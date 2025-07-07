@@ -17,6 +17,8 @@ interface AddEmployeeFormProps {
 }
 
 export function AddEmployeeForm({ onBack, onSave, onCalculate }: AddEmployeeFormProps) {
+  const { addEmployee } = useEmployeeStorage();
+  const { toast } = useToast();
   const [formData, setFormData] = useState({
     // Persönliche Daten
     firstName: "",

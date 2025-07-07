@@ -15,10 +15,99 @@ export function SalaryCalculator({ onBack, employeeData }: SalaryCalculatorProps
   const [calculation, setCalculation] = useState<SalaryCalculation | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
 
-  // Vereinfachte deutsche Gehaltsberechnung (Demo-Version)
-  const calculateSalary = (grossSalary: number, taxClass: string, churchTax: boolean = false) => {
+  // Erweiterte deutsche Gehaltsberechnung mit verschiedenen Beschäftigungsarten
+  const calculateSalary = (grossSalary: number, taxClass: string, churchTax: boolean = false, employmentType: string = 'fulltime') => {
     setIsCalculating(true);
     
+    // Spezielle Behandlung für Minijobs und Midijobs
+    if (employmentType === 'minijob' && grossSalary <= 538) {
+      // Minijob-Berechnung (pauschal versteuert)
+      setTimeout(() => {
+        setCalculation({
+          grossSalary,
+          netSalary: grossSalary, // Minijobber zahlen keine Steuern/SV-Beiträge
+          socialSecurityContributions: {
+            healthInsurance: { employee: 0, employer: grossSalary * 0.13, total: grossSalary * 0.13 },
+            pensionInsurance: { employee: 0, employer: grossSalary * 0.15, total: grossSalary * 0.15 },
+            unemploymentInsurance: { employee: 0, employer: 0, total: 0 },
+            careInsurance: { employee: 0, employer: 0, total: 0 },
+            total: { employee: 0, employer: grossSalary * 0.28, total: grossSalary * 0.28 }
+          },
+          taxes: {
+            incomeTax: grossSalary * 0.02, // Pauschalsteuer 2%
+            churchTax: 0,
+            solidarityTax: 0,
+            total: grossSalary * 0.02
+          },
+          employerCosts: grossSalary + (grossSalary * 0.28) + (grossSalary * 0.02)
+        });
+        setIsCalculating(false);
+      }, 1000);
+      return;
+    }
+    
+    // Midijob-Berechnung (Übergangsbereich 538,01 - 2000€)
+    if (employmentType === 'midijob' && grossSalary > 538 && grossSalary <= 2000) {
+      // Vereinfachte Midijob-Berechnung mit reduziertem Gleitzonenfaktor
+      const reductionFactor = 0.7; // Vereinfacht
+      const reducedGrossSalary = grossSalary * reductionFactor;
+      
+      const healthInsuranceEmployee = reducedGrossSalary * 0.073;
+      const pensionInsuranceEmployee = reducedGrossSalary * 0.093;
+      const unemploymentInsuranceEmployee = reducedGrossSalary * 0.013;
+      const careInsuranceEmployee = reducedGrossSalary * 0.015;
+      
+      const totalSocialSecurityEmployee = 
+        healthInsuranceEmployee + pensionInsuranceEmployee + 
+        unemploymentInsuranceEmployee + careInsuranceEmployee;
+      
+      // Vereinfachte Steuerberechnung für Midijob
+      const taxableIncome = grossSalary - totalSocialSecurityEmployee;
+      const incomeTax = Math.max(0, (taxableIncome - 1000) * 0.10);
+      const solidarityTax = incomeTax * 0.055;
+      const churchTaxAmount = churchTax ? incomeTax * 0.08 : 0;
+      const totalTax = incomeTax + solidarityTax + churchTaxAmount;
+      
+      setTimeout(() => {
+        setCalculation({
+          grossSalary,
+          netSalary: grossSalary - totalSocialSecurityEmployee - totalTax,
+          socialSecurityContributions: {
+            healthInsurance: { 
+              employee: healthInsuranceEmployee, 
+              employer: grossSalary * 0.073, 
+              total: healthInsuranceEmployee + (grossSalary * 0.073) 
+            },
+            pensionInsurance: { 
+              employee: pensionInsuranceEmployee, 
+              employer: grossSalary * 0.093, 
+              total: pensionInsuranceEmployee + (grossSalary * 0.093) 
+            },
+            unemploymentInsurance: { 
+              employee: unemploymentInsuranceEmployee, 
+              employer: grossSalary * 0.013, 
+              total: unemploymentInsuranceEmployee + (grossSalary * 0.013) 
+            },
+            careInsurance: { 
+              employee: careInsuranceEmployee, 
+              employer: grossSalary * 0.015, 
+              total: careInsuranceEmployee + (grossSalary * 0.015) 
+            },
+            total: { 
+              employee: totalSocialSecurityEmployee, 
+              employer: grossSalary * 0.194, 
+              total: totalSocialSecurityEmployee + (grossSalary * 0.194) 
+            }
+          },
+          taxes: { incomeTax, churchTax: churchTaxAmount, solidarityTax, total: totalTax },
+          employerCosts: grossSalary + (grossSalary * 0.194)
+        });
+        setIsCalculating(false);
+      }, 1000);
+      return;
+    }
+    
+    // Standard-Berechnung für Vollzeit/Teilzeit
     // Sozialversicherungsbeiträge 2024 (vereinfacht)
     const healthInsuranceRate = 0.146; // 14,6% (7,3% AN + 7,3% AG + Zusatzbeitrag)
     const pensionInsuranceRate = 0.186; // 18,6% (9,3% AN + 9,3% AG)
@@ -111,7 +200,8 @@ export function SalaryCalculator({ onBack, employeeData }: SalaryCalculatorProps
       calculateSalary(
         employeeData.grossSalary, 
         employeeData.taxClass || 'I',
-        employeeData.churchTax || false
+        employeeData.churchTax || false,
+        employeeData.employmentType || 'fulltime'
       );
     }
   }, [employeeData]);

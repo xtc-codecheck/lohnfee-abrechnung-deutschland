@@ -1,57 +1,28 @@
 import { useState } from "react";
-import { Plus, Users, Calculator, FileText, Search } from "lucide-react";
+import { Plus, Users, Calculator, FileText, Search, Edit, Trash2, BarChart3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageHeader } from "@/components/ui/page-header";
 import { Employee } from "@/types/employee";
-
-// Mock-Daten für die Demo
-const mockEmployees: Employee[] = [
-  {
-    id: "1",
-    personalData: {
-      firstName: "Max",
-      lastName: "Mustermann",
-      dateOfBirth: new Date("1985-05-15"),
-      address: {
-        street: "Musterstraße",
-        houseNumber: "123",
-        postalCode: "12345",
-        city: "Berlin",
-        country: "Deutschland"
-      },
-      taxId: "12345678901",
-      taxClass: "I",
-      churchTax: false,
-      healthInsurance: { name: "AOK", additionalRate: 1.3 },
-      socialSecurityNumber: "12345678901",
-      childAllowances: 0
-    },
-    employmentData: {
-      employmentType: "fulltime",
-      startDate: new Date("2023-01-01"),
-      isFixedTerm: false,
-      weeklyHours: 40
-    },
-    salaryData: {
-      grossSalary: 4500,
-      salaryType: "fixed",
-      additionalBenefits: {}
-    },
-    createdAt: new Date(),
-    updatedAt: new Date()
-  }
-];
+import { useEmployeeStorage } from "@/hooks/use-employee-storage";
+import { EditEmployeeDialog } from "./edit-employee-dialog";
+import { EmployeeReports } from "@/components/reports/employee-reports";
+import { useToast } from "@/hooks/use-toast";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 interface EmployeeDashboardProps {
   onAddEmployee: () => void;
-  onCalculateSalary: () => void;
+  onCalculateSalary: (data?: any) => void;
 }
 
 export function EmployeeDashboard({ onAddEmployee, onCalculateSalary }: EmployeeDashboardProps) {
   const [searchTerm, setSearchTerm] = useState("");
-  const [employees] = useState<Employee[]>(mockEmployees);
+  const [showReports, setShowReports] = useState(false);
+  const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const { employees, updateEmployee, deleteEmployee } = useEmployeeStorage();
+  const { toast } = useToast();
 
   const filteredEmployees = employees.filter(employee =>
     `${employee.personalData.firstName} ${employee.personalData.lastName}`
@@ -59,11 +30,51 @@ export function EmployeeDashboard({ onAddEmployee, onCalculateSalary }: Employee
       .includes(searchTerm.toLowerCase())
   );
 
+  const handleEditEmployee = (employee: Employee) => {
+    setEditingEmployee(employee);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleSaveEmployee = (updates: Partial<Employee>) => {
+    if (editingEmployee) {
+      updateEmployee(editingEmployee.id, updates);
+      toast({
+        title: "Mitarbeiter aktualisiert",
+        description: "Die Änderungen wurden erfolgreich gespeichert.",
+      });
+    }
+  };
+
+  const handleDeleteEmployee = (employee: Employee) => {
+    deleteEmployee(employee.id);
+    toast({
+      title: "Mitarbeiter gelöscht",
+      description: `${employee.personalData.firstName} ${employee.personalData.lastName} wurde entfernt.`,
+      variant: "destructive",
+    });
+  };
+
+  const handleCalculateForEmployee = (employee: Employee) => {
+    const employeeCalculationData = {
+      firstName: employee.personalData.firstName,
+      lastName: employee.personalData.lastName,
+      grossSalary: employee.salaryData.grossSalary,
+      taxClass: employee.personalData.taxClass,
+      churchTax: employee.personalData.churchTax,
+      employmentType: employee.employmentData.employmentType
+    };
+    onCalculateSalary(employeeCalculationData);
+  };
+
   const stats = {
     totalEmployees: employees.length,
-    avgGrossSalary: employees.reduce((sum, emp) => sum + emp.salaryData.grossSalary, 0) / employees.length,
+    avgGrossSalary: employees.length > 0 ? employees.reduce((sum, emp) => sum + emp.salaryData.grossSalary, 0) / employees.length : 0,
     totalMonthlyCosts: employees.reduce((sum, emp) => sum + emp.salaryData.grossSalary * 1.2, 0) // inkl. AG-Anteil
   };
+
+  if (showReports) {
+    return <EmployeeReports employees={employees} onBack={() => setShowReports(false)} />;
+  }
 
   return (
     <div className="space-y-8 animate-fade-in">
@@ -73,7 +84,15 @@ export function EmployeeDashboard({ onAddEmployee, onCalculateSalary }: Employee
       >
         <div className="flex gap-3">
           <Button 
-            onClick={onCalculateSalary}
+            onClick={() => setShowReports(true)}
+            variant="outline"
+            className="flex items-center gap-2"
+          >
+            <BarChart3 className="h-4 w-4" />
+            Berichte
+          </Button>
+          <Button 
+            onClick={() => onCalculateSalary()}
             variant="outline"
             className="flex items-center gap-2"
           >
@@ -194,12 +213,46 @@ export function EmployeeDashboard({ onAddEmployee, onCalculateSalary }: Employee
                     </div>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <Button variant="outline" size="sm">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleEditEmployee(employee)}
+                      className="flex items-center gap-1"
+                    >
+                      <Edit className="h-3 w-3" />
                       Bearbeiten
                     </Button>
-                    <Button variant="outline" size="sm">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleCalculateForEmployee(employee)}
+                      className="flex items-center gap-1"
+                    >
+                      <Calculator className="h-3 w-3" />
                       Abrechnung
                     </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="outline" size="sm" className="flex items-center gap-1 text-destructive hover:text-destructive">
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Mitarbeiter löschen?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Möchten Sie {employee.personalData.firstName} {employee.personalData.lastName} wirklich löschen? 
+                            Diese Aktion kann nicht rückgängig gemacht werden.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Abbrechen</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => handleDeleteEmployee(employee)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                            Löschen
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </div>
                 </div>
               ))
@@ -207,6 +260,13 @@ export function EmployeeDashboard({ onAddEmployee, onCalculateSalary }: Employee
           </div>
         </CardContent>
       </Card>
+
+      <EditEmployeeDialog
+        employee={editingEmployee}
+        open={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+        onSave={handleSaveEmployee}
+      />
     </div>
   );
 }
