@@ -9,6 +9,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { PageHeader } from "@/components/ui/page-header";
 import { EmploymentType, TaxClass, SalaryType } from "@/types/employee";
+import { useEmployeeStorage } from "@/hooks/use-employee-storage";
+import { useToast } from "@/hooks/use-toast";
 
 interface AddEmployeeFormProps {
   onBack: () => void;
