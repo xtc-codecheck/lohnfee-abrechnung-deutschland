@@ -1,13 +1,58 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useState } from "react";
+import { MainLayout } from "@/components/layout/main-layout";
+import { EmployeeDashboard } from "@/components/employees/employee-dashboard";
+import { AddEmployeeForm } from "@/components/employees/add-employee-form";
+import { SalaryCalculator } from "@/components/salary/salary-calculator";
+
+type View = 'dashboard' | 'add-employee' | 'salary-calculator';
 
 const Index = () => {
+  const [currentView, setCurrentView] = useState<View>('dashboard');
+  const [employeeData, setEmployeeData] = useState<any>(null);
+
+  const handleAddEmployee = () => {
+    setCurrentView('add-employee');
+  };
+
+  const handleCalculateSalary = (data?: any) => {
+    if (data) {
+      setEmployeeData(data);
+    }
+    setCurrentView('salary-calculator');
+  };
+
+  const handleBack = () => {
+    setCurrentView('dashboard');
+  };
+
+  const handleSaveEmployee = (data: any) => {
+    // TODO: Hier würde die Speicherung in die Datenbank erfolgen
+    console.log('Mitarbeiter speichern:', data);
+    setCurrentView('dashboard');
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
-      </div>
-    </div>
+    <MainLayout>
+      {currentView === 'dashboard' && (
+        <EmployeeDashboard 
+          onAddEmployee={handleAddEmployee}
+          onCalculateSalary={handleCalculateSalary}
+        />
+      )}
+      {currentView === 'add-employee' && (
+        <AddEmployeeForm 
+          onBack={handleBack}
+          onSave={handleSaveEmployee}
+          onCalculate={handleCalculateSalary}
+        />
+      )}
+      {currentView === 'salary-calculator' && (
+        <SalaryCalculator 
+          onBack={handleBack}
+          employeeData={employeeData}
+        />
+      )}
+    </MainLayout>
   );
 };
 
