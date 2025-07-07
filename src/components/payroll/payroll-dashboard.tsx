@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowLeft, Plus, FileText, Calendar, DollarSign, Users, Eye, Trash2 } from "lucide-react";
+import { ArrowLeft, Plus, FileText, Calendar, DollarSign, Users, Eye, Trash2, BookOpen, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageHeader } from "@/components/ui/page-header";
@@ -9,6 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { CreatePayrollDialog } from "./create-payroll-dialog";
 import { PayrollDetail } from "./payroll-detail";
+import { PayrollJournal } from "./payroll-journal";
+import { EmployeePayrollAccount } from "./employee-payroll-account";
 import { PayrollStatus } from "@/types/payroll";
 
 interface PayrollDashboardProps {
@@ -18,6 +20,8 @@ interface PayrollDashboardProps {
 export function PayrollDashboard({ onBack }: PayrollDashboardProps) {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [selectedPayrollId, setSelectedPayrollId] = useState<string | null>(null);
+  const [currentView, setCurrentView] = useState<'dashboard' | 'detail' | 'journal' | 'account'>('dashboard');
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | null>(null);
   const { payrollPeriods, getPayrollReport, deletePayrollPeriod } = usePayrollStorage();
   const { employees } = useEmployeeStorage();
 
@@ -47,6 +51,21 @@ export function PayrollDashboard({ onBack }: PayrollDashboardProps) {
     deletePayrollPeriod(periodId);
   };
 
+  const handleViewJournal = () => {
+    setCurrentView('journal');
+  };
+
+  const handleViewAccount = (employeeId: string) => {
+    setSelectedEmployeeId(employeeId);
+    setCurrentView('account');
+  };
+
+  const handleBackToDashboard = () => {
+    setCurrentView('dashboard');
+    setSelectedPayrollId(null);
+    setSelectedEmployeeId(null);
+  };
+
   const sortedPeriods = [...payrollPeriods].sort((a, b) => {
     if (a.year !== b.year) return b.year - a.year;
     return b.month - a.month;
@@ -62,11 +81,29 @@ export function PayrollDashboard({ onBack }: PayrollDashboardProps) {
       .sort((a, b) => (b.processedAt!.getTime() - a.processedAt!.getTime()))[0]
   };
 
-  if (selectedPayrollId) {
+  if (selectedPayrollId && currentView === 'detail') {
     return (
       <PayrollDetail 
         payrollId={selectedPayrollId} 
-        onBack={() => setSelectedPayrollId(null)} 
+        onBack={handleBackToDashboard} 
+      />
+    );
+  }
+
+  if (currentView === 'journal') {
+    return (
+      <PayrollJournal 
+        onBack={handleBackToDashboard}
+        onViewAccount={handleViewAccount}
+      />
+    );
+  }
+
+  if (currentView === 'account' && selectedEmployeeId) {
+    return (
+      <EmployeePayrollAccount 
+        employeeId={selectedEmployeeId} 
+        onBack={handleBackToDashboard}
       />
     );
   }
@@ -78,6 +115,14 @@ export function PayrollDashboard({ onBack }: PayrollDashboardProps) {
         description="Monatliche Lohnabrechnung für alle Mitarbeiter"
       >
         <div className="flex gap-3">
+          <Button 
+            onClick={handleViewJournal}
+            variant="outline"
+            className="flex items-center gap-2"
+          >
+            <BookOpen className="h-4 w-4" />
+            Lohnjournal
+          </Button>
           <Button 
             onClick={() => setShowCreateDialog(true)}
             className="flex items-center gap-2 bg-gradient-primary hover:opacity-90"
@@ -221,7 +266,10 @@ export function PayrollDashboard({ onBack }: PayrollDashboardProps) {
                       <Button 
                         variant="outline" 
                         size="sm"
-                        onClick={() => setSelectedPayrollId(period.id)}
+                        onClick={() => {
+                          setSelectedPayrollId(period.id);
+                          setCurrentView('detail');
+                        }}
                         className="flex items-center gap-1"
                       >
                         <Eye className="h-3 w-3" />
