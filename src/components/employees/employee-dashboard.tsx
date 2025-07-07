@@ -14,9 +14,10 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 interface EmployeeDashboardProps {
   onAddEmployee: () => void;
   onCalculateSalary: (data?: any) => void;
+  onShowPayroll: () => void;
 }
 
-export function EmployeeDashboard({ onAddEmployee, onCalculateSalary }: EmployeeDashboardProps) {
+export function EmployeeDashboard({ onAddEmployee, onCalculateSalary, onShowPayroll }: EmployeeDashboardProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [showReports, setShowReports] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
@@ -90,6 +91,14 @@ export function EmployeeDashboard({ onAddEmployee, onCalculateSalary }: Employee
           >
             <BarChart3 className="h-4 w-4" />
             Berichte
+          </Button>
+          <Button 
+            onClick={onShowPayroll}
+            variant="outline"
+            className="flex items-center gap-2"
+          >
+            <FileText className="h-4 w-4" />
+            Lohnabrechnung
           </Button>
           <Button 
             onClick={() => onCalculateSalary()}
