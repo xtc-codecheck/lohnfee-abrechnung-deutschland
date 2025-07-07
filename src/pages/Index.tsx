@@ -4,8 +4,9 @@ import { EmployeeDashboard } from "@/components/employees/employee-dashboard";
 import { AddEmployeeForm } from "@/components/employees/add-employee-form";
 import { SalaryCalculator } from "@/components/salary/salary-calculator";
 import { PayrollDashboard } from "@/components/payroll/payroll-dashboard";
+import { ComplianceDashboard } from "@/components/compliance/compliance-dashboard";
 
-type View = 'dashboard' | 'add-employee' | 'salary-calculator' | 'payroll';
+type View = 'dashboard' | 'add-employee' | 'salary-calculator' | 'payroll' | 'compliance';
 
 const Index = () => {
   const [currentView, setCurrentView] = useState<View>('dashboard');
@@ -26,6 +27,10 @@ const Index = () => {
     setCurrentView('payroll');
   };
 
+  const handleShowCompliance = () => {
+    setCurrentView('compliance');
+  };
+
   const handleBack = () => {
     setCurrentView('dashboard');
   };
@@ -43,6 +48,7 @@ const Index = () => {
           onAddEmployee={handleAddEmployee}
           onCalculateSalary={handleCalculateSalary}
           onShowPayroll={handleShowPayroll}
+          onShowCompliance={handleShowCompliance}
         />
       )}
       {currentView === 'add-employee' && (
@@ -60,6 +66,11 @@ const Index = () => {
       )}
       {currentView === 'payroll' && (
         <PayrollDashboard 
+          onBack={handleBack}
+        />
+      )}
+      {currentView === 'compliance' && (
+        <ComplianceDashboard 
           onBack={handleBack}
         />
       )}
