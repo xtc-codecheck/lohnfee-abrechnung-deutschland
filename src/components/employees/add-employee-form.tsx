@@ -130,6 +130,54 @@ export function AddEmployeeForm({ onBack, onSave, onCalculate }: AddEmployeeForm
     return totalDaily - formData.weeklyHours;
   };
 
+  const calculateNetSalary = () => {
+    const grossSalary = formData.grossSalary || 0;
+    if (grossSalary === 0) return null;
+
+    // Basis-Krankenversicherungssatz (14,6% + Zusatzbeitrag)
+    const basicHealthInsuranceRate = 14.6;
+    const totalHealthInsuranceRate = basicHealthInsuranceRate + formData.healthInsuranceRate;
+    
+    // Kinderlosenzuschlag prüfen (ab 23 Jahre + keine Kinder)
+    const hasChildlessSurcharge = formData.childAllowances === 0;
+    const careRate = hasChildlessSurcharge ? SOCIAL_SECURITY_RATES.careWithoutChildren : SOCIAL_SECURITY_RATES.care;
+
+    // Arbeitgeber-Anteile
+    const employerHealthInsurance = (grossSalary * (basicHealthInsuranceRate / 2 + formData.healthInsuranceRate / 2)) / 100;
+    const employerPension = (grossSalary * SOCIAL_SECURITY_RATES.pension.employer) / 100;
+    const employerUnemployment = (grossSalary * SOCIAL_SECURITY_RATES.unemployment.employer) / 100;
+    const employerCare = (grossSalary * careRate.employer) / 100;
+
+    // Arbeitnehmer-Anteile
+    const employeeHealthInsurance = (grossSalary * (basicHealthInsuranceRate / 2 + formData.healthInsuranceRate / 2)) / 100;
+    const employeePension = (grossSalary * SOCIAL_SECURITY_RATES.pension.employee) / 100;
+    const employeeUnemployment = (grossSalary * SOCIAL_SECURITY_RATES.unemployment.employee) / 100;
+    const employeeCare = (grossSalary * careRate.employee) / 100;
+
+    // Arbeitgeberbrutto
+    const employerGross = grossSalary + employerHealthInsurance + employerPension + employerUnemployment + employerCare;
+
+    // Gesamte Sozialversicherungsabzüge Arbeitnehmer
+    const totalSocialSecurityDeductions = employeeHealthInsurance + employeePension + employeeUnemployment + employeeCare;
+
+    // Netto (vereinfacht, ohne Lohnsteuer)
+    const netSalary = grossSalary - totalSocialSecurityDeductions;
+
+    return {
+      employerGross,
+      employeeGross: grossSalary,
+      deductions: {
+        healthInsurance: employeeHealthInsurance,
+        pension: employeePension,
+        unemployment: employeeUnemployment,
+        care: employeeCare,
+        total: totalSocialSecurityDeductions
+      },
+      netSalary,
+      hasChildlessSurcharge
+    };
+  };
+
   const getChurchTaxRate = () => {
     if (!formData.religion || !formData.state) return 0;
     return CHURCH_TAX_RATES[formData.state]?.[formData.religion] || 0;
@@ -719,7 +767,16 @@ export function AddEmployeeForm({ onBack, onSave, onCalculate }: AddEmployeeForm
 
                 <div className="bg-muted/50 p-4 rounded-lg space-y-3">
                   <div className="font-medium text-sm">Sozialversicherungssätze 2025</div>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-3 text-xs">
+                    <div>
+                      <div className="font-medium">Krankenversicherung</div>
+                      <div className="text-muted-foreground">
+                        Basis: 14,6%<br />
+                        (AG: 7,3% | AN: 7,3%)<br />
+                        + Zusatzbeitrag: {formData.healthInsuranceRate}%<br />
+                        (AN: {formData.healthInsuranceRate}%)
+                      </div>
+                    </div>
                     <div>
                       <div className="font-medium">Rentenversicherung</div>
                       <div className="text-muted-foreground">
@@ -737,14 +794,77 @@ export function AddEmployeeForm({ onBack, onSave, onCalculate }: AddEmployeeForm
                     <div>
                       <div className="font-medium">Pflegeversicherung</div>
                       <div className="text-muted-foreground">
-                        Gesamt: {SOCIAL_SECURITY_RATES.care.total}%<br />
-                        (AG: {SOCIAL_SECURITY_RATES.care.employer}% | AN: {SOCIAL_SECURITY_RATES.care.employee}%)
-                        <br />
-                        <span className="text-xs">+ 0.6% Kinderlosenzuschlag ab 23 Jahre</span>
+                        Gesamt: {formData.childAllowances === 0 ? SOCIAL_SECURITY_RATES.careWithoutChildren.total : SOCIAL_SECURITY_RATES.care.total}%<br />
+                        (AG: {formData.childAllowances === 0 ? SOCIAL_SECURITY_RATES.careWithoutChildren.employer : SOCIAL_SECURITY_RATES.care.employer}% | AN: {formData.childAllowances === 0 ? SOCIAL_SECURITY_RATES.careWithoutChildren.employee : SOCIAL_SECURITY_RATES.care.employee}%)<br />
+                        {formData.childAllowances === 0 && <span className="text-xs text-orange-600">+ 0.6% Kinderlosenzuschlag</span>}
                       </div>
                     </div>
                   </div>
                 </div>
+
+                {/* Nettolohnberechnung */}
+                {formData.grossSalary > 0 && formData.healthInsurance && (
+                  <div className="bg-blue-50 p-4 rounded-lg space-y-4">
+                    <div className="font-medium text-sm text-blue-800">Voraussichtliche Nettolohnberechnung</div>
+                    {(() => {
+                      const calculation = calculateNetSalary();
+                      if (!calculation) return null;
+
+                      return (
+                        <div className="space-y-3 text-sm">
+                          {/* Arbeitgeberkosten */}
+                          <div className="flex justify-between items-center p-2 bg-blue-100 rounded">
+                            <span className="font-medium">Arbeitgeberbrutto:</span>
+                            <span className="font-bold">{calculation.employerGross.toFixed(2)}€</span>
+                          </div>
+
+                          {/* Arbeitnehmerbrutto */}
+                          <div className="flex justify-between items-center p-2 bg-white rounded border">
+                            <span className="font-medium">Arbeitnehmerbrutto:</span>
+                            <span className="font-bold">{calculation.employeeGross.toFixed(2)}€</span>
+                          </div>
+
+                          {/* Abzüge */}
+                          <div className="space-y-2">
+                            <div className="font-medium text-muted-foreground">Abzüge (Arbeitnehmeranteil):</div>
+                            <div className="pl-4 space-y-1 text-xs">
+                              <div className="flex justify-between">
+                                <span>- Krankenversicherung:</span>
+                                <span>{calculation.deductions.healthInsurance.toFixed(2)}€</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span>- Rentenversicherung:</span>
+                                <span>{calculation.deductions.pension.toFixed(2)}€</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span>- Arbeitslosenversicherung:</span>
+                                <span>{calculation.deductions.unemployment.toFixed(2)}€</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span>- Pflegeversicherung{calculation.hasChildlessSurcharge ? ' (inkl. Kinderlosenzuschlag)' : ''}:</span>
+                                <span>{calculation.deductions.care.toFixed(2)}€</span>
+                              </div>
+                              <div className="flex justify-between font-medium border-t pt-1">
+                                <span>Gesamt Sozialversicherung:</span>
+                                <span>{calculation.deductions.total.toFixed(2)}€</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Netto */}
+                          <div className="flex justify-between items-center p-2 bg-green-100 rounded">
+                            <span className="font-medium">Netto (vor Lohnsteuer):</span>
+                            <span className="font-bold text-green-700">{calculation.netSalary.toFixed(2)}€</span>
+                          </div>
+
+                          <div className="text-xs text-muted-foreground mt-2">
+                            * Vereinfachte Berechnung ohne Lohnsteuer, Kirchensteuer und Solidaritätszuschlag
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
