@@ -30,11 +30,10 @@ export function AddEmployeeForm({ onBack, onSave, onCalculate }: AddEmployeeForm
     houseNumber: "",
     postalCode: "",
     city: "",
+    state: "nordrhein-westfalen",
     country: "Deutschland",
     taxId: "",
     taxClass: "I" as TaxClass,
-    churchTax: false,
-    churchTaxState: "",
     religion: "none" as Religion,
     relationshipStatus: "single" as RelationshipStatus,
     relationshipDate: "",
@@ -95,8 +94,8 @@ export function AddEmployeeForm({ onBack, onSave, onCalculate }: AddEmployeeForm
   };
 
   const getChurchTaxRate = () => {
-    if (!formData.churchTax || !formData.churchTaxState || !formData.religion) return 0;
-    return CHURCH_TAX_RATES[formData.churchTaxState]?.[formData.religion] || 0;
+    if (!formData.religion || !formData.state) return 0;
+    return CHURCH_TAX_RATES[formData.state]?.[formData.religion] || 0;
   };
 
   return (
@@ -204,14 +203,40 @@ export function AddEmployeeForm({ onBack, onSave, onCalculate }: AddEmployeeForm
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="city">Stadt*</Label>
-                <Input
-                  id="city"
-                  value={formData.city}
-                  onChange={(e) => handleInputChange("city", e.target.value)}
-                  placeholder="Berlin"
-                />
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="city">Stadt*</Label>
+                  <Input
+                    id="city"
+                    value={formData.city}
+                    onChange={(e) => handleInputChange("city", e.target.value)}
+                    placeholder="Berlin"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="state">Bundesland*</Label>
+                  <Select value={formData.state} onValueChange={(value) => handleInputChange("state", value)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Bundesland wählen" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {GERMAN_STATES.map((state) => (
+                        <SelectItem key={state} value={state}>
+                          {GERMAN_STATE_NAMES[state]}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="country">Land*</Label>
+                  <Input
+                    id="country"
+                    value={formData.country}
+                    onChange={(e) => handleInputChange("country", e.target.value)}
+                    placeholder="Deutschland"
+                  />
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -287,38 +312,12 @@ export function AddEmployeeForm({ onBack, onSave, onCalculate }: AddEmployeeForm
                       <SelectItem value="other">Sonstige</SelectItem>
                     </SelectContent>
                   </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="churchTaxState">Bundesland für Kirchensteuer</Label>
-                  <Select value={formData.churchTaxState} onValueChange={(value) => handleInputChange("churchTaxState", value)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Bundesland wählen" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {GERMAN_STATES.map((state) => (
-                        <SelectItem key={state} value={state}>
-                          {GERMAN_STATE_NAMES[state]}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="churchTax"
-                  checked={formData.churchTax}
-                  onCheckedChange={(checked) => handleInputChange("churchTax", checked)}
-                />
-                <Label htmlFor="churchTax">
-                  Kirchensteuerpflichtig 
-                  {formData.churchTax && getChurchTaxRate() > 0 && (
-                    <span className="ml-2 text-sm text-muted-foreground">
-                      ({getChurchTaxRate()}%)
-                    </span>
+                  {getChurchTaxRate() > 0 && (
+                    <div className="text-sm text-muted-foreground">
+                      Kirchensteuersatz: {getChurchTaxRate()}%
+                    </div>
                   )}
-                </Label>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

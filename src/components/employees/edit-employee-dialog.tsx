@@ -73,8 +73,8 @@ export function EditEmployeeDialog({ employee, open, onOpenChange, onSave }: Edi
   };
 
   const getChurchTaxRate = () => {
-    if (!formData.personalData?.churchTax || !formData.personalData?.churchTaxState || !formData.personalData?.religion) return 0;
-    return CHURCH_TAX_RATES[formData.personalData.churchTaxState]?.[formData.personalData.religion] || 0;
+    if (!formData.personalData?.religion || !formData.personalData?.address?.state) return 0;
+    return CHURCH_TAX_RATES[formData.personalData.address.state]?.[formData.personalData.religion] || 0;
   };
 
   if (!employee || !formData.personalData) return null;
@@ -166,38 +166,12 @@ export function EditEmployeeDialog({ employee, open, onOpenChange, onSave }: Edi
                         <SelectItem value="other">Sonstige</SelectItem>
                       </SelectContent>
                     </Select>
-                  </div>
-                  <div>
-                    <Label htmlFor="churchTaxState">Bundesland für Kirchensteuer</Label>
-                    <Select value={formData.personalData.churchTaxState || ''} onValueChange={(value) => updatePersonalData('churchTaxState', value)}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Bundesland wählen" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {GERMAN_STATES.map((state) => (
-                          <SelectItem key={state} value={state}>
-                            {GERMAN_STATE_NAMES[state]}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="churchTax"
-                    checked={formData.personalData.churchTax || false}
-                    onCheckedChange={(checked) => updatePersonalData('churchTax', checked)}
-                  />
-                  <Label htmlFor="churchTax">
-                    Kirchensteuerpflichtig 
-                    {formData.personalData.churchTax && getChurchTaxRate() > 0 && (
-                      <span className="ml-2 text-sm text-muted-foreground">
-                        ({getChurchTaxRate()}%)
-                      </span>
+                    {getChurchTaxRate() > 0 && (
+                      <div className="text-sm text-muted-foreground">
+                        Kirchensteuersatz: {getChurchTaxRate()}%
+                      </div>
                     )}
-                  </Label>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
