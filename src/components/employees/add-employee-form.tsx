@@ -1,14 +1,17 @@
 import { useState } from "react";
-import { ArrowLeft, Save, Calculator } from "lucide-react";
+import { ArrowLeft, Save, Calculator, Check, ChevronsUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { PageHeader } from "@/components/ui/page-header";
-import { EmploymentType, TaxClass, SalaryType, RelationshipStatus, Religion, CHURCH_TAX_RATES, GERMAN_STATES, GERMAN_STATE_NAMES } from "@/types/employee";
+import { EmploymentType, TaxClass, SalaryType, RelationshipStatus, Religion, CHURCH_TAX_RATES, GERMAN_STATES, GERMAN_STATE_NAMES, GERMAN_HEALTH_INSURANCES, SOCIAL_SECURITY_RATES } from "@/types/employee";
 import { useEmployeeStorage } from "@/hooks/use-employee-storage";
 import { useToast } from "@/hooks/use-toast";
 
@@ -38,7 +41,7 @@ export function AddEmployeeForm({ onBack, onSave, onCalculate }: AddEmployeeForm
     relationshipStatus: "single" as RelationshipStatus,
     relationshipDate: "",
     healthInsurance: "",
-    healthInsuranceRate: 1.3,
+    healthInsuranceRate: 2.45,
     socialSecurityNumber: "",
     childAllowances: 0,
     
@@ -74,6 +77,7 @@ export function AddEmployeeForm({ onBack, onSave, onCalculate }: AddEmployeeForm
     capitalFormingBenefits: 0,
     taxFreeBenefits: 0
   });
+  const [openHealthInsurance, setOpenHealthInsurance] = useState(false);
 
   const handleInputChange = (field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -96,6 +100,15 @@ export function AddEmployeeForm({ onBack, onSave, onCalculate }: AddEmployeeForm
   const getChurchTaxRate = () => {
     if (!formData.religion || !formData.state) return 0;
     return CHURCH_TAX_RATES[formData.state]?.[formData.religion] || 0;
+  };
+
+  const handleHealthInsuranceSelect = (insuranceName: string) => {
+    const selectedInsurance = GERMAN_HEALTH_INSURANCES.find(ins => ins.name === insuranceName);
+    handleInputChange("healthInsurance", insuranceName);
+    if (selectedInsurance) {
+      handleInputChange("healthInsuranceRate", selectedInsurance.additionalRate);
+    }
+    setOpenHealthInsurance(false);
   };
 
   return (
@@ -506,27 +519,97 @@ export function AddEmployeeForm({ onBack, onSave, onCalculate }: AddEmployeeForm
                 </div>
               )}
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="healthInsurance">Krankenkasse*</Label>
-                  <Input
-                    id="healthInsurance"
-                    value={formData.healthInsurance}
-                    onChange={(e) => handleInputChange("healthInsurance", e.target.value)}
-                    placeholder="AOK"
-                  />
+                  <Popover open={openHealthInsurance} onOpenChange={setOpenHealthInsurance}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={openHealthInsurance}
+                        className="w-full justify-between"
+                      >
+                        {formData.healthInsurance
+                          ? GERMAN_HEALTH_INSURANCES.find((insurance) => insurance.name === formData.healthInsurance)?.name
+                          : "Krankenkasse wählen..."}
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-full p-0">
+                      <Command>
+                        <CommandInput placeholder="Krankenkasse suchen..." />
+                        <CommandList>
+                          <CommandEmpty>Keine Krankenkasse gefunden.</CommandEmpty>
+                          <CommandGroup>
+                            {GERMAN_HEALTH_INSURANCES.map((insurance) => (
+                              <CommandItem
+                                key={insurance.name}
+                                value={insurance.name}
+                                onSelect={handleHealthInsuranceSelect}
+                              >
+                                <Check
+                                  className={cn(
+                                    "mr-2 h-4 w-4",
+                                    formData.healthInsurance === insurance.name ? "opacity-100" : "opacity-0"
+                                  )}
+                                />
+                                <div className="flex-1">
+                                  <div>{insurance.name}</div>
+                                  <div className="text-sm text-muted-foreground">Zusatzbeitrag: {insurance.additionalRate}%</div>
+                                </div>
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
                 </div>
+                
                 <div className="space-y-2">
-                  <Label htmlFor="healthInsuranceRate">Zusatzbeitrag (%)</Label>
+                  <Label htmlFor="healthInsuranceRate">Zusatzbeitrag (%)*</Label>
                   <Input
                     id="healthInsuranceRate"
                     type="number"
                     min="0"
                     max="5"
-                    step="0.1"
+                    step="0.01"
                     value={formData.healthInsuranceRate}
                     onChange={(e) => handleInputChange("healthInsuranceRate", parseFloat(e.target.value) || 0)}
                   />
+                  <div className="text-xs text-muted-foreground">
+                    Wird automatisch bei Krankenkassenwahl ausgefüllt, kann aber angepasst werden
+                  </div>
+                </div>
+
+                <div className="bg-muted/50 p-4 rounded-lg space-y-3">
+                  <div className="font-medium text-sm">Sozialversicherungssätze 2025</div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+                    <div>
+                      <div className="font-medium">Rentenversicherung</div>
+                      <div className="text-muted-foreground">
+                        Gesamt: {SOCIAL_SECURITY_RATES.pension.total}%<br />
+                        (AG: {SOCIAL_SECURITY_RATES.pension.employer}% | AN: {SOCIAL_SECURITY_RATES.pension.employee}%)
+                      </div>
+                    </div>
+                    <div>
+                      <div className="font-medium">Arbeitslosenversicherung</div>
+                      <div className="text-muted-foreground">
+                        Gesamt: {SOCIAL_SECURITY_RATES.unemployment.total}%<br />
+                        (AG: {SOCIAL_SECURITY_RATES.unemployment.employer}% | AN: {SOCIAL_SECURITY_RATES.unemployment.employee}%)
+                      </div>
+                    </div>
+                    <div>
+                      <div className="font-medium">Pflegeversicherung</div>
+                      <div className="text-muted-foreground">
+                        Gesamt: {SOCIAL_SECURITY_RATES.care.total}%<br />
+                        (AG: {SOCIAL_SECURITY_RATES.care.employer}% | AN: {SOCIAL_SECURITY_RATES.care.employee}%)
+                        <br />
+                        <span className="text-xs">+ 0.6% Kinderlosenzuschlag ab 23 Jahre</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </CardContent>

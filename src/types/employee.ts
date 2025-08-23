@@ -73,6 +73,82 @@ export interface HealthInsurance {
   additionalRate: number; // in Prozent
 }
 
+// Deutsche Krankenkassen mit Zusatzbeiträgen 2025
+export const GERMAN_HEALTH_INSURANCES = [
+  { name: "AOK Baden‑Württemberg", additionalRate: 2.60 },
+  { name: "AOK Bayern", additionalRate: 2.69 },
+  { name: "AOK Bremen/Bremerhaven", additionalRate: 2.49 },
+  { name: "AOK Hessen", additionalRate: 2.49 },
+  { name: "AOK Niedersachsen", additionalRate: 2.70 },
+  { name: "AOK Nordost", additionalRate: 3.50 },
+  { name: "AOK Nordwest", additionalRate: 2.79 },
+  { name: "AOK Plus", additionalRate: 3.10 },
+  { name: "AOK Rheinland/Hamburg", additionalRate: 2.99 },
+  { name: "AOK Rheinland‑Pfalz/Saarland", additionalRate: 2.47 },
+  { name: "AOK Sachsen-Anhalt", additionalRate: 2.50 },
+  { name: "Audi BKK", additionalRate: 2.40 },
+  { name: "Bahn‑BKK", additionalRate: 3.40 },
+  { name: "Barmer Ersatzkasse (BARMER)", additionalRate: 3.29 },
+  { name: "BKK Akzo Nobel", additionalRate: 3.39 },
+  { name: "BKK B. Braun Aesculap", additionalRate: 2.95 },
+  { name: "BKK Deutsche Bank AG", additionalRate: 3.40 },
+  { name: "BKK Diakonie", additionalRate: 3.80 },
+  { name: "BKK DürkoppAdler", additionalRate: 3.88 },
+  { name: "BKK Euregio", additionalRate: 3.39 },
+  { name: "BKK Exklusiv", additionalRate: 2.39 },
+  { name: "BKK Faber‑Castell & Partner", additionalRate: 2.18 },
+  { name: "BKK Firmus", additionalRate: 2.18 },
+  { name: "BKK Freudenberg", additionalRate: 2.49 },
+  { name: "BKK Gildemeister Seidensticker", additionalRate: 3.40 },
+  { name: "BKK Herkules", additionalRate: 3.48 },
+  { name: "BKK Linde", additionalRate: 2.99 },
+  { name: "BKK Melitta HMR", additionalRate: 3.50 },
+  { name: "BKK Pfalz", additionalRate: 3.90 },
+  { name: "BKK ProVita", additionalRate: 2.89 },
+  { name: "BKK Public", additionalRate: 2.30 },
+  { name: "BKK SBH", additionalRate: 2.44 },
+  { name: "BKK Scheufelen", additionalRate: 3.40 },
+  { name: "BKK Technoform", additionalRate: 3.49 },
+  { name: "BKK Verbundplus", additionalRate: 3.89 },
+  { name: "BKK Werra‑Meissner", additionalRate: 3.39 },
+  { name: "BKK Wirtschaft & Finanzen", additionalRate: 3.99 },
+  { name: "BKK ZF & Partner", additionalRate: 3.40 },
+  { name: "BKK24", additionalRate: 4.39 },
+  { name: "Bundesinnungskrankenkasse Gesundheit", additionalRate: 3.39 },
+  { name: "Continentale BKK", additionalRate: 3.33 },
+  { name: "DAK‑Gesundheit", additionalRate: 2.80 },
+  { name: "Debeka BKK", additionalRate: 3.25 },
+  { name: "Energie‑BKK", additionalRate: 2.98 },
+  { name: "Handelskrankenkasse (hkk)", additionalRate: 2.19 },
+  { name: "Heimat Krankenkasse", additionalRate: 3.10 },
+  { name: "HEK – Hanseatische Krankenkasse", additionalRate: 2.50 },
+  { name: "IKK classic", additionalRate: 3.40 },
+  { name: "IKK gesund plus", additionalRate: 3.39 },
+  { name: "IKK – Die Innovationskasse", additionalRate: 4.30 },
+  { name: "KKH (Kaufmännische Krankenkasse)", additionalRate: 3.78 },
+  { name: "Knappschaft", additionalRate: 4.40 },
+  { name: "mhplus BKK", additionalRate: 3.29 },
+  { name: "Mobil Krankenkasse", additionalRate: 3.89 },
+  { name: "Novitas BKK", additionalRate: 2.98 },
+  { name: "pronova BKK", additionalRate: 3.20 },
+  { name: "R+V BKK", additionalRate: 2.96 },
+  { name: "Salus BKK", additionalRate: 2.99 },
+  { name: "SBK (Siemens‑BKK)", additionalRate: 3.80 },
+  { name: "Techniker Krankenkasse (TK)", additionalRate: 2.45 },
+  { name: "TUI BKK", additionalRate: 2.50 },
+  { name: "Viactiv BKK", additionalRate: 3.27 },
+  { name: "Vivida BKK", additionalRate: 3.79 },
+  { name: "WMF BKK", additionalRate: 2.45 }
+];
+
+// Sozialversicherungssätze 2025 (in Prozent)
+export const SOCIAL_SECURITY_RATES = {
+  pension: { total: 18.6, employee: 9.3, employer: 9.3 },
+  unemployment: { total: 2.6, employee: 1.3, employer: 1.3 },
+  care: { total: 3.4, employee: 1.7, employer: 1.7 }, // ohne Kinderlosenzuschlag
+  careWithoutChildren: { total: 4.0, employee: 2.0, employer: 2.0 } // mit Kinderlosenzuschlag
+};
+
 export interface SalaryCalculation {
   grossSalary: number;
   netSalary: number;
