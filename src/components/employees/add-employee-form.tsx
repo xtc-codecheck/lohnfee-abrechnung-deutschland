@@ -28,6 +28,7 @@ export function AddEmployeeForm({ onBack, onSave, onCalculate }: AddEmployeeForm
     // Persönliche Daten
     firstName: "",
     lastName: "",
+    gender: "male" as "male" | "female" | "diverse",
     dateOfBirth: "",
     street: "",
     houseNumber: "",
@@ -204,14 +205,29 @@ export function AddEmployeeForm({ onBack, onSave, onCalculate }: AddEmployeeForm
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="dateOfBirth">Geburtsdatum*</Label>
-                <Input
-                  id="dateOfBirth"
-                  type="date"
-                  value={formData.dateOfBirth}
-                  onChange={(e) => handleInputChange("dateOfBirth", e.target.value)}
-                />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="dateOfBirth">Geburtsdatum*</Label>
+                  <Input
+                    id="dateOfBirth"
+                    type="date"
+                    value={formData.dateOfBirth}
+                    onChange={(e) => handleInputChange("dateOfBirth", e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="gender">Geschlecht*</Label>
+                  <Select value={formData.gender} onValueChange={(value) => handleInputChange("gender", value)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Geschlecht wählen" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="male">Männlich</SelectItem>
+                      <SelectItem value="female">Weiblich</SelectItem>
+                      <SelectItem value="diverse">Divers</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
