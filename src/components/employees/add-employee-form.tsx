@@ -35,6 +35,8 @@ export function AddEmployeeForm({ onBack, onSave, onCalculate }: AddEmployeeForm
     city: "",
     state: "nordrhein-westfalen",
     country: "Deutschland",
+    phone: "",
+    email: "",
     taxId: "",
     taxClass: "I" as TaxClass,
     religion: "none" as Religion,
@@ -278,6 +280,30 @@ export function AddEmployeeForm({ onBack, onSave, onCalculate }: AddEmployeeForm
                 </div>
               </div>
 
+              {/* Telefon und E-Mail */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="phone">Telefonnummer</Label>
+                  <Input
+                    id="phone"
+                    type="tel"
+                    value={formData.phone}
+                    onChange={(e) => handleInputChange("phone", e.target.value)}
+                    placeholder="+49 123 456789"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="email">E-Mail-Adresse</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => handleInputChange("email", e.target.value)}
+                    placeholder="max.mustermann@email.de"
+                  />
+                </div>
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="taxId">Steuer-ID*</Label>
@@ -321,23 +347,6 @@ export function AddEmployeeForm({ onBack, onSave, onCalculate }: AddEmployeeForm
                     </SelectContent>
                   </Select>
                 </div>
-                {(formData.relationshipStatus === "married" || formData.relationshipStatus === "divorced" || formData.relationshipStatus === "widowed") && (
-                  <div className="space-y-2">
-                    <Label htmlFor="relationshipDate">
-                      {formData.relationshipStatus === "married" ? "Hochzeitsdatum" : 
-                       formData.relationshipStatus === "divorced" ? "Scheidungsdatum" : "Todesdatum Partner"}
-                    </Label>
-                    <Input
-                      id="relationshipDate"
-                      type="date"
-                      value={formData.relationshipDate}
-                      onChange={(e) => handleInputChange("relationshipDate", e.target.value)}
-                    />
-                  </div>
-                )}
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="religion">Religionszugehörigkeit</Label>
                   <Select value={formData.religion} onValueChange={(value) => handleInputChange("religion", value)}>
@@ -363,7 +372,22 @@ export function AddEmployeeForm({ onBack, onSave, onCalculate }: AddEmployeeForm
                     </div>
                   )}
                 </div>
+                {(formData.relationshipStatus === "married" || formData.relationshipStatus === "divorced" || formData.relationshipStatus === "widowed") && (
+                  <div className="space-y-2">
+                    <Label htmlFor="relationshipDate">
+                      {formData.relationshipStatus === "married" ? "Hochzeitsdatum" : 
+                       formData.relationshipStatus === "divorced" ? "Scheidungsdatum" : "Todesdatum Partner"}
+                    </Label>
+                    <Input
+                      id="relationshipDate"
+                      type="date"
+                      value={formData.relationshipDate}
+                      onChange={(e) => handleInputChange("relationshipDate", e.target.value)}
+                    />
+                  </div>
+                )}
               </div>
+
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
