@@ -16,9 +16,10 @@ interface EmployeeDashboardProps {
   onCalculateSalary: (data?: any) => void;
   onShowPayroll: () => void;
   onShowCompliance: () => void;
+  onShowReports: () => void;
 }
 
-export function EmployeeDashboard({ onAddEmployee, onCalculateSalary, onShowPayroll, onShowCompliance }: EmployeeDashboardProps) {
+export function EmployeeDashboard({ onAddEmployee, onCalculateSalary, onShowPayroll, onShowCompliance, onShowReports }: EmployeeDashboardProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [showReports, setShowReports] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
@@ -86,12 +87,20 @@ export function EmployeeDashboard({ onAddEmployee, onCalculateSalary, onShowPayr
       >
         <div className="flex gap-3">
           <Button 
+            onClick={onShowReports}
+            variant="outline"
+            className="flex items-center gap-2"
+          >
+            <BarChart3 className="h-4 w-4" />
+            Erweiterte Berichte
+          </Button>
+          <Button 
             onClick={() => setShowReports(true)}
             variant="outline"
             className="flex items-center gap-2"
           >
             <BarChart3 className="h-4 w-4" />
-            Berichte
+            Mitarbeiter-Berichte
           </Button>
           <Button 
             onClick={onShowCompliance}
