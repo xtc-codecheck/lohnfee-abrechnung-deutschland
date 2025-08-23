@@ -116,13 +116,13 @@ export function AddEmployeeForm({ onBack, onSave, onCalculate }: AddEmployeeForm
     let rate = 0;
     switch (formData.carType) {
       case "benzin":
-        rate = 1;
+        rate = 1; // 1% monatlich
         break;
       case "elektro":
-        rate = formData.carListPrice <= 80000 ? 0.25 : 0.5;
+        rate = formData.carListPrice <= 80000 ? 0.25 : 0.5; // 0,25% bis 80.000€, 0,5% über 80.000€ monatlich
         break;
       case "hybrid":
-        rate = 0.5;
+        rate = 0.5; // 0,5% monatlich
         break;
     }
     return (formData.carListPrice * rate) / 100;
@@ -682,6 +682,95 @@ export function AddEmployeeForm({ onBack, onSave, onCalculate }: AddEmployeeForm
                 </div>
               </div>
 
+              {/* Boni/Prämien - direkt nach Bruttolistenpreis */}
+              <div className="space-y-2">
+                <Label htmlFor="bonuses">Boni/Prämien</Label>
+                <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <Label htmlFor="yearlyBonusPercent" className="text-sm">Jahresboni (%)</Label>
+                      <Input
+                        id="yearlyBonusPercent"
+                        type="number"
+                        min="0"
+                        max="100"
+                        step="0.1"
+                        value={formData.yearlyBonusPercent}
+                        onChange={(e) => handleInputChange("yearlyBonusPercent", parseFloat(e.target.value) || 0)}
+                        placeholder="0"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="yearlyBonusFixed" className="text-sm">Jahresboni fix (€)</Label>
+                      <Input
+                        id="yearlyBonusFixed"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={formData.yearlyBonusFixed}
+                        onChange={(e) => handleInputChange("yearlyBonusFixed", parseFloat(e.target.value) || 0)}
+                        placeholder="0.00"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="has13thSalary"
+                          checked={formData.has13thSalary}
+                          onCheckedChange={(checked) => handleInputChange("has13thSalary", checked)}
+                        />
+                        <Label htmlFor="has13thSalary" className="text-sm">13. Monatsgehalt</Label>
+                      </div>
+                      {formData.has13thSalary && (
+                        <div>
+                          <Label htmlFor="factor13thSalary" className="text-xs">Faktor</Label>
+                          <Input
+                            id="factor13thSalary"
+                            type="number"
+                            min="0"
+                            max="2"
+                            step="0.1"
+                            value={formData.factor13thSalary}
+                            onChange={(e) => handleInputChange("factor13thSalary", parseFloat(e.target.value) || 1)}
+                            placeholder="1.0"
+                          />
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="has14thSalary"
+                          checked={formData.has14thSalary}
+                          onCheckedChange={(checked) => handleInputChange("has14thSalary", checked)}
+                        />
+                        <Label htmlFor="has14thSalary" className="text-sm">14. Monatsgehalt</Label>
+                      </div>
+                      {formData.has14thSalary && (
+                        <div>
+                          <Label htmlFor="factor14thSalary" className="text-xs">Faktor</Label>
+                          <Input
+                            id="factor14thSalary"
+                            type="number"
+                            min="0"
+                            max="2"
+                            step="0.1"
+                            value={formData.factor14thSalary}
+                            onChange={(e) => handleInputChange("factor14thSalary", parseFloat(e.target.value) || 1)}
+                            placeholder="1.0"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Sachbezüge */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="benefits">Sachbezüge</Label>
@@ -703,9 +792,6 @@ export function AddEmployeeForm({ onBack, onSave, onCalculate }: AddEmployeeForm
                     <Label htmlFor="benefitsCompliant" className="text-sm">Compliance-Check (z.B. Gutscheinkarte erfüllt)</Label>
                   </div>
                 </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="travelExpenses">Fahrtkostenerstattung</Label>
                   <Input
@@ -717,92 +803,6 @@ export function AddEmployeeForm({ onBack, onSave, onCalculate }: AddEmployeeForm
                     onChange={(e) => handleInputChange("travelExpenses", parseFloat(e.target.value) || 0)}
                     placeholder="0.00"
                   />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="bonuses">Boni/Prämien</Label>
-                  <div className="space-y-3">
-                    <div className="grid grid-cols-2 gap-2">
-                      <div>
-                        <Label htmlFor="yearlyBonusPercent" className="text-sm">Jahresboni (%)</Label>
-                        <Input
-                          id="yearlyBonusPercent"
-                          type="number"
-                          min="0"
-                          max="100"
-                          step="0.1"
-                          value={formData.yearlyBonusPercent}
-                          onChange={(e) => handleInputChange("yearlyBonusPercent", parseFloat(e.target.value) || 0)}
-                          placeholder="0"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="yearlyBonusFixed" className="text-sm">Jahresboni fix (€)</Label>
-                        <Input
-                          id="yearlyBonusFixed"
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          value={formData.yearlyBonusFixed}
-                          onChange={(e) => handleInputChange("yearlyBonusFixed", parseFloat(e.target.value) || 0)}
-                          placeholder="0.00"
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <div className="flex items-center space-x-2">
-                          <Checkbox
-                            id="has13thSalary"
-                            checked={formData.has13thSalary}
-                            onCheckedChange={(checked) => handleInputChange("has13thSalary", checked)}
-                          />
-                          <Label htmlFor="has13thSalary" className="text-sm">13. Monatsgehalt</Label>
-                        </div>
-                        {formData.has13thSalary && (
-                          <div>
-                            <Label htmlFor="factor13thSalary" className="text-xs">Faktor</Label>
-                            <Input
-                              id="factor13thSalary"
-                              type="number"
-                              min="0"
-                              max="2"
-                              step="0.1"
-                              value={formData.factor13thSalary}
-                              onChange={(e) => handleInputChange("factor13thSalary", parseFloat(e.target.value) || 1)}
-                              placeholder="1.0"
-                            />
-                          </div>
-                        )}
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <div className="flex items-center space-x-2">
-                          <Checkbox
-                            id="has14thSalary"
-                            checked={formData.has14thSalary}
-                            onCheckedChange={(checked) => handleInputChange("has14thSalary", checked)}
-                          />
-                          <Label htmlFor="has14thSalary" className="text-sm">14. Monatsgehalt</Label>
-                        </div>
-                        {formData.has14thSalary && (
-                          <div>
-                            <Label htmlFor="factor14thSalary" className="text-xs">Faktor</Label>
-                            <Input
-                              id="factor14thSalary"
-                              type="number"
-                              min="0"
-                              max="2"
-                              step="0.1"
-                              value={formData.factor14thSalary}
-                              onChange={(e) => handleInputChange("factor14thSalary", parseFloat(e.target.value) || 1)}
-                              placeholder="1.0"
-                            />
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
                 </div>
               </div>
 
