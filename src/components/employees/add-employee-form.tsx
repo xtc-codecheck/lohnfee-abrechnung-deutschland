@@ -68,10 +68,18 @@ export function AddEmployeeForm({ onBack, onSave, onCalculate }: AddEmployeeForm
     salaryType: "fixed" as SalaryType,
     
     // Zusatzleistungen
-    companyCar: 0,
+    carListPrice: 0,
+    carType: "benzin" as "benzin" | "elektro" | "hybrid",
     benefits: 0,
+    benefitsCompliant: false,
     travelExpenses: 0,
     bonuses: 0,
+    yearlyBonusPercent: 0,
+    yearlyBonusFixed: 0,
+    has13thSalary: false,
+    factor13thSalary: 1,
+    has14thSalary: false,
+    factor14thSalary: 1,
     allowances: 0,
     companyPension: 0,
     capitalFormingBenefits: 0,
@@ -100,6 +108,24 @@ export function AddEmployeeForm({ onBack, onSave, onCalculate }: AddEmployeeForm
   const getChurchTaxRate = () => {
     if (!formData.religion || !formData.state) return 0;
     return CHURCH_TAX_RATES[formData.state]?.[formData.religion] || 0;
+  };
+
+  const calculateCarBenefit = () => {
+    if (!formData.carListPrice) return 0;
+    
+    let rate = 0;
+    switch (formData.carType) {
+      case "benzin":
+        rate = 1;
+        break;
+      case "elektro":
+        rate = formData.carListPrice <= 80000 ? 0.25 : 0.5;
+        break;
+      case "hybrid":
+        rate = 0.5;
+        break;
+    }
+    return (formData.carListPrice * rate) / 100;
   };
 
   const handleHealthInsuranceSelect = (insuranceName: string) => {
@@ -625,17 +651,38 @@ export function AddEmployeeForm({ onBack, onSave, onCalculate }: AddEmployeeForm
             <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="companyCar">Firmenwagen (geldwerter Vorteil)</Label>
+                  <Label htmlFor="carListPrice">Bruttolistenpreis des Kfz</Label>
                   <Input
-                    id="companyCar"
+                    id="carListPrice"
                     type="number"
                     min="0"
                     step="0.01"
-                    value={formData.companyCar}
-                    onChange={(e) => handleInputChange("companyCar", parseFloat(e.target.value) || 0)}
+                    value={formData.carListPrice}
+                    onChange={(e) => handleInputChange("carListPrice", parseFloat(e.target.value) || 0)}
                     placeholder="0.00"
                   />
                 </div>
+                <div className="space-y-2">
+                  <Label htmlFor="carType">Fahrzeugtyp</Label>
+                  <Select value={formData.carType} onValueChange={(value) => handleInputChange("carType", value)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Fahrzeugtyp wählen" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="benzin">Benzin/Diesel (1%)</SelectItem>
+                      <SelectItem value="elektro">Elektrofahrzeug (0,25% bis 80.000€, 0,5% über 80.000€)</SelectItem>
+                      <SelectItem value="hybrid">Hybrid (0,5%)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {formData.carListPrice > 0 && (
+                    <div className="text-sm text-muted-foreground">
+                      Geldwerter Vorteil: {calculateCarBenefit().toFixed(2)}€ pro Monat
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="benefits">Sachbezüge</Label>
                   <Input
@@ -647,6 +694,14 @@ export function AddEmployeeForm({ onBack, onSave, onCalculate }: AddEmployeeForm
                     onChange={(e) => handleInputChange("benefits", parseFloat(e.target.value) || 0)}
                     placeholder="0.00"
                   />
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="benefitsCompliant"
+                      checked={formData.benefitsCompliant}
+                      onCheckedChange={(checked) => handleInputChange("benefitsCompliant", checked)}
+                    />
+                    <Label htmlFor="benefitsCompliant" className="text-sm">Compliance-Check (z.B. Gutscheinkarte erfüllt)</Label>
+                  </div>
                 </div>
               </div>
 
@@ -665,15 +720,89 @@ export function AddEmployeeForm({ onBack, onSave, onCalculate }: AddEmployeeForm
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="bonuses">Boni/Prämien</Label>
-                  <Input
-                    id="bonuses"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={formData.bonuses}
-                    onChange={(e) => handleInputChange("bonuses", parseFloat(e.target.value) || 0)}
-                    placeholder="0.00"
-                  />
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <Label htmlFor="yearlyBonusPercent" className="text-sm">Jahresboni (%)</Label>
+                        <Input
+                          id="yearlyBonusPercent"
+                          type="number"
+                          min="0"
+                          max="100"
+                          step="0.1"
+                          value={formData.yearlyBonusPercent}
+                          onChange={(e) => handleInputChange("yearlyBonusPercent", parseFloat(e.target.value) || 0)}
+                          placeholder="0"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="yearlyBonusFixed" className="text-sm">Jahresboni fix (€)</Label>
+                        <Input
+                          id="yearlyBonusFixed"
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={formData.yearlyBonusFixed}
+                          onChange={(e) => handleInputChange("yearlyBonusFixed", parseFloat(e.target.value) || 0)}
+                          placeholder="0.00"
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <div className="flex items-center space-x-2">
+                          <Checkbox
+                            id="has13thSalary"
+                            checked={formData.has13thSalary}
+                            onCheckedChange={(checked) => handleInputChange("has13thSalary", checked)}
+                          />
+                          <Label htmlFor="has13thSalary" className="text-sm">13. Monatsgehalt</Label>
+                        </div>
+                        {formData.has13thSalary && (
+                          <div>
+                            <Label htmlFor="factor13thSalary" className="text-xs">Faktor</Label>
+                            <Input
+                              id="factor13thSalary"
+                              type="number"
+                              min="0"
+                              max="2"
+                              step="0.1"
+                              value={formData.factor13thSalary}
+                              onChange={(e) => handleInputChange("factor13thSalary", parseFloat(e.target.value) || 1)}
+                              placeholder="1.0"
+                            />
+                          </div>
+                        )}
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <div className="flex items-center space-x-2">
+                          <Checkbox
+                            id="has14thSalary"
+                            checked={formData.has14thSalary}
+                            onCheckedChange={(checked) => handleInputChange("has14thSalary", checked)}
+                          />
+                          <Label htmlFor="has14thSalary" className="text-sm">14. Monatsgehalt</Label>
+                        </div>
+                        {formData.has14thSalary && (
+                          <div>
+                            <Label htmlFor="factor14thSalary" className="text-xs">Faktor</Label>
+                            <Input
+                              id="factor14thSalary"
+                              type="number"
+                              min="0"
+                              max="2"
+                              step="0.1"
+                              value={formData.factor14thSalary}
+                              onChange={(e) => handleInputChange("factor14thSalary", parseFloat(e.target.value) || 1)}
+                              placeholder="1.0"
+                            />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
