@@ -1,10 +1,16 @@
 import { ReactNode } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 
 interface MainLayoutProps {
   children: ReactNode;
 }
 
 export function MainLayout({ children }: MainLayoutProps) {
+  const navigate = useNavigate();
+  const location = useLocation();
+  
+  const isActive = (path: string) => location.pathname === path;
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -21,13 +27,34 @@ export function MainLayout({ children }: MainLayoutProps) {
               </div>
             </div>
             <nav className="flex items-center space-x-6">
-              <button className="text-foreground hover:text-primary transition-colors">
+              <button 
+                onClick={() => navigate("/")}
+                className={`transition-colors ${
+                  isActive("/") 
+                    ? "text-primary font-medium" 
+                    : "text-muted-foreground hover:text-primary"
+                }`}
+              >
                 Dashboard
               </button>
-              <button className="text-muted-foreground hover:text-primary transition-colors">
+              <button 
+                onClick={() => navigate("/employees")}
+                className={`transition-colors ${
+                  isActive("/employees") 
+                    ? "text-primary font-medium" 
+                    : "text-muted-foreground hover:text-primary"
+                }`}
+              >
                 Mitarbeiter
               </button>
-              <button className="text-muted-foreground hover:text-primary transition-colors">
+              <button 
+                onClick={() => navigate("/payroll")}
+                className={`transition-colors ${
+                  isActive("/payroll") 
+                    ? "text-primary font-medium" 
+                    : "text-muted-foreground hover:text-primary"
+                }`}
+              >
                 Abrechnung
               </button>
             </nav>
