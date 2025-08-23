@@ -108,7 +108,7 @@ export function MainDashboard() {
           </CardContent>
         </Card>
 
-        <Card className="shadow-card hover:shadow-elegant transition-shadow">
+        <Card className="shadow-card hover:shadow-elegant transition-shadow cursor-pointer" onClick={() => navigate("/employees?view=salary-calculator")}>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Calculator className="h-5 w-5 text-primary" />

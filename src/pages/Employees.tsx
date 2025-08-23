@@ -1,16 +1,25 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { MainLayout } from "@/components/layout/main-layout";
 import { EmployeeDashboard } from "@/components/employees/employee-dashboard";
 import { AddEmployeeForm } from "@/components/employees/add-employee-form";
 import { SalaryCalculator } from "@/components/salary/salary-calculator";
+import { QuickSalaryCalculator } from "@/components/salary/quick-salary-calculator";
 
-type EmployeeView = 'dashboard' | 'add-employee' | 'salary-calculator';
+type EmployeeView = 'dashboard' | 'add-employee' | 'salary-calculator' | 'quick-salary-calculator' | 'time-tracking' | 'compliance' | 'reports';
 
 export default function Employees() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [currentView, setCurrentView] = useState<EmployeeView>('dashboard');
   const [employeeData, setEmployeeData] = useState<any>(null);
+
+  useEffect(() => {
+    const view = searchParams.get('view');
+    if (view === 'salary-calculator') {
+      setCurrentView('quick-salary-calculator');
+    }
+  }, [searchParams]);
 
   const handleAddEmployee = () => {
     setCurrentView('add-employee');
@@ -19,8 +28,10 @@ export default function Employees() {
   const handleCalculateSalary = (data?: any) => {
     if (data) {
       setEmployeeData(data);
+      setCurrentView('salary-calculator');
+    } else {
+      setCurrentView('quick-salary-calculator');
     }
-    setCurrentView('salary-calculator');
   };
 
   const handleBack = () => {
@@ -39,9 +50,9 @@ export default function Employees() {
           onAddEmployee={handleAddEmployee}
           onCalculateSalary={handleCalculateSalary}
           onShowPayroll={() => navigate("/payroll")}
-          onShowCompliance={() => {/* TODO: Implement compliance view */}}
-          onShowReports={() => {/* TODO: Implement reports view */}}
-          onShowTimeTracking={() => {/* TODO: Implement time tracking view */}}
+          onShowCompliance={() => setCurrentView('compliance')}
+          onShowReports={() => setCurrentView('reports')}
+          onShowTimeTracking={() => setCurrentView('time-tracking')}
         />
       )}
       {currentView === 'add-employee' && (
@@ -56,6 +67,38 @@ export default function Employees() {
           onBack={handleBack}
           employeeData={employeeData}
         />
+      )}
+      {currentView === 'quick-salary-calculator' && (
+        <QuickSalaryCalculator 
+          onBack={handleBack}
+        />
+      )}
+      {currentView === 'time-tracking' && (
+        <div className="space-y-6 animate-fade-in">
+          <div className="text-center py-12">
+            <h2 className="text-2xl font-bold mb-4">Zeiterfassung</h2>
+            <p className="text-muted-foreground">Zeiterfassung-Modul wird hier implementiert.</p>
+            <button onClick={handleBack} className="mt-4 text-primary hover:underline">Zurück zum Dashboard</button>
+          </div>
+        </div>
+      )}
+      {currentView === 'compliance' && (
+        <div className="space-y-6 animate-fade-in">
+          <div className="text-center py-12">
+            <h2 className="text-2xl font-bold mb-4">Compliance</h2>
+            <p className="text-muted-foreground">Compliance-Modul wird hier implementiert.</p>
+            <button onClick={handleBack} className="mt-4 text-primary hover:underline">Zurück zum Dashboard</button>
+          </div>
+        </div>
+      )}
+      {currentView === 'reports' && (
+        <div className="space-y-6 animate-fade-in">
+          <div className="text-center py-12">
+            <h2 className="text-2xl font-bold mb-4">Erweiterte Berichte</h2>
+            <p className="text-muted-foreground">Erweiterte Berichte werden hier implementiert.</p>
+            <button onClick={handleBack} className="mt-4 text-primary hover:underline">Zurück zum Dashboard</button>
+          </div>
+        </div>
       )}
     </MainLayout>
   );

@@ -262,6 +262,7 @@ export function AutolohnDashboard() {
                       onChange={(e) => handleSocialSecurityChange("daysBefore", parseInt(e.target.value) || 10)}
                     />
                     <p className="text-sm text-muted-foreground">
+                      <strong>Gesetzlich: bis zum fünftletzten Bankarbeitstag vor Monatsende</strong><br />
                       Empfohlen: 10 Tage vor Monatsende
                     </p>
                   </div>
