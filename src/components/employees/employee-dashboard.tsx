@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, Users, Calculator, FileText, Search, Edit, Trash2, BarChart3, Shield } from "lucide-react";
+import { Plus, Users, Calculator, FileText, Search, Edit, Trash2, BarChart3, Shield, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,9 +17,10 @@ interface EmployeeDashboardProps {
   onShowPayroll: () => void;
   onShowCompliance: () => void;
   onShowReports: () => void;
+  onShowTimeTracking: () => void;
 }
 
-export function EmployeeDashboard({ onAddEmployee, onCalculateSalary, onShowPayroll, onShowCompliance, onShowReports }: EmployeeDashboardProps) {
+export function EmployeeDashboard({ onAddEmployee, onCalculateSalary, onShowPayroll, onShowCompliance, onShowReports, onShowTimeTracking }: EmployeeDashboardProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [showReports, setShowReports] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
@@ -101,6 +102,14 @@ export function EmployeeDashboard({ onAddEmployee, onCalculateSalary, onShowPayr
           >
             <BarChart3 className="h-4 w-4" />
             Mitarbeiter-Berichte
+          </Button>
+          <Button 
+            onClick={onShowTimeTracking}
+            variant="outline"
+            className="flex items-center gap-2"
+          >
+            <Clock className="h-4 w-4" />
+            Zeiterfassung
           </Button>
           <Button 
             onClick={onShowCompliance}
