@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { PageHeader } from "@/components/ui/page-header";
-import { EmploymentType, TaxClass, SalaryType } from "@/types/employee";
+import { EmploymentType, TaxClass, SalaryType, RelationshipStatus, Religion, CHURCH_TAX_RATES, GERMAN_STATES, GERMAN_STATE_NAMES } from "@/types/employee";
 import { useEmployeeStorage } from "@/hooks/use-employee-storage";
 import { useToast } from "@/hooks/use-toast";
 
@@ -30,10 +30,14 @@ export function AddEmployeeForm({ onBack, onSave, onCalculate }: AddEmployeeForm
     houseNumber: "",
     postalCode: "",
     city: "",
+    country: "Deutschland",
     taxId: "",
     taxClass: "I" as TaxClass,
     churchTax: false,
     churchTaxState: "",
+    religion: "none" as Religion,
+    relationshipStatus: "single" as RelationshipStatus,
+    relationshipDate: "",
     healthInsurance: "",
     healthInsuranceRate: 1.3,
     socialSecurityNumber: "",
@@ -45,6 +49,16 @@ export function AddEmployeeForm({ onBack, onSave, onCalculate }: AddEmployeeForm
     isFixedTerm: false,
     endDate: "",
     weeklyHours: 40,
+    vacationDays: 30,
+    workDays: [
+      { day: 'monday', isWorkDay: true },
+      { day: 'tuesday', isWorkDay: true },
+      { day: 'wednesday', isWorkDay: true },
+      { day: 'thursday', isWorkDay: true },
+      { day: 'friday', isWorkDay: true },
+      { day: 'saturday', isWorkDay: false },
+      { day: 'sunday', isWorkDay: false }
+    ],
     
     // Gehaltsdaten
     grossSalary: 0,
@@ -72,6 +86,17 @@ export function AddEmployeeForm({ onBack, onSave, onCalculate }: AddEmployeeForm
 
   const handleSave = () => {
     onSave(formData);
+  };
+
+  const handleWorkDayChange = (dayIndex: number, isWorkDay: boolean) => {
+    const updatedWorkDays = [...formData.workDays];
+    updatedWorkDays[dayIndex] = { ...updatedWorkDays[dayIndex], isWorkDay };
+    handleInputChange("workDays", updatedWorkDays);
+  };
+
+  const getChurchTaxRate = () => {
+    if (!formData.churchTax || !formData.churchTaxState || !formData.religion) return 0;
+    return CHURCH_TAX_RATES[formData.churchTaxState]?.[formData.religion] || 0;
   };
 
   return (
@@ -217,13 +242,83 @@ export function AddEmployeeForm({ onBack, onSave, onCalculate }: AddEmployeeForm
                 </div>
               </div>
 
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="relationshipStatus">Beziehungsstatus*</Label>
+                  <Select value={formData.relationshipStatus} onValueChange={(value) => handleInputChange("relationshipStatus", value)}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="single">Ledig</SelectItem>
+                      <SelectItem value="married">Verheiratet</SelectItem>
+                      <SelectItem value="divorced">Geschieden</SelectItem>
+                      <SelectItem value="widowed">Verwitwet</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                {(formData.relationshipStatus === "married" || formData.relationshipStatus === "divorced" || formData.relationshipStatus === "widowed") && (
+                  <div className="space-y-2">
+                    <Label htmlFor="relationshipDate">
+                      {formData.relationshipStatus === "married" ? "Hochzeitsdatum" : 
+                       formData.relationshipStatus === "divorced" ? "Scheidungsdatum" : "Todesdatum Partner"}
+                    </Label>
+                    <Input
+                      id="relationshipDate"
+                      type="date"
+                      value={formData.relationshipDate}
+                      onChange={(e) => handleInputChange("relationshipDate", e.target.value)}
+                    />
+                  </div>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="religion">Religionszugehörigkeit</Label>
+                  <Select value={formData.religion} onValueChange={(value) => handleInputChange("religion", value)}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Keine/Andere</SelectItem>
+                      <SelectItem value="catholic">Römisch-katholisch</SelectItem>
+                      <SelectItem value="protestant">Evangelisch</SelectItem>
+                      <SelectItem value="other">Sonstige</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="churchTaxState">Bundesland für Kirchensteuer</Label>
+                  <Select value={formData.churchTaxState} onValueChange={(value) => handleInputChange("churchTaxState", value)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Bundesland wählen" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {GERMAN_STATES.map((state) => (
+                        <SelectItem key={state} value={state}>
+                          {GERMAN_STATE_NAMES[state]}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
               <div className="flex items-center space-x-2">
                 <Checkbox
                   id="churchTax"
                   checked={formData.churchTax}
                   onCheckedChange={(checked) => handleInputChange("churchTax", checked)}
                 />
-                <Label htmlFor="churchTax">Kirchensteuerpflichtig</Label>
+                <Label htmlFor="churchTax">
+                  Kirchensteuerpflichtig 
+                  {formData.churchTax && getChurchTaxRate() > 0 && (
+                    <span className="ml-2 text-sm text-muted-foreground">
+                      ({getChurchTaxRate()}%)
+                    </span>
+                  )}
+                </Label>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -274,7 +369,7 @@ export function AddEmployeeForm({ onBack, onSave, onCalculate }: AddEmployeeForm
                 </Select>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="startDate">Eintrittsdatum*</Label>
                   <Input
@@ -294,6 +389,40 @@ export function AddEmployeeForm({ onBack, onSave, onCalculate }: AddEmployeeForm
                     value={formData.weeklyHours}
                     onChange={(e) => handleInputChange("weeklyHours", parseInt(e.target.value) || 0)}
                   />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="vacationDays">Urlaubstage pro Jahr*</Label>
+                  <Input
+                    id="vacationDays"
+                    type="number"
+                    min="20"
+                    max="50"
+                    value={formData.vacationDays}
+                    onChange={(e) => handleInputChange("vacationDays", parseInt(e.target.value) || 20)}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <Label>Arbeitstage pro Woche*</Label>
+                <div className="grid grid-cols-7 gap-2">
+                  {formData.workDays.map((workDay, index) => {
+                    const dayNames = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
+                    const dayNamesFull = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag'];
+                    return (
+                      <div key={workDay.day} className="flex flex-col items-center space-y-2">
+                        <Label className="text-sm font-medium">{dayNames[index]}</Label>
+                        <Checkbox
+                          id={`workDay-${workDay.day}`}
+                          checked={workDay.isWorkDay}
+                          onCheckedChange={(checked) => handleWorkDayChange(index, !!checked)}
+                        />
+                        <Label htmlFor={`workDay-${workDay.day}`} className="text-xs text-muted-foreground sr-only">
+                          {dayNamesFull[index]}
+                        </Label>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
 
