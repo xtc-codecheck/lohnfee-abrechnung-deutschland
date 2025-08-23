@@ -85,65 +85,66 @@ export function EmployeeDashboard({ onAddEmployee, onCalculateSalary, onShowPayr
       <PageHeader
         title="Mitarbeiter-Dashboard"
         description="Überblick über alle Mitarbeiter und deren Gehaltsabrechnungen"
-      >
-        <div className="flex gap-3">
-          <Button 
-            onClick={onShowReports}
-            variant="outline"
-            className="flex items-center gap-2"
-          >
-            <BarChart3 className="h-4 w-4" />
-            Erweiterte Berichte
-          </Button>
-          <Button 
-            onClick={() => setShowReports(true)}
-            variant="outline"
-            className="flex items-center gap-2"
-          >
-            <BarChart3 className="h-4 w-4" />
-            Mitarbeiter-Berichte
-          </Button>
-          <Button 
-            onClick={onShowTimeTracking}
-            variant="outline"
-            className="flex items-center gap-2"
-          >
-            <Clock className="h-4 w-4" />
-            Zeiterfassung
-          </Button>
-          <Button 
-            onClick={onShowCompliance}
-            variant="outline"
-            className="flex items-center gap-2"
-          >
-            <Shield className="h-4 w-4" />
-            Compliance
-          </Button>
-          <Button 
-            onClick={onShowPayroll}
-            variant="outline"
-            className="flex items-center gap-2"
-          >
-            <FileText className="h-4 w-4" />
-            Lohnabrechnung
-          </Button>
-          <Button 
-            onClick={() => onCalculateSalary()}
-            variant="outline"
-            className="flex items-center gap-2"
-          >
-            <Calculator className="h-4 w-4" />
-            Gehaltsrechner
-          </Button>
-          <Button 
-            onClick={onAddEmployee}
-            className="flex items-center gap-2 bg-gradient-primary hover:opacity-90"
-          >
-            <Plus className="h-4 w-4" />
-            Mitarbeiter hinzufügen
-          </Button>
-        </div>
-      </PageHeader>
+      />
+
+      {/* Action Buttons */}
+      <div className="flex flex-wrap gap-3 justify-center">
+        <Button 
+          onClick={onShowReports}
+          variant="outline"
+          className="flex items-center gap-2"
+        >
+          <BarChart3 className="h-4 w-4" />
+          Erweiterte Berichte
+        </Button>
+        <Button 
+          onClick={() => setShowReports(true)}
+          variant="outline"
+          className="flex items-center gap-2"
+        >
+          <BarChart3 className="h-4 w-4" />
+          Mitarbeiter-Berichte
+        </Button>
+        <Button 
+          onClick={onShowTimeTracking}
+          variant="outline"
+          className="flex items-center gap-2"
+        >
+          <Clock className="h-4 w-4" />
+          Zeiterfassung
+        </Button>
+        <Button 
+          onClick={onShowCompliance}
+          variant="outline"
+          className="flex items-center gap-2"
+        >
+          <Shield className="h-4 w-4" />
+          Compliance
+        </Button>
+        <Button 
+          onClick={onShowPayroll}
+          variant="outline"
+          className="flex items-center gap-2"
+        >
+          <FileText className="h-4 w-4" />
+          Lohnabrechnung
+        </Button>
+        <Button 
+          onClick={() => onCalculateSalary()}
+          variant="outline"
+          className="flex items-center gap-2"
+        >
+          <Calculator className="h-4 w-4" />
+          Gehaltsrechner
+        </Button>
+        <Button 
+          onClick={onAddEmployee}
+          className="flex items-center gap-2 bg-gradient-primary hover:opacity-90"
+        >
+          <Plus className="h-4 w-4" />
+          Mitarbeiter hinzufügen
+        </Button>
+      </div>
 
       {/* Statistiken */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
