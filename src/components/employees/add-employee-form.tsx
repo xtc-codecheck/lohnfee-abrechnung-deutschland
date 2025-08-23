@@ -56,13 +56,13 @@ export function AddEmployeeForm({ onBack, onSave, onCalculate }: AddEmployeeForm
     weeklyHours: 40,
     vacationDays: 30,
     workDays: [
-      { day: 'monday', isWorkDay: true },
-      { day: 'tuesday', isWorkDay: true },
-      { day: 'wednesday', isWorkDay: true },
-      { day: 'thursday', isWorkDay: true },
-      { day: 'friday', isWorkDay: true },
-      { day: 'saturday', isWorkDay: false },
-      { day: 'sunday', isWorkDay: false }
+      { day: 'monday', isWorkDay: true, hours: 8 },
+      { day: 'tuesday', isWorkDay: true, hours: 8 },
+      { day: 'wednesday', isWorkDay: true, hours: 8 },
+      { day: 'thursday', isWorkDay: true, hours: 8 },
+      { day: 'friday', isWorkDay: true, hours: 8 },
+      { day: 'saturday', isWorkDay: false, hours: 0 },
+      { day: 'sunday', isWorkDay: false, hours: 0 }
     ],
     
     // Gehaltsdaten
@@ -104,8 +104,30 @@ export function AddEmployeeForm({ onBack, onSave, onCalculate }: AddEmployeeForm
 
   const handleWorkDayChange = (dayIndex: number, isWorkDay: boolean) => {
     const updatedWorkDays = [...formData.workDays];
-    updatedWorkDays[dayIndex] = { ...updatedWorkDays[dayIndex], isWorkDay };
+    updatedWorkDays[dayIndex] = { 
+      ...updatedWorkDays[dayIndex], 
+      isWorkDay,
+      hours: isWorkDay ? updatedWorkDays[dayIndex].hours || 8 : 0
+    };
     handleInputChange("workDays", updatedWorkDays);
+  };
+
+  const handleWorkHoursChange = (dayIndex: number, hours: number) => {
+    const updatedWorkDays = [...formData.workDays];
+    updatedWorkDays[dayIndex] = { 
+      ...updatedWorkDays[dayIndex], 
+      hours: Math.max(0, hours)
+    };
+    handleInputChange("workDays", updatedWorkDays);
+  };
+
+  const getTotalDailyHours = () => {
+    return formData.workDays.reduce((sum, day) => sum + (day.isWorkDay ? day.hours : 0), 0);
+  };
+
+  const getHoursDifference = () => {
+    const totalDaily = getTotalDailyHours();
+    return totalDaily - formData.weeklyHours;
   };
 
   const getChurchTaxRate = () => {
@@ -501,12 +523,58 @@ export function AddEmployeeForm({ onBack, onSave, onCalculate }: AddEmployeeForm
                           checked={workDay.isWorkDay}
                           onCheckedChange={(checked) => handleWorkDayChange(index, !!checked)}
                         />
+                        <div className="w-full">
+                          <Input
+                            type="number"
+                            min="0"
+                            max="24"
+                            step="0.5"
+                            value={workDay.hours}
+                            onChange={(e) => handleWorkHoursChange(index, parseFloat(e.target.value) || 0)}
+                            disabled={!workDay.isWorkDay}
+                            className="text-center text-xs h-8"
+                            placeholder="Std."
+                          />
+                        </div>
                         <Label htmlFor={`workDay-${workDay.day}`} className="text-xs text-muted-foreground sr-only">
                           {dayNamesFull[index]}
                         </Label>
                       </div>
                     );
                   })}
+                </div>
+                
+                {/* Stunden-Zusammenfassung */}
+                <div className="bg-muted/50 p-4 rounded-lg">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="font-medium">Stundenübersicht:</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="text-muted-foreground">Summe tägliche Stunden:</span>
+                      <span className="ml-2 font-medium">{getTotalDailyHours().toFixed(1)}h</span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Wochenstunden (Soll):</span>
+                      <span className="ml-2 font-medium">{formData.weeklyHours}h</span>
+                    </div>
+                  </div>
+                  {getHoursDifference() !== 0 && (
+                    <div className={`mt-2 p-2 rounded text-sm ${
+                      getHoursDifference() > 0 ? 'bg-orange-100 text-orange-800' : 'bg-blue-100 text-blue-800'
+                    }`}>
+                      {getHoursDifference() > 0 ? '⚠️' : 'ℹ️'} Differenz: {getHoursDifference() > 0 ? '+' : ''}{getHoursDifference().toFixed(1)}h
+                      {getHoursDifference() > 0 
+                        ? ' (Mehr Stunden als geplant)' 
+                        : ' (Weniger Stunden als geplant)'
+                      }
+                    </div>
+                  )}
+                  {getHoursDifference() === 0 && (
+                    <div className="mt-2 p-2 rounded text-sm bg-green-100 text-green-800">
+                      ✅ Stundenverteilung stimmt mit Wochenstunden überein
+                    </div>
+                  )}
                 </div>
               </div>
 
