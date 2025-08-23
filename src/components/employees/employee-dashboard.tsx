@@ -82,10 +82,11 @@ export function EmployeeDashboard({ onAddEmployee, onCalculateSalary, onShowPayr
 
   return (
     <div className="space-y-8 animate-fade-in">
-      <PageHeader
-        title="Mitarbeiter-Dashboard"
-        description="Überblick über alle Mitarbeiter und deren Gehaltsabrechnungen"
-      />
+      {/* Zentrierter Header */}
+      <div className="text-center pb-6 border-b border-border">
+        <h1 className="text-3xl font-bold text-foreground">Mitarbeiter-Dashboard</h1>
+        <p className="text-muted-foreground mt-2">Überblick über alle Mitarbeiter und deren Gehaltsabrechnungen</p>
+      </div>
 
       {/* Action Buttons */}
       <div className="flex flex-wrap gap-3 justify-center">
