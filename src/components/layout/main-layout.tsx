@@ -57,6 +57,16 @@ export function MainLayout({ children }: MainLayoutProps) {
               >
                 Abrechnung
               </button>
+              <button 
+                onClick={() => navigate("/autolohn")}
+                className={`transition-colors ${
+                  isActive("/autolohn") 
+                    ? "text-primary font-medium" 
+                    : "text-muted-foreground hover:text-primary"
+                }`}
+              >
+                Autolohn
+              </button>
             </nav>
           </div>
         </div>
