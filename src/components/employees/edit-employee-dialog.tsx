@@ -163,6 +163,12 @@ export function EditEmployeeDialog({ employee, open, onOpenChange, onSave }: Edi
                         <SelectItem value="none">Keine/Andere</SelectItem>
                         <SelectItem value="catholic">Römisch-katholisch</SelectItem>
                         <SelectItem value="protestant">Evangelisch</SelectItem>
+                        <SelectItem value="old-catholic">Altkatholische Kirche</SelectItem>
+                        <SelectItem value="jewish">Jüdische Kultusgemeinden</SelectItem>
+                        <SelectItem value="free-religious">Freireligiöse Gemeinden</SelectItem>
+                        <SelectItem value="unitarian">Unitarische Religionsgemeinschaft</SelectItem>
+                        <SelectItem value="mennonite">Mennonitengemeinde</SelectItem>
+                        <SelectItem value="huguenot">Französische Kirche (Hugenotten)</SelectItem>
                         <SelectItem value="other">Sonstige</SelectItem>
                       </SelectContent>
                     </Select>

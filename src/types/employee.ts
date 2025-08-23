@@ -106,26 +106,26 @@ export type EmploymentType = 'minijob' | 'midijob' | 'fulltime' | 'parttime';
 export type TaxClass = 'I' | 'II' | 'III' | 'IV' | 'V' | 'VI';
 export type SalaryType = 'fixed' | 'hourly' | 'variable';
 export type RelationshipStatus = 'single' | 'married' | 'divorced' | 'widowed';
-export type Religion = 'none' | 'catholic' | 'protestant' | 'other';
+export type Religion = 'none' | 'catholic' | 'protestant' | 'old-catholic' | 'jewish' | 'free-religious' | 'unitarian' | 'mennonite' | 'huguenot' | 'other';
 
 // Kirchensteuersätze nach Bundesland und Religion
 export const CHURCH_TAX_RATES: Record<string, Record<Religion, number>> = {
-  'baden-wuerttemberg': { none: 0, catholic: 8, protestant: 8, other: 0 },
-  'bayern': { none: 0, catholic: 8, protestant: 8, other: 0 },
-  'berlin': { none: 0, catholic: 9, protestant: 9, other: 0 },
-  'brandenburg': { none: 0, catholic: 9, protestant: 9, other: 0 },
-  'bremen': { none: 0, catholic: 8, protestant: 8, other: 0 },
-  'hamburg': { none: 0, catholic: 9, protestant: 9, other: 0 },
-  'hessen': { none: 0, catholic: 9, protestant: 9, other: 0 },
-  'mecklenburg-vorpommern': { none: 0, catholic: 9, protestant: 9, other: 0 },
-  'niedersachsen': { none: 0, catholic: 9, protestant: 9, other: 0 },
-  'nordrhein-westfalen': { none: 0, catholic: 9, protestant: 9, other: 0 },
-  'rheinland-pfalz': { none: 0, catholic: 9, protestant: 9, other: 0 },
-  'saarland': { none: 0, catholic: 9, protestant: 9, other: 0 },
-  'sachsen': { none: 0, catholic: 9, protestant: 9, other: 0 },
-  'sachsen-anhalt': { none: 0, catholic: 9, protestant: 9, other: 0 },
-  'schleswig-holstein': { none: 0, catholic: 9, protestant: 9, other: 0 },
-  'thueringen': { none: 0, catholic: 9, protestant: 9, other: 0 }
+  'baden-wuerttemberg': { none: 0, catholic: 8, protestant: 8, 'old-catholic': 8, jewish: 8, 'free-religious': 8, unitarian: 8, mennonite: 8, huguenot: 8, other: 0 },
+  'bayern': { none: 0, catholic: 8, protestant: 8, 'old-catholic': 8, jewish: 8, 'free-religious': 8, unitarian: 8, mennonite: 8, huguenot: 8, other: 0 },
+  'berlin': { none: 0, catholic: 9, protestant: 9, 'old-catholic': 9, jewish: 9, 'free-religious': 9, unitarian: 9, mennonite: 9, huguenot: 9, other: 0 },
+  'brandenburg': { none: 0, catholic: 9, protestant: 9, 'old-catholic': 9, jewish: 9, 'free-religious': 9, unitarian: 9, mennonite: 9, huguenot: 9, other: 0 },
+  'bremen': { none: 0, catholic: 8, protestant: 8, 'old-catholic': 8, jewish: 8, 'free-religious': 8, unitarian: 8, mennonite: 8, huguenot: 8, other: 0 },
+  'hamburg': { none: 0, catholic: 9, protestant: 9, 'old-catholic': 9, jewish: 9, 'free-religious': 9, unitarian: 9, mennonite: 9, huguenot: 9, other: 0 },
+  'hessen': { none: 0, catholic: 9, protestant: 9, 'old-catholic': 9, jewish: 9, 'free-religious': 9, unitarian: 9, mennonite: 9, huguenot: 9, other: 0 },
+  'mecklenburg-vorpommern': { none: 0, catholic: 9, protestant: 9, 'old-catholic': 9, jewish: 9, 'free-religious': 9, unitarian: 9, mennonite: 9, huguenot: 9, other: 0 },
+  'niedersachsen': { none: 0, catholic: 9, protestant: 9, 'old-catholic': 9, jewish: 9, 'free-religious': 9, unitarian: 9, mennonite: 9, huguenot: 9, other: 0 },
+  'nordrhein-westfalen': { none: 0, catholic: 9, protestant: 9, 'old-catholic': 9, jewish: 9, 'free-religious': 9, unitarian: 9, mennonite: 9, huguenot: 9, other: 0 },
+  'rheinland-pfalz': { none: 0, catholic: 9, protestant: 9, 'old-catholic': 9, jewish: 9, 'free-religious': 9, unitarian: 9, mennonite: 9, huguenot: 9, other: 0 },
+  'saarland': { none: 0, catholic: 9, protestant: 9, 'old-catholic': 9, jewish: 9, 'free-religious': 9, unitarian: 9, mennonite: 9, huguenot: 9, other: 0 },
+  'sachsen': { none: 0, catholic: 9, protestant: 9, 'old-catholic': 9, jewish: 9, 'free-religious': 9, unitarian: 9, mennonite: 9, huguenot: 9, other: 0 },
+  'sachsen-anhalt': { none: 0, catholic: 9, protestant: 9, 'old-catholic': 9, jewish: 9, 'free-religious': 9, unitarian: 9, mennonite: 9, huguenot: 9, other: 0 },
+  'schleswig-holstein': { none: 0, catholic: 9, protestant: 9, 'old-catholic': 9, jewish: 9, 'free-religious': 9, unitarian: 9, mennonite: 9, huguenot: 9, other: 0 },
+  'thueringen': { none: 0, catholic: 9, protestant: 9, 'old-catholic': 9, jewish: 9, 'free-religious': 9, unitarian: 9, mennonite: 9, huguenot: 9, other: 0 }
 };
 
 export const GERMAN_STATES = [
