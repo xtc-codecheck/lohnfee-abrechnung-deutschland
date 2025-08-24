@@ -1,5 +1,23 @@
 // Exakte deutsche Steuerberechnung nach § 32a EStG 2025
 // Einkommensteuergesetz (EStG) § 32a Einkommensteuertarif
+//
+// ALLGEMEINE LOHNSTEUERTABELLE - für sozialversicherungspflichtige Arbeitnehmer
+// Diese Tabelle berücksichtigt Sozialversicherungsbeiträge bei der Lohnsteuerberechnung
+// und gilt für alle Arbeitnehmer, die ganz normal sozialversicherungspflichtig beschäftigt sind.
+//
+// HINWEIS: Es existiert auch eine BESONDERE LOHNSTEUERTABELLE für:
+// - Beamte
+// - Richter  
+// - Berufssoldaten
+// - Arbeitnehmer, die komplett privat krankenversichert sind und keine Beiträge 
+//   zur gesetzlichen Renten-/Arbeitslosenversicherung zahlen
+//
+// Die besondere Lohnsteuertabelle berechnet die Lohnsteuer OHNE Berücksichtigung von 
+// Sozialversicherungsbeiträgen, wodurch die Steuerlast höher ausfällt.
+// 
+// ⚠️ AKTUELLER STATUS: Die besondere Lohnsteuertabelle ist derzeit NICHT implementiert
+// und wird in diesem Lohnverarbeitungssystem noch NICHT verarbeitet.
+// Eine Implementierung ist für einen späteren Zeitpunkt geplant.
 
 import { 
   BBG_2025_YEARLY, 
