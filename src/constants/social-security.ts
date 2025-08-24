@@ -52,25 +52,45 @@ export const SOCIAL_INSURANCE_RATES_2025 = {
 } as const;
 
 /**
- * Minijob-Konstanten
+ * Minijob-Konstanten 2025
+ * Verdienstgrenze: bis 556 € pro Monat
+ * Sozialversicherung: keine Beiträge zur Kranken-, Pflege- und Arbeitslosenversicherung
+ * Rentenversicherungspflicht besteht (Befreiung möglich)
+ * Steuer: Pauschalsteuer 2% (zahlt Arbeitgeber) oder individuelle Versteuerung
  */
 export const MINIJOB_2025 = {
-  maxEarnings: 538, // €538 monatlich
+  maxEarnings: 556, // €556 monatlich (Stand 2025)
   taxRate: 0.02, // 2% Pauschalsteuer
   employerRates: {
-    health: 0.13, // 13% Krankenversicherung
-    pension: 0.15, // 15% Rentenversicherung  
+    health: 0.13, // 13% Krankenversicherung (AG zahlt)
+    pension: 0.15, // 15% Rentenversicherung (AG zahlt)
     total: 0.28, // 28% Gesamtabgaben AG
   },
+  // Beispielrechnung: 556€ × 2% = 11,12€ Steuer (falls Pauschalsteuer)
 } as const;
 
 /**
- * Midijob-Konstanten (Übergangsbereich)
+ * Midijob-Konstanten 2025 (Übergangsbereich)
+ * Verdienstgrenze: 556,01€ bis 2.000€ pro Monat
+ * Sozialversicherung: volle Versicherungspflicht mit reduzierten AN-Beiträgen
+ * Steuer: Steuerklasse I-IV meist keine Lohnsteuer, V/VI können Lohnsteuer haben
+ * 
+ * Berechnungsformel Übergangsbereich:
+ * Gleitzonenentgelt = F × 556,01 + 
+ * ([2000 / (2000 – 556,01)] – [556,01 / (2000 – 556,01)] × F) × (Brutto – 556,01)
  */
 export const MIDIJOB_2025 = {
-  minEarnings: 538.01,
-  maxEarnings: 2000,
-  reductionFactor: 0.7, // Vereinfachter Gleitzonenfaktor
+  minEarnings: 556.01, // Untergrenze (Stand 2025)
+  maxEarnings: 2000,    // Obergrenze
+  factor: 0.6683,       // Faktor F für 2025
+  lowerThreshold: 556.01,
+  upperThreshold: 2000,
+  // Formel-Komponenten für Gleitzonenberechnung
+  formula: {
+    factor: 0.6683,
+    lowerBound: 556.01,
+    upperBound: 2000,
+  }
 } as const;
 
 /**

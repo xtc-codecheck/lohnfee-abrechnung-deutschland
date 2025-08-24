@@ -25,6 +25,8 @@ import {
   TAX_ALLOWANCES_2025, 
   TAX_RATES_2025,
   WAGE_TAX_TABLE_2025,
+  MINIJOB_2025,
+  MIDIJOB_2025,
   getBBGForRegion,
   getCareInsuranceRate 
 } from '@/constants/social-security';
@@ -39,6 +41,7 @@ export interface TaxCalculationParams {
   isEastGermany: boolean; // für BBG Unterschiede
   isChildless: boolean; // für Pflegeversicherung
   age: number; // für Pflegeversicherung
+  employmentType?: 'minijob' | 'midijob' | 'fulltime' | 'parttime'; // für spezielle Behandlung
 }
 
 export interface TaxCalculationResult {
@@ -164,11 +167,156 @@ export function calculateTaxableIncome(
 }
 
 /**
+ * Berechnet Gleitzonenentgelt für Midijobs (Übergangsbereich)
+ * Formel: F × 556,01 + ([2000 / (2000 – 556,01)] – [556,01 / (2000 – 556,01)] × F) × (Brutto – 556,01)
+ */
+function calculateMidijobGleitzone(grossMonthly: number): number {
+  const { factor, lowerBound, upperBound } = MIDIJOB_2025.formula;
+  
+  if (grossMonthly <= lowerBound) {
+    return grossMonthly;
+  }
+  
+  if (grossMonthly >= upperBound) {
+    return grossMonthly;
+  }
+  
+  // Gleitzonenformel anwenden
+  const firstTerm = factor * lowerBound;
+  const secondTermFactor = (upperBound / (upperBound - lowerBound)) - ((lowerBound / (upperBound - lowerBound)) * factor);
+  const secondTerm = secondTermFactor * (grossMonthly - lowerBound);
+  
+  return firstTerm + secondTerm;
+}
+
+/**
+ * Berechnet Minijob-Abgaben (nur für Arbeitgeber)
+ */
+function calculateMinijobContributions(grossMonthly: number): { 
+  employeeTax: number; 
+  employerContributions: number; 
+  netSalary: number;
+} {
+  // Pauschalsteuer (2% - zahlt normalerweise AG)
+  const employeeTax = grossMonthly * MINIJOB_2025.taxRate;
+  
+  // Arbeitgeber-Beiträge (28% gesamt)
+  const employerContributions = grossMonthly * MINIJOB_2025.employerRates.total;
+  
+  // Arbeitnehmer zahlt normalerweise keine Abgaben (außer opt. RV-Beitrag)
+  const netSalary = grossMonthly - (employeeTax); // Falls individual versteuert
+  
+  return {
+    employeeTax,
+    employerContributions,
+    netSalary: grossMonthly, // Minijobber behält normalerweise das volle Gehalt
+  };
+}
+
+/**
  * Vollständige Steuer- und Sozialabgabenberechnung
+ * ⚠️ HINWEIS: Minijob/Midijob-Berechnung als Auswahloption verfügbar,
+ * wird jedoch unter Vorbehalt implementiert, da nicht immer anwendbar
  */
 export function calculateCompleteTax(params: TaxCalculationParams): TaxCalculationResult {
   const { grossSalaryYearly, taxClass, childAllowances, churchTax, churchTaxRate, 
-          healthInsuranceRate, isEastGermany, isChildless, age } = params;
+          healthInsuranceRate, isEastGermany, isChildless, age, employmentType } = params;
+
+  const grossMonthly = grossSalaryYearly / 12;
+
+  // ⚠️ SPEZIALBEHANDLUNG: Minijob (unter Vorbehalt)
+  if (employmentType === 'minijob' && grossMonthly <= MINIJOB_2025.maxEarnings) {
+    const minijobCalc = calculateMinijobContributions(grossMonthly);
+    
+    return {
+      grossYearly: grossSalaryYearly,
+      grossMonthly,
+      taxableIncome: 0, // Pauschal versteuert
+      incomeTax: minijobCalc.employeeTax * 12,
+      solidarityTax: 0,
+      churchTax: 0,
+      pensionInsurance: 0, // Optional für AN
+      unemploymentInsurance: 0,
+      healthInsurance: 0,
+      careInsurance: 0,
+      totalTaxes: minijobCalc.employeeTax * 12,
+      totalSocialContributions: 0,
+      totalDeductions: minijobCalc.employeeTax * 12,
+      netYearly: minijobCalc.netSalary * 12,
+      netMonthly: minijobCalc.netSalary,
+      employerCosts: (grossMonthly + minijobCalc.employerContributions + minijobCalc.employeeTax) * 12,
+    };
+  }
+
+  // ⚠️ SPEZIALBEHANDLUNG: Midijob (unter Vorbehalt)  
+  if (employmentType === 'midijob' && grossMonthly > MIDIJOB_2025.minEarnings && grossMonthly <= MIDIJOB_2025.maxEarnings) {
+    // Reduzierte Sozialabgaben durch Gleitzonenformel
+    const gleitzonenEntgelt = calculateMidijobGleitzone(grossMonthly);
+    const gleitzonenEntgeltYearly = gleitzonenEntgelt * 12;
+    
+    // Beitragsbemessungsgrenzen
+    const bbg = getBBGForRegion(isEastGermany, 'yearly');
+
+    // Reduzierte Sozialversicherungsbeiträge basierend auf Gleitzonenentgelt
+    const pensionBase = Math.min(gleitzonenEntgeltYearly, bbg.pension);
+    const pensionInsurance = pensionBase * (SOCIAL_INSURANCE_RATES_2025.pension.employee / 100);
+
+    const unemploymentBase = Math.min(gleitzonenEntgeltYearly, bbg.pension);
+    const unemploymentInsurance = unemploymentBase * (SOCIAL_INSURANCE_RATES_2025.unemployment.employee / 100);
+
+    const healthBase = Math.min(gleitzonenEntgeltYearly, bbg.health);
+    const healthInsurance = healthBase * (SOCIAL_INSURANCE_RATES_2025.health.employee / 100) + healthBase * (healthInsuranceRate / 2 / 100);
+
+    const careBase = Math.min(gleitzonenEntgeltYearly, bbg.health);
+    const careRate = getCareInsuranceRate(isChildless, age);
+    const careInsurance = careBase * (careRate.employee / 100);
+
+    const totalSocialContributions = pensionInsurance + unemploymentInsurance + healthInsurance + careInsurance;
+    
+    // Steuer: Steuerklasse I-IV meist keine Lohnsteuer, V/VI können haben
+    const taxClassNumber = parseInt(taxClass) || 1;
+    const incomeTaxMonthly = getWageTaxFromTable(grossMonthly, taxClassNumber);
+    const incomeTax = incomeTaxMonthly * 12;
+    
+    const solidarityTax = calculateSolidarityTax(incomeTax);
+    const churchTaxAmount = churchTax ? calculateChurchTax(incomeTax, churchTaxRate) : 0;
+    
+    const taxableIncome = calculateTaxableIncome(grossSalaryYearly, childAllowances, totalSocialContributions);
+
+    const totalTaxes = incomeTax + solidarityTax + churchTaxAmount;
+    const totalDeductions = totalSocialContributions + totalTaxes;
+    const netYearly = grossSalaryYearly - totalDeductions;
+    
+    // Arbeitgeberkosten (normale Beiträge auf volles Gehalt)
+    const employerSocialContributions = Math.min(grossSalaryYearly, bbg.pension) * (SOCIAL_INSURANCE_RATES_2025.pension.employer / 100) +
+                                      Math.min(grossSalaryYearly, bbg.pension) * (SOCIAL_INSURANCE_RATES_2025.unemployment.employer / 100) +
+                                      Math.min(grossSalaryYearly, bbg.health) * (SOCIAL_INSURANCE_RATES_2025.health.employer / 100) + 
+                                      Math.min(grossSalaryYearly, bbg.health) * (healthInsuranceRate / 2 / 100) +
+                                      Math.min(grossSalaryYearly, bbg.health) * (careRate.employer / 100);
+    
+    const employerCosts = grossSalaryYearly + employerSocialContributions;
+
+    return {
+      grossYearly: grossSalaryYearly,
+      grossMonthly,
+      taxableIncome,
+      incomeTax,
+      solidarityTax,
+      churchTax: churchTaxAmount,
+      pensionInsurance,
+      unemploymentInsurance,
+      healthInsurance,
+      careInsurance,
+      totalTaxes,
+      totalSocialContributions,
+      totalDeductions,
+      netYearly,
+      netMonthly: netYearly / 12,
+      employerCosts,
+    };
+  }
+
+  // STANDARD-BERECHNUNG für normale sozialversicherungspflichtige Beschäftigung
 
   // Beitragsbemessungsgrenzen
   const bbg = getBBGForRegion(isEastGermany, 'yearly');
@@ -191,9 +339,9 @@ export function calculateCompleteTax(params: TaxCalculationParams): TaxCalculati
   const totalSocialContributions = pensionInsurance + unemploymentInsurance + healthInsurance + careInsurance;
   
   // Lohnsteuer direkt aus Tabelle basierend auf Brutto und Steuerklasse
-  const grossMonthly = grossSalaryYearly / 12;
+  const monthlyGross = grossSalaryYearly / 12;
   const taxClassNumber = parseInt(taxClass) || 1;
-  const incomeTaxMonthly = getWageTaxFromTable(grossMonthly, taxClassNumber);
+  const incomeTaxMonthly = getWageTaxFromTable(monthlyGross, taxClassNumber);
   const incomeTax = incomeTaxMonthly * 12;
   
   const solidarityTax = calculateSolidarityTax(incomeTax);
@@ -218,7 +366,7 @@ export function calculateCompleteTax(params: TaxCalculationParams): TaxCalculati
 
   return {
     grossYearly: grossSalaryYearly,
-    grossMonthly: grossSalaryYearly / 12,
+    grossMonthly: monthlyGross,
     taxableIncome,
     incomeTax,
     solidarityTax,
