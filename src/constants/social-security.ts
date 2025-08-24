@@ -82,8 +82,8 @@ export const TAX_ALLOWANCES_2025 = {
   workRelatedExpenses: 1230, // Werbungskostenpauschale
   specialExpenses: 36, // Sonderausgabenpauschale
   retirementProvision: 3000, // Max. Vorsorgepauschale
-  solidarityTaxFreeAmount: 1036.76, // Soli-Freibetrag
-  solidarityReductionLimit: 1340.06, // Soli-Milderungsgrenze
+  solidarityTaxFreeAmount: 19950, // Soli-Freibetrag 2025 (Einkommensteuer)
+  solidarityReductionLimit: 73483, // Soli-Milderungsgrenze 2025 (zvE)
 } as const;
 
 /**

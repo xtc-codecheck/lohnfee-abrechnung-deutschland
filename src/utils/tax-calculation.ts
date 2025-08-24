@@ -75,23 +75,16 @@ export function calculateIncomeTax(taxableIncome: number): number {
  * Berechnet den Solidaritätszuschlag
  */
 export function calculateSolidarityTax(incomeTax: number): number {
-  // Für 2025: Freibetrag von €1.036,76 jährlich bzw. €86,40 monatlich
+  // Für 2025: Freigrenze von €19.950 Einkommensteuer jährlich
   const freibetragYearly = TAX_ALLOWANCES_2025.solidarityTaxFreeAmount;
-  const freibetragMonthly = freibetragYearly / 12;
   
-  // Wenn die Einkommensteuer unter dem Freibetrag liegt, kein Soli
+  // Wenn die Einkommensteuer unter der Freigrenze liegt, kein Soli
   if (incomeTax <= freibetragYearly) {
     return 0;
   }
   
+  // 5,5% der Einkommensteuer
   const soli = incomeTax * TAX_RATES_2025.solidarityTax;
-  
-  // Milderungszone bis €1.340,06 jährlich
-  const milderungsgrenze = TAX_ALLOWANCES_2025.solidarityReductionLimit;
-  if (incomeTax <= milderungsgrenze) {
-    const milderung = (incomeTax - freibetragYearly) * 0.2;
-    return Math.min(soli, milderung);
-  }
   
   return Math.floor(soli);
 }
