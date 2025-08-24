@@ -169,72 +169,74 @@ export function PayrollDashboard({ onBack, onShowSpecialPayments, onShowAutomati
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <PageHeader
-        title="Lohnabrechnung"
-        description="Monatliche Lohnabrechnung für alle Mitarbeiter"
-      >
-        <div className="flex gap-3">
-          <Button 
-            onClick={() => onShowSpecialPayments?.()}
-            variant="outline"
-            className="flex items-center gap-2"
-          >
-            <Baby className="h-4 w-4" />
-            Spez. Lohnarten
-          </Button>
-          <Button 
-            onClick={() => onShowAutomation?.()}
-            variant="outline"
-            className="flex items-center gap-2"
-          >
-            <Settings className="h-4 w-4" />
-            Automatisierung
-          </Button>
-          <Button 
-            onClick={handleViewJournal}
-            variant="outline"
-            className="flex items-center gap-2"
-          >
-            <BookOpen className="h-4 w-4" />
-            Lohnjournal
-          </Button>
-          <Button 
-            onClick={() => setCurrentView('manual')}
-            variant="outline"
-            className="flex items-center gap-2"
-          >
-            <ClipboardList className="h-4 w-4" />
-            Manuelle Erfassung
-          </Button>
-          <Button 
-            onClick={() => setCurrentView('settings')}
-            variant="outline"
-            className="flex items-center gap-2"
-          >
-            <Settings className="h-4 w-4" />
-            Einstellungen
-          </Button>
-          <Button 
-            onClick={() => setCurrentView('enhancements')}
-            variant="outline"
-            className="flex items-center gap-2"
-          >
-            <Plus className="h-4 w-4" />
-            System-Erweiterungen
-          </Button>
-          <Button 
-            onClick={() => setShowCreateDialog(true)}
-            className="flex items-center gap-2 bg-gradient-primary hover:opacity-90"
-          >
-            <Plus className="h-4 w-4" />
-            Neue Abrechnung
-          </Button>
-          <Button variant="outline" onClick={onBack} className="flex items-center gap-2">
-            <ArrowLeft className="h-4 w-4" />
-            Zurück
-          </Button>
-        </div>
-      </PageHeader>
+      {/* Zentrierter Header */}
+      <div className="text-center pb-6 border-b border-border">
+        <h1 className="text-3xl font-bold text-foreground">Lohnabrechnung</h1>
+        <p className="text-muted-foreground mt-2">Monatliche Lohnabrechnung für alle Mitarbeiter</p>
+      </div>
+
+      {/* Action Buttons */}
+      <div className="flex flex-wrap gap-3 justify-center">
+        <Button 
+          onClick={() => onShowSpecialPayments?.()}
+          variant="outline"
+          className="flex items-center gap-2"
+        >
+          <Baby className="h-4 w-4" />
+          Spez. Lohnarten
+        </Button>
+        <Button 
+          onClick={() => onShowAutomation?.()}
+          variant="outline"
+          className="flex items-center gap-2"
+        >
+          <Settings className="h-4 w-4" />
+          Automatisierung
+        </Button>
+        <Button 
+          onClick={handleViewJournal}
+          variant="outline"
+          className="flex items-center gap-2"
+        >
+          <BookOpen className="h-4 w-4" />
+          Lohnjournal
+        </Button>
+        <Button 
+          onClick={() => setCurrentView('manual')}
+          variant="outline"
+          className="flex items-center gap-2"
+        >
+          <ClipboardList className="h-4 w-4" />
+          Manuelle Erfassung
+        </Button>
+        <Button 
+          onClick={() => setCurrentView('settings')}
+          variant="outline"
+          className="flex items-center gap-2"
+        >
+          <Settings className="h-4 w-4" />
+          Einstellungen
+        </Button>
+        <Button 
+          onClick={() => setCurrentView('enhancements')}
+          variant="outline"
+          className="flex items-center gap-2"
+        >
+          <Plus className="h-4 w-4" />
+          System-Erweiterungen
+        </Button>
+        <Button 
+          onClick={() => setShowCreateDialog(true)}
+          className="flex items-center gap-2 bg-gradient-primary hover:opacity-90"
+        >
+          <Plus className="h-4 w-4" />
+          Neue Abrechnung
+        </Button>
+        <Button variant="outline" onClick={onBack} className="flex items-center gap-2">
+          <ArrowLeft className="h-4 w-4" />
+          Zurück
+        </Button>
+      </div>
 
       {/* Statistiken */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
