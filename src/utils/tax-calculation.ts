@@ -105,7 +105,8 @@ export function calculateChurchTax(incomeTax: number, rate: number): number {
  */
 export function calculateTaxableIncome(
   grossYearly: number,
-  childAllowances: number
+  childAllowances: number,
+  socialContributions: number = 0
 ): number {
   // Werbungskostenpauschale
   const werbungskostenpauschale = TAX_ALLOWANCES_2025.workRelatedExpenses;
@@ -113,8 +114,9 @@ export function calculateTaxableIncome(
   // Sonderausgabenpauschale
   const sonderausgabenpauschale = TAX_ALLOWANCES_2025.specialExpenses;
   
-  // Vorsorgepauschale (vereinfacht)
-  const vorsorgepauschale = Math.min(grossYearly * 0.12, TAX_ALLOWANCES_2025.retirementProvision);
+  // Vorsorgepauschale: Sozialversicherungsbeiträge sind bereits als Sonderausgaben absetzbar
+  // Nur zusätzliche private Vorsorge wird berücksichtigt (hier vereinfacht 0)
+  const vorsorgepauschale = socialContributions; // SV-Beiträge sind bereits abzugsfähig
   
   // Kinderfreibetrag
   const kinderfreibetrag = childAllowances * TAX_ALLOWANCES_2025.childAllowance;
@@ -152,14 +154,16 @@ export function calculateCompleteTax(params: TaxCalculationParams): TaxCalculati
   const careRate = getCareInsuranceRate(isChildless, age);
   const careInsurance = careBase * (careRate.employee / 100);
 
-  // Steuern
-  const taxableIncome = calculateTaxableIncome(grossSalaryYearly, childAllowances);
+  // Zuerst Sozialversicherung berechnen für korrekte Vorsorgepauschale
+  const totalSocialContributions = pensionInsurance + unemploymentInsurance + healthInsurance + careInsurance;
+  
+  // Steuern mit korrekter Vorsorgepauschale
+  const taxableIncome = calculateTaxableIncome(grossSalaryYearly, childAllowances, totalSocialContributions);
   const incomeTax = calculateIncomeTax(taxableIncome);
   const solidarityTax = calculateSolidarityTax(incomeTax);
   const churchTaxAmount = churchTax ? calculateChurchTax(incomeTax, churchTaxRate) : 0;
 
   // Summen
-  const totalSocialContributions = pensionInsurance + unemploymentInsurance + healthInsurance + careInsurance;
   const totalTaxes = incomeTax + solidarityTax + churchTaxAmount;
   const totalDeductions = totalSocialContributions + totalTaxes;
   
