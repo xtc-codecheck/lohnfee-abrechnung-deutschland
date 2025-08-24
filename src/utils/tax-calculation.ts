@@ -6,6 +6,7 @@ import {
   SOCIAL_INSURANCE_RATES_2025, 
   TAX_ALLOWANCES_2025, 
   TAX_RATES_2025,
+  WAGE_TAX_TABLE_2025,
   getBBGForRegion,
   getCareInsuranceRate 
 } from '@/constants/social-security';
@@ -42,33 +43,52 @@ export interface TaxCalculationResult {
 }
 
 /**
- * Berechnet die Einkommensteuer nach § 32a EStG 2025
+ * Hilfsfunktion: Lohnsteuer aus Tabelle interpolieren
  */
-export function calculateIncomeTax(taxableIncome: number): number {
-  const zvE = Math.floor(taxableIncome); // auf volle Euro abrunden
+function getWageTaxFromTable(grossSalary: number, taxClass: number): number {
+  // Steuerklassen-Mapping: StKl I/IV, StKl II, StKl III, StKl V, StKl VI
+  const columnIndex = {
+    1: 1, // StKl I
+    2: 2, // StKl II  
+    3: 3, // StKl III
+    4: 1, // StKl IV (gleich wie I)
+    5: 4, // StKl V
+    6: 5, // StKl VI
+  }[taxClass] || 1;
+
+  // Finde passende Tabellenzeile oder interpoliere
+  const table = WAGE_TAX_TABLE_2025;
   
-  let tax = 0;
-
-  if (zvE <= TAX_ALLOWANCES_2025.basicAllowance) {
-    // Grundfreibetrag
-    tax = 0;
-  } else if (zvE <= TAX_RATES_2025.progressionZone1.to) {
-    // Progressionszone 1
-    const y = (zvE - TAX_ALLOWANCES_2025.basicAllowance) / 10000;
-    tax = (TAX_RATES_2025.progressionZone1.coefficients[0] * y + TAX_RATES_2025.progressionZone1.coefficients[1]) * y;
-  } else if (zvE <= TAX_RATES_2025.progressionZone2.to) {
-    // Progressionszone 2
-    const z = (zvE - TAX_RATES_2025.progressionZone1.to - 1) / 10000;
-    tax = (TAX_RATES_2025.progressionZone2.coefficients[0] * z + TAX_RATES_2025.progressionZone2.coefficients[1]) * z + TAX_RATES_2025.progressionZone2.constant;
-  } else if (zvE <= TAX_RATES_2025.proportionalZone1.to) {
-    // Proportionalzone 1 (42%)
-    tax = TAX_RATES_2025.proportionalZone1.rate * zvE - TAX_RATES_2025.proportionalZone1.constant;
-  } else {
-    // Proportionalzone 2 (45% - Reichensteuer)
-    tax = TAX_RATES_2025.proportionalZone2.rate * zvE - TAX_RATES_2025.proportionalZone2.constant;
+  // Suche exakte Übereinstimmung oder nächste Zeile
+  for (let i = 0; i < table.length; i++) {
+    const [salary, ...taxes] = table[i];
+    
+    if (grossSalary <= salary) {
+      return taxes[columnIndex - 1];
+    }
   }
+  
+  // Für höhere Gehälter: Extrapolation basierend auf letzten beiden Einträgen
+  if (table.length >= 2) {
+    const lastEntry = table[table.length - 1];
+    const secondLastEntry = table[table.length - 2];
+    
+    const salaryDiff = lastEntry[0] - secondLastEntry[0];
+    const taxDiff = lastEntry[columnIndex] - secondLastEntry[columnIndex];
+    const extrapolationFactor = (grossSalary - lastEntry[0]) / salaryDiff;
+    
+    return lastEntry[columnIndex] + (taxDiff * extrapolationFactor);
+  }
+  
+  return 0;
+}
 
-  return Math.floor(tax); // auf volle Euro abrunden
+/**
+ * Berechnet die Lohnsteuer basierend auf Bruttolohn und Steuerklasse
+ * Verwendet die offizielle Lohnsteuertabelle 2025
+ */
+export function calculateIncomeTax(grossSalary: number, taxClass: number = 1): number {
+  return getWageTaxFromTable(grossSalary, taxClass);
 }
 
 /**
@@ -152,11 +172,17 @@ export function calculateCompleteTax(params: TaxCalculationParams): TaxCalculati
   // Zuerst Sozialversicherung berechnen für korrekte Vorsorgepauschale
   const totalSocialContributions = pensionInsurance + unemploymentInsurance + healthInsurance + careInsurance;
   
-  // Steuern mit korrekter Vorsorgepauschale
-  const taxableIncome = calculateTaxableIncome(grossSalaryYearly, childAllowances, totalSocialContributions);
-  const incomeTax = calculateIncomeTax(taxableIncome);
+  // Lohnsteuer direkt aus Tabelle basierend auf Brutto und Steuerklasse
+  const grossMonthly = grossSalaryYearly / 12;
+  const taxClassNumber = parseInt(taxClass) || 1;
+  const incomeTaxMonthly = getWageTaxFromTable(grossMonthly, taxClassNumber);
+  const incomeTax = incomeTaxMonthly * 12;
+  
   const solidarityTax = calculateSolidarityTax(incomeTax);
   const churchTaxAmount = churchTax ? calculateChurchTax(incomeTax, churchTaxRate) : 0;
+  
+  // Für Informationszwecke: zu versteuerndes Einkommen
+  const taxableIncome = calculateTaxableIncome(grossSalaryYearly, childAllowances, totalSocialContributions);
 
   // Summen
   const totalTaxes = incomeTax + solidarityTax + churchTaxAmount;
