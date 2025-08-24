@@ -18,7 +18,7 @@ export function QuickSalaryCalculator({ onBack }: QuickSalaryCalculatorProps) {
   const [childAllowances, setChildAllowances] = useState<string>("0");
   const [churchTax, setChurchTax] = useState(false);
   const [churchTaxRate, setChurchTaxRate] = useState<string>("9");
-  const [healthInsuranceRate, setHealthInsuranceRate] = useState<string>("1.7");
+  const [healthInsuranceRate, setHealthInsuranceRate] = useState<string>("0.85");
   const [isEastGermany, setIsEastGermany] = useState(false);
   const [isChildless, setIsChildless] = useState(false);
   const [age, setAge] = useState<string>("30");
@@ -34,7 +34,7 @@ export function QuickSalaryCalculator({ onBack }: QuickSalaryCalculatorProps) {
       childAllowances: parseInt(childAllowances) || 0,
       churchTax,
       churchTaxRate: parseFloat(churchTaxRate) || 9,
-      healthInsuranceRate: parseFloat(healthInsuranceRate) || 1.7,
+      healthInsuranceRate: parseFloat(healthInsuranceRate) || 0.85,
       isEastGermany,
       isChildless,
       age: parseInt(age) || 30,
