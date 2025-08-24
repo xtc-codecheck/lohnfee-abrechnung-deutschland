@@ -14,18 +14,15 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 interface EmployeeDashboardProps {
   onAddEmployee: () => void;
   onCalculateSalary: (data?: any) => void;
-  onShowPayroll: () => void;
   onShowCompliance: () => void;
   onShowReports: () => void;
   onShowTimeTracking: () => void;
-  onShowSpecialPayments?: () => void;
   onShowAdvancedPayroll?: () => void;
   onShowAuthorities?: () => void;
-  onShowAutomation?: () => void;
   onShowExtendedCalc?: () => void;
 }
 
-export function EmployeeDashboard({ onAddEmployee, onCalculateSalary, onShowPayroll, onShowCompliance, onShowReports, onShowTimeTracking, onShowSpecialPayments, onShowAdvancedPayroll, onShowAuthorities, onShowAutomation, onShowExtendedCalc }: EmployeeDashboardProps) {
+export function EmployeeDashboard({ onAddEmployee, onCalculateSalary, onShowCompliance, onShowReports, onShowTimeTracking, onShowAdvancedPayroll, onShowAuthorities, onShowExtendedCalc }: EmployeeDashboardProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [showReports, setShowReports] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);

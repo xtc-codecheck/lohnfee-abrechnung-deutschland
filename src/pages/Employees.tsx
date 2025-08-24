@@ -15,7 +15,7 @@ import { AuthoritiesIntegration } from "@/components/integration/authorities-int
 import { AutomationDashboard } from "@/components/automation/automation-dashboard";
 import { ExtendedCalculations } from "@/components/calculations/extended-calculations";
 
-type EmployeeView = 'dashboard' | 'add-employee' | 'salary-calculator' | 'quick-salary-calculator' | 'time-tracking' | 'working-time-accounts' | 'compliance' | 'reports' | 'special-payments' | 'advanced-payroll' | 'authorities' | 'automation' | 'extended-calc';
+type EmployeeView = 'dashboard' | 'add-employee' | 'salary-calculator' | 'quick-salary-calculator' | 'time-tracking' | 'working-time-accounts' | 'compliance' | 'reports' | 'advanced-payroll' | 'authorities' | 'extended-calc';
 
 export default function Employees() {
   const navigate = useNavigate();
@@ -58,14 +58,11 @@ export default function Employees() {
         <EmployeeDashboard 
           onAddEmployee={handleAddEmployee}
           onCalculateSalary={handleCalculateSalary}
-          onShowPayroll={() => navigate("/payroll")}
           onShowCompliance={() => setCurrentView('compliance')}
           onShowReports={() => setCurrentView('reports')}
           onShowTimeTracking={() => setCurrentView('time-tracking')}
-          onShowSpecialPayments={() => setCurrentView('special-payments')}
           onShowAdvancedPayroll={() => setCurrentView('advanced-payroll')}
           onShowAuthorities={() => setCurrentView('authorities')}
-          onShowAutomation={() => setCurrentView('automation')}
           onShowExtendedCalc={() => setCurrentView('extended-calc')}
         />
       )}
@@ -103,17 +100,11 @@ export default function Employees() {
       {currentView === 'reports' && (
         <AdvancedReports onBack={handleBack} />
       )}
-      {currentView === 'special-payments' && (
-        <SpecialPaymentsManager onBack={handleBack} />
-      )}
       {currentView === 'advanced-payroll' && (
         <AdvancedPayrollDashboard onBack={handleBack} />
       )}
       {currentView === 'authorities' && (
         <AuthoritiesIntegration onBack={handleBack} />
-      )}
-      {currentView === 'automation' && (
-        <AutomationDashboard onBack={handleBack} />
       )}
       {currentView === 'extended-calc' && (
         <ExtendedCalculations onBack={handleBack} />
