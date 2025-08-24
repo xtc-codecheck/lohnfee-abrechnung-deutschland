@@ -271,7 +271,7 @@ export function useCompliance() {
     return checks;
   };
 
-  // Compliance-Report generieren
+  // Compliance-Report generieren (ohne State-Updates)
   const generateComplianceReport = (employees: Employee[], payrollEntries: PayrollEntry[]): ComplianceReport => {
     const employeeChecks = runEmployeeCompliance(employees);
     const payrollChecks = runPayrollCompliance(payrollEntries);
@@ -296,8 +296,15 @@ export function useCompliance() {
       summary
     };
     
+    return report;
+  };
+
+  // Separat: Report speichern und Alerts erstellen
+  const saveComplianceReport = (employees: Employee[], payrollEntries: PayrollEntry[]) => {
+    const report = generateComplianceReport(employees, payrollEntries);
+    
     // Kritische Alerts erstellen
-    const criticalChecks = allChecks.filter(c => c.severity === 'critical' && c.status === 'failed');
+    const criticalChecks = report.checks.filter(c => c.severity === 'critical' && c.status === 'failed');
     const newAlerts: ComplianceAlert[] = criticalChecks.map(check => ({
       id: `alert-${check.id}`,
       type: check.type,
@@ -351,6 +358,7 @@ export function useCompliance() {
     runEmployeeCompliance,
     runPayrollCompliance,
     generateComplianceReport,
+    saveComplianceReport,
     markAlertAsRead,
     resolveAlert
   };
