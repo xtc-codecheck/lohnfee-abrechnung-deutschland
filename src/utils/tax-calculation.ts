@@ -1,6 +1,15 @@
 // Exakte deutsche Steuerberechnung nach § 32a EStG 2025
 // Einkommensteuergesetz (EStG) § 32a Einkommensteuertarif
 
+import { 
+  BBG_2025_YEARLY, 
+  SOCIAL_INSURANCE_RATES_2025, 
+  TAX_ALLOWANCES_2025, 
+  TAX_RATES_2025,
+  getBBGForRegion,
+  getCareInsuranceRate 
+} from '@/constants/social-security';
+
 export interface TaxCalculationParams {
   grossSalaryYearly: number;
   taxClass: string;
@@ -32,22 +41,6 @@ export interface TaxCalculationResult {
   employerCosts: number;
 }
 
-// Beitragsbemessungsgrenzen 2025
-const BBG_2025 = {
-  pensionWest: 7550 * 12, // Renten-/Arbeitslosenversicherung West
-  pensionEast: 7450 * 12, // Renten-/Arbeitslosenversicherung Ost
-  healthCare: 5175 * 12,  // Kranken-/Pflegeversicherung bundesweit
-};
-
-// Sozialversicherungsbeiträge 2025
-const SOCIAL_INSURANCE_RATES = {
-  pension: 0.186, // 18,6% (Arbeitnehmer: 9,3%)
-  unemployment: 0.026, // 2,6% (Arbeitnehmer: 1,3%)
-  health: 0.146, // 14,6% (Arbeitnehmer: 7,3%) + Zusatzbeitrag
-  care: 0.034, // 3,4% (Arbeitnehmer: 1,7%)
-  careChildless: 0.04, // 4,0% für Kinderlose über 23 (Arbeitnehmer: 2,0%)
-};
-
 /**
  * Berechnet die Einkommensteuer nach § 32a EStG 2025
  */
@@ -56,23 +49,23 @@ export function calculateIncomeTax(taxableIncome: number): number {
   
   let tax = 0;
 
-  if (zvE <= 12096) {
+  if (zvE <= TAX_ALLOWANCES_2025.basicAllowance) {
     // Grundfreibetrag
     tax = 0;
-  } else if (zvE <= 17443) {
+  } else if (zvE <= TAX_RATES_2025.progressionZone1.to) {
     // Progressionszone 1
-    const y = (zvE - 12096) / 10000;
-    tax = (932.30 * y + 1400) * y;
-  } else if (zvE <= 68480) {
+    const y = (zvE - TAX_ALLOWANCES_2025.basicAllowance) / 10000;
+    tax = (TAX_RATES_2025.progressionZone1.coefficients[0] * y + TAX_RATES_2025.progressionZone1.coefficients[1]) * y;
+  } else if (zvE <= TAX_RATES_2025.progressionZone2.to) {
     // Progressionszone 2
-    const z = (zvE - 17443) / 10000;
-    tax = (176.64 * z + 2397) * z + 1015.13;
-  } else if (zvE <= 277825) {
+    const z = (zvE - TAX_RATES_2025.progressionZone1.to - 1) / 10000;
+    tax = (TAX_RATES_2025.progressionZone2.coefficients[0] * z + TAX_RATES_2025.progressionZone2.coefficients[1]) * z + TAX_RATES_2025.progressionZone2.constant;
+  } else if (zvE <= TAX_RATES_2025.proportionalZone1.to) {
     // Proportionalzone 1 (42%)
-    tax = 0.42 * zvE - 10911.92;
+    tax = TAX_RATES_2025.proportionalZone1.rate * zvE - TAX_RATES_2025.proportionalZone1.constant;
   } else {
     // Proportionalzone 2 (45% - Reichensteuer)
-    tax = 0.45 * zvE - 19246.67;
+    tax = TAX_RATES_2025.proportionalZone2.rate * zvE - TAX_RATES_2025.proportionalZone2.constant;
   }
 
   return Math.floor(tax); // auf volle Euro abrunden
@@ -82,17 +75,16 @@ export function calculateIncomeTax(taxableIncome: number): number {
  * Berechnet den Solidaritätszuschlag
  */
 export function calculateSolidarityTax(incomeTax: number): number {
-  // Freibetrag 2025: ca. 1.036,76 € (Alleinstehende)
-  const freibetrag = 1036.76;
+  const freibetrag = TAX_ALLOWANCES_2025.solidarityTaxFreeAmount;
   
   if (incomeTax <= freibetrag) {
     return 0;
   }
   
-  const soli = incomeTax * 0.055; // 5,5%
+  const soli = incomeTax * TAX_RATES_2025.solidarityTax;
   
-  // Milderungszone zwischen Freibetrag und 1.340,06 €
-  const milderungsgrenze = 1340.06;
+  // Milderungszone
+  const milderungsgrenze = TAX_ALLOWANCES_2025.solidarityReductionLimit;
   if (incomeTax <= milderungsgrenze) {
     const milderung = (incomeTax - freibetrag) * 0.2;
     return Math.min(soli, milderung);
@@ -116,16 +108,16 @@ export function calculateTaxableIncome(
   childAllowances: number
 ): number {
   // Werbungskostenpauschale
-  const werbungskostenpauschale = 1230;
+  const werbungskostenpauschale = TAX_ALLOWANCES_2025.workRelatedExpenses;
   
   // Sonderausgabenpauschale
-  const sonderausgabenpauschale = 36;
+  const sonderausgabenpauschale = TAX_ALLOWANCES_2025.specialExpenses;
   
   // Vorsorgepauschale (vereinfacht)
-  const vorsorgepauschale = Math.min(grossYearly * 0.12, 3000);
+  const vorsorgepauschale = Math.min(grossYearly * 0.12, TAX_ALLOWANCES_2025.retirementProvision);
   
-  // Kinderfreibetrag 2025: 6.612 € pro Kind
-  const kinderfreibetrag = childAllowances * 6612;
+  // Kinderfreibetrag
+  const kinderfreibetrag = childAllowances * TAX_ALLOWANCES_2025.childAllowance;
   
   let taxableIncome = grossYearly 
     - werbungskostenpauschale 
@@ -144,22 +136,21 @@ export function calculateCompleteTax(params: TaxCalculationParams): TaxCalculati
           healthInsuranceRate, isEastGermany, isChildless, age } = params;
 
   // Beitragsbemessungsgrenzen
-  const bbgPension = isEastGermany ? BBG_2025.pensionEast : BBG_2025.pensionWest;
-  const bbgHealth = BBG_2025.healthCare;
+  const bbg = getBBGForRegion(isEastGermany, 'yearly');
 
   // Sozialversicherungsbeiträge (Arbeitnehmeranteil)
-  const pensionBase = Math.min(grossSalaryYearly, bbgPension);
-  const pensionInsurance = pensionBase * (SOCIAL_INSURANCE_RATES.pension / 2);
+  const pensionBase = Math.min(grossSalaryYearly, bbg.pension);
+  const pensionInsurance = pensionBase * (SOCIAL_INSURANCE_RATES_2025.pension.employee / 100);
 
-  const unemploymentBase = Math.min(grossSalaryYearly, bbgPension);
-  const unemploymentInsurance = unemploymentBase * (SOCIAL_INSURANCE_RATES.unemployment / 2);
+  const unemploymentBase = Math.min(grossSalaryYearly, bbg.pension);
+  const unemploymentInsurance = unemploymentBase * (SOCIAL_INSURANCE_RATES_2025.unemployment.employee / 100);
 
-  const healthBase = Math.min(grossSalaryYearly, bbgHealth);
-  const healthInsurance = healthBase * (SOCIAL_INSURANCE_RATES.health / 2 + healthInsuranceRate / 100 / 2);
+  const healthBase = Math.min(grossSalaryYearly, bbg.health);
+  const healthInsurance = healthBase * ((SOCIAL_INSURANCE_RATES_2025.health.employee + healthInsuranceRate) / 100);
 
-  const careBase = Math.min(grossSalaryYearly, bbgHealth);
-  const careRate = (isChildless && age > 23) ? SOCIAL_INSURANCE_RATES.careChildless : SOCIAL_INSURANCE_RATES.care;
-  const careInsurance = careBase * (careRate / 2);
+  const careBase = Math.min(grossSalaryYearly, bbg.health);
+  const careRate = getCareInsuranceRate(isChildless, age);
+  const careInsurance = careBase * (careRate.employee / 100);
 
   // Steuern
   const taxableIncome = calculateTaxableIncome(grossSalaryYearly, childAllowances);
@@ -175,10 +166,10 @@ export function calculateCompleteTax(params: TaxCalculationParams): TaxCalculati
   const netYearly = grossSalaryYearly - totalDeductions;
   
   // Arbeitgeberkosten (Arbeitgeberanteile)
-  const employerSocialContributions = pensionBase * (SOCIAL_INSURANCE_RATES.pension / 2) +
-                                    unemploymentBase * (SOCIAL_INSURANCE_RATES.unemployment / 2) +
-                                    healthBase * (SOCIAL_INSURANCE_RATES.health / 2 + healthInsuranceRate / 100 / 2) +
-                                    careBase * (careRate / 2);
+  const employerSocialContributions = pensionBase * (SOCIAL_INSURANCE_RATES_2025.pension.employer / 100) +
+                                    unemploymentBase * (SOCIAL_INSURANCE_RATES_2025.unemployment.employer / 100) +
+                                    healthBase * ((SOCIAL_INSURANCE_RATES_2025.health.employer + healthInsuranceRate) / 100) +
+                                    careBase * (careRate.employer / 100);
   
   const employerCosts = grossSalaryYearly + employerSocialContributions;
 

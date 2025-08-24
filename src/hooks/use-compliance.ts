@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { Employee } from '@/types/employee';
 import { PayrollEntry } from '@/types/payroll';
 import { ComplianceCheck, ComplianceAlert, ComplianceReport, MINIMUM_WAGES } from '@/types/compliance';
+import { BBG_2025_MONTHLY } from '@/constants/social-security';
 
 export function useCompliance() {
   const [alerts, setAlerts] = useState<ComplianceAlert[]>([]);
@@ -91,8 +92,8 @@ export function useCompliance() {
       isActive: true,
       checkFunction: (employee: Employee) => {
         const monthlyGross = employee.salaryData.grossSalary;
-        const bbgRent = 7550; // BBG Rente/ALV 2025 West
-        const bbgHealth = 5175; // BBG KV/PV 2025
+        const bbgRent = BBG_2025_MONTHLY.pensionWest; // BBG Rente/ALV 2025 West
+        const bbgHealth = BBG_2025_MONTHLY.healthCare; // BBG KV/PV 2025
         
         let warnings = [];
         

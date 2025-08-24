@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { SOCIAL_SECURITY_RATES } from "@/types/employee";
+import { BBG_2025_MONTHLY, SOCIAL_INSURANCE_RATES_2025 } from "@/constants/social-security";
 
 interface QuickSalaryCalculatorProps {
   onBack: () => void;
@@ -33,26 +33,26 @@ export function QuickSalaryCalculator({ onBack }: QuickSalaryCalculatorProps) {
 
     if (gross <= 0) return;
 
-    // Beitragsbemessungsgrenzen 2025 (monatlich)
-    const bbgPensionWest = 7550; // Renten-/Arbeitslosenversicherung West
-    const bbgHealth = 5175; // Kranken-/Pflegeversicherung
+    // Beitragsbemessungsgrenzen 2025 (monatlich) - zentral verwaltet
+    const bbgPensionWest = BBG_2025_MONTHLY.pensionWest;
+    const bbgHealth = BBG_2025_MONTHLY.healthCare;
 
     // Sozialversicherungsbeiträge berechnen mit BBG-Begrenzung
     const pensionBase = Math.min(gross, bbgPensionWest);
     const healthBase = Math.min(gross, bbgHealth);
 
-    const healthInsurance = healthBase * (14.6 / 100); // Krankenversicherung 14,6%
-    const pensionInsurance = pensionBase * (SOCIAL_SECURITY_RATES.pension.total / 100);
-    const unemploymentInsurance = pensionBase * (SOCIAL_SECURITY_RATES.unemployment.total / 100);
-    const careInsurance = healthBase * (SOCIAL_SECURITY_RATES.care.total / 100);
+    const healthInsurance = healthBase * (SOCIAL_INSURANCE_RATES_2025.health.total / 100);
+    const pensionInsurance = pensionBase * (SOCIAL_INSURANCE_RATES_2025.pension.total / 100);
+    const unemploymentInsurance = pensionBase * (SOCIAL_INSURANCE_RATES_2025.unemployment.total / 100);
+    const careInsurance = healthBase * (SOCIAL_INSURANCE_RATES_2025.care.total / 100);
     
     const totalSocialSecurity = healthInsurance + pensionInsurance + unemploymentInsurance + careInsurance;
     
     // Arbeitgeber-Brutto (mit Arbeitgeberanteilen)
-    const employerHealthInsurance = healthBase * (7.3 / 100); // Arbeitgeberanteil Krankenversicherung
-    const employerPensionInsurance = pensionBase * (SOCIAL_SECURITY_RATES.pension.employer / 100);
-    const employerUnemploymentInsurance = pensionBase * (SOCIAL_SECURITY_RATES.unemployment.employer / 100);
-    const employerCareInsurance = healthBase * (SOCIAL_SECURITY_RATES.care.employer / 100);
+    const employerHealthInsurance = healthBase * (SOCIAL_INSURANCE_RATES_2025.health.employer / 100);
+    const employerPensionInsurance = pensionBase * (SOCIAL_INSURANCE_RATES_2025.pension.employer / 100);
+    const employerUnemploymentInsurance = pensionBase * (SOCIAL_INSURANCE_RATES_2025.unemployment.employer / 100);
+    const employerCareInsurance = healthBase * (SOCIAL_INSURANCE_RATES_2025.care.employer / 100);
     
     const employerGross = gross + employerHealthInsurance + employerPensionInsurance + employerUnemploymentInsurance + employerCareInsurance;
     
@@ -157,15 +157,15 @@ export function QuickSalaryCalculator({ onBack }: QuickSalaryCalculatorProps) {
                     <span>-{result.healthInsurance.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' })}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span>Rentenversicherung ({SOCIAL_SECURITY_RATES.pension.total}%)</span>
+                    <span>Rentenversicherung ({SOCIAL_INSURANCE_RATES_2025.pension.total}%)</span>
                     <span>-{result.pensionInsurance.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' })}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span>Arbeitslosenversicherung ({SOCIAL_SECURITY_RATES.unemployment.total}%)</span>
+                    <span>Arbeitslosenversicherung ({SOCIAL_INSURANCE_RATES_2025.unemployment.total}%)</span>
                     <span>-{result.unemploymentInsurance.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' })}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span>Pflegeversicherung ({SOCIAL_SECURITY_RATES.care.total}%)</span>
+                    <span>Pflegeversicherung ({SOCIAL_INSURANCE_RATES_2025.care.total}%)</span>
                     <span>-{result.careInsurance.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' })}</span>
                   </div>
                   <div className="flex justify-between font-medium border-t pt-2">

@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { PageHeader } from "@/components/ui/page-header";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { SalaryCalculation } from "@/types/employee";
+import { BBG_2025_MONTHLY, SOCIAL_INSURANCE_RATES_2025 } from "@/constants/social-security";
 
 interface SalaryCalculatorProps {
   onBack: () => void;
@@ -108,15 +109,15 @@ export function SalaryCalculator({ onBack, employeeData }: SalaryCalculatorProps
     }
     
     // Standard-Berechnung für Vollzeit/Teilzeit
-    // Beitragsbemessungsgrenzen 2025 (monatlich)
-    const bbgPensionWest = 7550; // Renten-/Arbeitslosenversicherung West
-    const bbgHealth = 5175; // Kranken-/Pflegeversicherung
+    // Beitragsbemessungsgrenzen 2025 (monatlich) - zentral verwaltet
+    const bbgPensionWest = BBG_2025_MONTHLY.pensionWest;
+    const bbgHealth = BBG_2025_MONTHLY.healthCare;
     
     // Sozialversicherungsbeiträge 2025 mit BBG-Begrenzung
-    const healthInsuranceRate = 0.146; // 14,6% (7,3% AN + 7,3% AG + Zusatzbeitrag)
-    const pensionInsuranceRate = 0.186; // 18,6% (9,3% AN + 9,3% AG)
-    const unemploymentInsuranceRate = 0.026; // 2,6% (1,3% AN + 1,3% AG)
-    const careInsuranceRate = 0.03; // 3,0% (1,5% AN + 1,5% AG)
+    const healthInsuranceRate = SOCIAL_INSURANCE_RATES_2025.health.total / 100;
+    const pensionInsuranceRate = SOCIAL_INSURANCE_RATES_2025.pension.total / 100;
+    const unemploymentInsuranceRate = SOCIAL_INSURANCE_RATES_2025.unemployment.total / 100;
+    const careInsuranceRate = SOCIAL_INSURANCE_RATES_2025.care.total / 100;
 
     // Beitragspflichtige Grundlagen
     const pensionBase = Math.min(grossSalary, bbgPensionWest);

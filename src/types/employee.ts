@@ -164,12 +164,13 @@ export const GERMAN_HEALTH_INSURANCES = [
   { name: "WMF BKK", additionalRate: 2.45 }
 ];
 
-// Sozialversicherungssätze 2025 (in Prozent)
+// DEPRECATED: Moved to @/constants/social-security 
+// Use SOCIAL_INSURANCE_RATES_2025 instead
 export const SOCIAL_SECURITY_RATES = {
   pension: { total: 18.6, employee: 9.3, employer: 9.3 },
   unemployment: { total: 2.6, employee: 1.3, employer: 1.3 },
-  care: { total: 3.4, employee: 1.7, employer: 1.7 }, // ohne Kinderlosenzuschlag
-  careWithoutChildren: { total: 4.0, employee: 2.0, employer: 2.0 } // mit Kinderlosenzuschlag
+  care: { total: 3.4, employee: 1.7, employer: 1.7 },
+  careWithoutChildren: { total: 4.0, employee: 2.0, employer: 2.0 }
 };
 
 export interface SalaryCalculation {
