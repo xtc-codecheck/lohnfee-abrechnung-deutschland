@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { AlertTriangle, CheckCircle, Clock, FileX, Shield, Users, Calendar, AlertCircle } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -27,8 +27,10 @@ export function ComplianceDashboard({ onBack }: ComplianceDashboardProps) {
     resolveAlert
   } = useCompliance();
 
-  // Generate current compliance report
-  const currentReport = generateComplianceReport(employees, payrollEntries);
+  // Generate current compliance report (memoized to prevent infinite loops)
+  const currentReport = useMemo(() => {
+    return generateComplianceReport(employees, payrollEntries);
+  }, [employees, payrollEntries, generateComplianceReport]);
 
   const getStatusIcon = (status: string) => {
     switch (status) {
