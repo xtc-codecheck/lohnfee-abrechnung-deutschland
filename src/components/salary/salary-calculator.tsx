@@ -108,23 +108,31 @@ export function SalaryCalculator({ onBack, employeeData }: SalaryCalculatorProps
     }
     
     // Standard-Berechnung für Vollzeit/Teilzeit
-    // Sozialversicherungsbeiträge 2024 (vereinfacht)
+    // Beitragsbemessungsgrenzen 2025 (monatlich)
+    const bbgPensionWest = 7550; // Renten-/Arbeitslosenversicherung West
+    const bbgHealth = 5175; // Kranken-/Pflegeversicherung
+    
+    // Sozialversicherungsbeiträge 2025 mit BBG-Begrenzung
     const healthInsuranceRate = 0.146; // 14,6% (7,3% AN + 7,3% AG + Zusatzbeitrag)
     const pensionInsuranceRate = 0.186; // 18,6% (9,3% AN + 9,3% AG)
     const unemploymentInsuranceRate = 0.026; // 2,6% (1,3% AN + 1,3% AG)
     const careInsuranceRate = 0.03; // 3,0% (1,5% AN + 1,5% AG)
 
+    // Beitragspflichtige Grundlagen
+    const pensionBase = Math.min(grossSalary, bbgPensionWest);
+    const healthBase = Math.min(grossSalary, bbgHealth);
+
     // Arbeitnehmeranteile
-    const healthInsuranceEmployee = grossSalary * (healthInsuranceRate / 2);
-    const pensionInsuranceEmployee = grossSalary * (pensionInsuranceRate / 2);
-    const unemploymentInsuranceEmployee = grossSalary * (unemploymentInsuranceRate / 2);
-    const careInsuranceEmployee = grossSalary * (careInsuranceRate / 2);
+    const healthInsuranceEmployee = healthBase * (healthInsuranceRate / 2);
+    const pensionInsuranceEmployee = pensionBase * (pensionInsuranceRate / 2);
+    const unemploymentInsuranceEmployee = pensionBase * (unemploymentInsuranceRate / 2);
+    const careInsuranceEmployee = healthBase * (careInsuranceRate / 2);
 
     // Arbeitgeberanteile
-    const healthInsuranceEmployer = grossSalary * (healthInsuranceRate / 2);
-    const pensionInsuranceEmployer = grossSalary * (pensionInsuranceRate / 2);
-    const unemploymentInsuranceEmployer = grossSalary * (unemploymentInsuranceRate / 2);
-    const careInsuranceEmployer = grossSalary * (careInsuranceRate / 2);
+    const healthInsuranceEmployer = healthBase * (healthInsuranceRate / 2);
+    const pensionInsuranceEmployer = pensionBase * (pensionInsuranceRate / 2);
+    const unemploymentInsuranceEmployer = pensionBase * (unemploymentInsuranceRate / 2);
+    const careInsuranceEmployer = healthBase * (careInsuranceRate / 2);
 
     const totalSocialSecurityEmployee = 
       healthInsuranceEmployee + pensionInsuranceEmployee + 

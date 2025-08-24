@@ -33,19 +33,26 @@ export function QuickSalaryCalculator({ onBack }: QuickSalaryCalculatorProps) {
 
     if (gross <= 0) return;
 
-    // Sozialversicherungsbeiträge berechnen (mit deutschen Standardsätzen 2025)
-    const healthInsurance = gross * (14.6 / 100); // Krankenversicherung 14,6%
-    const pensionInsurance = gross * (SOCIAL_SECURITY_RATES.pension.total / 100);
-    const unemploymentInsurance = gross * (SOCIAL_SECURITY_RATES.unemployment.total / 100);
-    const careInsurance = gross * (SOCIAL_SECURITY_RATES.care.total / 100);
+    // Beitragsbemessungsgrenzen 2025 (monatlich)
+    const bbgPensionWest = 7550; // Renten-/Arbeitslosenversicherung West
+    const bbgHealth = 5175; // Kranken-/Pflegeversicherung
+
+    // Sozialversicherungsbeiträge berechnen mit BBG-Begrenzung
+    const pensionBase = Math.min(gross, bbgPensionWest);
+    const healthBase = Math.min(gross, bbgHealth);
+
+    const healthInsurance = healthBase * (14.6 / 100); // Krankenversicherung 14,6%
+    const pensionInsurance = pensionBase * (SOCIAL_SECURITY_RATES.pension.total / 100);
+    const unemploymentInsurance = pensionBase * (SOCIAL_SECURITY_RATES.unemployment.total / 100);
+    const careInsurance = healthBase * (SOCIAL_SECURITY_RATES.care.total / 100);
     
     const totalSocialSecurity = healthInsurance + pensionInsurance + unemploymentInsurance + careInsurance;
     
     // Arbeitgeber-Brutto (mit Arbeitgeberanteilen)
-    const employerHealthInsurance = gross * (7.3 / 100); // Arbeitgeberanteil Krankenversicherung
-    const employerPensionInsurance = gross * (SOCIAL_SECURITY_RATES.pension.employer / 100);
-    const employerUnemploymentInsurance = gross * (SOCIAL_SECURITY_RATES.unemployment.employer / 100);
-    const employerCareInsurance = gross * (SOCIAL_SECURITY_RATES.care.employer / 100);
+    const employerHealthInsurance = healthBase * (7.3 / 100); // Arbeitgeberanteil Krankenversicherung
+    const employerPensionInsurance = pensionBase * (SOCIAL_SECURITY_RATES.pension.employer / 100);
+    const employerUnemploymentInsurance = pensionBase * (SOCIAL_SECURITY_RATES.unemployment.employer / 100);
+    const employerCareInsurance = healthBase * (SOCIAL_SECURITY_RATES.care.employer / 100);
     
     const employerGross = gross + employerHealthInsurance + employerPensionInsurance + employerUnemploymentInsurance + employerCareInsurance;
     
