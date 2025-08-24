@@ -19,9 +19,10 @@ interface EmployeeDashboardProps {
   onShowReports: () => void;
   onShowTimeTracking: () => void;
   onShowSpecialPayments?: () => void;
+  onShowAdvancedPayroll?: () => void;
 }
 
-export function EmployeeDashboard({ onAddEmployee, onCalculateSalary, onShowPayroll, onShowCompliance, onShowReports, onShowTimeTracking, onShowSpecialPayments }: EmployeeDashboardProps) {
+export function EmployeeDashboard({ onAddEmployee, onCalculateSalary, onShowPayroll, onShowCompliance, onShowReports, onShowTimeTracking, onShowSpecialPayments, onShowAdvancedPayroll }: EmployeeDashboardProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [showReports, setShowReports] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
@@ -132,12 +133,20 @@ export function EmployeeDashboard({ onAddEmployee, onCalculateSalary, onShowPayr
           Lohnabrechnung
         </Button>
         <Button 
-          onClick={() => onCalculateSalary()}
+          onClick={() => onShowReports?.()}
           variant="outline"
           className="flex items-center gap-2"
         >
-          <Calculator className="h-4 w-4" />
-          Gehaltsrechner
+          <BarChart3 className="h-4 w-4" />
+          Erweiterte Berichte
+        </Button>
+        <Button 
+          onClick={() => onShowAdvancedPayroll?.()}
+          variant="outline"
+          className="flex items-center gap-2"
+        >
+          <FileText className="h-4 w-4" />
+          Erweiterte Lohn-Reports
         </Button>
         <Button 
           onClick={() => onShowSpecialPayments?.()}
