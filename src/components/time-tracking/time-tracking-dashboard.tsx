@@ -118,6 +118,15 @@ export function TimeTrackingDashboard({ onBack }: TimeTrackingDashboardProps) {
               <Plus className="h-4 w-4" />
               Massenerfassung
             </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {/* Hier würde Navigation zu Arbeitszeitkonten erfolgen */}}
+              className="flex items-center gap-2"
+            >
+              <TrendingUp className="h-4 w-4" />
+              Arbeitszeitkonten
+            </Button>
           </div>
         </CardHeader>
         <CardContent>

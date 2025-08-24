@@ -5,8 +5,10 @@ import { EmployeeDashboard } from "@/components/employees/employee-dashboard";
 import { AddEmployeeForm } from "@/components/employees/add-employee-form";
 import { SalaryCalculator } from "@/components/salary/salary-calculator";
 import { QuickSalaryCalculator } from "@/components/salary/quick-salary-calculator";
+import { TimeTrackingDashboard } from "@/components/time-tracking/time-tracking-dashboard";
+import { WorkingTimeAccounts } from "@/components/time-tracking/working-time-accounts";
 
-type EmployeeView = 'dashboard' | 'add-employee' | 'salary-calculator' | 'quick-salary-calculator' | 'time-tracking' | 'compliance' | 'reports';
+type EmployeeView = 'dashboard' | 'add-employee' | 'salary-calculator' | 'quick-salary-calculator' | 'time-tracking' | 'working-time-accounts' | 'compliance' | 'reports';
 
 export default function Employees() {
   const navigate = useNavigate();
@@ -74,13 +76,14 @@ export default function Employees() {
         />
       )}
       {currentView === 'time-tracking' && (
-        <div className="space-y-6 animate-fade-in">
-          <div className="text-center py-12">
-            <h2 className="text-2xl font-bold mb-4">Zeiterfassung</h2>
-            <p className="text-muted-foreground">Zeiterfassung-Modul wird hier implementiert.</p>
-            <button onClick={handleBack} className="mt-4 text-primary hover:underline">Zurück zum Dashboard</button>
-          </div>
-        </div>
+        <TimeTrackingDashboard 
+          onBack={handleBack}
+        />
+      )}
+      {currentView === 'working-time-accounts' && (
+        <WorkingTimeAccounts 
+          onBack={handleBack}
+        />
       )}
       {currentView === 'compliance' && (
         <div className="space-y-6 animate-fade-in">
