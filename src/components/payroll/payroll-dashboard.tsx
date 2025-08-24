@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowLeft, Plus, FileText, Calendar, DollarSign, Users, Eye, Trash2, BookOpen, User } from "lucide-react";
+import { ArrowLeft, Plus, FileText, Calendar, DollarSign, Users, Eye, Trash2, BookOpen, User, Baby, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageHeader } from "@/components/ui/page-header";
@@ -15,9 +15,11 @@ import { PayrollStatus } from "@/types/payroll";
 
 interface PayrollDashboardProps {
   onBack: () => void;
+  onShowSpecialPayments?: () => void;
+  onShowAutomation?: () => void;
 }
 
-export function PayrollDashboard({ onBack }: PayrollDashboardProps) {
+export function PayrollDashboard({ onBack, onShowSpecialPayments, onShowAutomation }: PayrollDashboardProps) {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [selectedPayrollId, setSelectedPayrollId] = useState<string | null>(null);
   const [currentView, setCurrentView] = useState<'dashboard' | 'detail' | 'journal' | 'account'>('dashboard');
@@ -115,6 +117,22 @@ export function PayrollDashboard({ onBack }: PayrollDashboardProps) {
         description="Monatliche Lohnabrechnung für alle Mitarbeiter"
       >
         <div className="flex gap-3">
+          <Button 
+            onClick={() => onShowSpecialPayments?.()}
+            variant="outline"
+            className="flex items-center gap-2"
+          >
+            <Baby className="h-4 w-4" />
+            Spez. Lohnarten
+          </Button>
+          <Button 
+            onClick={() => onShowAutomation?.()}
+            variant="outline"
+            className="flex items-center gap-2"
+          >
+            <Settings className="h-4 w-4" />
+            Automatisierung
+          </Button>
           <Button 
             onClick={handleViewJournal}
             variant="outline"

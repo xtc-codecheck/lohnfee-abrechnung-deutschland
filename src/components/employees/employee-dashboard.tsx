@@ -128,14 +128,6 @@ export function EmployeeDashboard({ onAddEmployee, onCalculateSalary, onShowPayr
           Compliance
         </Button>
         <Button 
-          onClick={onShowPayroll}
-          variant="outline"
-          className="flex items-center gap-2"
-        >
-          <FileText className="h-4 w-4" />
-          Lohnabrechnung
-        </Button>
-        <Button 
           onClick={() => onShowReports?.()}
           variant="outline"
           className="flex items-center gap-2"
@@ -152,28 +144,12 @@ export function EmployeeDashboard({ onAddEmployee, onCalculateSalary, onShowPayr
           Lohn-Reports
         </Button>
         <Button 
-          onClick={() => onShowSpecialPayments?.()}
-          variant="outline"
-          className="flex items-center gap-2"
-        >
-          <Baby className="h-4 w-4" />
-          Spez. Lohnarten
-        </Button>
-        <Button 
           onClick={() => onShowAuthorities?.()}
           variant="outline"
           className="flex items-center gap-2"
         >
           <Shield className="h-4 w-4" />
           Behörden
-        </Button>
-        <Button 
-          onClick={() => onShowAutomation?.()}
-          variant="outline"
-          className="flex items-center gap-2"
-        >
-          <Settings className="h-4 w-4" />
-          Automatisierung
         </Button>
         <Button 
           onClick={() => onShowExtendedCalc?.()}
