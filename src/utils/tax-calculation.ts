@@ -151,7 +151,7 @@ export function calculateCompleteTax(params: TaxCalculationParams): TaxCalculati
   const unemploymentInsurance = unemploymentBase * (SOCIAL_INSURANCE_RATES_2025.unemployment.employee / 100);
 
   const healthBase = Math.min(grossSalaryYearly, bbg.health);
-  const healthInsurance = healthBase * (SOCIAL_INSURANCE_RATES_2025.health.employee / 100) + healthBase * (healthInsuranceRate / 100);
+  const healthInsurance = healthBase * (SOCIAL_INSURANCE_RATES_2025.health.employee / 100) + healthBase * (healthInsuranceRate / 2 / 100);
 
   const careBase = Math.min(grossSalaryYearly, bbg.health);
   const careRate = getCareInsuranceRate(isChildless, age);
@@ -175,7 +175,7 @@ export function calculateCompleteTax(params: TaxCalculationParams): TaxCalculati
   // Arbeitgeberkosten (Arbeitgeberanteile)
   const employerSocialContributions = pensionBase * (SOCIAL_INSURANCE_RATES_2025.pension.employer / 100) +
                                     unemploymentBase * (SOCIAL_INSURANCE_RATES_2025.unemployment.employer / 100) +
-                                    healthBase * (SOCIAL_INSURANCE_RATES_2025.health.employer / 100) +
+                                    healthBase * (SOCIAL_INSURANCE_RATES_2025.health.employer / 100) + healthBase * (healthInsuranceRate / 2 / 100) +
                                     careBase * (careRate.employer / 100);
   
   const employerCosts = grossSalaryYearly + employerSocialContributions;
