@@ -9,8 +9,9 @@ import { TimeTrackingDashboard } from "@/components/time-tracking/time-tracking-
 import { WorkingTimeAccounts } from "@/components/time-tracking/working-time-accounts";
 import { ComplianceDashboard } from "@/components/compliance/compliance-dashboard";
 import { AdvancedReports } from "@/components/reports/advanced-reports";
+import { SpecialPaymentsManager } from "@/components/payroll/special-payments-manager";
 
-type EmployeeView = 'dashboard' | 'add-employee' | 'salary-calculator' | 'quick-salary-calculator' | 'time-tracking' | 'working-time-accounts' | 'compliance' | 'reports';
+type EmployeeView = 'dashboard' | 'add-employee' | 'salary-calculator' | 'quick-salary-calculator' | 'time-tracking' | 'working-time-accounts' | 'compliance' | 'reports' | 'special-payments';
 
 export default function Employees() {
   const navigate = useNavigate();
@@ -57,6 +58,7 @@ export default function Employees() {
           onShowCompliance={() => setCurrentView('compliance')}
           onShowReports={() => setCurrentView('reports')}
           onShowTimeTracking={() => setCurrentView('time-tracking')}
+          onShowSpecialPayments={() => setCurrentView('special-payments')}
         />
       )}
       {currentView === 'add-employee' && (
@@ -92,6 +94,9 @@ export default function Employees() {
       )}
       {currentView === 'reports' && (
         <AdvancedReports onBack={handleBack} />
+      )}
+      {currentView === 'special-payments' && (
+        <SpecialPaymentsManager onBack={handleBack} />
       )}
     </MainLayout>
   );

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, Users, Calculator, FileText, Search, Edit, Trash2, BarChart3, Shield, Clock } from "lucide-react";
+import { Plus, Users, Calculator, FileText, Search, Edit, Trash2, BarChart3, Shield, Clock, Baby } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,9 +18,10 @@ interface EmployeeDashboardProps {
   onShowCompliance: () => void;
   onShowReports: () => void;
   onShowTimeTracking: () => void;
+  onShowSpecialPayments?: () => void;
 }
 
-export function EmployeeDashboard({ onAddEmployee, onCalculateSalary, onShowPayroll, onShowCompliance, onShowReports, onShowTimeTracking }: EmployeeDashboardProps) {
+export function EmployeeDashboard({ onAddEmployee, onCalculateSalary, onShowPayroll, onShowCompliance, onShowReports, onShowTimeTracking, onShowSpecialPayments }: EmployeeDashboardProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [showReports, setShowReports] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
@@ -137,6 +138,14 @@ export function EmployeeDashboard({ onAddEmployee, onCalculateSalary, onShowPayr
         >
           <Calculator className="h-4 w-4" />
           Gehaltsrechner
+        </Button>
+        <Button 
+          onClick={() => onShowSpecialPayments?.()}
+          variant="outline"
+          className="flex items-center gap-2"
+        >
+          <Baby className="h-4 w-4" />
+          Spezielle Lohnarten
         </Button>
         <Button 
           onClick={onAddEmployee}
