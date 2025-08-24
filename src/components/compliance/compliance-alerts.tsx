@@ -131,10 +131,10 @@ export function ComplianceAlerts({ alerts, onMarkAsRead, onResolve }: Compliance
                 <span>{alert.createdAt.toLocaleDateString('de-DE')} um {alert.createdAt.toLocaleTimeString('de-DE')}</span>
               </div>
               
-              {alert.affectedEmployees && alert.affectedEmployees.length > 0 && (
+              {alert.employeeId && (
                 <div className="flex justify-between">
-                  <span>Betroffene Mitarbeiter:</span>
-                  <span>{alert.affectedEmployees.length}</span>
+                  <span>Betroffener Mitarbeiter:</span>
+                  <span>ID: {alert.employeeId}</span>
                 </div>
               )}
             </div>
