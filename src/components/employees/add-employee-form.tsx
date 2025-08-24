@@ -520,8 +520,8 @@ export function AddEmployeeForm({ onBack, onSave, onCalculate }: AddEmployeeForm
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="minijob">Minijob (450€)</SelectItem>
-                      <SelectItem value="midijob">Midijob (450-1300€)</SelectItem>
+                      <SelectItem value="minijob">Minijob (bis 556€)</SelectItem>
+                      <SelectItem value="midijob">Midijob (556,01€ - 2.000€)</SelectItem>
                       <SelectItem value="parttime">Teilzeit</SelectItem>
                       <SelectItem value="fulltime">Vollzeit</SelectItem>
                     </SelectContent>

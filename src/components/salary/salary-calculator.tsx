@@ -21,7 +21,7 @@ export function SalaryCalculator({ onBack, employeeData }: SalaryCalculatorProps
     setIsCalculating(true);
     
     // Spezielle Behandlung für Minijobs und Midijobs
-    if (employmentType === 'minijob' && grossSalary <= 538) {
+    if (employmentType === 'minijob' && grossSalary <= 556) {
       // Minijob-Berechnung (pauschal versteuert)
       setTimeout(() => {
         setCalculation({
@@ -48,7 +48,7 @@ export function SalaryCalculator({ onBack, employeeData }: SalaryCalculatorProps
     }
     
     // Midijob-Berechnung (Übergangsbereich 538,01 - 2000€)
-    if (employmentType === 'midijob' && grossSalary > 538 && grossSalary <= 2000) {
+    if (employmentType === 'midijob' && grossSalary > 556.01 && grossSalary <= 2000) {
       // Vereinfachte Midijob-Berechnung mit reduziertem Gleitzonenfaktor
       const reductionFactor = 0.7; // Vereinfacht
       const reducedGrossSalary = grossSalary * reductionFactor;

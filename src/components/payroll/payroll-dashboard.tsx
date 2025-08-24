@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowLeft, Plus, FileText, Calendar, DollarSign, Users, Eye, Trash2, BookOpen, User, Baby, Settings } from "lucide-react";
+import { ArrowLeft, Plus, FileText, Calendar, DollarSign, Users, Eye, Trash2, BookOpen, User, Baby, Settings, ClipboardList } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageHeader } from "@/components/ui/page-header";
@@ -11,6 +11,9 @@ import { CreatePayrollDialog } from "./create-payroll-dialog";
 import { PayrollDetail } from "./payroll-detail";
 import { PayrollJournal } from "./payroll-journal";
 import { EmployeePayrollAccount } from "./employee-payroll-account";
+import { ManualPayrollEntry } from "./manual-payroll-entry";
+import { SystemEnhancementProposal } from "./system-enhancement-proposal";
+import { TaxCalculationSettings } from "./tax-calculation-settings";
 import { PayrollStatus } from "@/types/payroll";
 
 interface PayrollDashboardProps {
@@ -22,7 +25,7 @@ interface PayrollDashboardProps {
 export function PayrollDashboard({ onBack, onShowSpecialPayments, onShowAutomation }: PayrollDashboardProps) {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [selectedPayrollId, setSelectedPayrollId] = useState<string | null>(null);
-  const [currentView, setCurrentView] = useState<'dashboard' | 'detail' | 'journal' | 'account'>('dashboard');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'detail' | 'journal' | 'account' | 'manual' | 'settings' | 'enhancements'>('dashboard');
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | null>(null);
   const { payrollPeriods, getPayrollReport, deletePayrollPeriod } = usePayrollStorage();
   const { employees } = useEmployeeStorage();
@@ -110,6 +113,60 @@ export function PayrollDashboard({ onBack, onShowSpecialPayments, onShowAutomati
     );
   }
 
+  if (currentView === 'manual') {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold">Manuelle Lohnabrechnung</h1>
+            <p className="text-muted-foreground">Manuelle Erfassung von Arbeitszeiten und Zuschlägen</p>
+          </div>
+          <Button onClick={() => setCurrentView('dashboard')} variant="outline">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Zurück zum Dashboard
+          </Button>
+        </div>
+        <ManualPayrollEntry />
+      </div>
+    );
+  }
+
+  if (currentView === 'settings') {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold">Steuerberechnungs-Einstellungen</h1>
+            <p className="text-muted-foreground">Konfiguration der Lohnsteuer- und Sozialabgabenberechnung</p>
+          </div>
+          <Button onClick={() => setCurrentView('dashboard')} variant="outline">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Zurück zum Dashboard
+          </Button>
+        </div>
+        <TaxCalculationSettings onSettingsChange={() => {}} />
+      </div>
+    );
+  }
+
+  if (currentView === 'enhancements') {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold">System-Erweiterungen</h1>
+            <p className="text-muted-foreground">Vorschläge für zusätzliche Funktionen des Lohnverarbeitungssystems</p>
+          </div>
+          <Button onClick={() => setCurrentView('dashboard')} variant="outline">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Zurück zum Dashboard
+          </Button>
+        </div>
+        <SystemEnhancementProposal />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6 animate-fade-in">
       <PageHeader
@@ -140,6 +197,30 @@ export function PayrollDashboard({ onBack, onShowSpecialPayments, onShowAutomati
           >
             <BookOpen className="h-4 w-4" />
             Lohnjournal
+          </Button>
+          <Button 
+            onClick={() => setCurrentView('manual')}
+            variant="outline"
+            className="flex items-center gap-2"
+          >
+            <ClipboardList className="h-4 w-4" />
+            Manuelle Erfassung
+          </Button>
+          <Button 
+            onClick={() => setCurrentView('settings')}
+            variant="outline"
+            className="flex items-center gap-2"
+          >
+            <Settings className="h-4 w-4" />
+            Einstellungen
+          </Button>
+          <Button 
+            onClick={() => setCurrentView('enhancements')}
+            variant="outline"
+            className="flex items-center gap-2"
+          >
+            <Plus className="h-4 w-4" />
+            System-Erweiterungen
           </Button>
           <Button 
             onClick={() => setShowCreateDialog(true)}
