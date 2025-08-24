@@ -61,6 +61,14 @@ export interface SalaryData {
   hourlyWage?: number;
   salaryType: SalaryType;
   additionalBenefits: AdditionalBenefits;
+  bankingData: BankingData;
+}
+
+export interface BankingData {
+  iban: string;
+  bic: string;
+  bankName: string;
+  accountHolder: string;
 }
 
 export interface AdditionalBenefits {

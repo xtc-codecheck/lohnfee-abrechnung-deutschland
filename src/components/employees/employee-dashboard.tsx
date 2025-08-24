@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, Users, Calculator, FileText, Search, Edit, Trash2, BarChart3, Shield, Clock, Baby } from "lucide-react";
+import { Plus, Users, Calculator, FileText, Search, Edit, Trash2, BarChart3, Shield, Clock, Baby, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,9 +20,12 @@ interface EmployeeDashboardProps {
   onShowTimeTracking: () => void;
   onShowSpecialPayments?: () => void;
   onShowAdvancedPayroll?: () => void;
+  onShowAuthorities?: () => void;
+  onShowAutomation?: () => void;
+  onShowExtendedCalc?: () => void;
 }
 
-export function EmployeeDashboard({ onAddEmployee, onCalculateSalary, onShowPayroll, onShowCompliance, onShowReports, onShowTimeTracking, onShowSpecialPayments, onShowAdvancedPayroll }: EmployeeDashboardProps) {
+export function EmployeeDashboard({ onAddEmployee, onCalculateSalary, onShowPayroll, onShowCompliance, onShowReports, onShowTimeTracking, onShowSpecialPayments, onShowAdvancedPayroll, onShowAuthorities, onShowAutomation, onShowExtendedCalc }: EmployeeDashboardProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [showReports, setShowReports] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
@@ -138,7 +141,7 @@ export function EmployeeDashboard({ onAddEmployee, onCalculateSalary, onShowPayr
           className="flex items-center gap-2"
         >
           <BarChart3 className="h-4 w-4" />
-          Erweiterte Berichte
+          Reports
         </Button>
         <Button 
           onClick={() => onShowAdvancedPayroll?.()}
@@ -146,7 +149,7 @@ export function EmployeeDashboard({ onAddEmployee, onCalculateSalary, onShowPayr
           className="flex items-center gap-2"
         >
           <FileText className="h-4 w-4" />
-          Erweiterte Lohn-Reports
+          Lohn-Reports
         </Button>
         <Button 
           onClick={() => onShowSpecialPayments?.()}
@@ -154,7 +157,31 @@ export function EmployeeDashboard({ onAddEmployee, onCalculateSalary, onShowPayr
           className="flex items-center gap-2"
         >
           <Baby className="h-4 w-4" />
-          Spezielle Lohnarten
+          Spez. Lohnarten
+        </Button>
+        <Button 
+          onClick={() => onShowAuthorities?.()}
+          variant="outline"
+          className="flex items-center gap-2"
+        >
+          <Shield className="h-4 w-4" />
+          Behörden
+        </Button>
+        <Button 
+          onClick={() => onShowAutomation?.()}
+          variant="outline"
+          className="flex items-center gap-2"
+        >
+          <Settings className="h-4 w-4" />
+          Automatisierung
+        </Button>
+        <Button 
+          onClick={() => onShowExtendedCalc?.()}
+          variant="outline"
+          className="flex items-center gap-2"
+        >
+          <Calculator className="h-4 w-4" />
+          Erw. Berechnungen
         </Button>
         <Button 
           onClick={onAddEmployee}

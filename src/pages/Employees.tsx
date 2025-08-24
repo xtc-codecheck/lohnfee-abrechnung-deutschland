@@ -11,8 +11,11 @@ import { ComplianceDashboard } from "@/components/compliance/compliance-dashboar
 import { AdvancedReports } from "@/components/reports/advanced-reports";
 import { SpecialPaymentsManager } from "@/components/payroll/special-payments-manager";
 import { AdvancedPayrollDashboard } from "@/components/payroll/advanced-payroll-dashboard";
+import { AuthoritiesIntegration } from "@/components/integration/authorities-integration";
+import { AutomationDashboard } from "@/components/automation/automation-dashboard";
+import { ExtendedCalculations } from "@/components/calculations/extended-calculations";
 
-type EmployeeView = 'dashboard' | 'add-employee' | 'salary-calculator' | 'quick-salary-calculator' | 'time-tracking' | 'working-time-accounts' | 'compliance' | 'reports' | 'special-payments' | 'advanced-payroll';
+type EmployeeView = 'dashboard' | 'add-employee' | 'salary-calculator' | 'quick-salary-calculator' | 'time-tracking' | 'working-time-accounts' | 'compliance' | 'reports' | 'special-payments' | 'advanced-payroll' | 'authorities' | 'automation' | 'extended-calc';
 
 export default function Employees() {
   const navigate = useNavigate();
@@ -61,6 +64,9 @@ export default function Employees() {
           onShowTimeTracking={() => setCurrentView('time-tracking')}
           onShowSpecialPayments={() => setCurrentView('special-payments')}
           onShowAdvancedPayroll={() => setCurrentView('advanced-payroll')}
+          onShowAuthorities={() => setCurrentView('authorities')}
+          onShowAutomation={() => setCurrentView('automation')}
+          onShowExtendedCalc={() => setCurrentView('extended-calc')}
         />
       )}
       {currentView === 'add-employee' && (
@@ -102,6 +108,15 @@ export default function Employees() {
       )}
       {currentView === 'advanced-payroll' && (
         <AdvancedPayrollDashboard onBack={handleBack} />
+      )}
+      {currentView === 'authorities' && (
+        <AuthoritiesIntegration onBack={handleBack} />
+      )}
+      {currentView === 'automation' && (
+        <AutomationDashboard onBack={handleBack} />
+      )}
+      {currentView === 'extended-calc' && (
+        <ExtendedCalculations onBack={handleBack} />
       )}
     </MainLayout>
   );
