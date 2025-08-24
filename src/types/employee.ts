@@ -43,6 +43,12 @@ export interface EmploymentData {
   weeklyHours: number;
   vacationDays: number;
   workDays: WorkDay[];
+  department: string;
+  position: string;
+  // Compliance Felder
+  contractSigned: boolean;
+  contractSignedDate?: Date;
+  dataRetentionDate: Date; // 5 Jahre nach Beendigung für Rentenversicherung
 }
 
 export interface WorkDay {

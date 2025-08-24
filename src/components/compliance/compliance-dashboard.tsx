@@ -1,353 +1,375 @@
-import { useState, useEffect } from "react";
-import { AlertTriangle, CheckCircle, Clock, FileText, Shield, TrendingUp, Users, XCircle } from "lucide-react";
+import { useState } from "react";
+import { AlertTriangle, CheckCircle, Clock, FileX, Shield, Users, Calendar, AlertCircle } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { PageHeader } from "@/components/ui/page-header";
-import { useCompliance } from "@/hooks/use-compliance";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useEmployeeStorage } from "@/hooks/use-employee-storage";
 import { usePayrollStorage } from "@/hooks/use-payroll-storage";
-import { ComplianceAlert, ComplianceCheck, ComplianceReport } from "@/types/compliance";
+import { useCompliance } from "@/hooks/use-compliance";
 import { ComplianceAlerts } from "./compliance-alerts";
+import { MINIMUM_WAGES } from "@/types/compliance";
 
 interface ComplianceDashboardProps {
   onBack: () => void;
 }
 
 export function ComplianceDashboard({ onBack }: ComplianceDashboardProps) {
-  const [currentReport, setCurrentReport] = useState<ComplianceReport | null>(null);
-  const [isGenerating, setIsGenerating] = useState(false);
-  
+  const [activeTab, setActiveTab] = useState("overview");
   const { employees } = useEmployeeStorage();
   const { payrollEntries } = usePayrollStorage();
   const { 
-    reports, 
+    generateComplianceReport, 
     activeAlerts, 
     unreadAlerts,
-    generateComplianceReport,
     markAlertAsRead,
     resolveAlert
   } = useCompliance();
 
-  // Generate initial report on mount
-  useEffect(() => {
-    if (employees.length > 0 && !currentReport) {
-      handleGenerateReport();
-    }
-  }, [employees]);
-
-  const handleGenerateReport = async () => {
-    setIsGenerating(true);
-    
-    // Simulate some processing time
-    setTimeout(() => {
-      const report = generateComplianceReport(employees, payrollEntries);
-      setCurrentReport(report);
-      setIsGenerating(false);
-    }, 1500);
-  };
+  // Generate current compliance report
+  const currentReport = generateComplianceReport(employees, payrollEntries);
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'compliant':
-        return <CheckCircle className="h-4 w-4 text-success" />;
+      case 'passed':
+        return <CheckCircle className="h-4 w-4 text-green-600" />;
       case 'warning':
-        return <AlertTriangle className="h-4 w-4 text-warning" />;
-      case 'non_compliant':
-        return <XCircle className="h-4 w-4 text-destructive" />;
+        return <AlertTriangle className="h-4 w-4 text-yellow-600" />;
+      case 'failed':
+        return <AlertCircle className="h-4 w-4 text-red-600" />;
       default:
-        return <Clock className="h-4 w-4 text-muted-foreground" />;
+        return <Clock className="h-4 w-4 text-gray-400" />;
     }
   };
 
   const getSeverityBadge = (severity: string) => {
-    const variants = {
-      'info': 'default',
-      'warning': 'secondary',
-      'error': 'destructive',
-      'critical': 'destructive'
-    } as const;
-    
-    return (
-      <Badge variant={variants[severity as keyof typeof variants] || 'default'}>
-        {severity.toUpperCase()}
-      </Badge>
-    );
+    switch (severity) {
+      case 'critical':
+        return <Badge variant="destructive">Kritisch</Badge>;
+      case 'high':
+        return <Badge variant="destructive">Hoch</Badge>;
+      case 'medium':
+        return <Badge variant="secondary">Mittel</Badge>;
+      case 'low':
+        return <Badge variant="outline">Niedrig</Badge>;
+      default:
+        return <Badge variant="outline">Unbekannt</Badge>;
+    }
   };
+
+  const formatDate = (date: Date) => {
+    return new Intl.DateTimeFormat('de-DE', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    }).format(date);
+  };
+
+  // Calculate compliance metrics
+  const complianceScore = currentReport.summary.totalChecks > 0 
+    ? Math.round((currentReport.summary.passed / currentReport.summary.totalChecks) * 100)
+    : 100;
+
+  const criticalIssues = currentReport.checks.filter(c => c.severity === 'critical' && c.status === 'failed');
+  const upcomingRetentions = employees.filter(emp => {
+    const retentionDate = new Date(emp.employmentData.dataRetentionDate);
+    const daysUntil = Math.ceil((retentionDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+    return daysUntil > 0 && daysUntil <= 365;
+  });
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <PageHeader
-        title="Compliance-Übersicht"
-        description="Rechtliche Compliance und Überwachung der Lohnabrechnung"
-      >
-        <div className="flex gap-3">
-          <Button variant="outline" onClick={onBack}>
-            Zurück
-          </Button>
-          <Button 
-            onClick={handleGenerateReport}
-            disabled={isGenerating}
-            className="flex items-center gap-2"
-          >
-            <Shield className="h-4 w-4" />
-            {isGenerating ? 'Prüfung läuft...' : 'Compliance prüfen'}
-          </Button>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Compliance Dashboard</h1>
+          <p className="text-muted-foreground">Überwachung rechtlicher Anforderungen und Compliance-Status</p>
         </div>
-      </PageHeader>
+        <Button variant="outline" onClick={onBack}>
+          Zurück
+        </Button>
+      </div>
 
-      {/* Status Overview Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Overview Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card className="shadow-card">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Aktive Warnungen</p>
-                <p className="text-2xl font-bold">{activeAlerts.length}</p>
-              </div>
-              <AlertTriangle className="h-8 w-8 text-warning" />
-            </div>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Compliance Score</CardTitle>
+            <Shield className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{complianceScore}%</div>
+            <p className="text-xs text-muted-foreground">
+              {currentReport.summary.passed} von {currentReport.summary.totalChecks} Prüfungen bestanden
+            </p>
           </CardContent>
         </Card>
 
         <Card className="shadow-card">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Ungelesen</p>
-                <p className="text-2xl font-bold">{unreadAlerts.length}</p>
-              </div>
-              <FileText className="h-8 w-8 text-primary" />
-            </div>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Aktive Alerts</CardTitle>
+            <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{activeAlerts.length}</div>
+            <p className="text-xs text-muted-foreground">
+              {unreadAlerts.length} ungelesen
+            </p>
           </CardContent>
         </Card>
 
         <Card className="shadow-card">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Geprüfte Mitarbeiter</p>
-                <p className="text-2xl font-bold">{employees.length}</p>
-              </div>
-              <Users className="h-8 w-8 text-success" />
-            </div>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Kritische Probleme</CardTitle>
+            <AlertCircle className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-red-600">{criticalIssues.length}</div>
+            <p className="text-xs text-muted-foreground">
+              Sofortige Aufmerksamkeit erforderlich
+            </p>
           </CardContent>
         </Card>
 
         <Card className="shadow-card">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Berichte</p>
-                <p className="text-2xl font-bold">{reports.length}</p>
-              </div>
-              <TrendingUp className="h-8 w-8 text-primary" />
-            </div>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Aufbewahrungsfristen</CardTitle>
+            <Calendar className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{upcomingRetentions.length}</div>
+            <p className="text-xs text-muted-foreground">
+              Ablauf innerhalb 12 Monaten
+            </p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Main Content */}
-      <Tabs defaultValue="current" className="space-y-6">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <TabsList>
-          <TabsTrigger value="current">Aktuelle Prüfung</TabsTrigger>
-          <TabsTrigger value="alerts">Warnungen</TabsTrigger>
-          <TabsTrigger value="history">Verlauf</TabsTrigger>
+          <TabsTrigger value="overview">Übersicht</TabsTrigger>
+          <TabsTrigger value="checks">Prüfungen</TabsTrigger>
+          <TabsTrigger value="alerts">Alerts</TabsTrigger>
+          <TabsTrigger value="wages">Mindestlöhne</TabsTrigger>
+          <TabsTrigger value="retention">Aufbewahrung</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="current" className="space-y-6">
-          {isGenerating && (
+        <TabsContent value="overview" className="space-y-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card className="shadow-card">
-              <CardContent className="flex items-center justify-center py-12">
-                <div className="text-center">
-                  <Shield className="h-12 w-12 text-primary mx-auto mb-4 animate-pulse" />
-                  <p className="text-lg font-medium">Compliance-Prüfung läuft...</p>
-                  <p className="text-sm text-muted-foreground">
-                    Überprüfe Mindestlohn, Sozialversicherung und Dokumentation
-                  </p>
+              <CardHeader>
+                <CardTitle>Compliance Summary</CardTitle>
+                <CardDescription>Aktueller Status aller Compliance-Prüfungen</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-600" />
+                    Bestanden
+                  </span>
+                  <span className="font-semibold">{currentReport.summary.passed}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="flex items-center gap-2">
+                    <AlertTriangle className="h-4 w-4 text-yellow-600" />
+                    Warnungen
+                  </span>
+                  <span className="font-semibold">{currentReport.summary.warnings}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="flex items-center gap-2">
+                    <AlertCircle className="h-4 w-4 text-red-600" />
+                    Fehlgeschlagen
+                  </span>
+                  <span className="font-semibold">{currentReport.summary.failed}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="flex items-center gap-2">
+                    <FileX className="h-4 w-4 text-red-800" />
+                    Kritisch
+                  </span>
+                  <span className="font-semibold text-red-600">{currentReport.summary.critical}</span>
                 </div>
               </CardContent>
             </Card>
-          )}
 
-          {currentReport && !isGenerating && (
-            <div className="space-y-6">
-              {/* Summary Card */}
-              <Card className="shadow-elegant">
-                <CardHeader>
-                  <CardTitle>Compliance-Zusammenfassung</CardTitle>
-                  <CardDescription>
-                    Generiert am {currentReport.generatedAt.toLocaleDateString('de-DE')} um {currentReport.generatedAt.toLocaleTimeString('de-DE')}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-success">{currentReport.summary.compliant}</div>
-                      <div className="text-sm text-muted-foreground">Konform</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-warning">{currentReport.summary.warnings}</div>
-                      <div className="text-sm text-muted-foreground">Warnungen</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-destructive">{currentReport.summary.nonCompliant}</div>
-                      <div className="text-sm text-muted-foreground">Nicht konform</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-destructive">{currentReport.summary.critical}</div>
-                      <div className="text-sm text-muted-foreground">Kritisch</div>
-                    </div>
-                  </div>
-
-                  {currentReport.summary.critical > 0 && (
-                    <Alert className="mt-4">
-                      <AlertTriangle className="h-4 w-4" />
-                      <AlertDescription>
-                        <strong>Kritische Compliance-Verstöße gefunden!</strong> Bitte prüfen Sie die Details und nehmen Sie umgehend Korrekturen vor.
-                      </AlertDescription>
-                    </Alert>
-                  )}
-                </CardContent>
-              </Card>
-
-              {/* Detailed Checks */}
-              <Card className="shadow-card">
-                <CardHeader>
-                  <CardTitle>Detaillierte Prüfungsergebnisse</CardTitle>
-                  <CardDescription>
-                    Alle durchgeführten Compliance-Checks im Überblick
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {currentReport.checks.map((check, index) => (
-                      <div key={index} className="flex items-start gap-3 p-4 border rounded-lg">
+            <Card className="shadow-card">
+              <CardHeader>
+                <CardTitle>Letzte Aktivitäten</CardTitle>
+                <CardDescription>Neueste Compliance-Ereignisse</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {currentReport.checks
+                    .filter(check => check.status !== 'passed')
+                    .slice(0, 5)
+                    .map((check, index) => (
+                      <div key={index} className="flex items-start gap-3">
                         {getStatusIcon(check.status)}
-                        <div className="flex-1 space-y-1">
-                          <div className="flex items-center gap-2">
-                            <h4 className="font-medium">{check.message}</h4>
-                            {getSeverityBadge(
-                              // Find the rule to get severity
-                              (() => {
-                                // This is a simplified lookup - in real app you'd pass the rule data
-                                const severityMap: Record<string, string> = {
-                                  'minimum_wage_check': 'critical',
-                                  'social_security_limits': 'warning',
-                                  'employee_data_completeness': 'warning',
-                                  'payroll_documentation': 'error'
-                                };
-                                return severityMap[check.ruleId] || 'info';
-                              })()
-                            )}
-                          </div>
-                          {check.details && (
-                            <p className="text-sm text-muted-foreground">{check.details}</p>
-                          )}
-                          {check.recommendations && check.recommendations.length > 0 && (
-                            <div className="mt-2">
-                              <p className="text-xs font-medium text-muted-foreground mb-1">Empfehlungen:</p>
-                              <ul className="text-xs text-muted-foreground space-y-1">
-                                {check.recommendations.map((rec, i) => (
-                                  <li key={i} className="flex items-start gap-1">
-                                    <span>•</span>
-                                    <span>{rec}</span>
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-                          )}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{check.title}</p>
+                          <p className="text-xs text-muted-foreground">{check.message}</p>
                         </div>
-                        <div className="text-xs text-muted-foreground">
-                          {check.checkedAt.toLocaleTimeString('de-DE')}
-                        </div>
+                        {getSeverityBadge(check.severity)}
                       </div>
                     ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          )}
-
-          {!currentReport && !isGenerating && employees.length === 0 && (
-            <Card className="shadow-card">
-              <CardContent className="text-center py-12">
-                <Shield className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-medium mb-2">Keine Mitarbeiterdaten</h3>
-                <p className="text-sm text-muted-foreground">
-                  Fügen Sie Mitarbeiter hinzu, um Compliance-Prüfungen durchzuführen.
-                </p>
+                </div>
               </CardContent>
             </Card>
-          )}
+          </div>
         </TabsContent>
 
-        <TabsContent value="alerts">
-          <ComplianceAlerts 
+        <TabsContent value="checks" className="space-y-4">
+          <Card className="shadow-card">
+            <CardHeader>
+              <CardTitle>Alle Compliance-Prüfungen</CardTitle>
+              <CardDescription>
+                Detaillierte Übersicht aller durchgeführten Prüfungen
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Prüfung</TableHead>
+                    <TableHead>Mitarbeiter</TableHead>
+                    <TableHead>Schwere</TableHead>
+                    <TableHead>Nachricht</TableHead>
+                    <TableHead>Datum</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {currentReport.checks.map((check, index) => {
+                    const employee = check.employeeId ? employees.find(e => e.id === check.employeeId) : null;
+                    return (
+                      <TableRow key={index}>
+                        <TableCell>{getStatusIcon(check.status)}</TableCell>
+                        <TableCell className="font-medium">{check.title}</TableCell>
+                        <TableCell>
+                          {employee ? `${employee.personalData.firstName} ${employee.personalData.lastName}` : '-'}
+                        </TableCell>
+                        <TableCell>{getSeverityBadge(check.severity)}</TableCell>
+                        <TableCell className="max-w-xs truncate">{check.message}</TableCell>
+                        <TableCell>{formatDate(check.checkDate)}</TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="alerts" className="space-y-4">
+          <ComplianceAlerts
             alerts={activeAlerts}
             onMarkAsRead={markAlertAsRead}
             onResolve={resolveAlert}
           />
         </TabsContent>
 
-        <TabsContent value="history" className="space-y-4">
-          {reports.length > 0 ? (
-            reports.map((report) => (
-              <Card key={report.id} className="shadow-card">
-                <CardHeader>
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <CardTitle className="text-lg">
-                        Compliance-Bericht
-                      </CardTitle>
-                      <CardDescription>
-                        {report.generatedAt.toLocaleDateString('de-DE')} - {report.generatedAt.toLocaleTimeString('de-DE')}
-                      </CardDescription>
+        <TabsContent value="wages" className="space-y-4">
+          <Card className="shadow-card">
+            <CardHeader>
+              <CardTitle>Mindestlohn-Überwachung</CardTitle>
+              <CardDescription>Historische Mindestlöhne und aktuelle Compliance</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
+                  {Object.entries(MINIMUM_WAGES).map(([year, wage]) => (
+                    <Card key={year} className={year === '2025' ? 'border-primary bg-primary/5' : ''}>
+                      <CardContent className="p-3 text-center">
+                        <p className="text-sm font-medium">{year}</p>
+                        <p className="text-lg font-bold">{wage.toFixed(2)}€</p>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+                
+                <div className="space-y-2">
+                  <h4 className="font-semibold">Mitarbeiter unter Mindestlohn:</h4>
+                  {employees.filter(emp => {
+                    const hourlyWage = emp.salaryData.hourlyWage || (emp.salaryData.grossSalary / (emp.employmentData.weeklyHours * 4.33));
+                    return hourlyWage < MINIMUM_WAGES[2025];
+                  }).map(emp => (
+                    <div key={emp.id} className="flex items-center justify-between p-3 bg-red-50 rounded-lg">
+                      <span>{emp.personalData.firstName} {emp.personalData.lastName}</span>
+                      <span className="text-red-600 font-semibold">
+                        {(emp.salaryData.hourlyWage || (emp.salaryData.grossSalary / (emp.employmentData.weeklyHours * 4.33))).toFixed(2)}€/h
+                      </span>
                     </div>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => setCurrentReport(report)}
-                    >
-                      Details anzeigen
-                    </Button>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-4 gap-4 text-center">
-                    <div>
-                      <div className="text-lg font-semibold text-success">{report.summary.compliant}</div>
-                      <div className="text-xs text-muted-foreground">Konform</div>
-                    </div>
-                    <div>
-                      <div className="text-lg font-semibold text-warning">{report.summary.warnings}</div>
-                      <div className="text-xs text-muted-foreground">Warnungen</div>
-                    </div>
-                    <div>
-                      <div className="text-lg font-semibold text-destructive">{report.summary.nonCompliant}</div>
-                      <div className="text-xs text-muted-foreground">Nicht konform</div>
-                    </div>
-                    <div>
-                      <div className="text-lg font-semibold text-destructive">{report.summary.critical}</div>
-                      <div className="text-xs text-muted-foreground">Kritisch</div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))
-          ) : (
-            <Card className="shadow-card">
-              <CardContent className="text-center py-12">
-                <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-medium mb-2">Keine Berichte</h3>
-                <p className="text-sm text-muted-foreground">
-                  Führen Sie eine Compliance-Prüfung durch, um Berichte zu generieren.
-                </p>
-              </CardContent>
-            </Card>
-          )}
+                  ))}
+                  {employees.filter(emp => {
+                    const hourlyWage = emp.salaryData.hourlyWage || (emp.salaryData.grossSalary / (emp.employmentData.weeklyHours * 4.33));
+                    return hourlyWage < MINIMUM_WAGES[2025];
+                  }).length === 0 && (
+                    <p className="text-green-600 p-3 bg-green-50 rounded-lg">
+                      ✓ Alle Mitarbeiter erhalten mindestens den gesetzlichen Mindestlohn
+                    </p>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="retention" className="space-y-4">
+          <Card className="shadow-card">
+            <CardHeader>
+              <CardTitle>Aufbewahrungsfristen-Management</CardTitle>
+              <CardDescription>Übersicht der Aufbewahrungsfristen für Mitarbeiterdaten</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Mitarbeiter</TableHead>
+                    <TableHead>Abteilung</TableHead>
+                    <TableHead>Anstellungsende</TableHead>
+                    <TableHead>Löschung möglich ab</TableHead>
+                    <TableHead>Tage verbleibend</TableHead>
+                    <TableHead>Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {employees.map(emp => {
+                    const retentionDate = new Date(emp.employmentData.dataRetentionDate);
+                    const daysUntil = Math.ceil((retentionDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+                    const endDate = emp.employmentData.endDate ? new Date(emp.employmentData.endDate) : null;
+                    
+                    return (
+                      <TableRow key={emp.id}>
+                        <TableCell className="font-medium">
+                          {emp.personalData.firstName} {emp.personalData.lastName}
+                        </TableCell>
+                        <TableCell>{emp.employmentData.department || '-'}</TableCell>
+                        <TableCell>
+                          {endDate ? endDate.toLocaleDateString('de-DE') : 'Aktiv'}
+                        </TableCell>
+                        <TableCell>{retentionDate.toLocaleDateString('de-DE')}</TableCell>
+                        <TableCell>
+                          {daysUntil < 0 ? '0' : daysUntil}
+                        </TableCell>
+                        <TableCell>
+                          {daysUntil < 0 ? (
+                            <Badge variant="destructive">Löschbar</Badge>
+                          ) : daysUntil <= 365 ? (
+                            <Badge variant="secondary">Bald fällig</Badge>
+                          ) : (
+                            <Badge variant="outline">Aktiv</Badge>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>

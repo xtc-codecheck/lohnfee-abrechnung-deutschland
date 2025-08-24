@@ -50,11 +50,15 @@ export function AddEmployeeForm({ onBack, onSave, onCalculate }: AddEmployeeForm
     
     // Beschäftigungsdaten
     employmentType: "fulltime" as EmploymentType,
+    department: "",
+    position: "",
     startDate: "",
     isFixedTerm: false,
     endDate: "",
     weeklyHours: 40,
     vacationDays: 30,
+    contractSigned: false,
+    contractSignedDate: "",
     workDays: [
       { day: 'monday', isWorkDay: true, hours: 8 },
       { day: 'tuesday', isWorkDay: true, hours: 8 },
@@ -508,19 +512,54 @@ export function AddEmployeeForm({ onBack, onSave, onCalculate }: AddEmployeeForm
               <CardDescription>Details zum Arbeitsverhältnis</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="employmentType">Beschäftigungsart*</Label>
-                <Select value={formData.employmentType} onValueChange={(value) => handleInputChange("employmentType", value)}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="minijob">Minijob (450€)</SelectItem>
-                    <SelectItem value="midijob">Midijob (450-1300€)</SelectItem>
-                    <SelectItem value="parttime">Teilzeit</SelectItem>
-                    <SelectItem value="fulltime">Vollzeit</SelectItem>
-                  </SelectContent>
-                </Select>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="employmentType">Beschäftigungsart*</Label>
+                  <Select value={formData.employmentType} onValueChange={(value) => handleInputChange("employmentType", value)}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="minijob">Minijob (450€)</SelectItem>
+                      <SelectItem value="midijob">Midijob (450-1300€)</SelectItem>
+                      <SelectItem value="parttime">Teilzeit</SelectItem>
+                      <SelectItem value="fulltime">Vollzeit</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="department">Abteilung*</Label>
+                  <Select value={formData.department} onValueChange={(value) => handleInputChange("department", value)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Abteilung wählen" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Geschäftsführung">Geschäftsführung</SelectItem>
+                      <SelectItem value="Verwaltung">Verwaltung</SelectItem>
+                      <SelectItem value="Buchhaltung">Buchhaltung</SelectItem>
+                      <SelectItem value="Personalwesen">Personalwesen</SelectItem>
+                      <SelectItem value="Vertrieb">Vertrieb</SelectItem>
+                      <SelectItem value="Marketing">Marketing</SelectItem>
+                      <SelectItem value="IT">IT</SelectItem>
+                      <SelectItem value="Produktion">Produktion</SelectItem>
+                      <SelectItem value="Logistik">Logistik</SelectItem>
+                      <SelectItem value="Qualitätssicherung">Qualitätssicherung</SelectItem>
+                      <SelectItem value="Kundendienst">Kundendienst</SelectItem>
+                      <SelectItem value="Einkauf">Einkauf</SelectItem>
+                      <SelectItem value="Forschung & Entwicklung">Forschung & Entwicklung</SelectItem>
+                      <SelectItem value="Sonstiges">Sonstiges</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="position">Position*</Label>
+                  <Input
+                    id="position"
+                    value={formData.position}
+                    onChange={(e) => handleInputChange("position", e.target.value)}
+                    placeholder="z.B. Sachbearbeiter, Teamleiter"
+                  />
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -554,6 +593,52 @@ export function AddEmployeeForm({ onBack, onSave, onCalculate }: AddEmployeeForm
                     value={formData.vacationDays}
                     onChange={(e) => handleInputChange("vacationDays", parseInt(e.target.value) || 20)}
                   />
+                </div>
+              </div>
+
+              {/* Compliance Bereich */}
+              <div className="space-y-4 bg-blue-50 p-4 rounded-lg">
+                <h4 className="font-medium text-blue-800">Compliance & Rechtliche Anforderungen</h4>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="contractSigned"
+                        checked={formData.contractSigned}
+                        onCheckedChange={(checked) => handleInputChange("contractSigned", checked)}
+                      />
+                      <Label htmlFor="contractSigned">Arbeitsvertrag unterschrieben zurückerhalten</Label>
+                    </div>
+                    <div className="text-xs text-muted-foreground ml-6">
+                      Arbeitszeitgesetz-Compliance: Bestätigung für behördliche Prüfungen
+                    </div>
+                  </div>
+                  
+                  {formData.contractSigned && (
+                    <div className="space-y-2">
+                      <Label htmlFor="contractSignedDate">Unterschriftsdatum</Label>
+                      <Input
+                        id="contractSignedDate"
+                        type="date"
+                        value={formData.contractSignedDate}
+                        onChange={(e) => handleInputChange("contractSignedDate", e.target.value)}
+                      />
+                    </div>
+                  )}
+                </div>
+
+                <div className="bg-yellow-50 p-3 rounded border border-yellow-200">
+                  <div className="flex items-start gap-2">
+                    <div className="text-yellow-600 text-sm">⚠️</div>
+                    <div className="text-sm">
+                      <div className="font-medium text-yellow-800">Aufbewahrungsfristen</div>
+                      <div className="text-yellow-700 text-xs mt-1">
+                        Personaldaten müssen 5 Jahre nach Beendigung des Arbeitsverhältnisses für die Rentenversicherung aufbewahrt werden.
+                        Das Löschdatum wird automatisch berechnet.
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 

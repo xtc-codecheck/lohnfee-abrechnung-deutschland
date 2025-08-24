@@ -7,6 +7,8 @@ import { SalaryCalculator } from "@/components/salary/salary-calculator";
 import { QuickSalaryCalculator } from "@/components/salary/quick-salary-calculator";
 import { TimeTrackingDashboard } from "@/components/time-tracking/time-tracking-dashboard";
 import { WorkingTimeAccounts } from "@/components/time-tracking/working-time-accounts";
+import { ComplianceDashboard } from "@/components/compliance/compliance-dashboard";
+import { AdvancedReports } from "@/components/reports/advanced-reports";
 
 type EmployeeView = 'dashboard' | 'add-employee' | 'salary-calculator' | 'quick-salary-calculator' | 'time-tracking' | 'working-time-accounts' | 'compliance' | 'reports';
 
@@ -86,22 +88,10 @@ export default function Employees() {
         />
       )}
       {currentView === 'compliance' && (
-        <div className="space-y-6 animate-fade-in">
-          <div className="text-center py-12">
-            <h2 className="text-2xl font-bold mb-4">Compliance</h2>
-            <p className="text-muted-foreground">Compliance-Modul wird hier implementiert.</p>
-            <button onClick={handleBack} className="mt-4 text-primary hover:underline">Zurück zum Dashboard</button>
-          </div>
-        </div>
+        <ComplianceDashboard onBack={handleBack} />
       )}
       {currentView === 'reports' && (
-        <div className="space-y-6 animate-fade-in">
-          <div className="text-center py-12">
-            <h2 className="text-2xl font-bold mb-4">Erweiterte Berichte</h2>
-            <p className="text-muted-foreground">Erweiterte Berichte werden hier implementiert.</p>
-            <button onClick={handleBack} className="mt-4 text-primary hover:underline">Zurück zum Dashboard</button>
-          </div>
-        </div>
+        <AdvancedReports onBack={handleBack} />
       )}
     </MainLayout>
   );
