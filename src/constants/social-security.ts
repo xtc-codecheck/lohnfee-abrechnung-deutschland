@@ -37,7 +37,7 @@ export const SOCIAL_INSURANCE_RATES_2025 = {
     total: 14.6, // Grundbeitrag ohne Zusatzbeitrag
     employee: 7.3,
     employer: 7.3,
-    averageAdditional: 1.7, // Durchschnittlicher Zusatzbeitrag
+    averageAdditional: 0.85, // Realistischer durchschnittlicher Zusatzbeitrag
   },
   care: {
     total: 3.4,
@@ -46,8 +46,8 @@ export const SOCIAL_INSURANCE_RATES_2025 = {
   },
   careChildless: {
     total: 4.0, // Für Kinderlose über 23
-    employee: 2.0,
-    employer: 1.7, // AG-Anteil bleibt gleich
+    employee: 2.4, // Korrigiert auf realen Satz 2025
+    employer: 1.6, // AG-Anteil angepasst
   },
 } as const;
 
