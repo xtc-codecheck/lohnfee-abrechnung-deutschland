@@ -90,79 +90,109 @@ export function EmployeeDashboard({ onAddEmployee, onCalculateSalary, onShowComp
         <p className="text-muted-foreground mt-2">Überblick über alle Mitarbeiter und deren Gehaltsabrechnungen</p>
       </div>
 
-      {/* Action Buttons */}
-      <div className="flex flex-wrap gap-3 justify-center">
-        <Button 
-          onClick={onShowReports}
-          variant="outline"
-          className="flex items-center gap-2"
-        >
-          <BarChart3 className="h-4 w-4" />
-          Erweiterte Berichte
-        </Button>
-        <Button 
-          onClick={() => setShowReports(true)}
-          variant="outline"
-          className="flex items-center gap-2"
-        >
-          <BarChart3 className="h-4 w-4" />
-          Mitarbeiter-Berichte
-        </Button>
-        <Button 
-          onClick={onShowTimeTracking}
-          variant="outline"
-          className="flex items-center gap-2"
-        >
-          <Clock className="h-4 w-4" />
-          Zeiterfassung
-        </Button>
-        <Button 
-          onClick={onShowCompliance}
-          variant="outline"
-          className="flex items-center gap-2"
-        >
-          <Shield className="h-4 w-4" />
-          Compliance
-        </Button>
-        <Button 
-          onClick={() => onShowReports?.()}
-          variant="outline"
-          className="flex items-center gap-2"
-        >
-          <BarChart3 className="h-4 w-4" />
-          Reports
-        </Button>
-        <Button 
-          onClick={() => onShowAdvancedPayroll?.()}
-          variant="outline"
-          className="flex items-center gap-2"
-        >
-          <FileText className="h-4 w-4" />
-          Lohn-Reports
-        </Button>
-        <Button 
-          onClick={() => onShowAuthorities?.()}
-          variant="outline"
-          className="flex items-center gap-2"
-        >
-          <Shield className="h-4 w-4" />
-          Behörden
-        </Button>
-        <Button 
-          onClick={() => onShowExtendedCalc?.()}
-          variant="outline"
-          className="flex items-center gap-2"
-        >
-          <Calculator className="h-4 w-4" />
-          Erw. Berechnungen
-        </Button>
-        <Button 
-          onClick={onAddEmployee}
-          className="flex items-center gap-2 bg-gradient-primary hover:opacity-90"
-        >
-          <Plus className="h-4 w-4" />
-          Mitarbeiter hinzufügen
-        </Button>
+      {/* Quick Actions */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <Card className="shadow-card hover:shadow-elegant transition-shadow cursor-pointer" onClick={onShowReports}>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <BarChart3 className="h-5 w-5 text-primary" />
+              Erweiterte Berichte
+            </CardTitle>
+            <CardDescription>
+              Detaillierte Auswertungen und Statistiken
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button variant="outline" className="w-full">
+              Berichte anzeigen
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-card hover:shadow-elegant transition-shadow cursor-pointer" onClick={() => setShowReports(true)}>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <BarChart3 className="h-5 w-5 text-primary" />
+              Mitarbeiter-Berichte
+            </CardTitle>
+            <CardDescription>
+              Personalbezogene Auswertungen und Analysen
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button variant="outline" className="w-full">
+              Mitarbeiter-Reports
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-card hover:shadow-elegant transition-shadow cursor-pointer" onClick={onShowTimeTracking}>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Clock className="h-5 w-5 text-primary" />
+              Zeiterfassung
+            </CardTitle>
+            <CardDescription>
+              Arbeitszeiten erfassen und verwalten
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button variant="outline" className="w-full">
+              Zeiten erfassen
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-card hover:shadow-elegant transition-shadow cursor-pointer" onClick={onShowCompliance}>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Shield className="h-5 w-5 text-primary" />
+              Compliance
+            </CardTitle>
+            <CardDescription>
+              Rechtliche Vorgaben und Richtlinien
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button variant="outline" className="w-full">
+              Compliance-Center
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-card hover:shadow-elegant transition-shadow cursor-pointer" onClick={() => onShowAdvancedPayroll?.()}>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5 text-primary" />
+              Lohn-Reports
+            </CardTitle>
+            <CardDescription>
+              Lohnabrechnungsberichte und -analysen
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button variant="outline" className="w-full">
+              Lohnberichte
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-card hover:shadow-elegant transition-shadow cursor-pointer" onClick={onAddEmployee}>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Plus className="h-5 w-5 text-primary" />
+              Mitarbeiter hinzufügen
+            </CardTitle>
+            <CardDescription>
+              Neue Mitarbeiter erfassen und anlegen
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button className="w-full bg-gradient-primary hover:opacity-90">
+              Neuen Mitarbeiter anlegen
+            </Button>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Statistiken */}

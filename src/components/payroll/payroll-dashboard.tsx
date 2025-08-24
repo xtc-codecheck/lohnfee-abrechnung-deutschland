@@ -175,66 +175,116 @@ export function PayrollDashboard({ onBack, onShowSpecialPayments, onShowAutomati
         <p className="text-muted-foreground mt-2">Monatliche Lohnabrechnung für alle Mitarbeiter</p>
       </div>
 
-      {/* Action Buttons */}
-      <div className="flex flex-wrap gap-3 justify-center">
-        <Button 
-          onClick={() => onShowSpecialPayments?.()}
-          variant="outline"
-          className="flex items-center gap-2"
-        >
-          <Baby className="h-4 w-4" />
-          Spez. Lohnarten
-        </Button>
-        <Button 
-          onClick={() => onShowAutomation?.()}
-          variant="outline"
-          className="flex items-center gap-2"
-        >
-          <Settings className="h-4 w-4" />
-          Automatisierung
-        </Button>
-        <Button 
-          onClick={handleViewJournal}
-          variant="outline"
-          className="flex items-center gap-2"
-        >
-          <BookOpen className="h-4 w-4" />
-          Lohnjournal
-        </Button>
-        <Button 
-          onClick={() => setCurrentView('manual')}
-          variant="outline"
-          className="flex items-center gap-2"
-        >
-          <ClipboardList className="h-4 w-4" />
-          Manuelle Erfassung
-        </Button>
-        <Button 
-          onClick={() => setCurrentView('settings')}
-          variant="outline"
-          className="flex items-center gap-2"
-        >
-          <Settings className="h-4 w-4" />
-          Einstellungen
-        </Button>
-        <Button 
-          onClick={() => setCurrentView('enhancements')}
-          variant="outline"
-          className="flex items-center gap-2"
-        >
-          <Plus className="h-4 w-4" />
-          System-Erweiterungen
-        </Button>
-        <Button 
-          onClick={() => setShowCreateDialog(true)}
-          className="flex items-center gap-2 bg-gradient-primary hover:opacity-90"
-        >
-          <Plus className="h-4 w-4" />
-          Neue Abrechnung
-        </Button>
+      {/* Quick Actions */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <Card className="shadow-card hover:shadow-elegant transition-shadow cursor-pointer" onClick={() => onShowSpecialPayments?.()}>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Baby className="h-5 w-5 text-primary" />
+              Spezielle Lohnarten
+            </CardTitle>
+            <CardDescription>
+              Elterngeld, Kurzarbeit und Sonderleistungen
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button variant="outline" className="w-full">
+              Spez. Lohnarten verwalten
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-card hover:shadow-elegant transition-shadow cursor-pointer" onClick={() => onShowAutomation?.()}>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Settings className="h-5 w-5 text-primary" />
+              Automatisierung
+            </CardTitle>
+            <CardDescription>
+              Automatische Lohnabrechnung konfigurieren
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button variant="outline" className="w-full">
+              Automation-Center
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-card hover:shadow-elegant transition-shadow cursor-pointer" onClick={handleViewJournal}>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <BookOpen className="h-5 w-5 text-primary" />
+              Lohnjournal
+            </CardTitle>
+            <CardDescription>
+              Übersicht aller Lohnbuchungen und Konten
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button variant="outline" className="w-full">
+              Journal anzeigen
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-card hover:shadow-elegant transition-shadow cursor-pointer" onClick={() => setCurrentView('manual')}>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <ClipboardList className="h-5 w-5 text-primary" />
+              Manuelle Erfassung
+            </CardTitle>
+            <CardDescription>
+              Arbeitszeiten und Zuschläge manuell eingeben
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button variant="outline" className="w-full">
+              Manuelle Eingabe
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-card hover:shadow-elegant transition-shadow cursor-pointer" onClick={() => setCurrentView('settings')}>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Settings className="h-5 w-5 text-primary" />
+              Einstellungen
+            </CardTitle>
+            <CardDescription>
+              Steuerberechnung und Parameter konfigurieren
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button variant="outline" className="w-full">
+              Einstellungen verwalten
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-card hover:shadow-elegant transition-shadow cursor-pointer" onClick={() => setShowCreateDialog(true)}>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Plus className="h-5 w-5 text-primary" />
+              Neue Abrechnung
+            </CardTitle>
+            <CardDescription>
+              Monatliche Lohnabrechnung erstellen
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button className="w-full bg-gradient-primary hover:opacity-90">
+              Abrechnung erstellen
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Back Button */}
+      <div className="flex justify-center">
         <Button variant="outline" onClick={onBack} className="flex items-center gap-2">
           <ArrowLeft className="h-4 w-4" />
-          Zurück
+          Zurück zum Dashboard
         </Button>
       </div>
 
