@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowLeft, Save, Calculator, Check, ChevronsUpDown } from "lucide-react";
+import { ArrowLeft, Save, Calculator, Check, ChevronsUpDown, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
@@ -15,6 +15,7 @@ import { EmploymentType, TaxClass, SalaryType, RelationshipStatus, Religion, CHU
 import { SOCIAL_INSURANCE_RATES_2025 } from "@/constants/social-security";
 import { useEmployeeStorage } from "@/hooks/use-employee-storage";
 import { useToast } from "@/hooks/use-toast";
+import { validateEmployeeForm } from "@/lib/validations/employee";
 
 interface AddEmployeeFormProps {
   onBack: () => void;
@@ -22,9 +23,21 @@ interface AddEmployeeFormProps {
   onCalculate: (data: any) => void;
 }
 
+// Hilfsfunktion für Fehleranzeige
+function FieldError({ error }: { error?: string }) {
+  if (!error) return null;
+  return (
+    <p className="text-sm text-destructive flex items-center gap-1 mt-1">
+      <AlertCircle className="h-3 w-3" />
+      {error}
+    </p>
+  );
+}
+
 export function AddEmployeeForm({ onBack, onSave, onCalculate }: AddEmployeeFormProps) {
   const { addEmployee } = useEmployeeStorage();
   const { toast } = useToast();
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [formData, setFormData] = useState({
     // Persönliche Daten
     firstName: "",
@@ -97,6 +110,14 @@ export function AddEmployeeForm({ onBack, onSave, onCalculate }: AddEmployeeForm
 
   const handleInputChange = (field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+    // Fehler für das Feld löschen wenn geändert
+    if (errors[field]) {
+      setErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[field];
+        return newErrors;
+      });
+    }
   };
 
   const handleCalculate = () => {
@@ -104,6 +125,24 @@ export function AddEmployeeForm({ onBack, onSave, onCalculate }: AddEmployeeForm
   };
 
   const handleSave = () => {
+    const result = validateEmployeeForm(formData);
+    
+    if (!result.success) {
+      const validationErrors: Record<string, string> = {};
+      for (const issue of result.error.issues) {
+        const path = issue.path.join(".");
+        validationErrors[path] = issue.message;
+      }
+      setErrors(validationErrors);
+      toast({
+        title: "Validierungsfehler",
+        description: "Bitte prüfen Sie die markierten Felder.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setErrors({});
     onSave(formData);
   };
 
@@ -267,7 +306,9 @@ export function AddEmployeeForm({ onBack, onSave, onCalculate }: AddEmployeeForm
                     value={formData.firstName}
                     onChange={(e) => handleInputChange("firstName", e.target.value)}
                     placeholder="Max"
+                    className={errors.firstName ? "border-destructive" : ""}
                   />
+                  <FieldError error={errors.firstName} />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="lastName">Nachname*</Label>
@@ -276,7 +317,9 @@ export function AddEmployeeForm({ onBack, onSave, onCalculate }: AddEmployeeForm
                     value={formData.lastName}
                     onChange={(e) => handleInputChange("lastName", e.target.value)}
                     placeholder="Mustermann"
+                    className={errors.lastName ? "border-destructive" : ""}
                   />
+                  <FieldError error={errors.lastName} />
                 </div>
               </div>
 
@@ -313,7 +356,9 @@ export function AddEmployeeForm({ onBack, onSave, onCalculate }: AddEmployeeForm
                     value={formData.street}
                     onChange={(e) => handleInputChange("street", e.target.value)}
                     placeholder="Musterstraße"
+                    className={errors.street ? "border-destructive" : ""}
                   />
+                  <FieldError error={errors.street} />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="houseNumber">Nr.*</Label>
@@ -322,7 +367,9 @@ export function AddEmployeeForm({ onBack, onSave, onCalculate }: AddEmployeeForm
                     value={formData.houseNumber}
                     onChange={(e) => handleInputChange("houseNumber", e.target.value)}
                     placeholder="123"
+                    className={errors.houseNumber ? "border-destructive" : ""}
                   />
+                  <FieldError error={errors.houseNumber} />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="postalCode">PLZ*</Label>
@@ -331,7 +378,9 @@ export function AddEmployeeForm({ onBack, onSave, onCalculate }: AddEmployeeForm
                     value={formData.postalCode}
                     onChange={(e) => handleInputChange("postalCode", e.target.value)}
                     placeholder="12345"
+                    className={errors.postalCode ? "border-destructive" : ""}
                   />
+                  <FieldError error={errors.postalCode} />
                 </div>
               </div>
 
@@ -343,7 +392,9 @@ export function AddEmployeeForm({ onBack, onSave, onCalculate }: AddEmployeeForm
                     value={formData.city}
                     onChange={(e) => handleInputChange("city", e.target.value)}
                     placeholder="Berlin"
+                    className={errors.city ? "border-destructive" : ""}
                   />
+                  <FieldError error={errors.city} />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="state">Bundesland*</Label>
@@ -403,7 +454,9 @@ export function AddEmployeeForm({ onBack, onSave, onCalculate }: AddEmployeeForm
                     value={formData.taxId}
                     onChange={(e) => handleInputChange("taxId", e.target.value)}
                     placeholder="12345678901"
+                    className={errors.taxId ? "border-destructive" : ""}
                   />
+                  <FieldError error={errors.taxId} />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="taxClass">Steuerklasse*</Label>
@@ -571,7 +624,9 @@ export function AddEmployeeForm({ onBack, onSave, onCalculate }: AddEmployeeForm
                     type="date"
                     value={formData.startDate}
                     onChange={(e) => handleInputChange("startDate", e.target.value)}
+                    className={errors.startDate ? "border-destructive" : ""}
                   />
+                  <FieldError error={errors.startDate} />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="weeklyHours">Wochenstunden*</Label>
@@ -768,7 +823,9 @@ export function AddEmployeeForm({ onBack, onSave, onCalculate }: AddEmployeeForm
                     value={formData.grossSalary}
                     onChange={(e) => handleInputChange("grossSalary", parseFloat(e.target.value) || 0)}
                     placeholder="4500.00"
+                    className={errors.grossSalary ? "border-destructive" : ""}
                   />
+                  <FieldError error={errors.grossSalary} />
                 </div>
               )}
 
@@ -796,7 +853,10 @@ export function AddEmployeeForm({ onBack, onSave, onCalculate }: AddEmployeeForm
                         variant="outline"
                         role="combobox"
                         aria-expanded={openHealthInsurance}
-                        className="w-full justify-between"
+                        className={cn(
+                          "w-full justify-between",
+                          errors.healthInsurance && "border-destructive"
+                        )}
                       >
                         {formData.healthInsurance
                           ? GERMAN_HEALTH_INSURANCES.find((insurance) => insurance.name === formData.healthInsurance)?.name
@@ -833,6 +893,7 @@ export function AddEmployeeForm({ onBack, onSave, onCalculate }: AddEmployeeForm
                       </Command>
                     </PopoverContent>
                   </Popover>
+                  <FieldError error={errors.healthInsurance} />
                 </div>
                 
                 <div className="space-y-2">
