@@ -11,7 +11,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { PageHeader } from "@/components/ui/page-header";
-import { EmploymentType, TaxClass, SalaryType, RelationshipStatus, Religion, CHURCH_TAX_RATES, GERMAN_STATES, GERMAN_STATE_NAMES, GERMAN_HEALTH_INSURANCES, SOCIAL_SECURITY_RATES } from "@/types/employee";
+import { EmploymentType, TaxClass, SalaryType, RelationshipStatus, Religion, CHURCH_TAX_RATES, GERMAN_STATES, GERMAN_STATE_NAMES, GERMAN_HEALTH_INSURANCES } from "@/types/employee";
+import { SOCIAL_INSURANCE_RATES_2025 } from "@/constants/social-security";
 import { useEmployeeStorage } from "@/hooks/use-employee-storage";
 import { useToast } from "@/hooks/use-toast";
 
@@ -144,18 +145,18 @@ export function AddEmployeeForm({ onBack, onSave, onCalculate }: AddEmployeeForm
     
     // Kinderlosenzuschlag prüfen (ab 23 Jahre + keine Kinder)
     const hasChildlessSurcharge = formData.childAllowances === 0;
-    const careRate = hasChildlessSurcharge ? SOCIAL_SECURITY_RATES.careWithoutChildren : SOCIAL_SECURITY_RATES.care;
+    const careRate = hasChildlessSurcharge ? SOCIAL_INSURANCE_RATES_2025.careChildless : SOCIAL_INSURANCE_RATES_2025.care;
 
     // Arbeitgeber-Anteile
     const employerHealthInsurance = (grossSalary * (basicHealthInsuranceRate / 2 + formData.healthInsuranceRate / 2)) / 100;
-    const employerPension = (grossSalary * SOCIAL_SECURITY_RATES.pension.employer) / 100;
-    const employerUnemployment = (grossSalary * SOCIAL_SECURITY_RATES.unemployment.employer) / 100;
+    const employerPension = (grossSalary * SOCIAL_INSURANCE_RATES_2025.pension.employer) / 100;
+    const employerUnemployment = (grossSalary * SOCIAL_INSURANCE_RATES_2025.unemployment.employer) / 100;
     const employerCare = (grossSalary * careRate.employer) / 100;
 
     // Arbeitnehmer-Anteile
     const employeeHealthInsurance = (grossSalary * (basicHealthInsuranceRate / 2 + formData.healthInsuranceRate / 2)) / 100;
-    const employeePension = (grossSalary * SOCIAL_SECURITY_RATES.pension.employee) / 100;
-    const employeeUnemployment = (grossSalary * SOCIAL_SECURITY_RATES.unemployment.employee) / 100;
+    const employeePension = (grossSalary * SOCIAL_INSURANCE_RATES_2025.pension.employee) / 100;
+    const employeeUnemployment = (grossSalary * SOCIAL_INSURANCE_RATES_2025.unemployment.employee) / 100;
     const employeeCare = (grossSalary * careRate.employee) / 100;
 
     // Arbeitgeberbrutto
@@ -865,23 +866,23 @@ export function AddEmployeeForm({ onBack, onSave, onCalculate }: AddEmployeeForm
                     <div>
                       <div className="font-medium">Rentenversicherung</div>
                       <div className="text-muted-foreground">
-                        Gesamt: {SOCIAL_SECURITY_RATES.pension.total}%<br />
-                        (AG: {SOCIAL_SECURITY_RATES.pension.employer}% | AN: {SOCIAL_SECURITY_RATES.pension.employee}%)
+                        Gesamt: {SOCIAL_INSURANCE_RATES_2025.pension.total}%<br />
+                        (AG: {SOCIAL_INSURANCE_RATES_2025.pension.employer}% | AN: {SOCIAL_INSURANCE_RATES_2025.pension.employee}%)
                       </div>
                     </div>
                     <div>
                       <div className="font-medium">Arbeitslosenversicherung</div>
                       <div className="text-muted-foreground">
-                        Gesamt: {SOCIAL_SECURITY_RATES.unemployment.total}%<br />
-                        (AG: {SOCIAL_SECURITY_RATES.unemployment.employer}% | AN: {SOCIAL_SECURITY_RATES.unemployment.employee}%)
+                        Gesamt: {SOCIAL_INSURANCE_RATES_2025.unemployment.total}%<br />
+                        (AG: {SOCIAL_INSURANCE_RATES_2025.unemployment.employer}% | AN: {SOCIAL_INSURANCE_RATES_2025.unemployment.employee}%)
                       </div>
                     </div>
                     <div>
                       <div className="font-medium">Pflegeversicherung</div>
                       <div className="text-muted-foreground">
-                        Gesamt: {formData.childAllowances === 0 ? SOCIAL_SECURITY_RATES.careWithoutChildren.total : SOCIAL_SECURITY_RATES.care.total}%<br />
-                        (AG: {formData.childAllowances === 0 ? SOCIAL_SECURITY_RATES.careWithoutChildren.employer : SOCIAL_SECURITY_RATES.care.employer}% | AN: {formData.childAllowances === 0 ? SOCIAL_SECURITY_RATES.careWithoutChildren.employee : SOCIAL_SECURITY_RATES.care.employee}%)<br />
-                        {formData.childAllowances === 0 && <span className="text-xs text-orange-600">+ 0.6% Kinderlosenzuschlag</span>}
+                        Gesamt: {formData.childAllowances === 0 ? SOCIAL_INSURANCE_RATES_2025.careChildless.total : SOCIAL_INSURANCE_RATES_2025.care.total}%<br />
+                        (AG: {formData.childAllowances === 0 ? SOCIAL_INSURANCE_RATES_2025.careChildless.employer : SOCIAL_INSURANCE_RATES_2025.care.employer}% | AN: {formData.childAllowances === 0 ? SOCIAL_INSURANCE_RATES_2025.careChildless.employee : SOCIAL_INSURANCE_RATES_2025.care.employee}%)<br />
+                        {formData.childAllowances === 0 && <span className="text-xs text-orange-600">+ Kinderlosenzuschlag</span>}
                       </div>
                     </div>
                   </div>

@@ -48,7 +48,7 @@ export default function Employees() {
   };
 
   const handleSaveEmployee = (data: any) => {
-    console.log('Mitarbeiter speichern:', data);
+    // Mitarbeiter wird über useEmployeeStorage gespeichert
     setCurrentView('dashboard');
   };
 

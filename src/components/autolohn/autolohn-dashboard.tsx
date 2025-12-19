@@ -97,7 +97,7 @@ export function AutolohnDashboard() {
 
   const handleSave = () => {
     // TODO: Hier würde die Speicherung der Einstellungen erfolgen
-    console.log("Autolohn-Einstellungen speichern:", settings);
+    // Speicherung in localStorage oder Backend implementieren
     toast({
       title: "Einstellungen gespeichert",
       description: "Die Autolohn-Einstellungen wurden erfolgreich gespeichert.",
