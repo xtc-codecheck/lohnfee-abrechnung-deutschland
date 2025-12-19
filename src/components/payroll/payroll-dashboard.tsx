@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowLeft, Plus, FileText, Calendar, DollarSign, Users, Eye, Trash2, BookOpen, User, Baby, Settings, ClipboardList } from "lucide-react";
+import { ArrowLeft, Plus, FileText, Calendar, DollarSign, Users, Eye, Trash2, BookOpen, User, Baby, Settings, ClipboardList, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageHeader } from "@/components/ui/page-header";
@@ -14,6 +14,7 @@ import { EmployeePayrollAccount } from "./employee-payroll-account";
 import { ManualPayrollEntry } from "./manual-payroll-entry";
 import { SystemEnhancementProposal } from "./system-enhancement-proposal";
 import { TaxCalculationSettings } from "./tax-calculation-settings";
+import { TimePayrollSync } from "./time-payroll-sync";
 import { PayrollStatus } from "@/types/payroll";
 
 interface PayrollDashboardProps {
@@ -25,7 +26,7 @@ interface PayrollDashboardProps {
 export function PayrollDashboard({ onBack, onShowSpecialPayments, onShowAutomation }: PayrollDashboardProps) {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [selectedPayrollId, setSelectedPayrollId] = useState<string | null>(null);
-  const [currentView, setCurrentView] = useState<'dashboard' | 'detail' | 'journal' | 'account' | 'manual' | 'settings' | 'enhancements'>('dashboard');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'detail' | 'journal' | 'account' | 'manual' | 'settings' | 'enhancements' | 'time-sync'>('dashboard');
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | null>(null);
   const { payrollPeriods, getPayrollReport, deletePayrollPeriod } = usePayrollStorage();
   const { employees } = useEmployeeStorage();
@@ -167,6 +168,24 @@ export function PayrollDashboard({ onBack, onShowSpecialPayments, onShowAutomati
     );
   }
 
+  if (currentView === 'time-sync') {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold">Zeiterfassung synchronisieren</h1>
+            <p className="text-muted-foreground">Arbeitszeiten aus Zeiterfassung in Lohnabrechnung übernehmen</p>
+          </div>
+          <Button onClick={() => setCurrentView('dashboard')} variant="outline">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Zurück zum Dashboard
+          </Button>
+        </div>
+        <TimePayrollSync onSyncComplete={() => setCurrentView('dashboard')} />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Zentrierter Header */}
@@ -241,6 +260,23 @@ export function PayrollDashboard({ onBack, onShowSpecialPayments, onShowAutomati
           <CardContent>
             <Button variant="outline" className="w-full">
               Manuelle Eingabe
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-card hover:shadow-elegant transition-shadow cursor-pointer bg-gradient-to-br from-primary/5 to-primary/10" onClick={() => setCurrentView('time-sync')}>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Clock className="h-5 w-5 text-primary" />
+              Zeiterfassung übernehmen
+            </CardTitle>
+            <CardDescription>
+              Arbeitszeiten automatisch in Lohnabrechnung importieren
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button className="w-full bg-gradient-primary hover:opacity-90">
+              Zeit → Lohn Sync
             </Button>
           </CardContent>
         </Card>
