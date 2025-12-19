@@ -164,14 +164,9 @@ export const GERMAN_HEALTH_INSURANCES = [
   { name: "WMF BKK", additionalRate: 2.45 }
 ];
 
-// DEPRECATED: Moved to @/constants/social-security 
-// Use SOCIAL_INSURANCE_RATES_2025 instead
-export const SOCIAL_SECURITY_RATES = {
-  pension: { total: 18.6, employee: 9.3, employer: 9.3 },
-  unemployment: { total: 2.6, employee: 1.3, employer: 1.3 },
-  care: { total: 3.4, employee: 1.7, employer: 1.7 },
-  careWithoutChildren: { total: 4.0, employee: 2.0, employer: 2.0 }
-};
+// Sozialversicherungssätze - importiere aus @/constants/social-security
+// Dieser Re-Export wird für Abwärtskompatibilität beibehalten
+export { SOCIAL_INSURANCE_RATES_2025 as SOCIAL_SECURITY_RATES } from '@/constants/social-security';
 
 export interface SalaryCalculation {
   grossSalary: number;

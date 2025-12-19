@@ -102,7 +102,6 @@ export function AutomationDashboard({ onBack }: AutomationDashboardProps) {
     }
 
     setIsLoading(true);
-    console.log("Triggering Zapier webhook:", zapierWebhook);
 
     try {
       const response = await fetch(zapierWebhook, {

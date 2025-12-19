@@ -222,8 +222,7 @@ export function DetailedPayrollCalculation({ employee, onBack, onSave }: Detaile
   };
 
   const generatePDF = () => {
-    // PDF-Generierung implementieren
-    console.log('PDF-Generierung wird implementiert...');
+    // TODO: PDF-Generierung implementieren
   };
 
   if (!employee) {
