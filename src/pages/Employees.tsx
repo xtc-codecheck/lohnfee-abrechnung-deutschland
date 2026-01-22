@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { MainLayout } from "@/components/layout/main-layout";
 import { EmployeeDashboard } from "@/components/employees/employee-dashboard";
-import { AddEmployeeForm } from "@/components/employees/add-employee-form";
+import { EmployeeWizard } from "@/components/employees/wizard";
 import { SalaryCalculator } from "@/components/salary/salary-calculator";
 import { UltimateSalaryCalculator } from "@/components/salary/ultimate-salary-calculator";
 import { QuickSalaryCalculator } from "@/components/salary/quick-salary-calculator";
@@ -68,7 +68,7 @@ export default function Employees() {
         />
       )}
       {currentView === 'add-employee' && (
-        <AddEmployeeForm 
+        <EmployeeWizard 
           onBack={handleBack}
           onSave={handleSaveEmployee}
           onCalculate={handleCalculateSalary}
