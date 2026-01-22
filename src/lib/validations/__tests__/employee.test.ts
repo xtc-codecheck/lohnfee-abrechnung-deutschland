@@ -157,6 +157,14 @@ describe('Employee Validation Schemas', () => {
       expect(result.success).toBe(false);
     });
 
+    it('should accept zero gross salary', () => {
+      const result = salaryDataSchema.safeParse({
+        grossSalary: 0,
+        salaryType: 'fixed',
+      });
+      expect(result.success).toBe(true);
+    });
+
     it('should accept all salary types', () => {
       ['fixed', 'hourly', 'variable'].forEach(type => {
         const result = salaryDataSchema.safeParse({
@@ -165,6 +173,32 @@ describe('Employee Validation Schemas', () => {
         });
         expect(result.success).toBe(true);
       });
+    });
+
+    it('should accept Minijob salary (556€)', () => {
+      const result = salaryDataSchema.safeParse({
+        grossSalary: 556,
+        salaryType: 'fixed',
+      });
+      expect(result.success).toBe(true);
+    });
+
+    it('should accept Midijob salary (556,01€ - 2000€)', () => {
+      [556.01, 1000, 2000].forEach(salary => {
+        const result = salaryDataSchema.safeParse({
+          grossSalary: salary,
+          salaryType: 'fixed',
+        });
+        expect(result.success).toBe(true);
+      });
+    });
+
+    it('should accept very high salary', () => {
+      const result = salaryDataSchema.safeParse({
+        grossSalary: 100000,
+        salaryType: 'fixed',
+      });
+      expect(result.success).toBe(true);
     });
   });
 
