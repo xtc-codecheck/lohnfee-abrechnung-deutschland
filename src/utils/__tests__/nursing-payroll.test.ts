@@ -15,11 +15,11 @@ describe('Pflege-Berechnungen (Nursing Payroll)', () => {
   // ============= SFN-Zuschläge (steuerfrei) =============
   
   describe('calculateSfnBonuses (Nursing)', () => {
-    it('sollte Nachtzuschlag mit 25% berechnen', () => {
+    it('sollte Nachtzuschlag mit 30% berechnen (Mischkalkulation)', () => {
       const result = calculateSfnBonuses(20, 40, 0, 0, 0);
       
-      // 40h * 20€ * 25% = 200€
-      expect(result.night).toBeCloseTo(200, 0);
+      // 40h * 20€ * 30% = 240€ (Mischkalkulation 25%/40%)
+      expect(result.night).toBeCloseTo(240, 0);
     });
 
     it('sollte Sonntagszuschlag mit 50% berechnen', () => {
@@ -53,8 +53,8 @@ describe('Pflege-Berechnungen (Nursing Payroll)', () => {
     it('sollte 50€/h Cap anwenden', () => {
       const result = calculateSfnBonuses(60, 10, 0, 0, 0); // 60€/h > Cap
       
-      // Sollte auf Basis von 50€/h berechnet werden
-      const expectedMax = 10 * 50 * 0.25;
+      // Sollte auf Basis von 50€/h und 30% berechnet werden
+      const expectedMax = 10 * 50 * 0.30;
       expect(result.night).toBeLessThanOrEqual(expectedMax);
     });
 
