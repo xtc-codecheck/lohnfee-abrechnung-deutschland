@@ -4,6 +4,7 @@ import { MainLayout } from "@/components/layout/main-layout";
 import { EmployeeDashboard } from "@/components/employees/employee-dashboard";
 import { AddEmployeeForm } from "@/components/employees/add-employee-form";
 import { SalaryCalculator } from "@/components/salary/salary-calculator";
+import { UltimateSalaryCalculator } from "@/components/salary/ultimate-salary-calculator";
 import { QuickSalaryCalculator } from "@/components/salary/quick-salary-calculator";
 import { TimeTrackingDashboard } from "@/components/time-tracking/time-tracking-dashboard";
 import { WorkingTimeAccounts } from "@/components/time-tracking/working-time-accounts";
@@ -15,7 +16,7 @@ import { AuthoritiesIntegration } from "@/components/integration/authorities-int
 import { AutomationDashboard } from "@/components/automation/automation-dashboard";
 import { ExtendedCalculations } from "@/components/calculations/extended-calculations";
 
-type EmployeeView = 'dashboard' | 'add-employee' | 'salary-calculator' | 'quick-salary-calculator' | 'time-tracking' | 'working-time-accounts' | 'compliance' | 'reports' | 'advanced-payroll' | 'authorities' | 'extended-calc';
+type EmployeeView = 'dashboard' | 'add-employee' | 'salary-calculator' | 'quick-salary-calculator' | 'ultimate-calculator' | 'time-tracking' | 'working-time-accounts' | 'compliance' | 'reports' | 'advanced-payroll' | 'authorities' | 'extended-calc';
 
 export default function Employees() {
   const navigate = useNavigate();
@@ -80,7 +81,12 @@ export default function Employees() {
         />
       )}
       {currentView === 'quick-salary-calculator' && (
-        <QuickSalaryCalculator 
+        <UltimateSalaryCalculator 
+          onBack={handleBack}
+        />
+      )}
+      {currentView === 'ultimate-calculator' && (
+        <UltimateSalaryCalculator 
           onBack={handleBack}
         />
       )}
