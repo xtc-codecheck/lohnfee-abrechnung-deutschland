@@ -362,6 +362,7 @@ export function DetailedPayrollCalculation({ employee, onBack, onSave }: Detaile
                 },
                 calculation,
               }}
+              industryResult={industryResult}
             />
           )}
           <Button onClick={handleSaveCalculation}>
