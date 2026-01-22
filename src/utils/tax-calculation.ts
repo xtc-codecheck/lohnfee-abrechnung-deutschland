@@ -109,6 +109,7 @@ function getWageTaxFromTable(grossSalary: number, taxClass: number): number {
  * Verwendet die offizielle Lohnsteuertabelle 2025
  */
 export function calculateIncomeTax(grossSalary: number, taxClass: number = 1): number {
+  if (grossSalary <= 0) return 0;
   return getWageTaxFromTable(grossSalary, taxClass);
 }
 
@@ -116,6 +117,9 @@ export function calculateIncomeTax(grossSalary: number, taxClass: number = 1): n
  * Berechnet den Solidaritätszuschlag
  */
 export function calculateSolidarityTax(incomeTax: number): number {
+  // Negative Steuern ablehnen
+  if (incomeTax <= 0) return 0;
+  
   // Für 2025: Freigrenze von €19.950 Einkommensteuer jährlich
   const freibetragYearly = TAX_ALLOWANCES_2025.solidarityTaxFreeAmount;
   
@@ -134,6 +138,7 @@ export function calculateSolidarityTax(incomeTax: number): number {
  * Berechnet die Kirchensteuer
  */
 export function calculateChurchTax(incomeTax: number, rate: number): number {
+  if (incomeTax <= 0) return 0;
   return Math.floor(incomeTax * (rate / 100));
 }
 

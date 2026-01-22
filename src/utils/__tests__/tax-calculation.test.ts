@@ -21,6 +21,16 @@ describe('Tax Calculation Functions', () => {
       expect(tax).toBe(0);
     });
 
+    it('should return 0 for negative income', () => {
+      const tax = calculateIncomeTax(-1000, 1);
+      expect(tax).toBe(0);
+    });
+
+    it('should return 0 for zero income', () => {
+      const tax = calculateIncomeTax(0, 1);
+      expect(tax).toBe(0);
+    });
+
     it('should calculate higher tax for tax class 5', () => {
       const taxClass1 = calculateIncomeTax(4000, 1);
       const taxClass5 = calculateIncomeTax(4000, 5);
@@ -31,6 +41,14 @@ describe('Tax Calculation Functions', () => {
       const taxClass1 = calculateIncomeTax(4000, 1);
       const taxClass3 = calculateIncomeTax(4000, 3);
       expect(taxClass3).toBeLessThan(taxClass1);
+    });
+
+    it('should handle all tax classes (1-6)', () => {
+      [1, 2, 3, 4, 5, 6].forEach(taxClass => {
+        const tax = calculateIncomeTax(4000, taxClass);
+        expect(tax).toBeGreaterThanOrEqual(0);
+        expect(typeof tax).toBe('number');
+      });
     });
   });
 
@@ -45,6 +63,11 @@ describe('Tax Calculation Functions', () => {
       const soli = calculateSolidarityTax(incomeTax);
       expect(soli).toBeGreaterThan(0);
       expect(soli).toBeLessThanOrEqual(incomeTax * 0.055);
+    });
+
+    it('should return 0 for negative income tax', () => {
+      const soli = calculateSolidarityTax(-1000);
+      expect(soli).toBe(0);
     });
 
     it('should be integer (floor)', () => {
@@ -66,6 +89,11 @@ describe('Tax Calculation Functions', () => {
 
     it('should return 0 for 0% rate', () => {
       const churchTax = calculateChurchTax(10000, 0);
+      expect(churchTax).toBe(0);
+    });
+
+    it('should return 0 for negative income tax', () => {
+      const churchTax = calculateChurchTax(-1000, 9);
       expect(churchTax).toBe(0);
     });
   });
