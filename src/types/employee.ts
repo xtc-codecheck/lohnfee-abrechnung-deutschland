@@ -45,10 +45,29 @@ export interface EmploymentData {
   workDays: WorkDay[];
   department: string;
   position: string;
+  industry?: IndustryType; // Branche für branchenspezifische Berechnungen
+  industryConfig?: IndustryConfig; // Branchenspezifische Konfiguration
   // Compliance Felder
   contractSigned: boolean;
   contractSignedDate?: Date;
   dataRetentionDate: Date; // 5 Jahre nach Beendigung für Rentenversicherung
+}
+
+// Branchentypen für spezifische Berechnungslogik
+export type IndustryType = 'standard' | 'construction' | 'gastronomy' | 'nursing';
+
+// Branchenspezifische Konfiguration
+export interface IndustryConfig {
+  // Baulohn
+  constructionRegion?: 'west' | 'east';
+  constructionTradeGroup?: 'worker' | 'skilled' | 'foreman' | 'master';
+  isWinterPeriod?: boolean;
+  // Gastronomie
+  mealsProvided?: boolean;
+  tipsFromEmployer?: boolean;
+  // Pflege
+  careLevel?: 'assistant' | 'nurse' | 'specialist' | 'lead';
+  shiftPattern?: ('early' | 'late' | 'night' | 'split')[];
 }
 
 export interface WorkDay {

@@ -110,6 +110,134 @@ export function EmploymentDataStep({ formData, errors, onInputChange }: WizardSt
           </div>
         </div>
 
+        {/* Branche für spezifische Abrechnungen */}
+        <div className="space-y-4 bg-accent/30 p-4 rounded-lg border">
+          <h4 className="font-medium flex items-center gap-2">
+            🏭 Branchenspezifische Abrechnung
+          </h4>
+          <p className="text-sm text-muted-foreground">
+            Wählen Sie eine Branche für automatische Berechnung von Zuschlägen, Umlagen und Sachbezügen.
+          </p>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="industry">Branche</Label>
+              <Select value={formData.industry} onValueChange={(value) => onInputChange('industry', value)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="standard">Standard (keine spezifische Branche)</SelectItem>
+                  <SelectItem value="construction">🏗️ Baulohn (SOKA-BAU, Wintergeld)</SelectItem>
+                  <SelectItem value="gastronomy">🍽️ Gastronomie (Trinkgeld, Mahlzeiten)</SelectItem>
+                  <SelectItem value="nursing">🏥 Pflege/Schichtdienst (SFN-Zuschläge)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Baulohn-spezifische Felder */}
+          {formData.industry === 'construction' && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 p-4 bg-orange-50 rounded-lg border border-orange-200">
+              <div className="col-span-2 flex items-center gap-2 text-orange-800 font-medium">
+                🏗️ Baulohn-Einstellungen
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="constructionRegion">Tarifgebiet</Label>
+                <Select 
+                  value={formData.constructionRegion} 
+                  onValueChange={(value) => onInputChange('constructionRegion', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="west">West (alte Bundesländer)</SelectItem>
+                    <SelectItem value="east">Ost (neue Bundesländer)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="constructionTradeGroup">Lohngruppe</Label>
+                <Select 
+                  value={formData.constructionTradeGroup} 
+                  onValueChange={(value) => onInputChange('constructionTradeGroup', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="worker">Bauhelfer/Werker</SelectItem>
+                    <SelectItem value="skilled">Facharbeiter</SelectItem>
+                    <SelectItem value="foreman">Vorarbeiter/Polier</SelectItem>
+                    <SelectItem value="master">Baumeister</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="col-span-2 text-xs text-orange-700">
+                SOKA-BAU Arbeitgeber-Beitrag: 15,20% • Urlaubskasse • Wintergeld (Dez-März)
+              </div>
+            </div>
+          )}
+
+          {/* Gastronomie-spezifische Felder */}
+          {formData.industry === 'gastronomy' && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 p-4 bg-amber-50 rounded-lg border border-amber-200">
+              <div className="col-span-2 flex items-center gap-2 text-amber-800 font-medium">
+                🍽️ Gastronomie-Einstellungen
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="mealsProvided"
+                  checked={formData.mealsProvided}
+                  onCheckedChange={(checked) => onInputChange('mealsProvided', checked)}
+                />
+                <Label htmlFor="mealsProvided">Mahlzeiten werden gestellt</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="tipsFromEmployer"
+                  checked={formData.tipsFromEmployer}
+                  onCheckedChange={(checked) => onInputChange('tipsFromEmployer', checked)}
+                />
+                <Label htmlFor="tipsFromEmployer">Trinkgeld vom Arbeitgeber</Label>
+              </div>
+              <div className="col-span-2 text-xs text-amber-700">
+                Sachbezug Mahlzeiten 2025: Frühstück 2,17€ • Mittag/Abend je 4,13€ • Trinkgeld von Gästen ist steuerfrei
+              </div>
+            </div>
+          )}
+
+          {/* Pflege-spezifische Felder */}
+          {formData.industry === 'nursing' && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+              <div className="col-span-2 flex items-center gap-2 text-blue-800 font-medium">
+                🏥 Pflege/Schichtdienst-Einstellungen
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="careLevel">Qualifikationsstufe</Label>
+                <Select 
+                  value={formData.careLevel} 
+                  onValueChange={(value) => onInputChange('careLevel', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="assistant">Pflegehilfskraft</SelectItem>
+                    <SelectItem value="nurse">Pflegefachkraft</SelectItem>
+                    <SelectItem value="specialist">Fachpfleger/in</SelectItem>
+                    <SelectItem value="lead">Stationsleitung</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="col-span-2 text-xs text-blue-700">
+                SFN-Zuschläge (steuerfrei): Nacht 25% • Sonntag 50% • Feiertag 125% • Schichtzulagen nach TVöD-P
+              </div>
+            </div>
+          )}
+        </div>
+
         {/* Eintrittsdatum, Wochenstunden, Urlaubstage */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="space-y-2">
