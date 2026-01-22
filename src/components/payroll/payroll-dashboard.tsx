@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowLeft, Plus, FileText, Calendar, DollarSign, Users, Eye, Trash2, BookOpen, User, Baby, Settings, ClipboardList, Clock, Shield } from "lucide-react";
+import { ArrowLeft, Plus, FileText, Calendar, DollarSign, Users, Eye, Trash2, BookOpen, User, Baby, Settings, ClipboardList, Clock, Shield, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageHeader } from "@/components/ui/page-header";
@@ -15,6 +15,7 @@ import { ManualPayrollEntry } from "./manual-payroll-entry";
 import { SystemEnhancementProposal } from "./system-enhancement-proposal";
 import { TaxCalculationSettings } from "./tax-calculation-settings";
 import { TimePayrollSync } from "./time-payroll-sync";
+import { DatevExportDialog } from "./datev-export-dialog";
 import { PayrollStatus } from "@/types/payroll";
 
 interface PayrollDashboardProps {
@@ -29,7 +30,7 @@ export function PayrollDashboard({ onBack, onShowSpecialPayments, onShowAutomati
   const [selectedPayrollId, setSelectedPayrollId] = useState<string | null>(null);
   const [currentView, setCurrentView] = useState<'dashboard' | 'detail' | 'journal' | 'account' | 'manual' | 'settings' | 'enhancements' | 'time-sync'>('dashboard');
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | null>(null);
-  const { payrollPeriods, getPayrollReport, deletePayrollPeriod } = usePayrollStorage();
+  const { payrollPeriods, payrollEntries, getPayrollReport, deletePayrollPeriod } = usePayrollStorage();
   const { employees } = useEmployeeStorage();
 
   const getStatusColor = (status: PayrollStatus) => {
@@ -296,6 +297,33 @@ export function PayrollDashboard({ onBack, onShowSpecialPayments, onShowAutomati
             <Button className="w-full bg-gradient-primary hover:opacity-90">
               Zeit → Lohn Sync
             </Button>
+          </CardContent>
+        </Card>
+
+        {/* DATEV Export Card */}
+        <Card className="shadow-card hover:shadow-elegant transition-shadow border-purple-200 bg-gradient-to-br from-purple-50 to-purple-100/50 dark:from-purple-950/20 dark:to-purple-900/10">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Download className="h-5 w-5 text-purple-600" />
+              DATEV Export
+            </CardTitle>
+            <CardDescription>
+              Lohndaten für Steuerberater exportieren (SKR03/SKR04)
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {sortedPeriods.length > 0 && payrollEntries.length > 0 ? (
+              <DatevExportDialog 
+                payrollEntries={payrollEntries.filter(e => 
+                  e.payrollPeriodId === sortedPeriods[0]?.id
+                )}
+                periode={sortedPeriods[0]}
+              />
+            ) : (
+              <Button variant="outline" className="w-full" disabled>
+                Keine Abrechnungen vorhanden
+              </Button>
+            )}
           </CardContent>
         </Card>
 
