@@ -9,6 +9,7 @@ import {
 } from '@/utils/time-payroll-integration';
 import { PayrollEntry, WorkingTimeData, BONUS_RATES } from '@/types/payroll';
 import { calculateCompleteTax } from '@/utils/tax-calculation';
+import { buildTaxParamsFromEmployee } from '@/utils/tax-params-factory';
 
 export interface TimePayrollSyncResult {
   success: boolean;
@@ -118,20 +119,12 @@ export function useTimePayrollIntegration() {
           total: 0
         };
 
-        // Berechne Gehalt mit Steuern
+        // Berechne Gehalt mit Steuern - nutze zentrale Factory
         const grossWithAdditions = employee.salaryData.grossSalary + additions.total;
-        const taxResult = calculateCompleteTax({
+        const taxParams = buildTaxParamsFromEmployee(employee, {
           grossSalaryYearly: grossWithAdditions * 12,
-          taxClass: employee.personalData.taxClass,
-          childAllowances: employee.personalData.childAllowances || 0,
-          churchTax: employee.personalData.churchTax,
-          churchTaxRate: employee.personalData.churchTax ? 9 : 0,
-          healthInsuranceRate: employee.personalData.healthInsurance?.additionalRate || 1.7,
-          isEastGermany: false,
-          isChildless: (employee.personalData.childAllowances || 0) === 0,
-          age: 30,
-          employmentType: employee.employmentData.employmentType
         });
+        const taxResult = calculateCompleteTax(taxParams);
 
         const payrollEntry: Omit<PayrollEntry, 'id' | 'createdAt' | 'updatedAt'> = {
           employeeId: employee.id,

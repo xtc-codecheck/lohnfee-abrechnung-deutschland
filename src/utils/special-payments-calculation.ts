@@ -4,6 +4,7 @@ import { differenceInDays, differenceInCalendarDays, startOfDay, endOfDay } from
 import { Employee } from '@/types/employee';
 import { SickPayCalculation, MaternityBenefits, ShortTimeWork, SICK_PAY_RATES, MATERNITY_RATES, SHORT_TIME_WORK_RATES } from '@/types/special-payments';
 import { calculateCompleteTax } from './tax-calculation';
+import { buildTaxParamsFromEmployee } from './tax-params-factory';
 
 export interface SickPayParams {
   employee: Employee;
@@ -39,18 +40,11 @@ export function calculateSickPay(params: SickPayParams): SickPayCalculation {
   // Tägliches Bruttogehalt (Monat / 30 Tage)
   const dailyGrossSalary = grossSalary / 30;
   
-  // Berechne Nettogehalt für 90%-Grenze
-  const taxResult = calculateCompleteTax({
+  // Berechne Nettogehalt für 90%-Grenze mit zentraler Factory
+  const taxParams = buildTaxParamsFromEmployee(employee, {
     grossSalaryYearly: grossSalary * 12,
-    taxClass: employee.personalData.taxClass,
-    childAllowances: employee.personalData.childAllowances || 0,
-    churchTax: employee.personalData.churchTax,
-    churchTaxRate: employee.personalData.churchTax ? 9 : 0,
-    healthInsuranceRate: 2.45, // Standard TK-Satz
-    isEastGermany: false,
-    isChildless: (employee.personalData.childAllowances || 0) === 0,
-    age: 30, // Vereinfacht
   });
+  const taxResult = calculateCompleteTax(taxParams);
   
   const dailyNetSalary = taxResult.netMonthly / 30;
   
@@ -102,17 +96,10 @@ export function calculateMaternityBenefits(params: MaternityParams): MaternityBe
     paidByEmployer = dailyEmployerSupplement * daysInPeriod;
   } else if (type === 'parental-leave') {
     // Elterngeld: 65% des Nettogehalts (vereinfacht)
-    const taxResult = calculateCompleteTax({
+    const taxParams = buildTaxParamsFromEmployee(employee, {
       grossSalaryYearly: grossSalary * 12,
-      taxClass: employee.personalData.taxClass,
-      childAllowances: employee.personalData.childAllowances || 0,
-      churchTax: employee.personalData.churchTax,
-      churchTaxRate: employee.personalData.churchTax ? 9 : 0,
-      healthInsuranceRate: 2.45,
-      isEastGermany: false,
-      isChildless: (employee.personalData.childAllowances || 0) === 0,
-      age: 30,
     });
+    const taxResult = calculateCompleteTax(taxParams);
     
     dailyBenefit = (taxResult.netMonthly * 0.65) / 30;
     paidByInsurance = dailyBenefit * daysInPeriod;
@@ -150,17 +137,10 @@ export function calculateShortTimeWork(params: ShortTimeWorkParams): ShortTimeWo
   const grossSalaryLoss = grossSalary * reductionPercentage;
   
   // Kurzarbeitergeld: 60% oder 67% des Netto-Entgeltausfalls
-  const taxResult = calculateCompleteTax({
+  const taxParams = buildTaxParamsFromEmployee(employee, {
     grossSalaryYearly: grossSalaryLoss * 12,
-    taxClass: employee.personalData.taxClass,
-    childAllowances: employee.personalData.childAllowances || 0,
-    churchTax: employee.personalData.churchTax,
-    churchTaxRate: employee.personalData.churchTax ? 9 : 0,
-    healthInsuranceRate: 2.45,
-    isEastGermany: false,
-    isChildless: (employee.personalData.childAllowances || 0) === 0,
-    age: 30,
   });
+  const taxResult = calculateCompleteTax(taxParams);
   
   const netLoss = grossSalaryLoss - (grossSalaryLoss - taxResult.netMonthly); // Vereinfachte Berechnung
   const rate = hasChildren ? SHORT_TIME_WORK_RATES.withChildrenPercentage : SHORT_TIME_WORK_RATES.basePercentage;
