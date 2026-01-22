@@ -450,3 +450,104 @@ export const REGION_NAMES: Record<Region, string> = {
   dresden: 'Dresden',
   rural: 'Ländlicher Raum',
 };
+
+// Kompatibilität mit Payroll Guardian
+export interface SimpleBenchmarkParams {
+  position: string;
+  industry: string;
+  region: string;
+  experience: number;
+  education: string;
+}
+
+export interface SimpleBenchmarkResult {
+  percentile: number;
+  medianSalary: number;
+  delta: number;
+}
+
+/**
+ * Vereinfachte Benchmarking-Funktion für Payroll Guardian
+ */
+export function getSalaryBenchmark(params: SimpleBenchmarkParams): SimpleBenchmarkResult {
+  // Map position zu Experience Level
+  const positionLower = params.position.toLowerCase();
+  let experienceLevel: ExperienceLevel = 'mid';
+  
+  if (positionLower.includes('junior') || positionLower.includes('trainee') || positionLower.includes('azubi')) {
+    experienceLevel = 'junior';
+  } else if (positionLower.includes('senior') || positionLower.includes('specialist')) {
+    experienceLevel = 'senior';
+  } else if (positionLower.includes('lead') || positionLower.includes('manager') || positionLower.includes('leiter')) {
+    experienceLevel = 'lead';
+  } else if (positionLower.includes('director') || positionLower.includes('head') || positionLower.includes('chief')) {
+    experienceLevel = 'executive';
+  }
+
+  // Map industry string zu Industry type
+  const industryLower = params.industry.toLowerCase();
+  let industry: Industry = 'manufacturing';
+  
+  if (industryLower.includes('it') || industryLower.includes('software') || industryLower.includes('tech')) {
+    industry = 'it_software';
+  } else if (industryLower.includes('finanz') || industryLower.includes('bank') || industryLower.includes('buchhalt')) {
+    industry = 'finance';
+  } else if (industryLower.includes('gesund') || industryLower.includes('pflege') || industryLower.includes('health')) {
+    industry = 'healthcare';
+  } else if (industryLower.includes('handel') || industryLower.includes('retail') || industryLower.includes('verkauf')) {
+    industry = 'retail';
+  } else if (industryLower.includes('bau') || industryLower.includes('construct')) {
+    industry = 'construction';
+  } else if (industryLower.includes('gastro') || industryLower.includes('hotel')) {
+    industry = 'hospitality';
+  } else if (industryLower.includes('bildung') || industryLower.includes('education') || industryLower.includes('schule')) {
+    industry = 'education';
+  } else if (industryLower.includes('öffentlich') || industryLower.includes('public') || industryLower.includes('staat')) {
+    industry = 'public_service';
+  } else if (industryLower.includes('berat') || industryLower.includes('consult')) {
+    industry = 'consulting';
+  }
+
+  // Map region zu Region type
+  const regionLower = params.region.toLowerCase();
+  let region: Region = 'rural';
+  
+  if (regionLower.includes('münchen') || regionLower.includes('munich') || regionLower.includes('bayern')) {
+    region = 'munich';
+  } else if (regionLower.includes('frankfurt') || regionLower.includes('hessen')) {
+    region = 'frankfurt';
+  } else if (regionLower.includes('berlin')) {
+    region = 'berlin';
+  } else if (regionLower.includes('hamburg')) {
+    region = 'hamburg';
+  } else if (regionLower.includes('köln') || regionLower.includes('cologne')) {
+    region = 'cologne';
+  } else if (regionLower.includes('stuttgart') || regionLower.includes('baden')) {
+    region = 'stuttgart';
+  } else if (regionLower.includes('düsseldorf') || regionLower.includes('nordrhein')) {
+    region = 'dusseldorf';
+  } else if (regionLower.includes('leipzig') || regionLower.includes('sachsen')) {
+    region = 'leipzig';
+  } else if (regionLower.includes('dresden')) {
+    region = 'dresden';
+  }
+
+  const industryData = INDUSTRY_SALARIES[industry];
+  const medianSalary = industryData.median * EXPERIENCE_MULTIPLIERS[experienceLevel] * 12;
+  
+  // Für jetzt simulieren wir ein Percentil basierend auf Erfahrung
+  const experienceYears = params.experience;
+  let percentile = 50;
+  
+  if (experienceYears >= 15) percentile = 80;
+  else if (experienceYears >= 10) percentile = 70;
+  else if (experienceYears >= 5) percentile = 55;
+  else if (experienceYears >= 2) percentile = 40;
+  else percentile = 25;
+
+  return {
+    percentile,
+    medianSalary,
+    delta: 0 // Wird vom Caller berechnet
+  };
+}
