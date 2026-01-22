@@ -23,6 +23,7 @@ import {
   TaxCalculationParams,
   OvertimeCalculation 
 } from '@/utils/tax-calculation';
+import { buildTaxParamsFromEmployee } from '@/utils/tax-params-factory';
 import { format } from 'date-fns';
 import { de } from 'date-fns/locale';
 
@@ -120,16 +121,23 @@ export function DetailedPayrollCalculation({ employee, onBack, onSave }: Detaile
     other: 0,
   });
 
-  const [taxParams, setTaxParams] = useState<TaxCalculationParams>({
-    grossSalaryYearly: employee?.salaryData.grossSalary * 12 || 50000,
-    taxClass: employee?.personalData.taxClass || 'I',
-    childAllowances: employee?.personalData.childAllowances || 0,
-    churchTax: employee?.personalData.churchTax || false,
-    churchTaxRate: 9, // Default 9% (andere Länder)
-    healthInsuranceRate: employee?.personalData.healthInsurance.additionalRate || 1.7,
-    isEastGermany: false,
-    isChildless: true,
-    age: 30,
+  // Initiale Tax-Params aus Employee erstellen
+  const [taxParams, setTaxParams] = useState<TaxCalculationParams>(() => {
+    if (employee) {
+      return buildTaxParamsFromEmployee(employee);
+    }
+    // Fallback für den Fall ohne Employee
+    return {
+      grossSalaryYearly: 50000,
+      taxClass: 'I',
+      childAllowances: 0,
+      churchTax: false,
+      churchTaxRate: 0,
+      healthInsuranceRate: 1.7,
+      isEastGermany: false,
+      isChildless: true,
+      age: 30,
+    };
   });
 
   const [calculation, setCalculation] = useState<any>(null);
