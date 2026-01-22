@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowLeft, Plus, FileText, Calendar, DollarSign, Users, Eye, Trash2, BookOpen, User, Baby, Settings, ClipboardList, Clock } from "lucide-react";
+import { ArrowLeft, Plus, FileText, Calendar, DollarSign, Users, Eye, Trash2, BookOpen, User, Baby, Settings, ClipboardList, Clock, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageHeader } from "@/components/ui/page-header";
@@ -21,9 +21,10 @@ interface PayrollDashboardProps {
   onBack: () => void;
   onShowSpecialPayments?: () => void;
   onShowAutomation?: () => void;
+  onShowGuardian?: () => void;
 }
 
-export function PayrollDashboard({ onBack, onShowSpecialPayments, onShowAutomation }: PayrollDashboardProps) {
+export function PayrollDashboard({ onBack, onShowSpecialPayments, onShowAutomation, onShowGuardian }: PayrollDashboardProps) {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [selectedPayrollId, setSelectedPayrollId] = useState<string | null>(null);
   const [currentView, setCurrentView] = useState<'dashboard' | 'detail' | 'journal' | 'account' | 'manual' | 'settings' | 'enhancements' | 'time-sync'>('dashboard');
@@ -226,6 +227,23 @@ export function PayrollDashboard({ onBack, onShowSpecialPayments, onShowAutomati
           <CardContent>
             <Button variant="outline" className="w-full">
               Automation-Center
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-card hover:shadow-elegant transition-shadow cursor-pointer bg-gradient-to-br from-primary/10 to-secondary/10 border-primary/20" onClick={() => onShowGuardian?.()}>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Shield className="h-5 w-5 text-primary" />
+              Payroll Guardian
+            </CardTitle>
+            <CardDescription>
+              KI-gestützte Anomalie-Erkennung & Prognosen
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button className="w-full bg-gradient-primary hover:opacity-90">
+              Guardian öffnen
             </Button>
           </CardContent>
         </Card>
