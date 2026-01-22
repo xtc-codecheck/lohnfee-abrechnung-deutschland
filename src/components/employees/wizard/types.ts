@@ -43,6 +43,17 @@ export interface EmployeeFormData {
   contractSignedDate: string;
   workDays: WorkDayData[];
   
+  // Branchenspezifische Daten
+  industry: 'standard' | 'construction' | 'gastronomy' | 'nursing';
+  // Baulohn
+  constructionRegion: 'west' | 'east';
+  constructionTradeGroup: 'worker' | 'skilled' | 'foreman' | 'master';
+  // Gastronomie
+  mealsProvided: boolean;
+  tipsFromEmployer: boolean;
+  // Pflege
+  careLevel: 'assistant' | 'nurse' | 'specialist' | 'lead';
+  
   // Gehaltsdaten
   grossSalary: number;
   hourlyWage: number;
@@ -127,6 +138,14 @@ export const initialFormData: EmployeeFormData = {
     { day: 'saturday', isWorkDay: false, hours: 0 },
     { day: 'sunday', isWorkDay: false, hours: 0 },
   ],
+  
+  // Branchenspezifische Daten
+  industry: 'standard',
+  constructionRegion: 'west',
+  constructionTradeGroup: 'skilled',
+  mealsProvided: false,
+  tipsFromEmployer: false,
+  careLevel: 'nurse',
   
   // Gehaltsdaten
   grossSalary: 0,

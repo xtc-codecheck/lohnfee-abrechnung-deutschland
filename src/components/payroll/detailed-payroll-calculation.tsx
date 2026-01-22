@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,9 +13,13 @@ import {
   Download,
   Euro,
   Clock,
-  Calendar
+  Calendar,
+  HardHat,
+  UtensilsCrossed,
+  Stethoscope
 } from 'lucide-react';
 import { PayrollPDFGenerator } from './payroll-pdf-generator';
+import { IndustryPayrollInputs } from './industry-payroll-inputs';
 import { Employee } from '@/types/employee';
 import { 
   calculateCompleteTax, 
@@ -24,6 +28,7 @@ import {
   OvertimeCalculation 
 } from '@/utils/tax-calculation';
 import { buildTaxParamsFromEmployee } from '@/utils/tax-params-factory';
+import { useIndustryPayroll, IndustryPayrollInput, IndustryPayrollResult, INDUSTRY_LABELS } from '@/hooks/use-industry-payroll';
 import { format } from 'date-fns';
 import { de } from 'date-fns/locale';
 
@@ -93,6 +98,8 @@ export interface PayrollCalculationResult {
 }
 
 export function DetailedPayrollCalculation({ employee, onBack, onSave }: DetailedPayrollCalculationProps) {
+  const { calculateIndustryPayroll, hasIndustrySpecificPayroll, getEmployeeIndustry } = useIndustryPayroll();
+  
   const [period, setPeriod] = useState({
     year: new Date().getFullYear(),
     month: new Date().getMonth() + 1,
@@ -121,6 +128,15 @@ export function DetailedPayrollCalculation({ employee, onBack, onSave }: Detaile
     other: 0,
   });
 
+  // Branchenspezifische Eingaben
+  const [industryInput, setIndustryInput] = useState<IndustryPayrollInput>({
+    grossMonthly: employee?.salaryData.grossSalary ?? 0,
+    hoursWorked: 160,
+    nightHours: 0,
+    sundayHours: 0,
+    holidayHours: 0,
+  });
+
   // Initiale Tax-Params aus Employee erstellen
   const [taxParams, setTaxParams] = useState<TaxCalculationParams>(() => {
     if (employee) {
@@ -142,8 +158,32 @@ export function DetailedPayrollCalculation({ employee, onBack, onSave }: Detaile
 
   const [calculation, setCalculation] = useState<any>(null);
   const [overtimeResult, setOvertimeResult] = useState<any>(null);
+  const [industryResult, setIndustryResult] = useState<IndustryPayrollResult | undefined>();
 
-  // Berechnung der Lohnabrechnung
+  // Branchenspezifische Berechnung
+  const industryPayrollResult = useMemo(() => {
+    if (!employee || !hasIndustrySpecificPayroll(employee)) {
+      return undefined;
+    }
+    
+    const input: IndustryPayrollInput = {
+      ...industryInput,
+      grossMonthly: employee.salaryData.grossSalary,
+      hoursWorked: workingTime.regularHours,
+      nightHours: workingTime.nightHours,
+      sundayHours: workingTime.sundayHours,
+      holidayHours: workingTime.holidayHours,
+    };
+    
+    return calculateIndustryPayroll(employee, input, period.month, period.year);
+  }, [employee, industryInput, workingTime, period, calculateIndustryPayroll, hasIndustrySpecificPayroll]);
+
+  // Sync industry result
+  useEffect(() => {
+    setIndustryResult(industryPayrollResult);
+  }, [industryPayrollResult]);
+
+  // Berechnung der Lohnabrechnung mit Branchenlogik
   useEffect(() => {
     if (!employee) return;
 
@@ -164,8 +204,13 @@ export function DetailedPayrollCalculation({ employee, onBack, onSave }: Detaile
     const overtimeRes = calculateOvertimeAndBonuses(overtimeCalc);
     setOvertimeResult(overtimeRes);
 
+    // Branchenspezifische Zulagen hinzufügen
+    const industryAdditions = industryResult?.additionalGross ?? 0;
+    const industryTaxFree = industryResult?.taxFreeAdditions ?? 0;
+
     // Bruttolohn einschließlich Zuschläge und Sonderzahlungen
     const totalGross = overtimeRes.totalGrossPay + 
+                      industryAdditions +
                       specialPayments.vacationPay + 
                       specialPayments.christmasBonus + 
                       specialPayments.oneTimePayments + 
@@ -174,15 +219,31 @@ export function DetailedPayrollCalculation({ employee, onBack, onSave }: Detaile
                       deductions.advances - 
                       deductions.other;
 
+    // Steuerpflichtiges Brutto (ohne steuerfreie Zulagen)
+    const taxableGross = totalGross - industryTaxFree;
+
     // Steuern und Sozialabgaben berechnen
     const updatedTaxParams = {
       ...taxParams,
-      grossSalaryYearly: totalGross * 12,
+      grossSalaryYearly: taxableGross * 12,
     };
 
     const taxResult = calculateCompleteTax(updatedTaxParams);
-    setCalculation(taxResult);
-  }, [employee, workingTime, specialPayments, deductions, taxParams]);
+    
+    // Netto anpassen: Steuerfreie Zulagen zum Netto addieren
+    const adjustedTaxResult = {
+      ...taxResult,
+      netMonthly: taxResult.netMonthly + industryTaxFree,
+      grossMonthly: totalGross,
+    };
+    
+    setCalculation(adjustedTaxResult);
+  }, [employee, workingTime, specialPayments, deductions, taxParams, industryResult]);
+
+  // Handler für branchenspezifische Eingaben
+  const handleIndustryInputChange = (updates: Partial<IndustryPayrollInput>) => {
+    setIndustryInput(prev => ({ ...prev, ...updates }));
+  };
 
   const handleSaveCalculation = () => {
     if (!employee || !calculation || !overtimeResult) return;
@@ -320,6 +381,16 @@ export function DetailedPayrollCalculation({ employee, onBack, onSave }: Detaile
         </TabsList>
 
         <TabsContent value="eingabe" className="space-y-6">
+          {/* Branchenspezifische Eingaben */}
+          {employee && hasIndustrySpecificPayroll(employee) && (
+            <IndustryPayrollInputs
+              employee={employee}
+              input={industryInput}
+              result={industryResult}
+              onChange={handleIndustryInputChange}
+            />
+          )}
+          
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Abrechnungszeitraum */}
             <Card>
