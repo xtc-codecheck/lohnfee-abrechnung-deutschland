@@ -8,6 +8,78 @@
 import { format } from 'date-fns';
 import { de } from 'date-fns/locale';
 
+// ============= Kaufmännische Rundung =============
+
+/**
+ * Kaufmännische Rundung auf Cent-Genauigkeit
+ * 
+ * KRITISCH für Lohnabrechnungen: Alle Geldbeträge MÜSSEN diese Funktion durchlaufen
+ * um konsistente und nachvollziehbare Ergebnisse zu garantieren.
+ * 
+ * @param value - Der zu rundende Betrag
+ * @param decimals - Anzahl der Dezimalstellen (Standard: 2 für Cent)
+ * @returns Kaufmännisch gerundeter Wert
+ * 
+ * @example
+ * roundCurrency(1234.565) // 1234.57
+ * roundCurrency(1234.564) // 1234.56
+ * roundCurrency(1234.5, 0) // 1235
+ */
+export function roundCurrency(value: number, decimals: number = 2): number {
+  if (!isFinite(value)) return 0;
+  const factor = Math.pow(10, decimals);
+  return Math.round(value * factor) / factor;
+}
+
+/**
+ * Addiert mehrere Beträge mit korrekter Rundung
+ * Vermeidet Floating-Point-Fehler durch Cent-basierte Addition
+ * 
+ * @example
+ * sumCurrency(10.1, 10.2, 10.3) // 30.60 (nicht 30.599999999999998)
+ */
+export function sumCurrency(...values: number[]): number {
+  const sumCents = values.reduce((acc, val) => acc + Math.round(val * 100), 0);
+  return sumCents / 100;
+}
+
+/**
+ * Validiert, ob ein Betrag für Lohnabrechnungen gültig ist
+ * 
+ * @example
+ * isValidPayrollAmount(1234.56) // true
+ * isValidPayrollAmount(-100) // false
+ * isValidPayrollAmount(NaN) // false
+ */
+export function isValidPayrollAmount(value: number): boolean {
+  return typeof value === 'number' && isFinite(value) && value >= 0;
+}
+
+/**
+ * Assertion für Summenprüfung
+ * Wirft einen Fehler wenn die Summe nicht übereinstimmt
+ * 
+ * @example
+ * assertSumEquals(100, [30, 40, 30], 'Bruttoaufteilung') // OK
+ * assertSumEquals(100, [30, 40, 31], 'Bruttoaufteilung') // throws Error
+ */
+export function assertSumEquals(
+  expectedSum: number, 
+  components: number[], 
+  description: string,
+  tolerance: number = 0.01
+): void {
+  const actualSum = sumCurrency(...components);
+  const diff = Math.abs(actualSum - expectedSum);
+  
+  if (diff > tolerance) {
+    throw new Error(
+      `Summenprüfung fehlgeschlagen: ${description}. ` +
+      `Erwartet: ${expectedSum}, Tatsächlich: ${actualSum}, Differenz: ${diff.toFixed(4)}`
+    );
+  }
+}
+
 // ============= Währungs-Formatierung =============
 
 /**

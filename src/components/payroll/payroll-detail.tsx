@@ -1,14 +1,14 @@
-import { useState, useEffect } from "react";
-import { ArrowLeft, Calculator, FileText, Download, Check, X } from "lucide-react";
+import { useState } from "react";
+import { ArrowLeft, Calculator, FileText, Download, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageHeader } from "@/components/ui/page-header";
 import { usePayrollStorage } from "@/hooks/use-payroll-storage";
 import { useEmployeeStorage } from "@/hooks/use-employee-storage";
-import { Badge } from "@/components/ui/badge";
-import { PayrollEntry, WorkingTimeData, Deductions, Additions, BONUS_RATES } from "@/types/payroll";
-import { SalaryCalculation } from "@/types/employee";
+import { PayrollEntry } from "@/types/payroll";
 import { useToast } from "@/hooks/use-toast";
+import { calculatePayrollEntry, createDefaultWorkingData } from "@/utils/payroll-calculator";
+import { formatCurrency } from "@/lib/formatters";
 
 interface PayrollDetailProps {
   payrollId: string;
@@ -40,114 +40,28 @@ export function PayrollDetail({ payrollId, onBack }: PayrollDetailProps) {
     const employee = employees.find(emp => emp.id === employeeId);
     if (!employee) return null;
 
-    // Vereinfachte Arbeitszeitberechnung (normalerweise würde das aus einem Zeiterfassungssystem kommen)
-    const workingData: WorkingTimeData = {
-      regularHours: employee.employmentData.weeklyHours * 4.33, // Durchschnittliche Stunden pro Monat
-      overtimeHours: 0,
-      nightHours: 0,
-      sundayHours: 0,
-      holidayHours: 0,
-      vacationDays: 0,
-      sickDays: 0,
-      actualWorkingDays: 21, // Durchschnittliche Arbeitstage pro Monat
-      expectedWorkingDays: 21
-    };
-
-    // Basis-Gehaltsberechnung (vereinfacht)
-    const baseSalary = employee.salaryData.grossSalary;
-    const hourlyRate = baseSalary / (employee.employmentData.weeklyHours * 4.33);
-
-    // Zuschläge berechnen
-    const additions: Additions = {
-      overtimePay: workingData.overtimeHours * hourlyRate * BONUS_RATES.overtime,
-      nightShiftBonus: workingData.nightHours * hourlyRate * BONUS_RATES.nightShift,
-      sundayBonus: workingData.sundayHours * hourlyRate * BONUS_RATES.sunday,
-      holidayBonus: workingData.holidayHours * hourlyRate * BONUS_RATES.holiday,
-      bonuses: 0,
-      oneTimePayments: 0,
-      expenseReimbursements: 0,
-      total: 0
-    };
-    additions.total = additions.overtimePay + additions.nightShiftBonus + 
-                    additions.sundayBonus + additions.holidayBonus + 
-                    additions.bonuses + additions.oneTimePayments + additions.expenseReimbursements;
-
-    // Abzüge
-    const deductions: Deductions = {
-      unpaidLeave: 0,
-      advancePayments: 0,
-      otherDeductions: 0,
-      total: 0
-    };
-
-    // Erweiterte Gehaltsberechnung mit Zuschlägen
-    const totalGrossSalary = baseSalary + additions.total;
-    
-    // Vereinfachte Sozialversicherung und Steuerberechnung
-    const socialSecurityRate = 0.2; // 20% vereinfacht
-    const socialSecurityEmployee = totalGrossSalary * (socialSecurityRate / 2);
-    const socialSecurityEmployer = totalGrossSalary * (socialSecurityRate / 2);
-    
-    const taxableIncome = totalGrossSalary - socialSecurityEmployee;
-    const incomeTax = Math.max(0, (taxableIncome - 1000) * 0.14);
-    const solidarityTax = incomeTax * 0.055;
-    const churchTax = employee.personalData.churchTax ? incomeTax * 0.08 : 0;
-    const totalTax = incomeTax + solidarityTax + churchTax;
-
-    const salaryCalculation: SalaryCalculation = {
-      grossSalary: totalGrossSalary,
-      netSalary: totalGrossSalary - socialSecurityEmployee - totalTax,
-      socialSecurityContributions: {
-        healthInsurance: {
-          employee: socialSecurityEmployee * 0.5,
-          employer: socialSecurityEmployer * 0.5,
-          total: socialSecurityEmployee * 0.5 + socialSecurityEmployer * 0.5
+    try {
+      // KORREKTE Berechnung via zentralem Payroll-Calculator
+      const result = calculatePayrollEntry({
+        employee,
+        period: {
+          year: report.period.year,
+          month: report.period.month,
         },
-        pensionInsurance: {
-          employee: socialSecurityEmployee * 0.3,
-          employer: socialSecurityEmployer * 0.3,
-          total: socialSecurityEmployee * 0.3 + socialSecurityEmployer * 0.3
-        },
-        unemploymentInsurance: {
-          employee: socialSecurityEmployee * 0.1,
-          employer: socialSecurityEmployer * 0.1,
-          total: socialSecurityEmployee * 0.1 + socialSecurityEmployer * 0.1
-        },
-        careInsurance: {
-          employee: socialSecurityEmployee * 0.1,
-          employer: socialSecurityEmployer * 0.1,
-          total: socialSecurityEmployee * 0.1 + socialSecurityEmployer * 0.1
-        },
-        total: {
-          employee: socialSecurityEmployee,
-          employer: socialSecurityEmployer,
-          total: socialSecurityEmployee + socialSecurityEmployer
-        }
-      },
-      taxes: {
-        incomeTax,
-        churchTax,
-        solidarityTax,
-        total: totalTax
-      },
-      employerCosts: totalGrossSalary + socialSecurityEmployer
-    };
+        workingData: createDefaultWorkingData(employee),
+      });
 
-    const finalNetSalary = salaryCalculation.netSalary - deductions.total;
-
-    return {
-      id: '', // Wird beim Speichern gesetzt
-      employeeId: employee.id,
-      payrollPeriodId: payrollId,
-      employee,
-      workingData,
-      salaryCalculation,
-      deductions,
-      additions,
-      finalNetSalary,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    };
+      return {
+        ...result.entry,
+        id: '', // Wird beim Speichern gesetzt
+        payrollPeriodId: payrollId,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      } as PayrollEntry;
+    } catch (error) {
+      console.error(`Fehler bei Berechnung für ${employeeId}:`, error);
+      return null;
+    }
   };
 
   const handleCalculatePayroll = async () => {
@@ -248,10 +162,7 @@ export function PayrollDetail({ payrollId, onBack }: PayrollDetailProps) {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-secondary">
-                {report.summary.totalGrossSalary.toLocaleString('de-DE', { 
-                  style: 'currency', 
-                  currency: 'EUR' 
-                })}
+                {formatCurrency(report.summary.totalGrossSalary)}
               </div>
             </CardContent>
           </Card>
@@ -262,10 +173,7 @@ export function PayrollDetail({ payrollId, onBack }: PayrollDetailProps) {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-accent">
-                {report.summary.totalNetSalary.toLocaleString('de-DE', { 
-                  style: 'currency', 
-                  currency: 'EUR' 
-                })}
+                {formatCurrency(report.summary.totalNetSalary)}
               </div>
             </CardContent>
           </Card>
@@ -276,10 +184,7 @@ export function PayrollDetail({ payrollId, onBack }: PayrollDetailProps) {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-warning">
-                {report.summary.totalEmployerCosts.toLocaleString('de-DE', { 
-                  style: 'currency', 
-                  currency: 'EUR' 
-                })}
+                {formatCurrency(report.summary.totalEmployerCosts)}
               </div>
             </CardContent>
           </Card>
@@ -323,14 +228,8 @@ export function PayrollDetail({ payrollId, onBack }: PayrollDetailProps) {
                         {entry.employee.personalData.firstName} {entry.employee.personalData.lastName}
                       </h4>
                       <p className="text-sm text-muted-foreground">
-                        Brutto: {entry.salaryCalculation.grossSalary.toLocaleString('de-DE', { 
-                          style: 'currency', 
-                          currency: 'EUR' 
-                        })} • 
-                        Netto: {entry.finalNetSalary.toLocaleString('de-DE', { 
-                          style: 'currency', 
-                          currency: 'EUR' 
-                        })}
+                        Brutto: {formatCurrency(entry.salaryCalculation.grossSalary)} • 
+                        Netto: {formatCurrency(entry.finalNetSalary)}
                       </p>
                     </div>
                   </div>
