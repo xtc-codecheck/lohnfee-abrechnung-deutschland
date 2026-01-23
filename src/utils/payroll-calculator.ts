@@ -2,6 +2,8 @@
  * Zentraler Lohnberechnungs-Service
  * 
  * Phase 1 & 4: Korrekte Berechnungen mit Input-Guards
+ * Phase 5: Integrierter Audit-Trail für Revisionssicherheit
+ * 
  * Kapselt die gesamte Lohnberechnungslogik mit:
  * - Input-Validierung
  * - Korrekter Steuer/SV-Berechnung via calculateCompleteTax
@@ -14,7 +16,8 @@ import { PayrollEntry, WorkingTimeData, Deductions, Additions, BONUS_RATES } fro
 import { calculateCompleteTax, calculateOvertimeAndBonuses, TaxCalculationParams } from '@/utils/tax-calculation';
 import { buildTaxParamsFromEmployee } from '@/utils/tax-params-factory';
 import { roundCurrency, sumCurrency, isValidPayrollAmount } from '@/lib/formatters';
-import { SOCIAL_INSURANCE_RATES_2025, getCareInsuranceRate } from '@/constants/social-security';
+import { SOCIAL_INSURANCE_RATES_2025, getCareInsuranceRate, BBG_2025_MONTHLY } from '@/constants/social-security';
+import { PayrollAuditLogger, CalculationAudit, createPayrollAudit } from '@/utils/calculation-audit';
 
 // ============= Typen =============
 
@@ -33,6 +36,7 @@ export interface PayrollCalculationOutput {
   entry: Omit<PayrollEntry, 'id' | 'createdAt' | 'updatedAt'>;
   calculationLog: string[];
   warnings: string[];
+  audit?: CalculationAudit; // Vollständiges Audit-Dokument für Revisionssicherheit
 }
 
 // ============= Input Guards =============
@@ -98,16 +102,30 @@ export function calculatePayrollEntry(input: PayrollCalculationInput): PayrollCa
     throw new Error(`Ungültige Eingabedaten: ${validation.errors.join(', ')}`);
   }
   
-  log.push(`Berechnung gestartet für ${input.employee.personalData.firstName} ${input.employee.personalData.lastName}`);
-  log.push(`Periode: ${input.period.month}/${input.period.year}`);
-  
   const { employee, workingData } = input;
+  
+  // Audit-Logger initialisieren
+  const auditLogger = createPayrollAudit(
+    employee.id,
+    input.period.month,
+    input.period.year
+  );
+  
+  log.push(`Berechnung gestartet für ${employee.personalData.firstName} ${employee.personalData.lastName}`);
+  log.push(`Periode: ${input.period.month}/${input.period.year}`);
   
   // 2. Basis-Gehaltsdaten
   const baseSalary = roundCurrency(employee.salaryData.grossSalary);
   const weeklyHours = employee.employmentData.weeklyHours;
   const monthlyHours = weeklyHours * 4.33;
   const hourlyRate = roundCurrency(baseSalary / monthlyHours);
+  
+  auditLogger.log('BASE_SALARY', 'Basisgehalt ermittelt', {
+    Bruttogehalt: baseSalary,
+    Wochenstunden: weeklyHours,
+    Monatsstunden: roundCurrency(monthlyHours, 1),
+    Stundensatz: hourlyRate,
+  });
   
   log.push(`Basisgehalt: ${baseSalary}€, Stundensatz: ${hourlyRate}€`);
   
@@ -142,6 +160,26 @@ export function calculatePayrollEntry(input: PayrollCalculationInput): PayrollCa
     additions.expenseReimbursements
   );
   
+  if (additions.total > 0) {
+    auditLogger.log('ADDITIONS', 'Zuschläge berechnet', {
+      Überstunden_Std: workingData.overtimeHours,
+      Nacht_Std: workingData.nightHours,
+      Sonntag_Std: workingData.sundayHours,
+      Feiertag_Std: workingData.holidayHours,
+    }, {
+      Überstundenzuschlag: additions.overtimePay,
+      Nachtzuschlag: additions.nightShiftBonus,
+      Sonntagszuschlag: additions.sundayBonus,
+      Feiertagszuschlag: additions.holidayBonus,
+      Zuschläge_Gesamt: additions.total,
+    }, [
+      `Überstunden: ${BONUS_RATES.overtime * 100}%`,
+      `Nacht: ${BONUS_RATES.nightShift * 100}%`,
+      `Sonntag: ${BONUS_RATES.sunday * 100}%`,
+      `Feiertag: ${BONUS_RATES.holiday * 100}%`,
+    ]);
+  }
+  
   log.push(`Zuschläge gesamt: ${additions.total}€`);
   
   // 4. Abzüge
@@ -158,20 +196,51 @@ export function calculatePayrollEntry(input: PayrollCalculationInput): PayrollCa
     deductions.otherDeductions
   );
   
+  if (deductions.total > 0) {
+    auditLogger.log('DEDUCTIONS', 'Abzüge erfasst', undefined, {
+      Unbezahlter_Urlaub: deductions.unpaidLeave,
+      Vorschüsse: deductions.advancePayments,
+      Sonstige: deductions.otherDeductions,
+      Gesamt: deductions.total,
+    });
+  }
+  
   // 5. Gesamtbrutto berechnen
   const totalGrossSalary = roundCurrency(baseSalary + additions.total);
   log.push(`Gesamtbrutto: ${totalGrossSalary}€`);
   
-  // 6. KORREKTE Steuer- und SV-Berechnung via calculateCompleteTax
+  auditLogger.log('GROSS_TOTAL', 'Gesamtbrutto ermittelt', {
+    Basisgehalt: baseSalary,
+    Zuschläge: additions.total,
+  }, {
+    Gesamtbrutto: totalGrossSalary,
+  });
+  
+  // 6. Konstanten protokollieren
+  const eastGermanStates = ['berlin', 'brandenburg', 'mecklenburg-vorpommern', 'sachsen', 'sachsen-anhalt', 'thueringen'];
+  const isEastGermany = eastGermanStates.includes((employee.personalData.address?.state || '').toLowerCase());
+  const isChildless = employee.personalData.childAllowances === 0;
+  auditLogger.logConstants(isEastGermany ? 'east' : 'west', isChildless);
+  
+  // 7. BBG-Kappung prüfen und protokollieren
+  const bbgPension = isEastGermany ? BBG_2025_MONTHLY.pensionEast : BBG_2025_MONTHLY.pensionWest;
+  const bbgHealth = BBG_2025_MONTHLY.healthCare;
+  
+  if (totalGrossSalary > bbgPension) {
+    auditLogger.logBBGCapping('RV/AV', totalGrossSalary, bbgPension, bbgPension);
+  }
+  if (totalGrossSalary > bbgHealth) {
+    auditLogger.logBBGCapping('KV/PV', totalGrossSalary, bbgHealth, bbgHealth);
+  }
+  
+  // 8. KORREKTE Steuer- und SV-Berechnung via calculateCompleteTax
   const taxParams = buildTaxParamsFromEmployee(employee, {
     grossSalaryYearly: totalGrossSalary * 12,
   });
   
   const taxResult = calculateCompleteTax(taxParams);
-  log.push(`Steuerberechnung: Lohnsteuer ${roundCurrency(taxResult.incomeTax / 12)}€/Monat`);
-  log.push(`SV-Beiträge AN: ${roundCurrency(taxResult.totalSocialContributions / 12)}€/Monat`);
   
-  // 7. SalaryCalculation-Objekt erstellen
+  // 9. SalaryCalculation-Objekt erstellen
   const monthlyTax = roundCurrency(taxResult.incomeTax / 12);
   const monthlyChurchTax = roundCurrency(taxResult.churchTax / 12);
   const monthlySoli = roundCurrency(taxResult.solidarityTax / 12);
@@ -181,21 +250,40 @@ export function calculatePayrollEntry(input: PayrollCalculationInput): PayrollCa
   const monthlyUnemployment = roundCurrency(taxResult.unemploymentInsurance / 12);
   const monthlyCare = roundCurrency(taxResult.careInsurance / 12);
   
+  // Steuerberechnung protokollieren
+  auditLogger.logTaxCalculation(
+    totalGrossSalary,
+    employee.personalData.taxClass,
+    monthlyTax,
+    monthlySoli,
+    monthlyChurchTax
+  );
+  
   // Arbeitgeber-Anteile berechnen
-  const employerPension = roundCurrency(monthlyPension); // Gleicher Satz
-  const employerHealth = roundCurrency(monthlyHealth); // Gleicher Satz inkl. Zusatzbeitrag
-  const employerUnemployment = roundCurrency(monthlyUnemployment); // Gleicher Satz
+  const employerPension = roundCurrency(monthlyPension);
+  const employerHealth = roundCurrency(monthlyHealth);
+  const employerUnemployment = roundCurrency(monthlyUnemployment);
   
   // Pflegeversicherung: AG-Anteil kann abweichen
-  // Kinderlosigkeit wird über childAllowances bestimmt
-  const isChildless = employee.personalData.childAllowances === 0;
   const careRate = getCareInsuranceRate(
     isChildless,
     calculateAge(employee.personalData.dateOfBirth)
   );
   const employerCare = roundCurrency(
-    Math.min(totalGrossSalary, 5175) * (careRate.employer / 100)
+    Math.min(totalGrossSalary, bbgHealth) * (careRate.employer / 100)
   );
+  
+  // SV-Berechnung protokollieren
+  auditLogger.logSocialSecurityCalculation(
+    totalGrossSalary,
+    { employee: monthlyPension, employer: employerPension },
+    { employee: monthlyHealth, employer: employerHealth },
+    { employee: monthlyUnemployment, employer: employerUnemployment },
+    { employee: monthlyCare, employer: employerCare }
+  );
+  
+  log.push(`Steuerberechnung: Lohnsteuer ${monthlyTax}€/Monat`);
+  log.push(`SV-Beiträge AN: ${roundCurrency(monthlyPension + monthlyHealth + monthlyUnemployment + monthlyCare)}€/Monat`);
   
   const salaryCalculation: SalaryCalculation = {
     grossSalary: totalGrossSalary,
@@ -239,16 +327,17 @@ export function calculatePayrollEntry(input: PayrollCalculationInput): PayrollCa
     employerCosts: roundCurrency(taxResult.employerCosts / 12),
   };
   
-  // 8. Finale Nettoauszahlung
+  // 10. Finale Nettoauszahlung
   const finalNetSalary = roundCurrency(salaryCalculation.netSalary - deductions.total);
   log.push(`Finale Nettoauszahlung: ${finalNetSalary}€`);
   
-  // 9. Warnungen generieren
+  // 11. Warnungen generieren
   if (finalNetSalary < 0) {
     warnings.push('KRITISCH: Negative Nettoauszahlung berechnet');
+    auditLogger.addWarning('Negative Nettoauszahlung berechnet');
   }
   
-  if (totalGrossSalary > 7550) {
+  if (totalGrossSalary > bbgPension) {
     log.push('Hinweis: Gehalt über BBG RV/AV, Kappung angewendet');
   }
   
@@ -256,7 +345,7 @@ export function calculatePayrollEntry(input: PayrollCalculationInput): PayrollCa
     log.push(`Abzüge von ${deductions.total}€ berücksichtigt`);
   }
   
-  // 10. Entry zusammenbauen
+  // 12. Entry zusammenbauen
   const entry: Omit<PayrollEntry, 'id' | 'createdAt' | 'updatedAt'> = {
     employeeId: employee.id,
     payrollPeriodId: '', // Wird beim Speichern gesetzt
@@ -268,9 +357,19 @@ export function calculatePayrollEntry(input: PayrollCalculationInput): PayrollCa
     finalNetSalary,
   };
   
-  log.push('Berechnung abgeschlossen');
+  // 13. Audit finalisieren
+  const audit = auditLogger.finalize({
+    grossMonthly: totalGrossSalary,
+    netMonthly: finalNetSalary,
+    totalTaxes: salaryCalculation.taxes.total,
+    totalSocialSecurity: salaryCalculation.socialSecurityContributions.total.employee,
+    employerCosts: salaryCalculation.employerCosts,
+  });
   
-  return { entry, calculationLog: log, warnings };
+  log.push('Berechnung abgeschlossen');
+  log.push(`Audit-ID: ${audit.calculationId}`);
+  
+  return { entry, calculationLog: log, warnings, audit };
 }
 
 // ============= Hilfsfunktionen =============
