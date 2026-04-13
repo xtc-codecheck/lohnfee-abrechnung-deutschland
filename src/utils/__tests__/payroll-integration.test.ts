@@ -1,81 +1,77 @@
 import { describe, it, expect } from 'vitest';
 import { calculateCompleteTax, TaxCalculationParams } from '../tax-calculation';
-import { calculateSocialSecurity, SocialSecurityParams, SOCIAL_SECURITY_RATES } from '../payroll-calculator';
 
-// Integrations-Tests: Steuer + SV zusammen, wie in echten Abrechnungen
-
-function createDefaultParams(grossSalary: number, overrides: Partial<TaxCalculationParams> = {}): TaxCalculationParams {
+function createDefaultParams(grossYearly: number, overrides: Partial<TaxCalculationParams> = {}): TaxCalculationParams {
   return {
-    grossSalary,
+    grossSalaryYearly: grossYearly,
     taxClass: 'I',
     churchTax: false,
+    churchTaxRate: 0,
     childAllowances: 0,
-    healthInsuranceAdditionalRate: 1.7,
-    state: 'berlin',
-    year: 2025,
+    healthInsuranceRate: 1.7,
+    isEastGermany: false,
+    isChildless: true,
+    age: 30,
     ...overrides,
   };
 }
 
 describe('Lohnabrechnung Integration: Steuer + SV', () => {
-  it('berechnet eine vollständige Abrechnung für Steuerklasse I, 4000€', () => {
-    const params = createDefaultParams(4000);
-    const tax = calculateCompleteTax(params);
+  it('berechnet eine vollständige Abrechnung für Steuerklasse I, 4000€/Monat', () => {
+    const result = calculateCompleteTax(createDefaultParams(48000));
     
-    // Plausibilitätsprüfung: Steuer muss positiv sein bei 4000€ SK I
-    expect(tax.incomeTax).toBeGreaterThan(0);
-    expect(tax.solidarityTax).toBeGreaterThanOrEqual(0);
-    expect(tax.totalTax).toBeGreaterThan(0);
-    expect(tax.totalTax).toBeLessThan(4000); // nicht mehr als Brutto
+    expect(result.incomeTax).toBeGreaterThan(0);
+    expect(result.solidarityTax).toBeGreaterThanOrEqual(0);
+    expect(result.totalTaxes).toBeGreaterThan(0);
+    expect(result.totalTaxes).toBeLessThan(48000);
   });
 
   it('Steuerklasse III zahlt weniger Steuern als SK I bei gleichem Gehalt', () => {
-    const taxI = calculateCompleteTax(createDefaultParams(5000, { taxClass: 'I' }));
-    const taxIII = calculateCompleteTax(createDefaultParams(5000, { taxClass: 'III' }));
+    const taxI = calculateCompleteTax(createDefaultParams(60000, { taxClass: 'I' }));
+    const taxIII = calculateCompleteTax(createDefaultParams(60000, { taxClass: 'III' }));
     
-    expect(taxIII.totalTax).toBeLessThan(taxI.totalTax);
+    expect(taxIII.totalTaxes).toBeLessThan(taxI.totalTaxes);
   });
 
   it('Steuerklasse V zahlt mehr Steuern als SK I', () => {
-    const taxI = calculateCompleteTax(createDefaultParams(3000, { taxClass: 'I' }));
-    const taxV = calculateCompleteTax(createDefaultParams(3000, { taxClass: 'V' }));
+    const taxI = calculateCompleteTax(createDefaultParams(36000, { taxClass: 'I' }));
+    const taxV = calculateCompleteTax(createDefaultParams(36000, { taxClass: 'V' }));
     
-    expect(taxV.totalTax).toBeGreaterThan(taxI.totalTax);
+    expect(taxV.totalTaxes).toBeGreaterThan(taxI.totalTaxes);
   });
 
   it('Kirchensteuer erhöht die Gesamtsteuer', () => {
-    const ohne = calculateCompleteTax(createDefaultParams(4000));
-    const mit = calculateCompleteTax(createDefaultParams(4000, { churchTax: true }));
+    const ohne = calculateCompleteTax(createDefaultParams(48000));
+    const mit = calculateCompleteTax(createDefaultParams(48000, { churchTax: true, churchTaxRate: 9 }));
     
-    expect(mit.totalTax).toBeGreaterThan(ohne.totalTax);
+    expect(mit.totalTaxes).toBeGreaterThan(ohne.totalTaxes);
   });
 
   it('Nettolohn ist immer positiv bei realistischen Gehältern', () => {
-    const salaries = [2000, 3000, 4000, 5000, 6000, 8000, 10000];
+    const salaries = [24000, 36000, 48000, 60000, 72000, 96000, 120000];
     
     for (const gross of salaries) {
-      const tax = calculateCompleteTax(createDefaultParams(gross));
-      const netAfterTax = gross - tax.totalTax;
-      expect(netAfterTax).toBeGreaterThan(0);
+      const result = calculateCompleteTax(createDefaultParams(gross));
+      expect(result.netYearly).toBeGreaterThan(0);
     }
   });
 
-  it('Minijob (556€) hat 0€ Lohnsteuer in SK I', () => {
-    const tax = calculateCompleteTax(createDefaultParams(556));
-    expect(tax.incomeTax).toBe(0);
+  it('Minijob (6672€/Jahr) hat 0€ Lohnsteuer in SK I', () => {
+    const result = calculateCompleteTax(createDefaultParams(6672, { employmentType: 'minijob' }));
+    expect(result.incomeTax).toBe(0);
   });
 
   it('Gesamtabzüge überschreiten nie das Bruttogehalt', () => {
     const testCases = [
-      { gross: 1000, taxClass: 'I' as const },
-      { gross: 3000, taxClass: 'V' as const },
-      { gross: 5000, taxClass: 'VI' as const },
-      { gross: 10000, taxClass: 'I' as const },
+      { gross: 12000, taxClass: 'I' as const },
+      { gross: 36000, taxClass: 'V' as const },
+      { gross: 60000, taxClass: 'VI' as const },
+      { gross: 120000, taxClass: 'I' as const },
     ];
 
     for (const tc of testCases) {
-      const tax = calculateCompleteTax(createDefaultParams(tc.gross, { taxClass: tc.taxClass }));
-      expect(tax.totalTax).toBeLessThan(tc.gross);
+      const result = calculateCompleteTax(createDefaultParams(tc.gross, { taxClass: tc.taxClass }));
+      expect(result.totalDeductions).toBeLessThan(tc.gross);
     }
   });
 });
@@ -85,18 +81,18 @@ describe('Steuerklassen-Konsistenz', () => {
   
   it('alle Steuerklassen liefern valide Ergebnisse', () => {
     for (const tc of taxClasses) {
-      const result = calculateCompleteTax(createDefaultParams(4000, { taxClass: tc }));
+      const result = calculateCompleteTax(createDefaultParams(48000, { taxClass: tc }));
       expect(result.incomeTax).toBeGreaterThanOrEqual(0);
       expect(result.solidarityTax).toBeGreaterThanOrEqual(0);
-      expect(result.totalTax).toBeGreaterThanOrEqual(0);
-      expect(isFinite(result.totalTax)).toBe(true);
+      expect(result.totalTaxes).toBeGreaterThanOrEqual(0);
+      expect(isFinite(result.totalTaxes)).toBe(true);
     }
   });
 
   it('SK II hat leicht geringere Steuer als SK I (Entlastungsbetrag)', () => {
-    const taxI = calculateCompleteTax(createDefaultParams(4000, { taxClass: 'I' }));
-    const taxII = calculateCompleteTax(createDefaultParams(4000, { taxClass: 'II' }));
+    const taxI = calculateCompleteTax(createDefaultParams(48000, { taxClass: 'I' }));
+    const taxII = calculateCompleteTax(createDefaultParams(48000, { taxClass: 'II' }));
     
-    expect(taxII.totalTax).toBeLessThanOrEqual(taxI.totalTax);
+    expect(taxII.totalTaxes).toBeLessThanOrEqual(taxI.totalTaxes);
   });
 });
