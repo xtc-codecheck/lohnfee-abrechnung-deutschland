@@ -484,6 +484,9 @@ export default function Landing() {
               <button onClick={() => navigate("/agb")} className="text-muted-foreground hover:text-primary transition-colors">
                 AGB
               </button>
+              <button onClick={() => navigate("/kontakt")} className="text-muted-foreground hover:text-primary transition-colors">
+                Kontakt
+              </button>
             </nav>
             <p className="text-sm text-muted-foreground">
               © {new Date().getFullYear()} LohnPro. Alle Rechte vorbehalten.
