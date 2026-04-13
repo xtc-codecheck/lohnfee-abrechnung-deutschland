@@ -6,6 +6,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Badge } from "@/components/ui/badge";
 import { DarkModeToggle } from "@/components/ui/dark-mode-toggle";
 import { PageSeo } from "@/components/seo/page-seo";
+import { LandingJsonLd } from "@/components/seo/landing-json-ld";
 import {
   Users,
   Calculator,
