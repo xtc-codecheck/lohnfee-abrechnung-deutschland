@@ -34,27 +34,8 @@ export function PayrollDashboard({ onBack, onShowSpecialPayments, onShowAutomati
   const { payrollPeriods, payrollEntries, getPayrollReport, deletePayrollPeriod } = usePayrollStorage();
   const { employees } = useEmployeeStorage();
 
-  const getStatusColor = (status: PayrollStatus) => {
-    switch (status) {
-      case 'draft': return 'bg-muted text-muted-foreground';
-      case 'calculated': return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
-      case 'approved': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300';
-      case 'paid': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
-      case 'finalized': return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
-      default: return 'bg-muted text-muted-foreground';
-    }
-  };
-
-  const getStatusLabel = (status: PayrollStatus) => {
-    switch (status) {
-      case 'draft': return 'Entwurf';
-      case 'calculated': return 'Berechnet';
-      case 'approved': return 'Genehmigt';
-      case 'paid': return 'Ausgezahlt';
-      case 'finalized': return 'Abgeschlossen';
-      default: return status;
-    }
-  };
+  const getStatusColor = getPayrollStatusColor;
+  const getStatusLabel = getPayrollStatusLabel;
 
   const handleDeletePayroll = (periodId: string) => {
     deletePayrollPeriod(periodId);
