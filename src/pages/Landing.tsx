@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { DarkModeToggle } from "@/components/ui/dark-mode-toggle";
 import {
@@ -290,6 +291,67 @@ export default function Landing() {
                 </Button>
               </CardContent>
             </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section id="faq" className="py-24">
+        <div className="container mx-auto px-6">
+          <div className="mx-auto mb-16 max-w-2xl text-center">
+            <h2 className="text-3xl font-bold sm:text-4xl">Häufig gestellte Fragen</h2>
+            <p className="mt-4 text-lg text-muted-foreground">
+              Antworten auf die wichtigsten Fragen rund um LohnPro.
+            </p>
+          </div>
+          <div className="mx-auto max-w-3xl">
+            <Accordion type="single" collapsible className="w-full">
+              <AccordionItem value="q1">
+                <AccordionTrigger>Kann ich LohnPro kostenlos testen?</AccordionTrigger>
+                <AccordionContent>
+                  Ja! Der Starter-Tarif ist dauerhaft kostenlos und umfasst bis zu 5 Mitarbeiter.
+                  Sie können jederzeit auf einen höheren Tarif upgraden, wenn Ihr Unternehmen wächst.
+                </AccordionContent>
+              </AccordionItem>
+              <AccordionItem value="q2">
+                <AccordionTrigger>Sind meine Daten sicher?</AccordionTrigger>
+                <AccordionContent>
+                  Absolut. Alle Daten werden verschlüsselt in der Cloud gespeichert. Wir setzen auf
+                  mandantenspezifische Datenisolation (Row Level Security), DSGVO-konforme Verarbeitung
+                  und regelmäßige Sicherheitsaudits.
+                </AccordionContent>
+              </AccordionItem>
+              <AccordionItem value="q3">
+                <AccordionTrigger>Unterstützt LohnPro DATEV-Export?</AccordionTrigger>
+                <AccordionContent>
+                  Ja, ab dem Professional-Tarif können Sie alle Abrechnungsdaten im DATEV-Format exportieren
+                  und direkt an Ihren Steuerberater oder Ihre Finanzbuchhaltung übergeben.
+                </AccordionContent>
+              </AccordionItem>
+              <AccordionItem value="q4">
+                <AccordionTrigger>Welche Branchen werden unterstützt?</AccordionTrigger>
+                <AccordionContent>
+                  LohnPro bietet spezielle Branchenmodule für Bau (SOKA-BAU), Gastronomie (Sachbezüge
+                  für Mahlzeiten) und Pflege (steuerfreie SFN-Zuschläge). Die allgemeine Lohnabrechnung
+                  eignet sich für alle Branchen.
+                </AccordionContent>
+              </AccordionItem>
+              <AccordionItem value="q5">
+                <AccordionTrigger>Kann ich mehrere Mandanten verwalten?</AccordionTrigger>
+                <AccordionContent>
+                  Ja, mit dem Enterprise-Tarif können Sie beliebig viele Mandanten anlegen – ideal für
+                  Steuerkanzleien und Lohnbüros. Jeder Mandant hat eigene Mitarbeiter, Abrechnungen
+                  und Zugriffsrechte.
+                </AccordionContent>
+              </AccordionItem>
+              <AccordionItem value="q6">
+                <AccordionTrigger>Wie aktuell sind die Steuer- und SV-Sätze?</AccordionTrigger>
+                <AccordionContent>
+                  Wir aktualisieren alle Berechnungsgrundlagen (Lohnsteuertabellen, Beitragsbemessungsgrenzen,
+                  SV-Sätze) zeitnah zu jedem Jahreswechsel. Aktuell sind alle Werte für 2026 hinterlegt.
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
           </div>
         </div>
       </section>
