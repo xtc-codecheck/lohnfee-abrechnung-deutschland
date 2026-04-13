@@ -75,7 +75,7 @@ export function EmployeeDashboard({ onAddEmployee, onCalculateSalary, onShowComp
   const stats = {
     totalEmployees: employees.length,
     avgGrossSalary: employees.length > 0 ? employees.reduce((sum, emp) => sum + emp.salaryData.grossSalary, 0) / employees.length : 0,
-    totalMonthlyCosts: employees.reduce((sum, emp) => sum + emp.salaryData.grossSalary * 1.2, 0) // inkl. AG-Anteil
+    totalMonthlyCosts: employees.reduce((sum, emp) => sum + emp.salaryData.grossSalary * 1.21, 0) // ~21% SV-AG-Anteil Schätzung
   };
 
   if (showReports) {
