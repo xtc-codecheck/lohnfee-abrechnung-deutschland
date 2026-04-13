@@ -1,147 +1,223 @@
-import { useState, useEffect } from 'react';
-import { TimeEntry, BulkTimeEntry, EmployeeTimeStatus, TimeTrackingStats } from '@/types/time-tracking';
+/**
+ * Zeiterfassung Hook – Supabase-basiert
+ */
+import { useState, useEffect, useCallback } from 'react';
+import { TimeEntry, BulkTimeEntry, EmployeeTimeStatus, TimeTrackingStats, TimeEntryType } from '@/types/time-tracking';
 import { useEmployeeStorage } from '@/hooks/use-employee-storage';
-import { addDays, isSameDay, isWeekend, format, startOfWeek, endOfWeek, differenceInDays } from 'date-fns';
-
-const STORAGE_KEY = 'lohnpro_time_entries';
+import { useTenant } from '@/contexts/tenant-context';
+import { supabase } from '@/integrations/supabase/client';
+import { addDays, isSameDay, isWeekend, differenceInDays } from 'date-fns';
 
 export function useTimeTracking() {
   const [timeEntries, setTimeEntries] = useState<TimeEntry[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const { employees } = useEmployeeStorage();
+  const { currentTenant } = useTenant();
 
-  // Load time entries from localStorage on mount
+  // Load from Supabase
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored);
-        const entriesWithDates = parsed.map((entry: any) => ({
-          ...entry,
-          date: new Date(entry.date),
-          createdAt: new Date(entry.createdAt),
-          updatedAt: new Date(entry.updatedAt)
-        }));
-        setTimeEntries(entriesWithDates);
-      } catch (error) {
-        console.error('Error loading time entries from storage:', error);
+    if (!currentTenant) return;
+    
+    const loadEntries = async () => {
+      setIsLoading(true);
+      const { data, error } = await supabase
+        .from('time_entries')
+        .select('*')
+        .eq('tenant_id', currentTenant.id);
+
+      if (error) {
+        console.error('Error loading time entries:', error);
+      } else if (data) {
+        setTimeEntries(data.map(row => ({
+          id: row.id,
+          employeeId: row.employee_id,
+          date: new Date(row.date),
+          type: row.type as TimeEntryType,
+          hoursWorked: row.hours_worked ?? undefined,
+          startTime: row.start_time ?? undefined,
+          endTime: row.end_time ?? undefined,
+          breakTime: row.break_time ?? undefined,
+          notes: row.notes ?? undefined,
+          createdAt: new Date(row.created_at),
+          updatedAt: new Date(row.updated_at),
+        })));
       }
+      setIsLoading(false);
+    };
+
+    loadEntries();
+  }, [currentTenant]);
+
+  const addTimeEntry = useCallback(async (entry: Omit<TimeEntry, 'id' | 'createdAt' | 'updatedAt'>) => {
+    if (!currentTenant) return null;
+
+    const { data, error } = await supabase
+      .from('time_entries')
+      .insert({
+        tenant_id: currentTenant.id,
+        employee_id: entry.employeeId,
+        date: entry.date.toISOString().split('T')[0],
+        type: entry.type,
+        hours_worked: entry.hoursWorked ?? null,
+        start_time: entry.startTime ?? null,
+        end_time: entry.endTime ?? null,
+        break_time: entry.breakTime ?? null,
+        notes: entry.notes ?? null,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error adding time entry:', error);
+      return null;
     }
-  }, []);
 
-  // Save time entries to localStorage whenever the array changes
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(timeEntries));
-  }, [timeEntries]);
-
-  const addTimeEntry = (entry: Omit<TimeEntry, 'id' | 'createdAt' | 'updatedAt'>) => {
     const newEntry: TimeEntry = {
-      ...entry,
-      id: crypto.randomUUID(),
-      createdAt: new Date(),
-      updatedAt: new Date()
+      id: data.id,
+      employeeId: data.employee_id,
+      date: new Date(data.date),
+      type: data.type as TimeEntryType,
+      hoursWorked: data.hours_worked ?? undefined,
+      startTime: data.start_time ?? undefined,
+      endTime: data.end_time ?? undefined,
+      breakTime: data.break_time ?? undefined,
+      notes: data.notes ?? undefined,
+      createdAt: new Date(data.created_at),
+      updatedAt: new Date(data.updated_at),
     };
     setTimeEntries(prev => [...prev, newEntry]);
     return newEntry;
-  };
+  }, [currentTenant]);
 
-  const updateTimeEntry = (id: string, updates: Partial<Omit<TimeEntry, 'id' | 'createdAt'>>) => {
-    setTimeEntries(prev => 
-      prev.map(entry => 
-        entry.id === id 
-          ? { ...entry, ...updates, updatedAt: new Date() }
-          : entry
+  const updateTimeEntry = useCallback(async (id: string, updates: Partial<Omit<TimeEntry, 'id' | 'createdAt'>>) => {
+    const dbUpdates: Record<string, unknown> = {};
+    if (updates.hoursWorked !== undefined) dbUpdates.hours_worked = updates.hoursWorked;
+    if (updates.type !== undefined) dbUpdates.type = updates.type;
+    if (updates.notes !== undefined) dbUpdates.notes = updates.notes;
+    if (updates.startTime !== undefined) dbUpdates.start_time = updates.startTime;
+    if (updates.endTime !== undefined) dbUpdates.end_time = updates.endTime;
+    if (updates.breakTime !== undefined) dbUpdates.break_time = updates.breakTime;
+
+    const { error } = await supabase
+      .from('time_entries')
+      .update(dbUpdates)
+      .eq('id', id);
+
+    if (error) {
+      console.error('Error updating time entry:', error);
+      return;
+    }
+
+    setTimeEntries(prev =>
+      prev.map(entry =>
+        entry.id === id ? { ...entry, ...updates, updatedAt: new Date() } : entry
       )
     );
-  };
+  }, []);
 
-  const deleteTimeEntry = (id: string) => {
+  const deleteTimeEntry = useCallback(async (id: string) => {
+    const { error } = await supabase
+      .from('time_entries')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('Error deleting time entry:', error);
+      return;
+    }
+
     setTimeEntries(prev => prev.filter(entry => entry.id !== id));
-  };
+  }, []);
 
-  const addBulkTimeEntries = (bulkEntry: BulkTimeEntry) => {
-    const { startDate, endDate, employeeId, type, hoursPerDay, excludeWeekends, excludeHolidays, notes } = bulkEntry;
-    const newEntries: TimeEntry[] = [];
-    
+  const addBulkTimeEntries = useCallback(async (bulkEntry: BulkTimeEntry) => {
+    if (!currentTenant) return [];
+
+    const { startDate, endDate, employeeId, type, hoursPerDay, excludeWeekends, notes } = bulkEntry;
+    const rows: Array<Record<string, unknown>> = [];
+
     let currentDate = new Date(startDate);
     const end = new Date(endDate);
 
     while (currentDate <= end) {
-      // Skip weekends if requested
       if (excludeWeekends && isWeekend(currentDate)) {
         currentDate = addDays(currentDate, 1);
         continue;
       }
 
-      // Check if entry already exists for this date
-      const existingEntry = timeEntries.find(entry => 
+      const existingEntry = timeEntries.find(entry =>
         entry.employeeId === employeeId && isSameDay(entry.date, currentDate)
       );
 
       if (!existingEntry) {
-        const newEntry: TimeEntry = {
-          id: crypto.randomUUID(),
-          employeeId,
-          date: new Date(currentDate),
+        rows.push({
+          tenant_id: currentTenant.id,
+          employee_id: employeeId,
+          date: currentDate.toISOString().split('T')[0],
           type,
-          hoursWorked: type === 'work' ? hoursPerDay : undefined,
-          notes,
-          createdAt: new Date(),
-          updatedAt: new Date()
-        };
-        newEntries.push(newEntry);
+          hours_worked: type === 'work' ? hoursPerDay : null,
+          notes: notes ?? null,
+        });
       }
 
       currentDate = addDays(currentDate, 1);
     }
 
+    if (rows.length === 0) return [];
+
+    const { data, error } = await supabase
+      .from('time_entries')
+      .insert(rows)
+      .select();
+
+    if (error) {
+      console.error('Error adding bulk time entries:', error);
+      return [];
+    }
+
+    const newEntries: TimeEntry[] = (data ?? []).map(row => ({
+      id: row.id,
+      employeeId: row.employee_id,
+      date: new Date(row.date),
+      type: row.type as TimeEntryType,
+      hoursWorked: row.hours_worked ?? undefined,
+      notes: row.notes ?? undefined,
+      createdAt: new Date(row.created_at),
+      updatedAt: new Date(row.updated_at),
+    }));
+
     setTimeEntries(prev => [...prev, ...newEntries]);
     return newEntries;
-  };
+  }, [currentTenant, timeEntries]);
 
-  const getTimeEntriesForEmployee = (employeeId: string, startDate?: Date, endDate?: Date) => {
+  const getTimeEntriesForEmployee = useCallback((employeeId: string, startDate?: Date, endDate?: Date) => {
     return timeEntries.filter(entry => {
       if (entry.employeeId !== employeeId) return false;
       if (startDate && entry.date < startDate) return false;
       if (endDate && entry.date > endDate) return false;
       return true;
     });
-  };
+  }, [timeEntries]);
 
-  const getTimeEntryForDate = (employeeId: string, date: Date) => {
-    return timeEntries.find(entry => 
+  const getTimeEntryForDate = useCallback((employeeId: string, date: Date) => {
+    return timeEntries.find(entry =>
       entry.employeeId === employeeId && isSameDay(entry.date, date)
     );
-  };
+  }, [timeEntries]);
 
-  const calculateEmployeeStatus = (employeeId: string, startDate: Date, endDate: Date): EmployeeTimeStatus => {
+  const calculateEmployeeStatus = useCallback((employeeId: string, startDate: Date, endDate: Date): EmployeeTimeStatus => {
     const employee = employees.find(emp => emp.id === employeeId);
     if (!employee) {
-      return {
-        employeeId,
-        contractHours: 0,
-        actualHours: 0,
-        deviation: 0,
-        status: 'red',
-        sickDays: 0,
-        vacationDays: 0,
-        overtimeHours: 0
-      };
+      return { employeeId, contractHours: 0, actualHours: 0, deviation: 0, status: 'red', sickDays: 0, vacationDays: 0, overtimeHours: 0 };
     }
 
     const entries = getTimeEntriesForEmployee(employeeId, startDate, endDate);
-    const workEntries = entries.filter(e => e.type === 'work');
-    const sickEntries = entries.filter(e => e.type === 'sick');
-    const vacationEntries = entries.filter(e => e.type === 'vacation');
+    const actualHours = entries.filter(e => e.type === 'work').reduce((sum, e) => sum + (e.hoursWorked || 0), 0);
+    const sickDays = entries.filter(e => e.type === 'sick').length;
+    const vacationDays = entries.filter(e => e.type === 'vacation').length;
 
-    const actualHours = workEntries.reduce((sum, entry) => sum + (entry.hoursWorked || 0), 0);
-    const sickDays = sickEntries.length;
-    const vacationDays = vacationEntries.length;
-
-    // Calculate expected hours based on contract
     const weeklyHours = employee.employmentData.weeklyHours;
     const totalDays = differenceInDays(endDate, startDate) + 1;
-    const totalWeeks = totalDays / 7;
-    const expectedHours = weeklyHours * totalWeeks;
+    const expectedHours = weeklyHours * (totalDays / 7);
 
     const deviation = expectedHours > 0 ? ((actualHours - expectedHours) / expectedHours) * 100 : 0;
     const absDeviation = Math.abs(deviation);
@@ -150,36 +226,25 @@ export function useTimeTracking() {
     if (absDeviation > 10) status = 'red';
     else if (absDeviation > 5) status = 'yellow';
 
-    return {
-      employeeId,
-      contractHours: expectedHours,
-      actualHours,
-      deviation,
-      status,
-      sickDays,
-      vacationDays,
-      overtimeHours: Math.max(0, actualHours - expectedHours)
-    };
-  };
+    return { employeeId, contractHours: expectedHours, actualHours, deviation, status, sickDays, vacationDays, overtimeHours: Math.max(0, actualHours - expectedHours) };
+  }, [employees, getTimeEntriesForEmployee]);
 
-  const getTimeTrackingStats = (startDate: Date, endDate: Date): TimeTrackingStats => {
-    const employeeStatuses = employees.map(emp => 
-      calculateEmployeeStatus(emp.id, startDate, endDate)
-    );
-
+  const getTimeTrackingStats = useCallback((startDate: Date, endDate: Date): TimeTrackingStats => {
+    const statuses = employees.map(emp => calculateEmployeeStatus(emp.id, startDate, endDate));
     return {
       totalEmployees: employees.length,
-      greenStatus: employeeStatuses.filter(s => s.status === 'green').length,
-      yellowStatus: employeeStatuses.filter(s => s.status === 'yellow').length,
-      redStatus: employeeStatuses.filter(s => s.status === 'red').length,
-      averageHoursWorked: employeeStatuses.reduce((sum, s) => sum + s.actualHours, 0) / employees.length,
-      totalSickDays: employeeStatuses.reduce((sum, s) => sum + s.sickDays, 0),
-      totalVacationDays: employeeStatuses.reduce((sum, s) => sum + s.vacationDays, 0)
+      greenStatus: statuses.filter(s => s.status === 'green').length,
+      yellowStatus: statuses.filter(s => s.status === 'yellow').length,
+      redStatus: statuses.filter(s => s.status === 'red').length,
+      averageHoursWorked: employees.length > 0 ? statuses.reduce((sum, s) => sum + s.actualHours, 0) / employees.length : 0,
+      totalSickDays: statuses.reduce((sum, s) => sum + s.sickDays, 0),
+      totalVacationDays: statuses.reduce((sum, s) => sum + s.vacationDays, 0),
     };
-  };
+  }, [employees, calculateEmployeeStatus]);
 
   return {
     timeEntries,
+    isLoading,
     addTimeEntry,
     updateTimeEntry,
     deleteTimeEntry,
@@ -187,6 +252,6 @@ export function useTimeTracking() {
     getTimeEntriesForEmployee,
     getTimeEntryForDate,
     calculateEmployeeStatus,
-    getTimeTrackingStats
+    getTimeTrackingStats,
   };
 }
