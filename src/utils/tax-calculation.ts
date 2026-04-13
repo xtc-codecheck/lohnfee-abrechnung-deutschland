@@ -18,6 +18,7 @@
 // Die besondere Lohnsteuertabelle ist in src/utils/besondere-lohnsteuertabelle.ts implementiert
 // und wird über das Flag `useBesondereLohnsteuertabelle` in TaxCalculationParams aktiviert.
 
+import { calculateBesondereLohnsteuer } from './besondere-lohnsteuertabelle';
 import { 
   BBG_2025_YEARLY, 
   SOCIAL_INSURANCE_RATES_2025, 
@@ -234,7 +235,6 @@ export function calculateCompleteTax(params: TaxCalculationParams): TaxCalculati
 
   // BESONDERE LOHNSTEUERTABELLE für Beamte / PKV
   if (useBesondereLohnsteuertabelle) {
-    const { calculateBesondereLohnsteuer } = require('./besondere-lohnsteuertabelle');
     const besResult = calculateBesondereLohnsteuer({
       grossMonthly,
       taxClass: parseInt(taxClass) || 1,
