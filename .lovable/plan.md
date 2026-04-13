@@ -1,271 +1,196 @@
 
-# Umfassender Systemcheck: LohnPro
+
+# Umfassender Systemcheck: LohnPro (Post-Phase-5)
 
 ---
 
 ## 1. Codequalitaet & Sauberkeit
 
-### Kritisch: localStorage-Altlasten (4 Hooks noch auf localStorage)
-- `use-time-tracking.ts` – Zeiterfassungsdaten in localStorage
-- `use-special-payments.ts` – Krankengeld, Mutterschutz, Kurzarbeit in localStorage
-- `use-payroll-guardian.ts` – Anomalien, historische Daten, Config in localStorage
-- `use-compliance.ts` – Alerts und Reports in localStorage
+### Verbleibende Probleme
 
-**Problem:** Mitarbeiter/Payroll wurden auf Supabase migriert, aber diese 4 Module nicht. Daten gehen bei Browser-Wechsel verloren und sind nicht mandantenfaehig.
+**`any`-Typen in Employees.tsx (Mittel)**
+- `useState<any>(null)` (Zeile 22), `data?: any` (Zeile 35), `data: any` (Zeile 48) -- unsichere Typisierung, sollte durch konkrete Interfaces ersetzt werden.
 
-### Doppelter Code
-- `getStatusColor()` / `getStatusLabel()` ist in 4 Dateien identisch implementiert (payroll-dashboard, time-tracking-dashboard, employee-status-indicator, system-enhancement-proposal)
-- AG-Kostenberechnung `grossSalary * 1.2` ist ein Hardcode-Schaetzwert, dupliziert in main-dashboard.tsx und employee-dashboard.tsx – sollte die echte Payroll-Berechnung verwenden
-- `useSupabaseEmployees` exportiert sich zweimal (als Default und als `useEmployeeStorage`), plus `use-employee-storage.ts` re-exportiert nochmals
+**Autolohn-Dashboard TODO (Niedrig)**
+- `autolohn-dashboard.tsx` Zeile 100: Kommentar "Speicherung in localStorage oder Backend implementieren" -- veralteter Kommentar, Einstellungen werden nicht persistiert.
 
-### Stilkonsistenz
-- Code insgesamt gut strukturiert und deutsch kommentiert
-- Einheitliches Pattern bei Hooks und Komponenten
-- TypeScript wird durchgaengig genutzt
+**CHURCH_TAX_RATES Redundanz (Niedrig)**
+- `src/types/employee.ts` Zeilen 226-243: Alle 16 Bundeslaender haben identische Raten-Objekte pro Religion. Koennte auf eine Map `state => rate` reduziert werden (8% oder 9%).
 
 ---
 
 ## 2. Architektur & Struktur
 
-### Gut
-- Saubere Trennung: Pages → Components → Hooks → Utils → Types
-- Multi-Tenant-Isolation konsequent umgesetzt
-- Berechnungslogik zentral in `src/utils/`
+**Employees-Seite als Mega-Router (Mittel)**
+- `src/pages/Employees.tsx` routet 11 verschiedene Views (dashboard, wizard, 2 calculators, time-tracking, compliance, reports, advanced-payroll, authorities, extended-calc). Das ueberlaesst die Mitarbeiter-Seite und sollte in eigene Routen aufgeteilt werden.
 
-### Problematisch
-- **Employees-Seite ist ueberladen:** 12 verschiedene Views in einer einzigen Page-Komponente (Wizard, Salary Calculator, Time Tracking, Compliance, Reports, etc.)
-- **Payroll-Dashboard ebenso:** 570 Zeilen mit 8 Sub-Views via State-Switch
-- **Enge Kopplung:** `useSupabasePayroll` importiert `useSupabaseEmployees` direkt – bei jedem Payroll-Render werden alle Employees geladen
-- **Fehlende Foreign Keys:** Trotz geplanter Migration zeigt die DB-Schema-Analyse: keine einzige FK-Constraint existiert
+**Payroll-Dashboard lokale Status-Alias (Niedrig)**
+- `payroll-dashboard.tsx` Zeile 38-39: `const getStatusColor = getPayrollStatusColor` -- unnoetige Alias-Variablen, direkter Import reicht.
 
-### Fehlende DB-Trigger
-Die `<db-triggers>`-Sektion ist leer – der `trg_generate_personal_number`-Trigger aus der letzten Migration scheint nicht korrekt registriert zu sein. Dies muss geprueft werden.
+**Sonst sauber:** Hook-Abstraktion (Storage-Hooks als Re-Exports), Tenant-Context, Auth-Context, zentralisierte Formatierung -- alles gut strukturiert.
 
 ---
 
 ## 3. Performance & Effizienz
 
-- **social-security.ts mit ~7.900 Zeilen** wird komplett im Bundle geladen, obwohl nur wenige Konstanten pro Berechnung gebraucht werden. Kein Tree-Shaking moeglich bei einem einzelnen Objekt-Export.
-- **useSupabasePayroll** laedt ALLE payroll_entries bei jedem Mount – keine Paginierung, kein Limit. Bei 100+ Mitarbeitern × 12 Monate = 1.200+ Eintraege stoesst das an das 1.000-Row-Limit von Supabase.
-- **employeeMap** wird bei jedem Render neu erstellt (`new Map(employees.map(...))`), statt via `useMemo`
-- **Keine Debouncing** bei der Mitarbeitersuche
+**Time-Entries: Alle Eintraege geladen (Mittel)**
+- `use-time-tracking.ts` laedt alle `time_entries` fuer den Tenant ohne Limit oder Datumsfilter. Bei wachsenden Daten problematisch.
+
+**Compliance-Regeln: Neuberechnung bei jedem Render (Niedrig)**
+- `useMemo` ohne Abhaengigkeiten fuer `complianceRules` ist korrekt, aber `runEmployeeCompliance` erzeugt bei jedem Aufruf neue IDs mit `Date.now()` -- keine Caching-Moeglichkeit.
+
+**Sonst OK:** `useMemo` fuer employeeMap, Query-Limits fuer Payroll, Loading-States vorhanden.
 
 ---
 
 ## 4. Stabilitaet & Zuverlaessigkeit
 
-### Tests
-- 311 Unit-Tests fuer Berechnungslogik – sehr gut
-- **Keine Integrationstests** fuer Supabase-Hooks
-- **Keine E2E-Tests** (kein Playwright/Cypress)
-- **Keine Tests fuer UI-Komponenten** (Wizard, Dashboards)
+**Fehlende Error-Toasts (Mittel)**
+- Alle Supabase-Hooks loggen Fehler nur mit `console.error`. Der Nutzer bekommt keine visuelle Rueckmeldung bei fehlgeschlagenen DB-Operationen (Zeiterfassung, Sonderzahlungen, Guardian).
 
-### Fehlerbehandlung
-- Supabase-Fehler werden per `console.error` geloggt und in `error`-State gesetzt, aber dem Nutzer nie als Toast angezeigt
-- `dbToPayrollEntry` setzt `emp ?? {} as any` wenn Mitarbeiter nicht gefunden – crashed bei Zugriff auf Properties
-- `runPayrollCompliance` hat einen Placeholder (`if (true)`) der immer Warnungen erzeugt
+**Property-Based Test schlaegt fehl (Niedrig)**
+- Bekannter fehlschlagender Test bei Steuerprogression-Grenzen. Sollte gefixt oder mit `todo`/`skip` markiert werden.
+
+**354 Tests bestehen**, Error-Boundary vorhanden, Zod-Validierung fuer Mitarbeiterdaten.
 
 ---
 
-## 5. Sicherheit & Datenschutz
+## 5. Sicherheit & Datenschutz -- KRITISCH
 
-### Kritisch: Privilege Escalation
-Security-Scan bestaetigt: **Jeder authentifizierte Nutzer kann sich selbst Admin-Rechte geben** via INSERT in `user_roles`. Die ALL-Policy fuer Admins ist PERMISSIV, aber es fehlt eine restriktive INSERT-Policy fuer Nicht-Admins.
+Der Security-Scan hat **3 kritische Privilege-Escalation-Luecken** und **1 Datenleck** gefunden:
 
-### Audit-Log Manipulation
-Jeder Tenant-Member kann beliebige Eintraege in `audit_log` schreiben – inkl. gefaelschter `user_id`, `action`, `old_values`. Der Audit-Trail ist nicht vertrauenswuerdig.
-
-### Fehlende Foreign Keys
-Ohne FKs kann `employee_id` in `payroll_entries` auf nicht-existierende Mitarbeiter zeigen. Keine referentielle Integritaet.
+1. **KRITISCH: Cross-Tenant Admin-Rollen** -- `user_roles` hat keine `tenant_id`. Ein Admin kann global Rollen vergeben/aendern.
+2. **KRITISCH: Cross-Tenant Member-Injection** -- `tenant_members` Policy prueft nur `has_role('admin')` ohne `is_tenant_member`. Ein Admin kann sich in jeden Tenant einschleusen.
+3. **KRITISCH: Tenant-Daten offen fuer alle Admins** -- `tenants` Policy erlaubt jedem Admin Zugriff auf alle Tenant-Daten (Steuernummer, Kontakt).
+4. **WARNUNG: Profil-Enumeration** -- Jeder authentifizierte Nutzer kann alle Profil-E-Mails sehen.
 
 ---
 
 ## 6. Konsistenz & Wartbarkeit
 
-- **Benennungs-Inkonsistenz:** `employmentType` verwendet `fulltime`/`parttime` im Code, aber `vollzeit` als Default in DB
-- **Doppelte Re-Exports:** `use-employee-storage.ts` und `use-payroll-storage.ts` sind reine 1-Zeilen-Re-Exports – koennen direkt importiert werden
-- **Error Handling:** Kein einheitliches Pattern – manche Hooks setzen `error`-State, manche loggen nur, manche zeigen Toasts
+**Konsistentes Muster:** Alle operativen Hooks folgen dem gleichen Muster (Supabase-Query, State-Mapping, CRUD-Callbacks). Formatierung zentralisiert. Dark-Mode-Support einheitlich.
+
+**Inkonsistenz: `navigate` in Payroll** -- Payroll.tsx importiert `useNavigate` (Zeile 2), nutzt es aber nicht selbst, sondern uebergibt `onBack={() => navigate("/")}`. Unnoetig.
 
 ---
 
 ## 7. Verweise & Ressourcen
 
-- `QuickSalaryCalculator` wird importiert in Employees.tsx aber nie verwendet (Zeile 8)
-- `currentView === 'ultimate-calculator'` und `currentView === 'quick-salary-calculator'` rendern beide `UltimateSalaryCalculator` – redundant
-- `use-company-settings.ts` und `use-time-payroll-integration.ts` – Nutzung nicht verifiziert
-- Keine ungenutzten npm-Pakete gefunden
+**Keine toten Imports gefunden.** `QuickSalaryCalculator` wurde in Phase 4 entfernt. Alle verbliebenen Imports sind gueltig.
+
+**README Testdaten-Hinweis (Niedrig):** Der Abschnitt "Bekannte Testdaten" in der README erwaehnt noch `steuerberater-test@lohnpro.de` und Maria Mueller -- diese wurden bereits geloescht. README aktualisieren.
 
 ---
 
-## 8. Dokumentation & Verstaendlichkeit
+## 8. Dokumentation
 
-- README.md ist umfassend und aktuell (gerade erneuert)
-- `ANNUAL_UPDATE_CHECKLIST.md` vorhanden und hilfreich
-- **Fehlend:** API-Dokumentation der Supabase-Edge-Functions (keine vorhanden)
-- **Fehlend:** Onboarding-Guide fuer neue Entwickler
-- **Testdaten-Hinweis** in README vorhanden
+README ist umfassend und aktuell (bis auf den Testdaten-Hinweis). Inline-Kommentare in `formatters.ts` und Hooks sind gut. `ANNUAL_UPDATE_CHECKLIST.md` vorhanden.
 
 ---
 
-## 9. Design & UX
+## 9. Benutzererfahrung & Design
 
-### Konsistenz
-- Header/Footer durchgaengig via `MainLayout` – konsistent
-- Mobile Navigation via Hamburger-Menu vorhanden
-- **Auth-Seite hat KEIN MainLayout** (korrekt – kein Header/Footer vor Login)
+**Header/Footer konsistent:** Beide nutzen `navItems`-Array, Dark-Mode-Toggle im Header, Responsive Mobile-Menu vorhanden.
 
-### Verbesserungsbedarf
-- **Keine Loading-States sichtbar:** `isLoading` wird in Hooks gesetzt aber in vielen Dashboards nicht ausgewertet – Nutzer sieht leere Listen statt Spinner
-- **Keine Empty-State-Konsistenz:** Manche Seiten zeigen "Noch keine Daten", andere zeigen einfach nichts
-- **Kein Dark-Mode-Toggle** sichtbar, obwohl Dark-Mode CSS-Variablen definiert sind
-- **Footer-Navigation** wiederholt nur 3 von 7 Nav-Items – inkonsistent
+**Fehlende Mobile-Optimierung in Footer:** `DarkModeToggle` und `TenantSwitcher` fehlen im Mobile-Menu (nur Desktop-Nav hat sie).
+
+**Kein Breadcrumb-Navigation** in tief verschachtelten Views (z.B. Payroll > Guardian > Anomalie-Detail).
 
 ---
 
-## 10. Funktionsuebersicht & Verknuepfungen
+## 10. Funktionsliste & Verknuepfungen
 
-### Alle Systemfunktionen
+### Funktionen
 
-**1. Dashboard (/)** 
-- Statistik-Kacheln (Mitarbeiter, Durchschnittsgehalt, Gesamtkosten, Abrechnungen)
-- Quick-Actions zu Mitarbeiter, Lohnabrechnung, Gehaltsrechner
-- Onboarding-Hinweis bei leerer DB
-- Daten aus `useEmployeeStorage` + `usePayrollStorage`
-- AG-Kosten sind Schaetzwert (×1.2), nicht echte Berechnung
+| Funktion | Stichpunkte |
+|---|---|
+| **Dashboard** | Statistiken (MA-Anzahl, Durchschnittsgehalt, AG-Kosten, Perioden), Quick-Actions, Loading-State, Onboarding-Hinweis bei 0 MA |
+| **Mitarbeiterverwaltung** | 4-Schritt-Wizard (Personal, Beschaeftigung, Gehalt, Benefits), CRUD, Suche, Branchenmodule (Bau/Gastro/Pflege), Export |
+| **Lohnabrechnung** | Perioden-Verwaltung (Entwurf->Berechnet->Freigegeben->Ausgezahlt), Steuer+SV-Berechnung, DATEV-Export, PDF-Generierung, Journal |
+| **Gehaltsrechner** | Brutto-Netto (alle 6 Steuerklassen), Netto-Brutto-Umkehr, bAV-Optimierung, Dienstwagen (1%/0.25%), Gehaltsprognose |
+| **Zeiterfassung** | Tageseintraege (Arbeit/Urlaub/Krank), Bulk-Erfassung, Ampel-Status, Arbeitszeitkonten, Payroll-Sync |
+| **Sonderzahlungen** | Krankengeld, Mutterschutz, Kurzarbeit -- jeweils CRUD mit Perioden-Zuordnung |
+| **Meldewesen** | Beitragsnachweise pro KK, eLStB (Zeilen 3-26), SV-Meldungen (An-/Abmeldung/Storno) |
+| **Payroll Guardian** | Anomalie-Erkennung, Gehaltshistorie, Prognosen, Health-Score |
+| **Compliance** | Mindestlohn-Pruefung, BBG-Grenzen, Datenvollstaendigkeit, Aufbewahrungsfristen, Alerts in DB |
+| **Einstellungen** | Firmenstammdaten, Benutzerverwaltung (Rollen), DSGVO-Anfragen |
+| **Auth & Multi-Tenant** | Email+Passwort, Rollen (admin/sachbearbeiter/leserecht), Tenant-Switcher, Auto-Tenant-Erstellung |
 
-**2. Mitarbeiterverwaltung (/employees)**
-- 4-Schritt-Wizard (Personal → Beschaeftigung → Gehalt → Zusatzleistungen)
-- Mitarbeiterliste mit Suche, Bearbeiten, Loeschen
-- Gehaltsrechner (Quick + Ultimate)
-- Compliance-Center, Berichte, Zeiterfassung, Lohn-Reports
-- Verknuepfung: employees → payroll_entries, sv_meldungen, lohnsteuerbescheinigungen, beitragsnachweise
+### Verknuepfungen
 
-**3. Lohnabrechnung (/payroll)**
-- Abrechnungsperioden erstellen (Monat/Jahr)
-- Detailansicht pro Periode mit allen Mitarbeitern
-- Lohnjournal, Lohnkonto (§41 EStG)
-- Manuelle Erfassung, Zeiterfassung-Sync
-- Spezielle Lohnarten (Krankengeld, Mutterschutz, Kurzarbeit)
-- DATEV-Export (SKR03/SKR04)
-- Payroll Guardian (Anomalie-Erkennung)
-- Verknuepfung: payroll_periods ↔ payroll_entries ↔ employees
+| Von | Nach | Mechanismus | Status |
+|---|---|---|---|
+| Dashboard | Mitarbeiter, Abrechnung, Gehaltsrechner | Navigation-Buttons | OK |
+| Mitarbeiter-Wizard | Gehaltsrechner | `onCalculate`-Callback | OK |
+| Abrechnung | Sonderzahlungen, Automation, Guardian, Lohnkonto | View-Switching | OK |
+| Zeiterfassung | Payroll-Sync | `TimePayrollSync`-Komponente | OK |
+| Payroll Guardian | Anomalie-Detection-Utils | `detectAnomalies()` | OK |
+| Compliance | Mitarbeiter-Daten | `runEmployeeCompliance()` | OK |
+| Meldewesen | Payroll-Entries | Generierung aus Abrechnungsdaten | OK |
+| Alle operativen Hooks | Tenant-Context | `currentTenant.id` als Filter | OK |
+| Auth | Rollen-System | `user_roles`-Tabelle + `has_role()` | OK (aber Cross-Tenant-Luecke) |
 
-**4. Zeiterfassung (/time-tracking)**
-- Kalender-basierte Erfassung pro Mitarbeiter
-- Bulk-Eintraege (Urlaub, Krankheit)
-- Ampel-Status (Soll/Ist-Vergleich)
-- Arbeitszeitkonten
-- **PROBLEM:** Daten in localStorage, nicht in Supabase → nicht mandantenfaehig
+### Fehlende/Unvollstaendige Verknuepfungen
 
-**5. Meldewesen (/meldewesen)**
-- Beitragsnachweise (pro KK und Monat, KV/RV/AV/PV aufgeschluesselt)
-- Elektronische Lohnsteuerbescheinigung (Zeilen 3-26)
-- SV-Meldungen (An-/Abmeldung, Jahresmeldung, Stornierung)
-- Verknuepfung: beitragsnachweise ↔ payroll_entries, lohnsteuerbescheinigungen ↔ employees
-
-**6. Autolohn (/autolohn)**
-- Automatische Abrechnungskonfiguration
-- Zeitplaene, Benachrichtigungen
-- **PROBLEM:** Einstellungen werden nur als Toast bestaetigt, nicht persistent gespeichert
-
-**7. Einstellungen (/settings)**
-- Firmenstammdaten (Name, Steuernummer, Bank)
-- Benutzerverwaltung (Rollen zuweisen)
-- DSGVO-Management (Auskunft, Loeschung)
-- TenantSwitcher im Header
-
-**8. Auth (/auth + /reset-password)**
-- Email + Passwort Login/Signup
-- Auto-Login nach Registrierung (bei auto-confirm)
-- Passwort-Reset-Flow
-- HIBP-Check aktiviert
-
-### Verknuepfungen mit Problemen
-
-| Von | Nach | Status |
-|-----|------|--------|
-| employees → payroll_entries | Funktional, aber ohne FK | ⚠️ |
-| employees → sv_meldungen | Funktional, aber ohne FK | ⚠️ |
-| employees → lohnsteuerbescheinigungen | Funktional, aber ohne FK | ⚠️ |
-| payroll_periods → payroll_entries | Funktional, aber ohne FK | ⚠️ |
-| time-tracking → payroll (TimePayrollSync) | localStorage → Supabase Mismatch | ❌ |
-| special-payments → payroll | localStorage, nicht in Payroll integriert | ❌ |
-| compliance → employees | Funktional, localStorage-Alerts | ⚠️ |
-| payroll-guardian → payroll | localStorage, keine echte Verbindung | ❌ |
-| autolohn → payroll | Einstellungen nicht persistent | ❌ |
-| dashboard stats → echte Berechnung | Hardcoded ×1.2 statt real | ❌ |
+1. **Autolohn-Einstellungen** werden nicht persistiert (TODO-Kommentar vorhanden)
+2. **`runPayrollCompliance`** gibt immer leeres Array zurueck (Zeile 179) -- Payroll-Compliance-Pruefungen fehlen
+3. **Working-Time-Accounts** (`/employees?view=working-time-accounts`) ist als View definiert aber nicht navigierbar -- kein Button fuehrt dorthin
 
 ---
 
-## 11. Design-Check
+## 11. Design
 
-- Header: Konsistent, sticky, responsive mit Hamburger-Menu ✓
-- Footer: Vorhanden, aber nur 3 Links statt 7 ⚠️
-- Farbschema: Professionelles Blau, durchgaengig ✓
-- Dark Mode: CSS vorhanden, kein Toggle sichtbar ⚠️
-- Card-Shadows: Einheitlich `shadow-card` / `shadow-elegant` ✓
-- Animations: `animate-fade-in` konsistent genutzt ✓
-- Responsive: Grid-Layout mit Breakpoints ✓
+- **Header:** Konsistent mit Logo, Nav, Tenant-Switcher, Dark-Mode, User-Info. Sticky. Responsive mit Mobile-Menu.
+- **Footer:** Konsistent mit Logo, Nav-Links, Copyright. Aber: Dark-Mode-Toggle und Tenant-Switcher fehlen im Mobile-Menue.
+- **Karten-Design:** Einheitlich `shadow-card hover:shadow-elegant`. Dark-Mode-kompatibel durch Tailwind-Klassen.
+- **Keine globale Breadcrumb-Komponente** fuer verschachtelte Views.
 
 ---
 
-## Zusammenfassung: Kritischste Punkte
+## Kritischste Punkte (Zusammenfassung)
 
-1. **KRITISCH – Privilege Escalation:** Jeder User kann sich Admin-Rechte geben
-2. **KRITISCH – 4 Hooks auf localStorage:** Zeiterfassung, Sonderzahlungen, Compliance, Guardian verlieren Daten bei Browser-Wechsel und sind nicht mandantenfaehig
-3. **HOCH – Keine Foreign Keys:** Keine referentielle Integritaet in der DB
-4. **HOCH – Supabase Row-Limit:** Payroll laedt alle Entries ohne Paginierung (>1000 Rows = Datenverlust)
-5. **MITTEL – Audit-Log manipulierbar:** Kein vertrauenswuerdiger Audit-Trail
-6. **MITTEL – AG-Kosten Schaetzwert:** Dashboard zeigt ×1.2 statt echte Berechnung
-7. **MITTEL – Keine Loading-States:** Nutzer sieht leere Listen statt Ladeindikator
-8. **NIEDRIG – Doppelter Code:** getStatusColor/Label in 4 Dateien
+1. **3 Cross-Tenant Privilege-Escalation-Luecken** in RLS-Policies (user_roles, tenant_members, tenants)
+2. **Profil-Enumeration** -- alle Nutzer koennen alle E-Mails sehen
+3. **Fehlende Error-Toasts** in allen Supabase-Hooks -- Nutzer sieht keine Fehler
+4. **Time-Entries ohne Limit/Filter** -- Performance-Risiko bei wachsenden Daten
+5. **`any`-Typen** in Employees.tsx
+6. **README enthaelt geloeschte Testdaten-Referenz**
 
 ---
 
-## Verbesserungsvorschlaege mit Prioritaet
+## Verbesserungsvorschlaege
 
-| # | Verbesserung | Prioritaet |
-|---|-------------|-----------|
-| 1 | Privilege Escalation fixen (INSERT-Policy user_roles) | KRITISCH |
-| 2 | localStorage-Hooks auf Supabase migrieren (4 Hooks) | KRITISCH |
-| 3 | Foreign Keys anlegen (alle Tabellen) | HOCH |
-| 4 | Payroll-Query paginieren / Row-Limit beachten | HOCH |
-| 5 | Audit-Log INSERT-Policy auf Trigger beschraenken | HOCH |
-| 6 | Loading-States in allen Dashboards einbauen | MITTEL |
-| 7 | AG-Kosten durch echte Berechnung ersetzen | MITTEL |
-| 8 | getStatusColor/Label zentralisieren | MITTEL |
-| 9 | Dark-Mode-Toggle hinzufuegen | NIEDRIG |
-| 10 | Footer-Navigation vervollstaendigen | NIEDRIG |
-| 11 | Unused Code entfernen (QuickSalaryCalculator etc.) | NIEDRIG |
+| Prioritaet | Massnahme |
+|---|---|
+| **HOCH** | RLS-Policies fixen: `tenant_members` und `tenants` Policies um `is_tenant_member` erweitern |
+| **HOCH** | `profiles` SELECT-Policy auf gleichen Tenant einschraenken |
+| **HOCH** | Error-Toasts in allen Supabase-Hooks (time-tracking, special-payments, compliance, guardian) |
+| **MITTEL** | Time-Entries-Query mit Datums-Limit (z.B. letzte 90 Tage) |
+| **MITTEL** | `any`-Typen in Employees.tsx durch `Employee`-Interface ersetzen |
+| **MITTEL** | Mobile-Menu um Dark-Mode-Toggle und Tenant-Switcher erweitern |
+| **NIEDRIG** | README Testdaten-Abschnitt entfernen |
+| **NIEDRIG** | `runPayrollCompliance` implementieren oder entfernen |
+| **NIEDRIG** | Autolohn-Einstellungen persistieren |
+| **NIEDRIG** | Payroll-Dashboard Status-Alias entfernen |
 
 ---
 
 ## Umsetzungsplan
 
-### Phase 1: Sicherheit (1 Nachricht)
-- RLS-Policy fuer `user_roles`: INSERT nur fuer Admins
-- Audit-Log: INSERT-Policy entfernen, nur Trigger erlauben
-- Foreign Keys fuer alle Tabellen anlegen
+### Phase A: Sicherheitshärtung (1 Nachricht)
+- RLS-Policies fuer `tenant_members`, `tenants`, `user_roles` um Tenant-Scoping erweitern
+- `profiles` SELECT-Policy auf Tenant-Zugehoerigkeit einschraenken
+- Security-Scan erneut ausfuehren zur Verifikation
 
-### Phase 2: Datenmigration localStorage → Supabase (2 Nachrichten)
-- Neue Tabellen: `time_entries`, `special_payments`, `compliance_alerts`, `payroll_guardian_config`
-- Hooks umschreiben: `use-time-tracking`, `use-special-payments`, `use-compliance`, `use-payroll-guardian`
-- RLS-Policies und Tenant-Isolation fuer alle neuen Tabellen
+### Phase B: Robustheit & UX (1 Nachricht)
+- Toast-Fehlerbenachrichtigungen in alle 4 Supabase-Hooks einbauen
+- Time-Entries-Query auf 90-Tage-Fenster begrenzen
+- `any`-Typen in Employees.tsx ersetzen
+- Dark-Mode-Toggle + Tenant-Switcher ins Mobile-Menu
 
-### Phase 3: Performance & Stabilitaet (1 Nachricht)
-- Payroll-Queries paginieren / nach Periode filtern
-- `employeeMap` in `useMemo` wrappen
-- Loading-States in allen Dashboards einbauen
-- Error-Toasts statt nur console.error
+### Phase C: Cleanup & Dokumentation (1 Nachricht)
+- README: Testdaten-Abschnitt entfernen
+- `runPayrollCompliance` mit echten Pruefungen fuellen oder entfernen
+- Payroll-Dashboard: unnoetige Alias-Variablen entfernen
+- Property-Based Test fixen oder als `todo` markieren
 
-### Phase 4: Code-Qualitaet & UX (1 Nachricht)
-- `getStatusColor`/`getStatusLabel` in `src/lib/formatters.ts` zentralisieren
-- AG-Kosten durch echte Payroll-Berechnung ersetzen
-- Unused Code entfernen (QuickSalaryCalculator, doppelte Views)
-- Footer-Navigation vervollstaendigen
-- Dark-Mode-Toggle hinzufuegen
-
-### Phase 5: Test-Erweiterung (1 Nachricht)
-- Integrationstests fuer Supabase-Hooks (mit Mocks)
-- UI-Snapshot-Tests fuer kritische Komponenten (Wizard, Payroll-Detail)
-- Alle Tests ausfuehren und Regressionen pruefen
