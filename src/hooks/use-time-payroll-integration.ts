@@ -7,7 +7,7 @@ import {
   createPayrollFromTimeTracking,
   PayrollTimeIntegration 
 } from '@/utils/time-payroll-integration';
-import { PayrollEntry, WorkingTimeData, BONUS_RATES } from '@/types/payroll';
+import { PayrollEntry, PayrollPeriod, WorkingTimeData, BONUS_RATES } from '@/types/payroll';
 import { calculateCompleteTax } from '@/utils/tax-calculation';
 import { buildTaxParamsFromEmployee } from '@/utils/tax-params-factory';
 
