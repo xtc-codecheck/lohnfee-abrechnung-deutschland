@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { PageSeo } from "@/components/seo/page-seo";
 import { MainLayout } from "@/components/layout/main-layout";
 import { PayrollDashboard } from "@/components/payroll/payroll-dashboard";
 import { SpecialPaymentsManager } from "@/components/payroll/special-payments-manager";

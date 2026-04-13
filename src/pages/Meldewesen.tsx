@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { MainLayout } from "@/components/layout/main-layout";
+import { PageSeo } from "@/components/seo/page-seo";
 import { SVMeldungenPage } from "@/components/meldewesen/sv-meldungen-page";
 import { BeitragsnachweisPage } from "@/components/meldewesen/beitragsnachweis-page";
 import { LohnsteuerbescheinigungPage } from "@/components/meldewesen/lohnsteuerbescheinigung-page";

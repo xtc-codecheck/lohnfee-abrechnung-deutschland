@@ -1,5 +1,6 @@
 import { MainLayout } from "@/components/layout/main-layout";
 import { TimeTrackingDashboard } from "@/components/time-tracking/time-tracking-dashboard";
+import { PageSeo } from "@/components/seo/page-seo";
 import { useNavigate } from "react-router-dom";
 
 export default function TimeTracking() {

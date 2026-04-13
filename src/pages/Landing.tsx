@@ -88,6 +88,11 @@ export default function Landing() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
+      <PageSeo
+        title="LohnPro – Lohnabrechnungssoftware für Deutschland"
+        description="Professionelle Lohnabrechnung für deutsche Unternehmen. Automatisierte Brutto-Netto-Berechnung, DATEV-Export, SV-Meldungen und Compliance."
+        path="/"
+      />
       {/* Navbar */}
       <header className="sticky top-0 z-50 border-b border-border bg-card/80 backdrop-blur-lg">
         <div className="container mx-auto flex items-center justify-between px-6 py-4">
