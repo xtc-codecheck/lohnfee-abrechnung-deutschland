@@ -15,9 +15,8 @@
 // Die besondere Lohnsteuertabelle berechnet die Lohnsteuer OHNE Berücksichtigung von 
 // Sozialversicherungsbeiträgen, wodurch die Steuerlast höher ausfällt.
 // 
-// ⚠️ AKTUELLER STATUS: Die besondere Lohnsteuertabelle ist derzeit NICHT implementiert
-// und wird in diesem Lohnverarbeitungssystem noch NICHT verarbeitet.
-// Eine Implementierung ist für einen späteren Zeitpunkt geplant.
+// Die besondere Lohnsteuertabelle ist in src/utils/besondere-lohnsteuertabelle.ts implementiert
+// und wird über das Flag `useBesondereLohnsteuertabelle` in TaxCalculationParams aktiviert.
 
 import { 
   BBG_2025_YEARLY, 
@@ -42,6 +41,9 @@ export interface TaxCalculationParams {
   isChildless: boolean; // für Pflegeversicherung
   age: number; // für Pflegeversicherung
   employmentType?: 'minijob' | 'midijob' | 'fulltime' | 'parttime'; // für spezielle Behandlung
+  useBesondereLohnsteuertabelle?: boolean; // Besondere Tabelle für Beamte/PKV
+  privateHealthInsuranceMonthly?: number; // PKV-Basisbeitrag (nur bei besonderer Tabelle)
+  privateCareInsuranceMonthly?: number; // PPV-Beitrag (nur bei besonderer Tabelle)
 }
 
 export interface TaxCalculationResult {
