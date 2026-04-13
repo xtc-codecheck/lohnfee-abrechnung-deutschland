@@ -4,6 +4,7 @@ import { Employee } from "@/types/employee";
 import { useTimeTracking } from "@/hooks/use-time-tracking";
 import { cn } from "@/lib/utils";
 import { ChevronRight, Clock, Calendar, AlertTriangle } from "lucide-react";
+import { getTrafficLightColor, getTrafficLightDot, getTrafficLightLabel } from "@/lib/formatters";
 
 interface EmployeeStatusIndicatorProps {
   employee: Employee;
@@ -21,29 +22,11 @@ export function EmployeeStatusIndicator({
   const { calculateEmployeeStatus } = useTimeTracking();
   const status = calculateEmployeeStatus(employee.id, startDate, endDate);
 
-  const getStatusColor = (statusType: 'green' | 'yellow' | 'red') => {
-    switch (statusType) {
-      case 'green': return 'bg-green-50 border-green-200 text-green-800';
-      case 'yellow': return 'bg-yellow-50 border-yellow-200 text-yellow-800';
-      case 'red': return 'bg-red-50 border-red-200 text-red-800';
-    }
-  };
-
-  const getStatusIcon = (statusType: 'green' | 'yellow' | 'red') => {
-    switch (statusType) {
-      case 'green': return <div className="w-3 h-3 rounded-full bg-green-500" />;
-      case 'yellow': return <div className="w-3 h-3 rounded-full bg-yellow-500" />;
-      case 'red': return <div className="w-3 h-3 rounded-full bg-red-500" />;
-    }
-  };
-
-  const getStatusLabel = (statusType: 'green' | 'yellow' | 'red') => {
-    switch (statusType) {
-      case 'green': return 'Normal';
-      case 'yellow': return 'Achtung';
-      case 'red': return 'Kritisch';
-    }
-  };
+  const getStatusColor = getTrafficLightColor;
+  const getStatusIcon = (statusType: 'green' | 'yellow' | 'red') => (
+    <div className={`w-3 h-3 rounded-full ${getTrafficLightDot(statusType)}`} />
+  );
+  const getStatusLabel = getTrafficLightLabel;
 
   return (
     <Card 

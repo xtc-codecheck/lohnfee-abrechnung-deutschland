@@ -5,6 +5,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar, Clock, Users, AlertTriangle, TrendingUp, Plus } from "lucide-react";
+import { getTrafficLightColor } from "@/lib/formatters";
 import { useEmployeeStorage } from "@/hooks/use-employee-storage";
 import { useTimeTracking } from "@/hooks/use-time-tracking";
 import { EmployeeCalendar } from "./employee-calendar";
@@ -29,13 +30,7 @@ export function TimeTrackingDashboard({ onBack }: TimeTrackingDashboardProps) {
   const endOfCurrentMonth = endOfMonth(currentDate);
   const stats = getTimeTrackingStats(startOfCurrentMonth, endOfCurrentMonth);
 
-  const getStatusColor = (status: 'green' | 'yellow' | 'red') => {
-    switch (status) {
-      case 'green': return 'text-green-600 bg-green-50 border-green-200';
-      case 'yellow': return 'text-yellow-600 bg-yellow-50 border-yellow-200';
-      case 'red': return 'text-red-600 bg-red-50 border-red-200';
-    }
-  };
+  const getStatusColor = getTrafficLightColor;
 
   const handleEmployeeSelect = (employeeId: string) => {
     setSelectedEmployee(employeeId);

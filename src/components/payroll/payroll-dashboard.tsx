@@ -17,6 +17,7 @@ import { TaxCalculationSettings } from "./tax-calculation-settings";
 import { TimePayrollSync } from "./time-payroll-sync";
 import { DatevExportDialog } from "./datev-export-dialog";
 import { PayrollStatus } from "@/types/payroll";
+import { getPayrollStatusColor, getPayrollStatusLabel } from "@/lib/formatters";
 
 interface PayrollDashboardProps {
   onBack: () => void;
