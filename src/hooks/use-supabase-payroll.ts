@@ -104,7 +104,7 @@ export function useSupabasePayroll() {
     
     const [periodsRes, entriesRes] = await Promise.all([
       supabase.from('payroll_periods').select('*').eq('tenant_id', tenantId).order('year', { ascending: false }).order('month', { ascending: false }),
-      supabase.from('payroll_entries').select('*').eq('tenant_id', tenantId).order('created_at', { ascending: false }),
+      supabase.from('payroll_entries').select('*').eq('tenant_id', tenantId).order('created_at', { ascending: false }).limit(500),
     ]);
     
     if (periodsRes.error) setError(periodsRes.error.message);
