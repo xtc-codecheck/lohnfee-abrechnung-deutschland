@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { DarkModeToggle } from "@/components/ui/dark-mode-toggle";
 import {
   Users,
@@ -178,6 +179,117 @@ export default function Landing() {
                 </CardContent>
               </Card>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Pricing */}
+      <section id="pricing" className="border-t border-border bg-muted/30 py-24">
+        <div className="container mx-auto px-6">
+          <div className="mx-auto mb-16 max-w-2xl text-center">
+            <h2 className="text-3xl font-bold sm:text-4xl">
+              Transparent &amp; fair – wählen Sie Ihren Tarif
+            </h2>
+            <p className="mt-4 text-lg text-muted-foreground">
+              Starten Sie kostenlos und wachsen Sie mit Ihrem Unternehmen.
+            </p>
+          </div>
+          <div className="mx-auto grid max-w-5xl gap-8 lg:grid-cols-3">
+            {/* Starter */}
+            <Card className="flex flex-col border-border/60">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-xl">Starter</CardTitle>
+                <CardDescription>Für Kleinunternehmer &amp; Freelancer</CardDescription>
+              </CardHeader>
+              <CardContent className="flex flex-1 flex-col p-6 pt-2">
+                <div className="mb-6">
+                  <span className="text-4xl font-extrabold">0 €</span>
+                  <span className="text-muted-foreground"> / Monat</span>
+                </div>
+                <ul className="mb-8 flex-1 space-y-3 text-sm">
+                  {["Bis 5 Mitarbeiter", "Brutto-Netto-Berechnung", "Grundlegende Reports", "E-Mail-Support"].map((f) => (
+                    <li key={f} className="flex items-start gap-2">
+                      <CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-secondary" />
+                      {f}
+                    </li>
+                  ))}
+                </ul>
+                <Button variant="outline" className="w-full" onClick={() => navigate("/auth")}>
+                  Kostenlos starten
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Professional */}
+            <Card className="relative flex flex-col border-2 border-primary shadow-lg">
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                <Badge className="bg-primary text-primary-foreground px-3 py-1 text-xs">Beliebteste Wahl</Badge>
+              </div>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-xl">Professional</CardTitle>
+                <CardDescription>Für mittelständische Unternehmen</CardDescription>
+              </CardHeader>
+              <CardContent className="flex flex-1 flex-col p-6 pt-2">
+                <div className="mb-6">
+                  <span className="text-4xl font-extrabold">49 €</span>
+                  <span className="text-muted-foreground"> / Monat</span>
+                </div>
+                <ul className="mb-8 flex-1 space-y-3 text-sm">
+                  {[
+                    "Bis 50 Mitarbeiter",
+                    "Alle Berechnungsmodule",
+                    "DATEV-Export",
+                    "SV-Meldungen & LStB",
+                    "Zeiterfassung",
+                    "Branchenmodule (Bau, Gastro, Pflege)",
+                    "Prioritäts-Support",
+                  ].map((f) => (
+                    <li key={f} className="flex items-start gap-2">
+                      <CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-secondary" />
+                      {f}
+                    </li>
+                  ))}
+                </ul>
+                <Button className="w-full" onClick={() => navigate("/auth")}>
+                  Jetzt starten
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Enterprise */}
+            <Card className="flex flex-col border-border/60">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-xl">Enterprise</CardTitle>
+                <CardDescription>Für Steuerkanzleien &amp; Konzerne</CardDescription>
+              </CardHeader>
+              <CardContent className="flex flex-1 flex-col p-6 pt-2">
+                <div className="mb-6">
+                  <span className="text-4xl font-extrabold">149 €</span>
+                  <span className="text-muted-foreground"> / Monat</span>
+                </div>
+                <ul className="mb-8 flex-1 space-y-3 text-sm">
+                  {[
+                    "Unbegrenzte Mitarbeiter",
+                    "Multi-Tenant / Mandanten",
+                    "Rollenbasierte Zugriffskontrolle",
+                    "Anomalie-Erkennung (Guardian)",
+                    "DSGVO-Management",
+                    "Compliance-Monitoring",
+                    "API-Zugang",
+                    "Dedizierter Account Manager",
+                  ].map((f) => (
+                    <li key={f} className="flex items-start gap-2">
+                      <CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-secondary" />
+                      {f}
+                    </li>
+                  ))}
+                </ul>
+                <Button variant="outline" className="w-full" onClick={() => navigate("/auth")}>
+                  Kontakt aufnehmen
+                </Button>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </section>
