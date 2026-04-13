@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -13,6 +13,7 @@ interface AuthContextType {
   canEdit: () => boolean;
   isAdmin: () => boolean;
   signOut: () => Promise<void>;
+  refreshRolesForTenant: (tenantId: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -23,25 +24,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [roles, setRoles] = useState<AppRole[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchRoles = async (userId: string) => {
-    const { data } = await supabase
+  const fetchRoles = useCallback(async (userId: string, tenantId?: string) => {
+    let query = supabase
       .from('user_roles')
-      .select('role')
+      .select('role, tenant_id')
       .eq('user_id', userId);
-    
+
+    if (tenantId) {
+      query = query.eq('tenant_id', tenantId);
+    }
+
+    const { data } = await query;
+
     if (data) {
       setRoles(data.map(r => r.role as AppRole));
     }
-  };
+  }, []);
+
+  const refreshRolesForTenant = useCallback(async (tenantId: string) => {
+    if (user) {
+      await fetchRoles(user.id, tenantId);
+    }
+  }, [user, fetchRoles]);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
-        
+
         if (session?.user) {
-          // Defer role fetch to avoid deadlock
+          // Fetch all roles initially (tenant filtering happens when tenant is known)
           setTimeout(() => fetchRoles(session.user.id), 0);
         } else {
           setRoles([]);
@@ -60,7 +73,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [fetchRoles]);
 
   const hasRole = (role: AppRole) => roles.includes(role);
   const canEdit = () => hasRole('admin') || hasRole('sachbearbeiter');
@@ -72,7 +85,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ session, user, roles, loading, hasRole, canEdit, isAdmin, signOut }}>
+    <AuthContext.Provider value={{ session, user, roles, loading, hasRole, canEdit, isAdmin, signOut, refreshRolesForTenant }}>
       {children}
     </AuthContext.Provider>
   );

@@ -22,7 +22,7 @@ interface TenantContextType {
 const TenantContext = createContext<TenantContextType | undefined>(undefined);
 
 export function TenantProvider({ children }: { children: ReactNode }) {
-  const { user } = useAuth();
+  const { user, refreshRolesForTenant } = useAuth();
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [currentTenant, setCurrentTenant] = useState<Tenant | null>(null);
   const [loading, setLoading] = useState(true);
@@ -32,14 +32,12 @@ export function TenantProvider({ children }: { children: ReactNode }) {
     
     setLoading(true);
     
-    // Get tenant memberships
     const { data: memberships } = await supabase
       .from('tenant_members')
       .select('tenant_id, is_default')
       .eq('user_id', user.id);
     
     if (!memberships || memberships.length === 0) {
-      // Auto-create tenant for existing user without one
       const { data: newTenant } = await supabase
         .from('tenants')
         .insert({ name: 'Mein Unternehmen' })
@@ -54,6 +52,8 @@ export function TenantProvider({ children }: { children: ReactNode }) {
         });
         setTenants([newTenant]);
         setCurrentTenant(newTenant);
+        // Refresh roles for the new tenant
+        await refreshRolesForTenant(newTenant.id);
       }
       setLoading(false);
       return;
@@ -71,8 +71,14 @@ export function TenantProvider({ children }: { children: ReactNode }) {
     const defaultMembership = memberships.find(m => m.is_default);
     const defaultTenant = list.find(t => t.id === defaultMembership?.tenant_id) ?? list[0] ?? null;
     setCurrentTenant(defaultTenant);
+    
+    // Load roles for the active tenant
+    if (defaultTenant) {
+      await refreshRolesForTenant(defaultTenant.id);
+    }
+    
     setLoading(false);
-  }, [user]);
+  }, [user, refreshRolesForTenant]);
 
   useEffect(() => {
     fetchTenants();
@@ -80,8 +86,12 @@ export function TenantProvider({ children }: { children: ReactNode }) {
 
   const switchTenant = useCallback((tenantId: string) => {
     const t = tenants.find(t => t.id === tenantId);
-    if (t) setCurrentTenant(t);
-  }, [tenants]);
+    if (t) {
+      setCurrentTenant(t);
+      // Refresh roles when switching tenants
+      refreshRolesForTenant(tenantId);
+    }
+  }, [tenants, refreshRolesForTenant]);
 
   return (
     <TenantContext.Provider value={{
