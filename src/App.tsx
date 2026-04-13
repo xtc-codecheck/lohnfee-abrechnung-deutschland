@@ -12,6 +12,7 @@ import Payroll from "./pages/Payroll";
 import Autolohn from "./pages/Autolohn";
 import TimeTracking from "./pages/TimeTracking";
 import Auth from "./pages/Auth";
+import Settings from "./pages/Settings";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 
@@ -33,6 +34,7 @@ const App = () => (
               <Route path="/payroll" element={<ProtectedRoute><Payroll /></ProtectedRoute>} />
               <Route path="/autolohn" element={<ProtectedRoute><Autolohn /></ProtectedRoute>} />
               <Route path="/time-tracking" element={<ProtectedRoute><TimeTracking /></ProtectedRoute>} />
+              <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </AuthProvider>
