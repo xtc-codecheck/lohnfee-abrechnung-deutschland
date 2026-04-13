@@ -1,16 +1,6 @@
 /**
  * Mitarbeiter-Storage Hook
  * 
- * WICHTIG: Dieser Hook verwendet jetzt verschlüsselte Speicherung
- * für sensible Mitarbeiterdaten (Steuer-ID, IBAN, Gehalt etc.)
- * 
- * Die Implementierung ist in use-secure-employee-storage.ts
- * Dieser Export bleibt für Abwärtskompatibilität bestehen.
+ * Verwendet jetzt Supabase für persistente, sichere Speicherung.
  */
-
-export { 
-  useSecureEmployeeStorage as useEmployeeStorage,
-  useSecureEmployeeStorage,
-  type SecureEmployeeStorageState,
-  type SecureEmployeeStorageActions,
-} from './use-secure-employee-storage';
+export { useSupabaseEmployees as useEmployeeStorage } from './use-supabase-employees';
