@@ -21,6 +21,7 @@ import Meldewesen from "./pages/Meldewesen";
 import Impressum from "./pages/Impressum";
 import Datenschutz from "./pages/Datenschutz";
 import AGB from "./pages/AGB";
+import Kontakt from "./pages/Kontakt";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -49,6 +50,7 @@ const App = () => (
                 <Route path="/impressum" element={<Impressum />} />
                 <Route path="/datenschutz" element={<Datenschutz />} />
                 <Route path="/agb" element={<AGB />} />
+                <Route path="/kontakt" element={<Kontakt />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </TenantProvider>
