@@ -8,6 +8,7 @@ import { AuthProvider } from "@/contexts/auth-context";
 import { TenantProvider } from "@/contexts/tenant-context";
 import { ProtectedRoute } from "@/components/auth/protected-route";
 import Index from "./pages/Index";
+import Landing from "./pages/Landing";
 import Employees from "./pages/Employees";
 import Payroll from "./pages/Payroll";
 import Autolohn from "./pages/Autolohn";
