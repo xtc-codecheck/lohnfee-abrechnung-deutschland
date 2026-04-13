@@ -26,7 +26,7 @@ export default function Auth() {
     if (error) {
       toast({ title: 'Anmeldung fehlgeschlagen', description: error.message, variant: 'destructive' });
     } else {
-      navigate('/');
+      navigate('/dashboard');
     }
   };
 
@@ -46,7 +46,7 @@ export default function Auth() {
       toast({ title: 'Registrierung fehlgeschlagen', description: error.message, variant: 'destructive' });
     } else if (data.session) {
       toast({ title: 'Willkommen!', description: 'Ihr Konto wurde erstellt.' });
-      navigate('/');
+      navigate('/dashboard');
     } else {
       toast({ title: 'Registrierung erfolgreich', description: 'Bitte bestätigen Sie Ihre E-Mail-Adresse.' });
     }
