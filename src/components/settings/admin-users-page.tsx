@@ -8,9 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { PageHeader } from '@/components/ui/page-header';
 import { useToast } from '@/hooks/use-toast';
-import { Users, Shield, UserPlus, Loader2 } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Users, Shield, Loader2 } from 'lucide-react';
 
 interface UserWithRole {
   user_id: string;
@@ -25,8 +23,6 @@ export function AdminUsersPage() {
   const { toast } = useToast();
   const [users, setUsers] = useState<UserWithRole[]>([]);
   const [loading, setLoading] = useState(true);
-  const [inviteEmail, setInviteEmail] = useState('');
-  const [inviteRole, setInviteRole] = useState('leserecht');
 
   useEffect(() => {
     if (!tenantId) return;
@@ -34,27 +30,28 @@ export function AdminUsersPage() {
   }, [tenantId]);
 
   const loadUsers = async () => {
+    if (!tenantId) return;
     setLoading(true);
-    // Get members of this tenant
+
     const { data: members } = await supabase
       .from('tenant_members')
       .select('user_id')
-      .eq('tenant_id', tenantId!);
+      .eq('tenant_id', tenantId);
 
     if (!members) { setLoading(false); return; }
     const userIds = members.map(m => m.user_id);
 
-    // Get profiles
     const { data: profiles } = await supabase
       .from('profiles')
       .select('*')
       .in('user_id', userIds);
 
-    // Get roles
+    // Fetch roles scoped to this tenant
     const { data: roles } = await supabase
       .from('user_roles')
       .select('*')
-      .in('user_id', userIds);
+      .in('user_id', userIds)
+      .eq('tenant_id', tenantId);
 
     const userList: UserWithRole[] = (profiles ?? []).map(p => ({
       user_id: p.user_id,
@@ -68,17 +65,26 @@ export function AdminUsersPage() {
   };
 
   const changeRole = async (userId: string, newRole: string) => {
-    // Remove existing roles
-    await supabase.from('user_roles').delete().eq('user_id', userId);
-    // Add new role
+    if (!tenantId) return;
+
+    // Remove existing roles for this user in this tenant
+    await supabase
+      .from('user_roles')
+      .delete()
+      .eq('user_id', userId)
+      .eq('tenant_id', tenantId);
+
+    // Add new role with tenant_id
     const { error } = await supabase.from('user_roles').insert({
       user_id: userId,
-      role: newRole as any,
+      role: newRole as 'admin' | 'sachbearbeiter' | 'leserecht',
+      tenant_id: tenantId,
     });
+
     if (error) {
       toast({ title: 'Fehler', description: error.message, variant: 'destructive' });
     } else {
-      toast({ title: 'Rolle geändert', description: `Rolle auf "${newRole}" gesetzt.` });
+      toast({ title: 'Rolle geändert', description: `Rolle auf "${roleLabel(newRole)}" gesetzt.` });
       loadUsers();
     }
   };
@@ -122,7 +128,7 @@ export function AdminUsersPage() {
             <Users className="h-5 w-5" />
             Aktive Benutzer ({users.length})
           </CardTitle>
-          <CardDescription>Rollen zuweisen und Berechtigungen verwalten</CardDescription>
+          <CardDescription>Rollen zuweisen und Berechtigungen verwalten (pro Mandant)</CardDescription>
         </CardHeader>
         <CardContent>
           {loading ? (
