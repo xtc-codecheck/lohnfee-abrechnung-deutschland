@@ -4,6 +4,7 @@
  */
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useTenant } from '@/contexts/tenant-context';
 import { PayrollPeriod, PayrollEntry, PayrollReport, PayrollStatus } from '@/types/payroll';
 import { Tables } from '@/integrations/supabase/types';
 import { useSupabaseEmployees } from './use-supabase-employees';
@@ -93,15 +94,17 @@ export function useSupabasePayroll() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { employees } = useSupabaseEmployees();
+  const { tenantId } = useTenant();
 
   const employeeMap = new Map(employees.map(e => [e.id, e]));
 
   const fetchData = useCallback(async () => {
+    if (!tenantId) { setPayrollPeriods([]); setPayrollEntries([]); setIsLoading(false); return; }
     setIsLoading(true);
     
     const [periodsRes, entriesRes] = await Promise.all([
-      supabase.from('payroll_periods').select('*').order('year', { ascending: false }).order('month', { ascending: false }),
-      supabase.from('payroll_entries').select('*').order('created_at', { ascending: false }),
+      supabase.from('payroll_periods').select('*').eq('tenant_id', tenantId).order('year', { ascending: false }).order('month', { ascending: false }),
+      supabase.from('payroll_entries').select('*').eq('tenant_id', tenantId).order('created_at', { ascending: false }),
     ]);
     
     if (periodsRes.error) setError(periodsRes.error.message);
@@ -112,7 +115,7 @@ export function useSupabasePayroll() {
     
     if (!periodsRes.error && !entriesRes.error) setError(null);
     setIsLoading(false);
-  }, [employees.length]);
+  }, [employees.length, tenantId]);
 
   useEffect(() => {
     fetchData();
@@ -129,6 +132,7 @@ export function useSupabasePayroll() {
         start_date: startDate.toISOString().split('T')[0],
         end_date: endDate.toISOString().split('T')[0],
         status: 'draft',
+        tenant_id: tenantId,
       })
       .select()
       .single();
@@ -158,6 +162,7 @@ export function useSupabasePayroll() {
     const { data, error: err } = await supabase
       .from('payroll_entries')
       .insert({
+        tenant_id: tenantId,
         employee_id: entry.employeeId,
         payroll_period_id: entry.payrollPeriodId,
         gross_salary: entry.salaryCalculation.grossSalary,
