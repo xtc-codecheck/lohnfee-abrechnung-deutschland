@@ -14,6 +14,7 @@ const navItems = [
   { path: "/payroll", label: "Abrechnung" },
   { path: "/time-tracking", label: "Zeiterfassung" },
   { path: "/autolohn", label: "Autolohn" },
+  { path: "/settings", label: "Einstellungen" },
 ];
 
 export function MainLayout({ children }: MainLayoutProps) {

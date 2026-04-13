@@ -7,7 +7,7 @@ import {
   createPayrollFromTimeTracking,
   PayrollTimeIntegration 
 } from '@/utils/time-payroll-integration';
-import { PayrollEntry, WorkingTimeData, BONUS_RATES } from '@/types/payroll';
+import { PayrollEntry, PayrollPeriod, WorkingTimeData, BONUS_RATES } from '@/types/payroll';
 import { calculateCompleteTax } from '@/utils/tax-calculation';
 import { buildTaxParamsFromEmployee } from '@/utils/tax-params-factory';
 
@@ -69,7 +69,7 @@ export function useTimePayrollIntegration() {
       // Finde oder erstelle Abrechnungszeitraum
       let period = payrollPeriods.find(p => p.year === year && p.month === month);
       if (!period) {
-        period = createPayrollPeriod(year, month);
+        period = await createPayrollPeriod(year, month) as PayrollPeriod;
       }
 
       // Hole existierende Einträge
