@@ -16,6 +16,7 @@ import { detectAnomalies, calculateHealthScore } from '@/utils/anomaly-detection
 import { generateSalaryForecast, generateBatchForecasts } from '@/utils/salary-forecast';
 import { useTenant } from '@/contexts/tenant-context';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 export function usePayrollGuardian() {
   const [anomalies, setAnomalies] = useState<PayrollAnomaly[]>([]);

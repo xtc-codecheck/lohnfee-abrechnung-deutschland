@@ -15,11 +15,18 @@ import { ExtendedCalculations } from "@/components/calculations/extended-calcula
 
 type EmployeeView = 'dashboard' | 'add-employee' | 'salary-calculator' | 'ultimate-calculator' | 'time-tracking' | 'working-time-accounts' | 'compliance' | 'reports' | 'advanced-payroll' | 'authorities' | 'extended-calc';
 
+interface EmployeeCalcData {
+  grossSalary?: number;
+  taxClass?: string;
+  churchTax?: boolean;
+  state?: string;
+}
+
 export default function Employees() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [currentView, setCurrentView] = useState<EmployeeView>('dashboard');
-  const [employeeData, setEmployeeData] = useState<any>(null);
+  const [employeeData, setEmployeeData] = useState<EmployeeCalcData | null>(null);
 
   useEffect(() => {
     const view = searchParams.get('view');
@@ -32,7 +39,7 @@ export default function Employees() {
     setCurrentView('add-employee');
   };
 
-  const handleCalculateSalary = (data?: any) => {
+  const handleCalculateSalary = (data?: EmployeeCalcData) => {
     if (data) {
       setEmployeeData(data);
       setCurrentView('salary-calculator');
@@ -45,7 +52,7 @@ export default function Employees() {
     setCurrentView('dashboard');
   };
 
-  const handleSaveEmployee = (data: any) => {
+  const handleSaveEmployee = (_data: EmployeeCalcData) => {
     setCurrentView('dashboard');
   };
 

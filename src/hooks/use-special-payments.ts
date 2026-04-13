@@ -5,6 +5,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { SickPayCalculation, MaternityBenefits, ShortTimeWork, SpecialPaymentSummary } from '@/types/special-payments';
 import { useTenant } from '@/contexts/tenant-context';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 type PaymentRow = {
   id: string;
@@ -89,6 +90,7 @@ export function useSpecialPayments() {
 
       if (error) {
         console.error('Error loading special payments:', error);
+        toast.error('Sonderzahlungen konnten nicht geladen werden');
         setIsLoading(false);
         return;
       }

@@ -111,6 +111,10 @@ export function MainLayout({ children }: MainLayoutProps) {
                     {item.label}
                   </button>
                 ))}
+                <div className="flex items-center justify-between px-4 pt-3 border-t border-border mt-2">
+                  <TenantSwitcher />
+                  <DarkModeToggle />
+                </div>
               </div>
             </nav>
           )}
