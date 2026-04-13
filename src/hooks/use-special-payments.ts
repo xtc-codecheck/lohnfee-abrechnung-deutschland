@@ -170,7 +170,7 @@ export function useSpecialPayments() {
   }, [currentTenant]);
 
   const updateMaternityBenefit = useCallback(async (id: string, updates: Partial<MaternityBenefits>) => {
-    const dbUpdates: Record<string, unknown> = {};
+    const dbUpdates: { status?: string; total_amount?: number } = {};
     if (updates.status) dbUpdates.status = updates.status;
     if (updates.totalBenefit !== undefined) dbUpdates.total_amount = updates.totalBenefit;
 
@@ -213,7 +213,7 @@ export function useSpecialPayments() {
   }, [currentTenant]);
 
   const updateShortTimeWork = useCallback(async (id: string, updates: Partial<ShortTimeWork>) => {
-    const dbUpdates: Record<string, unknown> = {};
+    const dbUpdates: { status?: string; total_amount?: number } = {};
     if (updates.status) dbUpdates.status = updates.status;
     if (updates.shortTimeWorkBenefit !== undefined) dbUpdates.total_amount = updates.shortTimeWorkBenefit;
 
