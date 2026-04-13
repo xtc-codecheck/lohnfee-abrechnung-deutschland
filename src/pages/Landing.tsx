@@ -107,6 +107,9 @@ export default function Landing() {
           </div>
           <div className="flex items-center gap-3">
             <DarkModeToggle />
+            <Button variant="ghost" onClick={() => navigate("/kontakt")}>
+              Kontakt
+            </Button>
             <Button variant="ghost" onClick={() => navigate("/auth")}>
               Anmelden
             </Button>
@@ -483,6 +486,9 @@ export default function Landing() {
               </button>
               <button onClick={() => navigate("/agb")} className="text-muted-foreground hover:text-primary transition-colors">
                 AGB
+              </button>
+              <button onClick={() => navigate("/kontakt")} className="text-muted-foreground hover:text-primary transition-colors">
+                Kontakt
               </button>
             </nav>
             <p className="text-sm text-muted-foreground">
