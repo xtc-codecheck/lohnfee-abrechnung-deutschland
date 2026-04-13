@@ -12,3 +12,14 @@ Allow: /
 
 User-agent: *
 Allow: /
+Disallow: /dashboard
+Disallow: /employees
+Disallow: /payroll
+Disallow: /time-tracking
+Disallow: /settings
+Disallow: /meldewesen
+Disallow: /autolohn
+Disallow: /auth
+Disallow: /reset-password
+
+Sitemap: https://lohnpro.app/sitemap.xml
