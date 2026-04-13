@@ -60,6 +60,20 @@ export function MainLayout({ children }: MainLayoutProps) {
                   {item.label}
                 </button>
               ))}
+              <div className="flex items-center gap-2 ml-4 pl-4 border-l border-border">
+                <User className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm text-muted-foreground truncate max-w-[150px]">
+                  {user?.email}
+                </span>
+                {roles.length > 0 && (
+                  <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">
+                    {roles[0]}
+                  </span>
+                )}
+                <Button variant="ghost" size="icon" onClick={signOut} title="Abmelden">
+                  <LogOut className="h-4 w-4" />
+                </Button>
+              </div>
             </nav>
 
             {/* Mobile Menu Button */}
