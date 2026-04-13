@@ -227,9 +227,44 @@ function calculateMinijobContributions(grossMonthly: number): {
  */
 export function calculateCompleteTax(params: TaxCalculationParams): TaxCalculationResult {
   const { grossSalaryYearly, taxClass, childAllowances, churchTax, churchTaxRate, 
-          healthInsuranceRate, isEastGermany, isChildless, age, employmentType } = params;
+          healthInsuranceRate, isEastGermany, isChildless, age, employmentType,
+          useBesondereLohnsteuertabelle, privateHealthInsuranceMonthly, privateCareInsuranceMonthly } = params;
 
   const grossMonthly = grossSalaryYearly / 12;
+
+  // BESONDERE LOHNSTEUERTABELLE für Beamte / PKV
+  if (useBesondereLohnsteuertabelle) {
+    const { calculateBesondereLohnsteuer } = require('./besondere-lohnsteuertabelle');
+    const besResult = calculateBesondereLohnsteuer({
+      grossMonthly,
+      taxClass: parseInt(taxClass) || 1,
+      childAllowances,
+      churchTax,
+      churchTaxRate,
+      privateHealthInsuranceMonthly,
+      privateCareInsuranceMonthly,
+    });
+    
+    // Keine SV-Beiträge für Beamte/PKV-Versicherte
+    return {
+      grossYearly: grossSalaryYearly,
+      grossMonthly,
+      taxableIncome: 0,
+      incomeTax: besResult.incomeTax * 12,
+      solidarityTax: besResult.solidarityTax * 12,
+      churchTax: besResult.churchTax * 12,
+      pensionInsurance: 0,
+      unemploymentInsurance: 0,
+      healthInsurance: (privateHealthInsuranceMonthly ?? 300) * 12,
+      careInsurance: (privateCareInsuranceMonthly ?? 50) * 12,
+      totalTaxes: besResult.totalTax * 12,
+      totalSocialContributions: 0, // Keine GKV-Beiträge
+      totalDeductions: besResult.totalTax * 12 + ((privateHealthInsuranceMonthly ?? 300) + (privateCareInsuranceMonthly ?? 50)) * 12,
+      netYearly: grossSalaryYearly - besResult.totalTax * 12 - ((privateHealthInsuranceMonthly ?? 300) + (privateCareInsuranceMonthly ?? 50)) * 12,
+      netMonthly: grossMonthly - besResult.totalTax - (privateHealthInsuranceMonthly ?? 300) - (privateCareInsuranceMonthly ?? 50),
+      employerCosts: grossSalaryYearly, // Keine AG-SV-Anteile bei Beamten
+    };
+  }
 
   // ⚠️ SPEZIALBEHANDLUNG: Minijob (unter Vorbehalt)
   if (employmentType === 'minijob' && grossMonthly <= MINIJOB_2025.maxEarnings) {
