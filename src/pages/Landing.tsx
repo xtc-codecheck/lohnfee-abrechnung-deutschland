@@ -81,6 +81,10 @@ const benefits = [
 
 export default function Landing() {
   const navigate = useNavigate();
+  const { session, loading } = useAuth();
+
+  if (loading) return null;
+  if (session) return <Navigate to="/dashboard" replace />;
 
   return (
     <div className="min-h-screen bg-background text-foreground">
