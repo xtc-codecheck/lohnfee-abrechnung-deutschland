@@ -45,7 +45,7 @@ export default function Auth() {
     if (error) {
       toast({ title: 'Registrierung fehlgeschlagen', description: error.message, variant: 'destructive' });
     } else {
-      toast({ title: 'Registrierung erfolgreich', description: 'Bitte bestätigen Sie Ihre E-Mail-Adresse.' });
+      toast({ title: 'Registrierung erfolgreich', description: 'Ihr Konto wurde erstellt. Sie können sich jetzt anmelden.' });
     }
   };
 
