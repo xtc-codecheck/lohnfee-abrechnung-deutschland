@@ -1,4 +1,4 @@
-import { Users, Calculator, FileText, DollarSign, TrendingUp, AlertCircle } from "lucide-react";
+import { Users, Calculator, FileText, DollarSign, TrendingUp, AlertCircle, Loader2 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
@@ -7,13 +7,20 @@ import { usePayrollStorage } from "@/hooks/use-payroll-storage";
 
 export function MainDashboard() {
   const navigate = useNavigate();
-  const { employees } = useEmployeeStorage();
-  const { payrollPeriods } = usePayrollStorage();
+  const { employees, isLoading: empLoading } = useEmployeeStorage();
+  const { payrollPeriods, payrollEntries, isLoading: payLoading } = usePayrollStorage();
+
+  const isLoading = empLoading || payLoading;
+
+  // Echte AG-Kosten aus Abrechnungen berechnen, Fallback auf Schätzwert
+  const totalEmployerCosts = payrollEntries.length > 0
+    ? payrollEntries.reduce((sum, e) => sum + e.salaryCalculation.employerCosts, 0) / Math.max(1, new Set(payrollEntries.map(e => e.payrollPeriodId)).size)
+    : employees.reduce((sum, emp) => sum + emp.salaryData.grossSalary * 1.2, 0);
 
   const stats = {
     totalEmployees: employees.length,
     avgGrossSalary: employees.length > 0 ? employees.reduce((sum, emp) => sum + emp.salaryData.grossSalary, 0) / employees.length : 0,
-    totalMonthlyCosts: employees.reduce((sum, emp) => sum + emp.salaryData.grossSalary * 1.2, 0), // inkl. AG-Anteil
+    totalMonthlyCosts: totalEmployerCosts,
     totalPayrollPeriods: payrollPeriods.length
   };
 
@@ -25,6 +32,13 @@ export function MainDashboard() {
         <p className="text-muted-foreground mt-2">Willkommen bei LohnPro - Ihrer Lohnabrechnungssoftware</p>
       </div>
 
+      {isLoading ? (
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <span className="ml-3 text-muted-foreground">Daten werden geladen...</span>
+        </div>
+      ) : (
+      <>
       {/* Statistiken */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card className="shadow-card hover:shadow-elegant transition-shadow">
@@ -144,6 +158,8 @@ export function MainDashboard() {
             </Button>
           </CardContent>
         </Card>
+      )}
+      </>
       )}
     </div>
   );

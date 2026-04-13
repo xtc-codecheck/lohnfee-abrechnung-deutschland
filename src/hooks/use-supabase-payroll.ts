@@ -2,7 +2,7 @@
  * Supabase-basierter Payroll-Hook
  * Ersetzt den localStorage-basierten usePayrollStorage
  */
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useTenant } from '@/contexts/tenant-context';
 import { PayrollPeriod, PayrollEntry, PayrollReport, PayrollStatus } from '@/types/payroll';
@@ -96,7 +96,7 @@ export function useSupabasePayroll() {
   const { employees } = useSupabaseEmployees();
   const { tenantId } = useTenant();
 
-  const employeeMap = new Map(employees.map(e => [e.id, e]));
+  const employeeMap = useMemo(() => new Map(employees.map(e => [e.id, e])), [employees]);
 
   const fetchData = useCallback(async () => {
     if (!tenantId) { setPayrollPeriods([]); setPayrollEntries([]); setIsLoading(false); return; }
@@ -104,7 +104,7 @@ export function useSupabasePayroll() {
     
     const [periodsRes, entriesRes] = await Promise.all([
       supabase.from('payroll_periods').select('*').eq('tenant_id', tenantId).order('year', { ascending: false }).order('month', { ascending: false }),
-      supabase.from('payroll_entries').select('*').eq('tenant_id', tenantId).order('created_at', { ascending: false }),
+      supabase.from('payroll_entries').select('*').eq('tenant_id', tenantId).order('created_at', { ascending: false }).limit(500),
     ]);
     
     if (periodsRes.error) setError(periodsRes.error.message);
