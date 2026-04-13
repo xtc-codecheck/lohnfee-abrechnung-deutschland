@@ -107,6 +107,9 @@ export default function Landing() {
           </div>
           <div className="flex items-center gap-3">
             <DarkModeToggle />
+            <Button variant="ghost" onClick={() => navigate("/kontakt")}>
+              Kontakt
+            </Button>
             <Button variant="ghost" onClick={() => navigate("/auth")}>
               Anmelden
             </Button>
