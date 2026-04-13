@@ -21,7 +21,7 @@ export default function Payroll() {
     <MainLayout>
       {currentView === 'dashboard' && (
         <PayrollDashboard 
-          onBack={() => navigate("/")}
+          onBack={() => navigate("/dashboard")}
           onShowSpecialPayments={() => setCurrentView('special-payments')}
           onShowAutomation={() => setCurrentView('automation')}
           onShowGuardian={() => setCurrentView('guardian')}

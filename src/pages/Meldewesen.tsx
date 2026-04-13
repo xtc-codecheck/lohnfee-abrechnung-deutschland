@@ -28,7 +28,7 @@ export default function Meldewesen() {
   return (
     <MainLayout>
       <div className="space-y-6 animate-fade-in">
-        <PageHeader title="Meldewesen" description="Gesetzliche Meldungen und Bescheinigungen" onBack={() => navigate("/")} />
+        <PageHeader title="Meldewesen" description="Gesetzliche Meldungen und Bescheinigungen" onBack={() => navigate("/dashboard")} />
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <Card className="shadow-card hover:shadow-elegant transition-shadow cursor-pointer" onClick={() => setCurrentView('sv-meldungen')}>
