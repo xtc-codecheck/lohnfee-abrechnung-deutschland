@@ -23,9 +23,10 @@ interface PayrollDashboardProps {
   onShowSpecialPayments?: () => void;
   onShowAutomation?: () => void;
   onShowGuardian?: () => void;
+  onShowLohnkonto?: () => void;
 }
 
-export function PayrollDashboard({ onBack, onShowSpecialPayments, onShowAutomation, onShowGuardian }: PayrollDashboardProps) {
+export function PayrollDashboard({ onBack, onShowSpecialPayments, onShowAutomation, onShowGuardian, onShowLohnkonto }: PayrollDashboardProps) {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [selectedPayrollId, setSelectedPayrollId] = useState<string | null>(null);
   const [currentView, setCurrentView] = useState<'dashboard' | 'detail' | 'journal' | 'account' | 'manual' | 'settings' | 'enhancements' | 'time-sync'>('dashboard');
@@ -245,6 +246,23 @@ export function PayrollDashboard({ onBack, onShowSpecialPayments, onShowAutomati
           <CardContent>
             <Button className="w-full bg-gradient-primary hover:opacity-90">
               Guardian öffnen
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-card hover:shadow-elegant transition-shadow cursor-pointer border-accent/30" onClick={() => onShowLohnkonto?.()}>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <ClipboardList className="h-5 w-5 text-primary" />
+              Lohnkonto
+            </CardTitle>
+            <CardDescription>
+              Fortlaufendes Lohnkonto pro Mitarbeiter/Jahr (§ 41 EStG)
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button variant="outline" className="w-full">
+              Lohnkonto öffnen
             </Button>
           </CardContent>
         </Card>

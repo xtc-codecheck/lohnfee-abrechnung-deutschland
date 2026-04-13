@@ -5,8 +5,9 @@ import { PayrollDashboard } from "@/components/payroll/payroll-dashboard";
 import { SpecialPaymentsManager } from "@/components/payroll/special-payments-manager";
 import { AutomationDashboard } from "@/components/automation/automation-dashboard";
 import { PayrollGuardianDashboard } from "@/components/payroll/payroll-guardian-dashboard";
+import { LohnkontoPage } from "@/components/payroll/lohnkonto-page";
 
-type PayrollView = 'dashboard' | 'special-payments' | 'automation' | 'guardian';
+type PayrollView = 'dashboard' | 'special-payments' | 'automation' | 'guardian' | 'lohnkonto';
 
 export default function Payroll() {
   const navigate = useNavigate();
@@ -24,6 +25,7 @@ export default function Payroll() {
           onShowSpecialPayments={() => setCurrentView('special-payments')}
           onShowAutomation={() => setCurrentView('automation')}
           onShowGuardian={() => setCurrentView('guardian')}
+          onShowLohnkonto={() => setCurrentView('lohnkonto')}
         />
       )}
       {currentView === 'special-payments' && (
@@ -34,6 +36,9 @@ export default function Payroll() {
       )}
       {currentView === 'guardian' && (
         <PayrollGuardianDashboard onBack={handleBack} />
+      )}
+      {currentView === 'lohnkonto' && (
+        <LohnkontoPage onBack={handleBack} />
       )}
     </MainLayout>
   );
