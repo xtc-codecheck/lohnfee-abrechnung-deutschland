@@ -249,14 +249,6 @@ Jedes Jahr zum 1. Januar müssen aktualisiert werden:
 
 ---
 
-## Bekannte Testdaten in der Datenbank
-
-> ⚠️ **Vor Produktivbetrieb löschen:**
-> - Testnutzer: `steuerberater-test@lohnpro.de` (Admin-Rolle)
-> - Testmitarbeiterin: Maria Müller (Personalnummer 1001, 4.200 € brutto, TK)
-> - Zugehörige Abrechnungen, Beitragsnachweise und eLStB für April 2026
-
----
 
 ## Verzeichnisstruktur
 
