@@ -477,8 +477,8 @@ export function PayrollDashboard({ onBack, onShowSpecialPayments, onShowAutomati
                           })}
                         </h4>
                         <div className="flex items-center space-x-2 mt-1">
-                          <Badge className={getStatusColor(period.status)}>
-                            {getStatusLabel(period.status)}
+                          <Badge className={getPayrollStatusColor(period.status)}>
+                            {getPayrollStatusLabel(period.status)}
                           </Badge>
                           {report && (
                             <span className="text-sm text-muted-foreground">
