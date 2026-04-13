@@ -250,6 +250,23 @@ export function PayrollDashboard({ onBack, onShowSpecialPayments, onShowAutomati
           </CardContent>
         </Card>
 
+        <Card className="shadow-card hover:shadow-elegant transition-shadow cursor-pointer border-accent/30" onClick={() => onShowLohnkonto?.()}>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <ClipboardList className="h-5 w-5 text-primary" />
+              Lohnkonto
+            </CardTitle>
+            <CardDescription>
+              Fortlaufendes Lohnkonto pro Mitarbeiter/Jahr (§ 41 EStG)
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button variant="outline" className="w-full">
+              Lohnkonto öffnen
+            </Button>
+          </CardContent>
+        </Card>
+
         <Card className="shadow-card hover:shadow-elegant transition-shadow cursor-pointer" onClick={handleViewJournal}>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
