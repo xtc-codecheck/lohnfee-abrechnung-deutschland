@@ -18,6 +18,8 @@ import Auth from "./pages/Auth";
 import Settings from "./pages/Settings";
 import ResetPassword from "./pages/ResetPassword";
 import Meldewesen from "./pages/Meldewesen";
+import Impressum from "./pages/Impressum";
+import Datenschutz from "./pages/Datenschutz";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -43,6 +45,8 @@ const App = () => (
                 <Route path="/time-tracking" element={<ProtectedRoute><TimeTracking /></ProtectedRoute>} />
                 <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
                 <Route path="/meldewesen" element={<ProtectedRoute><Meldewesen /></ProtectedRoute>} />
+                <Route path="/impressum" element={<Impressum />} />
+                <Route path="/datenschutz" element={<Datenschutz />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </TenantProvider>

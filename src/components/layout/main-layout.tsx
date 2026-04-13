@@ -147,6 +147,9 @@ export function MainLayout({ children }: MainLayoutProps) {
                   {item.label}
                 </button>
               ))}
+              <span className="text-border">|</span>
+              <button onClick={() => handleNavigation("/impressum")} className="text-muted-foreground hover:text-primary transition-colors">Impressum</button>
+              <button onClick={() => handleNavigation("/datenschutz")} className="text-muted-foreground hover:text-primary transition-colors">Datenschutz</button>
             </nav>
 
             <p className="text-sm text-muted-foreground">

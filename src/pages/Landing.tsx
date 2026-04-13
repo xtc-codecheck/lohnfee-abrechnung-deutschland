@@ -388,16 +388,26 @@ export default function Landing() {
 
       {/* Footer */}
       <footer className="border-t border-border bg-card py-8">
-        <div className="container mx-auto flex flex-col items-center justify-between gap-4 px-6 sm:flex-row">
-          <div className="flex items-center gap-2">
-            <div className="flex h-6 w-6 items-center justify-center rounded bg-primary">
-              <span className="text-sm font-bold text-primary-foreground">L</span>
+        <div className="container mx-auto px-6">
+          <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
+            <div className="flex items-center gap-2">
+              <div className="flex h-6 w-6 items-center justify-center rounded bg-primary">
+                <span className="text-sm font-bold text-primary-foreground">L</span>
+              </div>
+              <span className="text-sm font-medium">LohnPro</span>
             </div>
-            <span className="text-sm font-medium">LohnPro</span>
+            <nav className="flex gap-6 text-sm">
+              <button onClick={() => navigate("/impressum")} className="text-muted-foreground hover:text-primary transition-colors">
+                Impressum
+              </button>
+              <button onClick={() => navigate("/datenschutz")} className="text-muted-foreground hover:text-primary transition-colors">
+                Datenschutz
+              </button>
+            </nav>
+            <p className="text-sm text-muted-foreground">
+              © {new Date().getFullYear()} LohnPro. Alle Rechte vorbehalten.
+            </p>
           </div>
-          <p className="text-sm text-muted-foreground">
-            © {new Date().getFullYear()} LohnPro. Alle Rechte vorbehalten.
-          </p>
         </div>
       </footer>
     </div>
