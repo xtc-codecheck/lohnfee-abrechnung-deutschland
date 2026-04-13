@@ -40,7 +40,7 @@ export function BulkEntryDialog({
 
   const { addBulkTimeEntries } = useTimeTracking();
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!selectedEmployee || !startDate || !endDate) {
       toast({
         title: "Fehler",

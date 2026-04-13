@@ -133,7 +133,7 @@ export function useTimeTracking() {
     if (!currentTenant) return [];
 
     const { startDate, endDate, employeeId, type, hoursPerDay, excludeWeekends, notes } = bulkEntry;
-    const rows: Array<Record<string, unknown>> = [];
+    const rows: Array<{ tenant_id: string; employee_id: string; date: string; type: string; hours_worked: number | null; notes: string | null }> = [];
 
     let currentDate = new Date(startDate);
     const end = new Date(endDate);
@@ -154,7 +154,7 @@ export function useTimeTracking() {
           employee_id: employeeId,
           date: currentDate.toISOString().split('T')[0],
           type,
-          hours_worked: type === 'work' ? hoursPerDay : null,
+          hours_worked: type === 'work' ? (hoursPerDay ?? null) : null,
           notes: notes ?? null,
         });
       }

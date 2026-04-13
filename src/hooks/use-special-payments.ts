@@ -127,7 +127,7 @@ export function useSpecialPayments() {
   }, [currentTenant]);
 
   const updateSickPayment = useCallback(async (id: string, updates: Partial<SickPayCalculation>) => {
-    const dbUpdates: Record<string, unknown> = {};
+    const dbUpdates: { status?: string; total_amount?: number } = {};
     if (updates.status) dbUpdates.status = updates.status;
     if (updates.totalSickPay !== undefined) dbUpdates.total_amount = updates.totalSickPay;
 
