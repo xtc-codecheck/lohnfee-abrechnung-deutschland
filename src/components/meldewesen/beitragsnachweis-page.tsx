@@ -2,8 +2,8 @@
  * Beitragsnachweis-Generierung
  * Monatliche Beitragsnachweise an Krankenkassen
  */
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import { ArrowLeft, Calculator, Loader2, Send, FileText } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { Calculator, Loader2, Send, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { PageHeader } from '@/components/ui/page-header';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { useTenant } from '@/contexts/tenant-context';
 
 const MONTH_NAMES = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
 
@@ -21,6 +22,7 @@ interface BeitragsnachweisPageProps {
 
 export function BeitragsnachweisPage({ onBack }: BeitragsnachweisPageProps) {
   const { toast } = useToast();
+  const { tenantId } = useTenant();
   const [nachweise, setNachweise] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
@@ -28,33 +30,32 @@ export function BeitragsnachweisPage({ onBack }: BeitragsnachweisPageProps) {
   const [generating, setGenerating] = useState(false);
 
   const fetchNachweise = useCallback(async () => {
+    if (!tenantId) return;
     setIsLoading(true);
     const { data } = await supabase
       .from('beitragsnachweise')
       .select('*')
+      .eq('tenant_id', tenantId)
       .eq('year', selectedYear)
       .order('month', { ascending: false });
     setNachweise(data ?? []);
     setIsLoading(false);
-  }, [selectedYear]);
+  }, [selectedYear, tenantId]);
 
   useEffect(() => { fetchNachweise(); }, [fetchNachweise]);
 
   const fmt = (v: number) => Number(v).toFixed(2).replace('.', ',') + ' €';
 
-  /**
-   * Generiert Beitragsnachweise automatisch aus den Payroll-Entries des Monats.
-   * Gruppiert nach Krankenkasse.
-   */
   const handleGenerate = async () => {
+    if (!tenantId) return;
     setGenerating(true);
 
-    // 1. Lade Payroll-Periode für den Monat
     const { data: periods } = await supabase
       .from('payroll_periods')
       .select('id')
       .eq('year', selectedYear)
-      .eq('month', selectedMonth);
+      .eq('month', selectedMonth)
+      .eq('tenant_id', tenantId);
 
     if (!periods?.length) {
       toast({ title: 'Keine Daten', description: `Keine Abrechnung für ${MONTH_NAMES[selectedMonth - 1]} ${selectedYear} vorhanden.`, variant: 'destructive' });
@@ -64,15 +65,16 @@ export function BeitragsnachweisPage({ onBack }: BeitragsnachweisPageProps) {
 
     const periodIds = periods.map(p => p.id);
 
-    // 2. Lade alle Entries + Employee-Daten
     const { data: entries } = await supabase
       .from('payroll_entries')
       .select('*')
-      .in('payroll_period_id', periodIds);
+      .in('payroll_period_id', periodIds)
+      .eq('tenant_id', tenantId);
 
     const { data: employees } = await supabase
       .from('employees')
-      .select('id, health_insurance');
+      .select('id, health_insurance')
+      .eq('tenant_id', tenantId);
 
     if (!entries?.length) {
       toast({ title: 'Keine Einträge', description: 'Keine Abrechnungseinträge gefunden.', variant: 'destructive' });
@@ -80,7 +82,7 @@ export function BeitragsnachweisPage({ onBack }: BeitragsnachweisPageProps) {
       return;
     }
 
-    // 3. Gruppiere nach Krankenkasse
+    // Gruppiere nach Krankenkasse
     const kkMap = new Map<string, typeof entries>();
     for (const entry of entries) {
       const emp = employees?.find(e => e.id === entry.employee_id);
@@ -89,12 +91,12 @@ export function BeitragsnachweisPage({ onBack }: BeitragsnachweisPageProps) {
       kkMap.get(kk)!.push(entry);
     }
 
-    // 4. Für jede KK einen Beitragsnachweis erstellen
     for (const [kk, kkEntries] of kkMap) {
       const nachweis = {
         year: selectedYear,
         month: selectedMonth,
         krankenkasse: kk,
+        tenant_id: tenantId,
         anzahl_versicherte: kkEntries.length,
         kv_an: kkEntries.reduce((s, e) => s + Number(e.sv_health_employee ?? 0), 0),
         kv_ag: kkEntries.reduce((s, e) => s + Number(e.sv_health_employer ?? 0), 0),
@@ -104,19 +106,29 @@ export function BeitragsnachweisPage({ onBack }: BeitragsnachweisPageProps) {
         av_ag: kkEntries.reduce((s, e) => s + Number(e.sv_unemployment_employer ?? 0), 0),
         pv_an: kkEntries.reduce((s, e) => s + Number(e.sv_care_employee ?? 0), 0),
         pv_ag: kkEntries.reduce((s, e) => s + Number(e.sv_care_employer ?? 0), 0),
-        gesamtbetrag: 0,
-        faelligkeitsdatum: `${selectedYear}-${String(selectedMonth).padStart(2, '0')}-27`, // Drittletzter Bankarbeitstag
+        gesamtbetrag: 0 as number,
+        faelligkeitsdatum: `${selectedYear}-${String(selectedMonth).padStart(2, '0')}-27`,
         status: 'entwurf',
       };
       nachweis.gesamtbetrag = nachweis.kv_an + nachweis.kv_ag + nachweis.rv_an + nachweis.rv_ag +
         nachweis.av_an + nachweis.av_ag + nachweis.pv_an + nachweis.pv_ag;
 
-      // Upsert (unique constraint auf year, month, krankenkasse)
-      await supabase.from('beitragsnachweise').upsert(nachweis, { onConflict: 'year,month,krankenkasse' });
+      await supabase.from('beitragsnachweise').upsert(nachweis, {
+        onConflict: 'year,month,krankenkasse,tenant_id',
+      });
     }
 
     toast({ title: 'Beitragsnachweise generiert', description: `${kkMap.size} Nachweis(e) für ${MONTH_NAMES[selectedMonth - 1]} ${selectedYear} erstellt.` });
     setGenerating(false);
+    fetchNachweise();
+  };
+
+  const handleSubmit = async (id: string) => {
+    await supabase.from('beitragsnachweise').update({
+      status: 'uebermittelt',
+      uebermittelt_am: new Date().toISOString(),
+    }).eq('id', id);
+    toast({ title: 'Beitragsnachweis übermittelt' });
     fetchNachweise();
   };
 
@@ -166,7 +178,14 @@ export function BeitragsnachweisPage({ onBack }: BeitragsnachweisPageProps) {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle className="text-lg">{n.krankenkasse}</CardTitle>
-                <Badge className={n.status === 'entwurf' ? 'bg-muted text-muted-foreground' : 'bg-green-100 text-green-800'}>{n.status}</Badge>
+                <div className="flex items-center gap-2">
+                  <Badge className={n.status === 'entwurf' ? 'bg-muted text-muted-foreground' : 'bg-green-100 text-green-800'}>{n.status}</Badge>
+                  {n.status === 'entwurf' && (
+                    <Button size="sm" variant="outline" onClick={() => handleSubmit(n.id)}>
+                      <Send className="h-3 w-3 mr-1" />Übermitteln
+                    </Button>
+                  )}
+                </div>
               </div>
               <CardDescription>{n.anzahl_versicherte} Versicherte • Fällig: {n.faelligkeitsdatum}</CardDescription>
             </CardHeader>
