@@ -248,6 +248,66 @@ export type Database = {
           },
         ]
       }
+      compliance_alerts: {
+        Row: {
+          created_at: string
+          due_date: string | null
+          employee_id: string | null
+          id: string
+          is_read: boolean
+          is_resolved: boolean
+          message: string
+          severity: string
+          tenant_id: string
+          title: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          due_date?: string | null
+          employee_id?: string | null
+          id?: string
+          is_read?: boolean
+          is_resolved?: boolean
+          message: string
+          severity?: string
+          tenant_id: string
+          title: string
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          due_date?: string | null
+          employee_id?: string | null
+          id?: string
+          is_read?: boolean
+          is_resolved?: boolean
+          message?: string
+          severity?: string
+          tenant_id?: string
+          title?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "compliance_alerts_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "compliance_alerts_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       employees: {
         Row: {
           bav_monthly_amount: number | null
@@ -716,6 +776,129 @@ export type Database = {
           },
         ]
       }
+      payroll_guardian_anomalies: {
+        Row: {
+          current_value: number
+          description: string
+          detected_at: string
+          deviation: number | null
+          employee_id: string
+          employee_name: string
+          expected_value: number | null
+          id: string
+          is_resolved: boolean
+          period: string
+          resolution: string | null
+          severity: string
+          tenant_id: string
+          title: string
+          type: string
+        }
+        Insert: {
+          current_value?: number
+          description: string
+          detected_at?: string
+          deviation?: number | null
+          employee_id: string
+          employee_name: string
+          expected_value?: number | null
+          id?: string
+          is_resolved?: boolean
+          period: string
+          resolution?: string | null
+          severity?: string
+          tenant_id: string
+          title: string
+          type: string
+        }
+        Update: {
+          current_value?: number
+          description?: string
+          detected_at?: string
+          deviation?: number | null
+          employee_id?: string
+          employee_name?: string
+          expected_value?: number | null
+          id?: string
+          is_resolved?: boolean
+          period?: string
+          resolution?: string | null
+          severity?: string
+          tenant_id?: string
+          title?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payroll_guardian_anomalies_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payroll_guardian_anomalies_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payroll_guardian_history: {
+        Row: {
+          bonuses: number
+          created_at: string
+          deductions: number
+          employee_id: string
+          gross_salary: number
+          id: string
+          net_salary: number
+          overtime: number
+          period: string
+          tenant_id: string
+        }
+        Insert: {
+          bonuses?: number
+          created_at?: string
+          deductions?: number
+          employee_id: string
+          gross_salary?: number
+          id?: string
+          net_salary?: number
+          overtime?: number
+          period: string
+          tenant_id: string
+        }
+        Update: {
+          bonuses?: number
+          created_at?: string
+          deductions?: number
+          employee_id?: string
+          gross_salary?: number
+          id?: string
+          net_salary?: number
+          overtime?: number
+          period?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payroll_guardian_history_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payroll_guardian_history_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payroll_periods: {
         Row: {
           created_at: string
@@ -796,6 +979,63 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      special_payments: {
+        Row: {
+          created_at: string
+          details: Json
+          employee_id: string
+          end_date: string
+          id: string
+          payment_type: string
+          start_date: string
+          status: string
+          tenant_id: string
+          total_amount: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          details?: Json
+          employee_id: string
+          end_date: string
+          id?: string
+          payment_type: string
+          start_date: string
+          status?: string
+          tenant_id: string
+          total_amount?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          details?: Json
+          employee_id?: string
+          end_date?: string
+          id?: string
+          payment_type?: string
+          start_date?: string
+          status?: string
+          tenant_id?: string
+          total_amount?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "special_payments_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "special_payments_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       sv_meldungen: {
         Row: {
@@ -978,6 +1218,66 @@ export type Database = {
           zip_code?: string | null
         }
         Relationships: []
+      }
+      time_entries: {
+        Row: {
+          break_time: number | null
+          created_at: string
+          date: string
+          employee_id: string
+          end_time: string | null
+          hours_worked: number | null
+          id: string
+          notes: string | null
+          start_time: string | null
+          tenant_id: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          break_time?: number | null
+          created_at?: string
+          date: string
+          employee_id: string
+          end_time?: string | null
+          hours_worked?: number | null
+          id?: string
+          notes?: string | null
+          start_time?: string | null
+          tenant_id: string
+          type?: string
+          updated_at?: string
+        }
+        Update: {
+          break_time?: number | null
+          created_at?: string
+          date?: string
+          employee_id?: string
+          end_time?: string | null
+          hours_worked?: number | null
+          id?: string
+          notes?: string | null
+          start_time?: string | null
+          tenant_id?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "time_entries_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "time_entries_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {

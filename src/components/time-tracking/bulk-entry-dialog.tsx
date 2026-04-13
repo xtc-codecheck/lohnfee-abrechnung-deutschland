@@ -40,7 +40,7 @@ export function BulkEntryDialog({
 
   const { addBulkTimeEntries } = useTimeTracking();
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!selectedEmployee || !startDate || !endDate) {
       toast({
         title: "Fehler",
@@ -70,7 +70,7 @@ export function BulkEntryDialog({
       notes: notes || undefined
     };
 
-    const createdEntries = addBulkTimeEntries(bulkEntry);
+    const createdEntries = await addBulkTimeEntries(bulkEntry);
     
     const employee = employees.find(emp => emp.id === selectedEmployee);
     toast({

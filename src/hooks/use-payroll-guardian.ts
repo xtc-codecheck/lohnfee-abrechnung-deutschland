@@ -1,11 +1,12 @@
-// Hook für Payroll Guardian Funktionalitäten
-
+/**
+ * Payroll Guardian Hook – Supabase-basiert
+ */
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Employee } from '@/types/employee';
 import { PayrollEntry } from '@/types/payroll';
-import { 
-  PayrollAnomaly, 
-  PayrollGuardianStats, 
+import {
+  PayrollAnomaly,
+  PayrollGuardianStats,
   AnomalyDetectionConfig,
   DEFAULT_ANOMALY_CONFIG,
   HistoricalPayrollData,
@@ -13,206 +14,203 @@ import {
 } from '@/types/payroll-guardian';
 import { detectAnomalies, calculateHealthScore } from '@/utils/anomaly-detection';
 import { generateSalaryForecast, generateBatchForecasts } from '@/utils/salary-forecast';
-
-const STORAGE_KEY_ANOMALIES = 'payroll-guardian-anomalies';
-const STORAGE_KEY_HISTORY = 'payroll-guardian-history';
-const STORAGE_KEY_CONFIG = 'payroll-guardian-config';
+import { useTenant } from '@/contexts/tenant-context';
+import { supabase } from '@/integrations/supabase/client';
 
 export function usePayrollGuardian() {
   const [anomalies, setAnomalies] = useState<PayrollAnomaly[]>([]);
   const [historicalData, setHistoricalData] = useState<HistoricalPayrollData[]>([]);
-  const [config, setConfig] = useState<AnomalyDetectionConfig>(DEFAULT_ANOMALY_CONFIG);
+  const [config] = useState<AnomalyDetectionConfig>(DEFAULT_ANOMALY_CONFIG);
   const [lastScanAt, setLastScanAt] = useState<Date | null>(null);
   const [isScanning, setIsScanning] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const { currentTenant } = useTenant();
 
-  // Lade gespeicherte Daten
+  // Load anomalies + history from Supabase
   useEffect(() => {
-    try {
-      const savedAnomalies = localStorage.getItem(STORAGE_KEY_ANOMALIES);
-      if (savedAnomalies) {
-        const parsed = JSON.parse(savedAnomalies);
-        setAnomalies(parsed.map((a: any) => ({
-          ...a,
-          detectedAt: new Date(a.detectedAt)
+    if (!currentTenant) return;
+
+    const load = async () => {
+      setIsLoading(true);
+      const [anomalyRes, historyRes] = await Promise.all([
+        supabase.from('payroll_guardian_anomalies').select('*').eq('tenant_id', currentTenant.id),
+        supabase.from('payroll_guardian_history').select('*').eq('tenant_id', currentTenant.id),
+      ]);
+
+      if (anomalyRes.data) {
+        setAnomalies(anomalyRes.data.map(row => ({
+          id: row.id,
+          type: row.type as PayrollAnomaly['type'],
+          severity: row.severity as PayrollAnomaly['severity'],
+          employeeId: row.employee_id,
+          employeeName: row.employee_name,
+          title: row.title,
+          description: row.description,
+          currentValue: Number(row.current_value),
+          expectedValue: row.expected_value != null ? Number(row.expected_value) : undefined,
+          deviation: row.deviation != null ? Number(row.deviation) : undefined,
+          period: row.period,
+          isResolved: row.is_resolved,
+          resolution: row.resolution ?? undefined,
+          detectedAt: new Date(row.detected_at),
         })));
       }
 
-      const savedHistory = localStorage.getItem(STORAGE_KEY_HISTORY);
-      if (savedHistory) {
-        setHistoricalData(JSON.parse(savedHistory));
+      if (historyRes.data) {
+        setHistoricalData(historyRes.data.map(row => ({
+          employeeId: row.employee_id,
+          period: row.period,
+          grossSalary: Number(row.gross_salary),
+          netSalary: Number(row.net_salary),
+          overtime: Number(row.overtime),
+          bonuses: Number(row.bonuses),
+          deductions: Number(row.deductions),
+        })));
       }
 
-      const savedConfig = localStorage.getItem(STORAGE_KEY_CONFIG);
-      if (savedConfig) {
-        setConfig(JSON.parse(savedConfig));
-      }
-    } catch (error) {
-      console.error('Fehler beim Laden der Guardian-Daten:', error);
-    }
-  }, []);
+      setIsLoading(false);
+    };
 
-  // Speichere Anomalien
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY_ANOMALIES, JSON.stringify(anomalies));
-  }, [anomalies]);
+    load();
+  }, [currentTenant]);
 
-  // Speichere historische Daten
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY_HISTORY, JSON.stringify(historicalData));
-  }, [historicalData]);
-
-  // Speichere Konfiguration
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY_CONFIG, JSON.stringify(config));
-  }, [config]);
-
-  /**
-   * Führt einen vollständigen Scan durch
-   */
-  const runScan = useCallback((
-    employees: Employee[],
-    payrollEntries: PayrollEntry[]
-  ): PayrollAnomaly[] => {
+  const runScan = useCallback(async (employees: Employee[], payrollEntries: PayrollEntry[]): Promise<PayrollAnomaly[]> => {
+    if (!currentTenant) return [];
     setIsScanning(true);
-    
+
     try {
-      // Führe Anomalie-Erkennung durch
-      const detectedAnomalies = detectAnomalies(
-        employees,
-        payrollEntries,
-        historicalData,
-        config
-      );
+      const detectedAnomalies = detectAnomalies(employees, payrollEntries, historicalData, config);
 
-      // Merge mit bestehenden ungelösten Anomalien (vermeide Duplikate)
-      const existingUnresolved = anomalies.filter(a => !a.isResolved);
-      const existingIds = new Set(existingUnresolved.map(a => a.type + a.employeeId));
-      
-      const newAnomalies = detectedAnomalies.filter(
-        a => !existingIds.has(a.type + a.employeeId)
-      );
+      // Deduplicate against existing unresolved
+      const existingIds = new Set(anomalies.filter(a => !a.isResolved).map(a => a.type + a.employeeId));
+      const newAnomalies = detectedAnomalies.filter(a => !existingIds.has(a.type + a.employeeId));
 
-      const allAnomalies = [...existingUnresolved, ...newAnomalies];
-      setAnomalies(allAnomalies);
+      if (newAnomalies.length > 0) {
+        const rows = newAnomalies.map(a => ({
+          tenant_id: currentTenant.id,
+          type: a.type,
+          severity: a.severity,
+          employee_id: a.employeeId,
+          employee_name: a.employeeName,
+          title: a.title,
+          description: a.description,
+          current_value: a.currentValue,
+          expected_value: a.expectedValue ?? null,
+          deviation: a.deviation ?? null,
+          period: a.period,
+        }));
+
+        const { data } = await supabase.from('payroll_guardian_anomalies').insert(rows).select();
+        if (data) {
+          const saved: PayrollAnomaly[] = data.map(row => ({
+            id: row.id,
+            type: row.type as PayrollAnomaly['type'],
+            severity: row.severity as PayrollAnomaly['severity'],
+            employeeId: row.employee_id,
+            employeeName: row.employee_name,
+            title: row.title,
+            description: row.description,
+            currentValue: Number(row.current_value),
+            expectedValue: row.expected_value != null ? Number(row.expected_value) : undefined,
+            deviation: row.deviation != null ? Number(row.deviation) : undefined,
+            period: row.period,
+            isResolved: row.is_resolved,
+            resolution: row.resolution ?? undefined,
+            detectedAt: new Date(row.detected_at),
+          }));
+          setAnomalies(prev => [...prev, ...saved]);
+        }
+      }
+
       setLastScanAt(new Date());
-
-      return allAnomalies;
+      return [...anomalies.filter(a => !a.isResolved), ...newAnomalies];
     } finally {
       setIsScanning(false);
     }
-  }, [anomalies, historicalData, config]);
+  }, [currentTenant, anomalies, historicalData, config]);
 
-  /**
-   * Fügt einen Payroll-Eintrag zur Historie hinzu
-   */
-  const addToHistory = useCallback((entry: PayrollEntry) => {
-    const historyEntry: HistoricalPayrollData = {
-      employeeId: entry.employeeId,
-      period: `${new Date(entry.createdAt).getFullYear()}-${String(new Date(entry.createdAt).getMonth() + 1).padStart(2, '0')}`,
-      grossSalary: entry.salaryCalculation.grossSalary,
-      netSalary: entry.salaryCalculation.netSalary,
+  const addToHistory = useCallback(async (entry: PayrollEntry) => {
+    if (!currentTenant) return;
+
+    const period = `${new Date(entry.createdAt).getFullYear()}-${String(new Date(entry.createdAt).getMonth() + 1).padStart(2, '0')}`;
+    const row = {
+      tenant_id: currentTenant.id,
+      employee_id: entry.employeeId,
+      period,
+      gross_salary: entry.salaryCalculation.grossSalary,
+      net_salary: entry.salaryCalculation.netSalary,
       overtime: entry.workingData.overtimeHours,
       bonuses: entry.additions.bonuses + entry.additions.oneTimePayments,
-      deductions: entry.deductions.total
+      deductions: entry.deductions.total,
     };
 
-    setHistoricalData(prev => {
-      // Verhindere Duplikate für dieselbe Periode
-      const exists = prev.some(
-        h => h.employeeId === historyEntry.employeeId && h.period === historyEntry.period
-      );
-      if (exists) {
-        return prev.map(h => 
-          h.employeeId === historyEntry.employeeId && h.period === historyEntry.period
-            ? historyEntry
+    // Upsert by unique constraint
+    const { data } = await supabase
+      .from('payroll_guardian_history')
+      .upsert(row, { onConflict: 'tenant_id,employee_id,period' })
+      .select()
+      .single();
+
+    if (data) {
+      setHistoricalData(prev => {
+        const exists = prev.some(h => h.employeeId === data.employee_id && h.period === data.period);
+        if (exists) {
+          return prev.map(h => h.employeeId === data.employee_id && h.period === data.period
+            ? { employeeId: data.employee_id, period: data.period, grossSalary: Number(data.gross_salary), netSalary: Number(data.net_salary), overtime: Number(data.overtime), bonuses: Number(data.bonuses), deductions: Number(data.deductions) }
             : h
-        );
-      }
-      return [...prev, historyEntry];
-    });
+          );
+        }
+        return [...prev, { employeeId: data.employee_id, period: data.period, grossSalary: Number(data.gross_salary), netSalary: Number(data.net_salary), overtime: Number(data.overtime), bonuses: Number(data.bonuses), deductions: Number(data.deductions) }];
+      });
+    }
+  }, [currentTenant]);
+
+  const resolveAnomaly = useCallback(async (anomalyId: string, resolution?: string) => {
+    const { error } = await supabase
+      .from('payroll_guardian_anomalies')
+      .update({ is_resolved: true, resolution: resolution ?? null })
+      .eq('id', anomalyId);
+
+    if (!error) {
+      setAnomalies(prev => prev.map(a => a.id === anomalyId ? { ...a, isResolved: true, resolution } : a));
+    }
   }, []);
 
-  /**
-   * Löst eine Anomalie
-   */
-  const resolveAnomaly = useCallback((anomalyId: string, resolution?: string) => {
-    setAnomalies(prev => 
-      prev.map(a => 
-        a.id === anomalyId 
-          ? { ...a, isResolved: true, resolution } 
-          : a
-      )
-    );
+  const dismissAnomaly = useCallback(async (anomalyId: string) => {
+    const { error } = await supabase.from('payroll_guardian_anomalies').delete().eq('id', anomalyId);
+    if (!error) setAnomalies(prev => prev.filter(a => a.id !== anomalyId));
   }, []);
 
-  /**
-   * Löscht eine Anomalie
-   */
-  const dismissAnomaly = useCallback((anomalyId: string) => {
-    setAnomalies(prev => prev.filter(a => a.id !== anomalyId));
-  }, []);
-
-  /**
-   * Aktualisiert die Konfiguration
-   */
-  const updateConfig = useCallback((newConfig: Partial<AnomalyDetectionConfig>) => {
-    setConfig(prev => ({ ...prev, ...newConfig }));
-  }, []);
-
-  /**
-   * Generiert Gehaltsprognose für einen Mitarbeiter
-   */
   const getForecast = useCallback((employee: Employee): SalaryForecast => {
-    const employeeHistory = historicalData.filter(h => h.employeeId === employee.id);
-    return generateSalaryForecast(employee, employeeHistory);
+    const empHistory = historicalData.filter(h => h.employeeId === employee.id);
+    return generateSalaryForecast(employee, empHistory);
   }, [historicalData]);
 
-  /**
-   * Generiert Batch-Prognosen für alle Mitarbeiter
-   */
   const getAllForecasts = useCallback((employees: Employee[]): SalaryForecast[] => {
     return generateBatchForecasts(employees, historicalData);
   }, [historicalData]);
 
-  // Berechnete Statistiken
   const stats: PayrollGuardianStats = useMemo(() => {
-    const unresolvedAnomalies = anomalies.filter(a => !a.isResolved);
-    const criticalAnomalies = unresolvedAnomalies.filter(a => a.severity === 'critical');
-    
-    // Trend-Analyse (positiv = weniger Anomalien im Vergleich zu früher)
-    const recentAnomalies = unresolvedAnomalies.filter(
-      a => new Date(a.detectedAt) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
-    );
-    const olderAnomalies = unresolvedAnomalies.filter(
-      a => new Date(a.detectedAt) <= new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
-    );
+    const unresolved = anomalies.filter(a => !a.isResolved);
+    const critical = unresolved.filter(a => a.severity === 'critical');
+    const recent = unresolved.filter(a => new Date(a.detectedAt) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000));
+    const older = unresolved.filter(a => new Date(a.detectedAt) <= new Date(Date.now() - 30 * 24 * 60 * 60 * 1000));
 
     return {
       totalAnomalies: anomalies.length,
-      unresolvedAnomalies: unresolvedAnomalies.length,
-      criticalAnomalies: criticalAnomalies.length,
+      unresolvedAnomalies: unresolved.length,
+      criticalAnomalies: critical.length,
       lastScanAt: lastScanAt || new Date(),
       healthScore: calculateHealthScore(anomalies),
-      trendsPositive: olderAnomalies.length > recentAnomalies.length ? 
-        olderAnomalies.length - recentAnomalies.length : 0,
-      trendsNegative: recentAnomalies.length > olderAnomalies.length ?
-        recentAnomalies.length - olderAnomalies.length : 0
+      trendsPositive: older.length > recent.length ? older.length - recent.length : 0,
+      trendsNegative: recent.length > older.length ? recent.length - older.length : 0,
     };
   }, [anomalies, lastScanAt]);
 
-  // Gefilterte Listen
-  const unresolvedAnomalies = useMemo(
-    () => anomalies.filter(a => !a.isResolved),
-    [anomalies]
-  );
-
-  const criticalAnomalies = useMemo(
-    () => anomalies.filter(a => a.severity === 'critical' && !a.isResolved),
-    [anomalies]
-  );
+  const unresolvedAnomalies = useMemo(() => anomalies.filter(a => !a.isResolved), [anomalies]);
+  const criticalAnomalies = useMemo(() => anomalies.filter(a => a.severity === 'critical' && !a.isResolved), [anomalies]);
 
   return {
-    // State
     anomalies,
     unresolvedAnomalies,
     criticalAnomalies,
@@ -220,15 +218,13 @@ export function usePayrollGuardian() {
     config,
     stats,
     isScanning,
+    isLoading,
     lastScanAt,
-    
-    // Actions
     runScan,
     addToHistory,
     resolveAnomaly,
     dismissAnomaly,
-    updateConfig,
     getForecast,
-    getAllForecasts
+    getAllForecasts,
   };
 }
