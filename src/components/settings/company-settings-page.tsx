@@ -86,7 +86,6 @@ export function CompanySettingsPage() {
   return (
     <div className="space-y-6 animate-fade-in">
       <PageHeader
-        icon={Building2}
         title="Firmenstammdaten"
         description="Firmeninformationen für Abrechnungen und offizielle Dokumente"
       />
