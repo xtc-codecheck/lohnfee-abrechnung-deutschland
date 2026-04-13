@@ -4,6 +4,7 @@
  */
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useTenant } from '@/contexts/tenant-context';
 import { Employee, PersonalData, EmploymentData, SalaryData, TaxClass, EmploymentType } from '@/types/employee';
 import { Tables, TablesInsert, TablesUpdate } from '@/integrations/supabase/types';
 
@@ -161,12 +162,15 @@ export function useSupabaseEmployees() {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { tenantId } = useTenant();
 
   const fetchEmployees = useCallback(async () => {
+    if (!tenantId) { setEmployees([]); setIsLoading(false); return; }
     setIsLoading(true);
     const { data, error: err } = await supabase
       .from('employees')
       .select('*')
+      .eq('tenant_id', tenantId)
       .order('last_name');
     
     if (err) {
@@ -177,7 +181,7 @@ export function useSupabaseEmployees() {
       setError(null);
     }
     setIsLoading(false);
-  }, []);
+  }, [tenantId]);
 
   useEffect(() => {
     fetchEmployees();
@@ -186,7 +190,7 @@ export function useSupabaseEmployees() {
   const addEmployee = useCallback(async (
     employeeData: Omit<Employee, 'id' | 'createdAt' | 'updatedAt'>
   ): Promise<Employee | null> => {
-    const insert = employeeToInsert(employeeData);
+    const insert = { ...employeeToInsert(employeeData), tenant_id: tenantId };
     const { data, error: err } = await supabase
       .from('employees')
       .insert(insert)
