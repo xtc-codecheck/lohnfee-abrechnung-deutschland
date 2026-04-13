@@ -13,6 +13,7 @@ const navItems = [
   { path: "/employees", label: "Mitarbeiter" },
   { path: "/payroll", label: "Abrechnung" },
   { path: "/time-tracking", label: "Zeiterfassung" },
+  { path: "/meldewesen", label: "Meldewesen" },
   { path: "/autolohn", label: "Autolohn" },
   { path: "/settings", label: "Einstellungen" },
 ];
