@@ -35,8 +35,6 @@ export function PayrollDashboard({ onBack, onShowSpecialPayments, onShowAutomati
   const { payrollPeriods, payrollEntries, getPayrollReport, deletePayrollPeriod } = usePayrollStorage();
   const { employees } = useEmployeeStorage();
 
-  const getStatusColor = getPayrollStatusColor;
-  const getStatusLabel = getPayrollStatusLabel;
 
   const handleDeletePayroll = (periodId: string) => {
     deletePayrollPeriod(periodId);

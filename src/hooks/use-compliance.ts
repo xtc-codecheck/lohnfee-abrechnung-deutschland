@@ -8,6 +8,7 @@ import { ComplianceCheck, ComplianceAlert, ComplianceReport, MINIMUM_WAGES } fro
 import { BBG_2025_MONTHLY } from '@/constants/social-security';
 import { useTenant } from '@/contexts/tenant-context';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 export function useCompliance() {
   const [alerts, setAlerts] = useState<ComplianceAlert[]>([]);
@@ -29,6 +30,7 @@ export function useCompliance() {
 
       if (error) {
         console.error('Error loading compliance alerts:', error);
+        toast.error('Compliance-Alerts konnten nicht geladen werden');
       } else if (data) {
         setAlerts(data.map(row => ({
           id: row.id,
