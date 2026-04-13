@@ -544,14 +544,13 @@ describe('Pflegeversicherung Edge Cases', () => {
       age: 22,
     });
 
-    const age25 = calculateCompleteTax({
+    const age23 = calculateCompleteTax({
       ...baseParams,
       isChildless: true,
-      age: 25,
+      age: 23,
     });
 
-    // Ab 23 Jahren greift der Kinderlosenzuschlag, daher höhere PV bei 25 vs 22
-    expect(age25.careInsurance).toBeGreaterThanOrEqual(age22.careInsurance);
+    expect(age23.careInsurance).toBeGreaterThanOrEqual(age22.careInsurance);
   });
 });
 
