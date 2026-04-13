@@ -159,6 +159,8 @@ export function MainDashboard() {
           </CardContent>
         </Card>
       )}
+      </>
+      )}
     </div>
   );
 }
