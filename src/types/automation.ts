@@ -199,7 +199,7 @@ export interface FailedEmail {
 
 export interface EmailAttachmentData {
   filename: string;
-  content: Buffer | string;
+  content: Uint8Array | string;
   contentType: string;
   encoding?: string;
 }
