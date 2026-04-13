@@ -84,19 +84,19 @@ export function SVMeldungenPage({ onBack }: SVMeldungenPageProps) {
     const grund = MELDEGRUENDE.find(m => m.value === formMeldegrund);
     const emp = employees.find(e => e.id === formEmployeeId);
 
-    const { error } = await supabase.from('sv_meldungen').insert({
+    const { error } = await supabase.from('sv_meldungen').insert([{
       employee_id: formEmployeeId,
       meldegrund: formMeldegrund,
       meldegrund_schluessel: grund?.schluessel,
       zeitraum_von: formVon,
       zeitraum_bis: formBis,
-      krankenkasse: formKK || emp?.personalData.healthInsurance || 'Unbekannt',
+      krankenkasse: formKK || emp?.personalData.healthInsurance?.name || 'Unbekannt',
       beitragsgruppe: '1111',
       sv_brutto: formSVBrutto ? Number(formSVBrutto) : (emp?.salaryData.grossSalary ?? 0),
       personengruppe: '101',
       status: 'entwurf',
       tenant_id: tenantId,
-    });
+    }]);
 
     if (error) {
       toast({ title: 'Fehler', description: error.message, variant: 'destructive' });
@@ -135,7 +135,7 @@ export function SVMeldungenPage({ onBack }: SVMeldungenPageProps) {
     return emp ? `${emp.personalData.lastName}, ${emp.personalData.firstName}` : empId.slice(0, 8);
   };
 
-  const activeEmployees = employees.filter(e => e.employmentData.isActive);
+  const activeEmployees = employees.filter(e => !e.employmentData.endDate || new Date(e.employmentData.endDate) > new Date());
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -152,7 +152,7 @@ export function SVMeldungenPage({ onBack }: SVMeldungenPageProps) {
                 <Select value={formEmployeeId} onValueChange={v => {
                   setFormEmployeeId(v);
                   const emp = employees.find(e => e.id === v);
-                  if (emp?.personalData.healthInsurance) setFormKK(emp.personalData.healthInsurance);
+                  if (emp?.personalData.healthInsurance?.name) setFormKK(emp.personalData.healthInsurance.name);
                 }}>
                   <SelectTrigger><SelectValue placeholder="Auswählen" /></SelectTrigger>
                   <SelectContent>
