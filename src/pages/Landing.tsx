@@ -5,6 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { DarkModeToggle } from "@/components/ui/dark-mode-toggle";
+import { PageSeo } from "@/components/seo/page-seo";
+import { LandingJsonLd } from "@/components/seo/landing-json-ld";
 import {
   Users,
   Calculator,
@@ -88,6 +90,12 @@ export default function Landing() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
+      <PageSeo
+        title="LohnPro – Lohnabrechnungssoftware für Deutschland"
+        description="Professionelle Lohnabrechnung für deutsche Unternehmen. Automatisierte Brutto-Netto-Berechnung, DATEV-Export, SV-Meldungen und Compliance."
+        path="/"
+      />
+      <LandingJsonLd />
       {/* Navbar */}
       <header className="sticky top-0 z-50 border-b border-border bg-card/80 backdrop-blur-lg">
         <div className="container mx-auto flex items-center justify-between px-6 py-4">

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { MainLayout } from "@/components/layout/main-layout";
+import { PageSeo } from "@/components/seo/page-seo";
 import { CompanySettingsPage } from "@/components/settings/company-settings-page";
 import { AdminUsersPage } from "@/components/settings/admin-users-page";
 import { GdprManagementPage } from "@/components/settings/gdpr-management-page";
@@ -9,6 +10,7 @@ import { Building2, Users, Shield } from "lucide-react";
 export default function Settings() {
   return (
     <MainLayout>
+      <PageSeo title="Einstellungen" description="Unternehmenseinstellungen, Benutzerverwaltung und Datenschutz konfigurieren." path="/settings" />
       <Tabs defaultValue="company" className="space-y-6">
         <TabsList>
           <TabsTrigger value="company" className="flex items-center gap-2">

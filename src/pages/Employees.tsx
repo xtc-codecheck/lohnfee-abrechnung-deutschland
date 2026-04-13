@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { PageSeo } from "@/components/seo/page-seo";
 import { MainLayout } from "@/components/layout/main-layout";
 import { EmployeeDashboard } from "@/components/employees/employee-dashboard";
 import { EmployeeWizard } from "@/components/employees/wizard";
@@ -58,6 +59,7 @@ export default function Employees() {
 
   return (
     <MainLayout>
+      <PageSeo title="Mitarbeiter" description="Mitarbeiter verwalten, Stammdaten pflegen und Gehaltsdaten einsehen." path="/employees" />
       {currentView === 'dashboard' && (
         <EmployeeDashboard 
           onAddEmployee={handleAddEmployee}
