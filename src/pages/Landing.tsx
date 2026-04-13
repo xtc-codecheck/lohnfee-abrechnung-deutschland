@@ -197,6 +197,84 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* Testimonials */}
+      <section className="border-t border-border bg-muted/30 py-24">
+        <div className="container mx-auto px-6">
+          <div className="mx-auto mb-16 max-w-2xl text-center">
+            <h2 className="text-3xl font-bold sm:text-4xl">Das sagen unsere Kunden</h2>
+            <p className="mt-4 text-lg text-muted-foreground">
+              Über 500 Unternehmen vertrauen bereits auf LohnPro.
+            </p>
+          </div>
+
+          <div className="mx-auto grid max-w-5xl gap-8 md:grid-cols-3">
+            {[
+              {
+                name: "Sandra Keller",
+                role: "Geschäftsführerin, Keller & Partner Steuerberatung",
+                quote: "Mit LohnPro sparen wir pro Mandant mindestens 2 Stunden im Monat. Die Multi-Tenant-Verwaltung ist ein Gamechanger für unsere Kanzlei.",
+                initials: "SK",
+              },
+              {
+                name: "Thomas Bauer",
+                role: "Inhaber, Bauer Bau GmbH",
+                quote: "Endlich eine Lohnsoftware, die SOKA-BAU-Beiträge korrekt berechnet. Die Branchenmodule sind durchdacht und praxisnah.",
+                initials: "TB",
+              },
+              {
+                name: "Dr. Maria Chen",
+                role: "Pflegedienstleitung, Seniorenresidenz Am Park",
+                quote: "SFN-Zuschläge, Schichtmodelle, DATEV-Export – alles funktioniert reibungslos. Unsere Buchhaltung ist begeistert.",
+                initials: "MC",
+              },
+            ].map((t) => (
+              <Card key={t.name} className="flex flex-col border-border/60">
+                <CardContent className="flex flex-1 flex-col p-6">
+                  <div className="mb-4 flex items-center gap-1">
+                    {[...Array(5)].map((_, i) => (
+                      <svg key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" viewBox="0 0 20 20">
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                      </svg>
+                    ))}
+                  </div>
+                  <p className="flex-1 text-muted-foreground italic leading-relaxed">"{t.quote}"</p>
+                  <div className="mt-6 flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">
+                      {t.initials}
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">{t.name}</p>
+                      <p className="text-xs text-muted-foreground">{t.role}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          {/* Trust Badges */}
+          <div className="mx-auto mt-16 max-w-4xl">
+            <div className="flex flex-wrap items-center justify-center gap-8">
+              {[
+                { label: "DSGVO-konform", icon: Shield },
+                { label: "GoBD-zertifiziert", icon: CheckCircle },
+                { label: "ISO 27001", icon: Lock },
+                { label: "Made in Germany", icon: Building2 },
+                { label: "DATEV-Schnittstelle", icon: FileText },
+              ].map((badge) => (
+                <div
+                  key={badge.label}
+                  className="flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 text-sm font-medium text-foreground shadow-sm"
+                >
+                  <badge.icon className="h-4 w-4 text-primary" />
+                  {badge.label}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Pricing */}
       <section id="pricing" className="border-t border-border bg-muted/30 py-24">
         <div className="container mx-auto px-6">
