@@ -20,7 +20,8 @@ export function MainLayout({ children }: MainLayoutProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  
+  const { user, roles, signOut } = useAuth();
+
   const isActive = (path: string) => location.pathname === path;
 
   const handleNavigation = (path: string) => {
