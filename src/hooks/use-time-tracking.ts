@@ -90,13 +90,13 @@ export function useTimeTracking() {
   }, [currentTenant]);
 
   const updateTimeEntry = useCallback(async (id: string, updates: Partial<Omit<TimeEntry, 'id' | 'createdAt'>>) => {
-    const dbUpdates: Record<string, unknown> = {};
+    const dbUpdates: { hours_worked?: number; type?: string; notes?: string | null; start_time?: string | null; end_time?: string | null; break_time?: number | null } = {};
     if (updates.hoursWorked !== undefined) dbUpdates.hours_worked = updates.hoursWorked;
     if (updates.type !== undefined) dbUpdates.type = updates.type;
-    if (updates.notes !== undefined) dbUpdates.notes = updates.notes;
-    if (updates.startTime !== undefined) dbUpdates.start_time = updates.startTime;
-    if (updates.endTime !== undefined) dbUpdates.end_time = updates.endTime;
-    if (updates.breakTime !== undefined) dbUpdates.break_time = updates.breakTime;
+    if (updates.notes !== undefined) dbUpdates.notes = updates.notes ?? null;
+    if (updates.startTime !== undefined) dbUpdates.start_time = updates.startTime ?? null;
+    if (updates.endTime !== undefined) dbUpdates.end_time = updates.endTime ?? null;
+    if (updates.breakTime !== undefined) dbUpdates.break_time = updates.breakTime ?? null;
 
     const { error } = await supabase
       .from('time_entries')
