@@ -50,6 +50,96 @@ export type Database = {
         }
         Relationships: []
       }
+      beitragsnachweise: {
+        Row: {
+          anzahl_versicherte: number | null
+          av_ag: number | null
+          av_an: number | null
+          betriebsnummer_kk: string | null
+          created_at: string
+          created_by: string | null
+          faelligkeitsdatum: string | null
+          gesamtbetrag: number | null
+          id: string
+          insolvenzgeldumlage: number | null
+          krankenkasse: string
+          kv_ag: number | null
+          kv_an: number | null
+          kv_zusatzbeitrag_ag: number | null
+          kv_zusatzbeitrag_an: number | null
+          month: number
+          pv_ag: number | null
+          pv_an: number | null
+          pv_kinderlose_zuschlag: number | null
+          rv_ag: number | null
+          rv_an: number | null
+          status: string
+          uebermittelt_am: string | null
+          umlage_u1: number | null
+          umlage_u2: number | null
+          updated_at: string
+          year: number
+        }
+        Insert: {
+          anzahl_versicherte?: number | null
+          av_ag?: number | null
+          av_an?: number | null
+          betriebsnummer_kk?: string | null
+          created_at?: string
+          created_by?: string | null
+          faelligkeitsdatum?: string | null
+          gesamtbetrag?: number | null
+          id?: string
+          insolvenzgeldumlage?: number | null
+          krankenkasse: string
+          kv_ag?: number | null
+          kv_an?: number | null
+          kv_zusatzbeitrag_ag?: number | null
+          kv_zusatzbeitrag_an?: number | null
+          month: number
+          pv_ag?: number | null
+          pv_an?: number | null
+          pv_kinderlose_zuschlag?: number | null
+          rv_ag?: number | null
+          rv_an?: number | null
+          status?: string
+          uebermittelt_am?: string | null
+          umlage_u1?: number | null
+          umlage_u2?: number | null
+          updated_at?: string
+          year: number
+        }
+        Update: {
+          anzahl_versicherte?: number | null
+          av_ag?: number | null
+          av_an?: number | null
+          betriebsnummer_kk?: string | null
+          created_at?: string
+          created_by?: string | null
+          faelligkeitsdatum?: string | null
+          gesamtbetrag?: number | null
+          id?: string
+          insolvenzgeldumlage?: number | null
+          krankenkasse?: string
+          kv_ag?: number | null
+          kv_an?: number | null
+          kv_zusatzbeitrag_ag?: number | null
+          kv_zusatzbeitrag_an?: number | null
+          month?: number
+          pv_ag?: number | null
+          pv_an?: number | null
+          pv_kinderlose_zuschlag?: number | null
+          rv_ag?: number | null
+          rv_an?: number | null
+          status?: string
+          uebermittelt_am?: string | null
+          umlage_u1?: number | null
+          umlage_u2?: number | null
+          updated_at?: string
+          year?: number
+        }
+        Relationships: []
+      }
       company_settings: {
         Row: {
           bank_name: string | null
@@ -217,6 +307,104 @@ export type Database = {
           zip_code?: string | null
         }
         Relationships: []
+      }
+      lohnsteuerbescheinigungen: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          employee_id: string
+          id: string
+          kinderfreibetraege: number | null
+          religion: string | null
+          status: string
+          steuerklasse: string | null
+          transfer_ticket: string | null
+          uebermittelt_am: string | null
+          updated_at: string
+          year: number
+          zeile_22a_arbeitnehmeranteil_rv: number | null
+          zeile_22b_arbeitgeberanteil_rv: number | null
+          zeile_23a_arbeitnehmeranteil_kv: number | null
+          zeile_23b_arbeitgeberanteil_kv: number | null
+          zeile_24a_arbeitnehmeranteil_av: number | null
+          zeile_24b_arbeitgeberanteil_av: number | null
+          zeile_25_arbeitnehmeranteil_pv: number | null
+          zeile_26_arbeitgeberanteil_pv: number | null
+          zeile_3_bruttolohn: number | null
+          zeile_4_lst: number | null
+          zeile_5_soli: number | null
+          zeile_6_kist: number | null
+          zeile_7_kist_ehegatte: number | null
+          zeitraum_bis: string | null
+          zeitraum_von: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          employee_id: string
+          id?: string
+          kinderfreibetraege?: number | null
+          religion?: string | null
+          status?: string
+          steuerklasse?: string | null
+          transfer_ticket?: string | null
+          uebermittelt_am?: string | null
+          updated_at?: string
+          year: number
+          zeile_22a_arbeitnehmeranteil_rv?: number | null
+          zeile_22b_arbeitgeberanteil_rv?: number | null
+          zeile_23a_arbeitnehmeranteil_kv?: number | null
+          zeile_23b_arbeitgeberanteil_kv?: number | null
+          zeile_24a_arbeitnehmeranteil_av?: number | null
+          zeile_24b_arbeitgeberanteil_av?: number | null
+          zeile_25_arbeitnehmeranteil_pv?: number | null
+          zeile_26_arbeitgeberanteil_pv?: number | null
+          zeile_3_bruttolohn?: number | null
+          zeile_4_lst?: number | null
+          zeile_5_soli?: number | null
+          zeile_6_kist?: number | null
+          zeile_7_kist_ehegatte?: number | null
+          zeitraum_bis?: string | null
+          zeitraum_von?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          employee_id?: string
+          id?: string
+          kinderfreibetraege?: number | null
+          religion?: string | null
+          status?: string
+          steuerklasse?: string | null
+          transfer_ticket?: string | null
+          uebermittelt_am?: string | null
+          updated_at?: string
+          year?: number
+          zeile_22a_arbeitnehmeranteil_rv?: number | null
+          zeile_22b_arbeitgeberanteil_rv?: number | null
+          zeile_23a_arbeitnehmeranteil_kv?: number | null
+          zeile_23b_arbeitgeberanteil_kv?: number | null
+          zeile_24a_arbeitnehmeranteil_av?: number | null
+          zeile_24b_arbeitgeberanteil_av?: number | null
+          zeile_25_arbeitnehmeranteil_pv?: number | null
+          zeile_26_arbeitgeberanteil_pv?: number | null
+          zeile_3_bruttolohn?: number | null
+          zeile_4_lst?: number | null
+          zeile_5_soli?: number | null
+          zeile_6_kist?: number | null
+          zeile_7_kist_ehegatte?: number | null
+          zeitraum_bis?: string | null
+          zeitraum_von?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lohnsteuerbescheinigungen_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       payroll_entries: {
         Row: {
@@ -394,6 +582,80 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      sv_meldungen: {
+        Row: {
+          beitragsgruppe: string | null
+          betriebsnummer_kk: string | null
+          created_at: string
+          created_by: string | null
+          employee_id: string
+          id: string
+          krankenkasse: string
+          meldedatum: string | null
+          meldegrund: string
+          meldegrund_schluessel: string | null
+          notes: string | null
+          personengruppe: string | null
+          status: string
+          storniert_am: string | null
+          storno_grund: string | null
+          sv_brutto: number | null
+          updated_at: string
+          zeitraum_bis: string
+          zeitraum_von: string
+        }
+        Insert: {
+          beitragsgruppe?: string | null
+          betriebsnummer_kk?: string | null
+          created_at?: string
+          created_by?: string | null
+          employee_id: string
+          id?: string
+          krankenkasse: string
+          meldedatum?: string | null
+          meldegrund: string
+          meldegrund_schluessel?: string | null
+          notes?: string | null
+          personengruppe?: string | null
+          status?: string
+          storniert_am?: string | null
+          storno_grund?: string | null
+          sv_brutto?: number | null
+          updated_at?: string
+          zeitraum_bis: string
+          zeitraum_von: string
+        }
+        Update: {
+          beitragsgruppe?: string | null
+          betriebsnummer_kk?: string | null
+          created_at?: string
+          created_by?: string | null
+          employee_id?: string
+          id?: string
+          krankenkasse?: string
+          meldedatum?: string | null
+          meldegrund?: string
+          meldegrund_schluessel?: string | null
+          notes?: string | null
+          personengruppe?: string | null
+          status?: string
+          storniert_am?: string | null
+          storno_grund?: string | null
+          sv_brutto?: number | null
+          updated_at?: string
+          zeitraum_bis?: string
+          zeitraum_von?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sv_meldungen_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
