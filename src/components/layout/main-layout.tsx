@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { Menu, X, LogOut, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/auth-context";
+import { TenantSwitcher } from "@/components/settings/tenant-switcher";
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -63,6 +64,7 @@ export function MainLayout({ children }: MainLayoutProps) {
                 </button>
               ))}
               <div className="flex items-center gap-2 ml-4 pl-4 border-l border-border">
+                <TenantSwitcher />
                 <User className="h-4 w-4 text-muted-foreground" />
                 <span className="text-sm text-muted-foreground truncate max-w-[150px]">
                   {user?.email}

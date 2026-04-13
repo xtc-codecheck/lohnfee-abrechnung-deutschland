@@ -24,6 +24,7 @@ export type Database = {
           old_values: Json | null
           record_id: string | null
           table_name: string
+          tenant_id: string | null
           user_id: string | null
         }
         Insert: {
@@ -35,6 +36,7 @@ export type Database = {
           old_values?: Json | null
           record_id?: string | null
           table_name: string
+          tenant_id?: string | null
           user_id?: string | null
         }
         Update: {
@@ -46,9 +48,18 @@ export type Database = {
           old_values?: Json | null
           record_id?: string | null
           table_name?: string
+          tenant_id?: string | null
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "audit_log_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       beitragsnachweise: {
         Row: {
@@ -74,6 +85,7 @@ export type Database = {
           rv_ag: number | null
           rv_an: number | null
           status: string
+          tenant_id: string | null
           uebermittelt_am: string | null
           umlage_u1: number | null
           umlage_u2: number | null
@@ -103,6 +115,7 @@ export type Database = {
           rv_ag?: number | null
           rv_an?: number | null
           status?: string
+          tenant_id?: string | null
           uebermittelt_am?: string | null
           umlage_u1?: number | null
           umlage_u2?: number | null
@@ -132,13 +145,22 @@ export type Database = {
           rv_ag?: number | null
           rv_an?: number | null
           status?: string
+          tenant_id?: string | null
           uebermittelt_am?: string | null
           umlage_u1?: number | null
           umlage_u2?: number | null
           updated_at?: string
           year?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "beitragsnachweise_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       company_settings: {
         Row: {
@@ -155,6 +177,7 @@ export type Database = {
           street: string | null
           tax_number: string | null
           tax_office: string | null
+          tenant_id: string | null
           updated_at: string
           zip_code: string | null
         }
@@ -172,6 +195,7 @@ export type Database = {
           street?: string | null
           tax_number?: string | null
           tax_office?: string | null
+          tenant_id?: string | null
           updated_at?: string
           zip_code?: string | null
         }
@@ -189,10 +213,19 @@ export type Database = {
           street?: string | null
           tax_number?: string | null
           tax_office?: string | null
+          tenant_id?: string | null
           updated_at?: string
           zip_code?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "company_settings_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       employees: {
         Row: {
@@ -228,6 +261,7 @@ export type Database = {
           sv_number: string | null
           tax_class: number | null
           tax_id: string | null
+          tenant_id: string | null
           updated_at: string
           weekly_hours: number | null
           zip_code: string | null
@@ -265,6 +299,7 @@ export type Database = {
           sv_number?: string | null
           tax_class?: number | null
           tax_id?: string | null
+          tenant_id?: string | null
           updated_at?: string
           weekly_hours?: number | null
           zip_code?: string | null
@@ -302,11 +337,82 @@ export type Database = {
           sv_number?: string | null
           tax_class?: number | null
           tax_id?: string | null
+          tenant_id?: string | null
           updated_at?: string
           weekly_hours?: number | null
           zip_code?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "employees_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gdpr_requests: {
+        Row: {
+          created_at: string
+          id: string
+          notes: string | null
+          processed_at: string | null
+          processed_by: string | null
+          reason: string | null
+          request_type: string
+          requested_by: string
+          retention_end_date: string | null
+          status: string
+          subject_id: string
+          subject_name: string | null
+          subject_type: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          processed_at?: string | null
+          processed_by?: string | null
+          reason?: string | null
+          request_type: string
+          requested_by: string
+          retention_end_date?: string | null
+          status?: string
+          subject_id: string
+          subject_name?: string | null
+          subject_type: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          processed_at?: string | null
+          processed_by?: string | null
+          reason?: string | null
+          request_type?: string
+          requested_by?: string
+          retention_end_date?: string | null
+          status?: string
+          subject_id?: string
+          subject_name?: string | null
+          subject_type?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gdpr_requests_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       lohnsteuerbescheinigungen: {
         Row: {
@@ -318,6 +424,7 @@ export type Database = {
           religion: string | null
           status: string
           steuerklasse: string | null
+          tenant_id: string | null
           transfer_ticket: string | null
           uebermittelt_am: string | null
           updated_at: string
@@ -347,6 +454,7 @@ export type Database = {
           religion?: string | null
           status?: string
           steuerklasse?: string | null
+          tenant_id?: string | null
           transfer_ticket?: string | null
           uebermittelt_am?: string | null
           updated_at?: string
@@ -376,6 +484,7 @@ export type Database = {
           religion?: string | null
           status?: string
           steuerklasse?: string | null
+          tenant_id?: string | null
           transfer_ticket?: string | null
           uebermittelt_am?: string | null
           updated_at?: string
@@ -402,6 +511,13 @@ export type Database = {
             columns: ["employee_id"]
             isOneToOne: false
             referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lohnsteuerbescheinigungen_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
         ]
@@ -437,6 +553,7 @@ export type Database = {
           tax_income_tax: number | null
           tax_solidarity: number | null
           tax_total: number | null
+          tenant_id: string | null
           updated_at: string
         }
         Insert: {
@@ -469,6 +586,7 @@ export type Database = {
           tax_income_tax?: number | null
           tax_solidarity?: number | null
           tax_total?: number | null
+          tenant_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -501,6 +619,7 @@ export type Database = {
           tax_income_tax?: number | null
           tax_solidarity?: number | null
           tax_total?: number | null
+          tenant_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -518,6 +637,13 @@ export type Database = {
             referencedRelation: "payroll_periods"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "payroll_entries_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
         ]
       }
       payroll_periods: {
@@ -530,6 +656,7 @@ export type Database = {
           processed_by: string | null
           start_date: string
           status: string
+          tenant_id: string | null
           year: number
         }
         Insert: {
@@ -541,6 +668,7 @@ export type Database = {
           processed_by?: string | null
           start_date: string
           status?: string
+          tenant_id?: string | null
           year: number
         }
         Update: {
@@ -552,9 +680,18 @@ export type Database = {
           processed_by?: string | null
           start_date?: string
           status?: string
+          tenant_id?: string | null
           year?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "payroll_periods_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -601,6 +738,7 @@ export type Database = {
           storniert_am: string | null
           storno_grund: string | null
           sv_brutto: number | null
+          tenant_id: string | null
           updated_at: string
           zeitraum_bis: string
           zeitraum_von: string
@@ -622,6 +760,7 @@ export type Database = {
           storniert_am?: string | null
           storno_grund?: string | null
           sv_brutto?: number | null
+          tenant_id?: string | null
           updated_at?: string
           zeitraum_bis: string
           zeitraum_von: string
@@ -643,6 +782,7 @@ export type Database = {
           storniert_am?: string | null
           storno_grund?: string | null
           sv_brutto?: number | null
+          tenant_id?: string | null
           updated_at?: string
           zeitraum_bis?: string
           zeitraum_von?: string
@@ -655,7 +795,91 @@ export type Database = {
             referencedRelation: "employees"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "sv_meldungen_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
         ]
+      }
+      tenant_members: {
+        Row: {
+          created_at: string
+          id: string
+          is_default: boolean
+          tenant_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          tenant_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          tenant_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tenant_members_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tenants: {
+        Row: {
+          betriebsnummer: string | null
+          city: string | null
+          contact_email: string | null
+          contact_phone: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          street: string | null
+          tax_number: string | null
+          updated_at: string
+          zip_code: string | null
+        }
+        Insert: {
+          betriebsnummer?: string | null
+          city?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          street?: string | null
+          tax_number?: string | null
+          updated_at?: string
+          zip_code?: string | null
+        }
+        Update: {
+          betriebsnummer?: string | null
+          city?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          street?: string | null
+          tax_number?: string | null
+          updated_at?: string
+          zip_code?: string | null
+        }
+        Relationships: []
       }
       user_roles: {
         Row: {
@@ -683,12 +907,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_default_tenant: { Args: { _user_id: string }; Returns: string }
       has_any_role: { Args: { _user_id: string }; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      is_tenant_member: {
+        Args: { _tenant_id: string; _user_id: string }
         Returns: boolean
       }
     }
