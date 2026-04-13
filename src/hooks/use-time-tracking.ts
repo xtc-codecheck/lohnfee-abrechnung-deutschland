@@ -6,7 +6,8 @@ import { TimeEntry, BulkTimeEntry, EmployeeTimeStatus, TimeTrackingStats, TimeEn
 import { useEmployeeStorage } from '@/hooks/use-employee-storage';
 import { useTenant } from '@/contexts/tenant-context';
 import { supabase } from '@/integrations/supabase/client';
-import { addDays, isSameDay, isWeekend, differenceInDays } from 'date-fns';
+import { addDays, isSameDay, isWeekend, differenceInDays, subDays } from 'date-fns';
+import { toast } from 'sonner';
 
 export function useTimeTracking() {
   const [timeEntries, setTimeEntries] = useState<TimeEntry[]>([]);
@@ -20,13 +21,16 @@ export function useTimeTracking() {
     
     const loadEntries = async () => {
       setIsLoading(true);
+      const ninetyDaysAgo = subDays(new Date(), 90).toISOString().split('T')[0];
       const { data, error } = await supabase
         .from('time_entries')
         .select('*')
-        .eq('tenant_id', currentTenant.id);
+        .eq('tenant_id', currentTenant.id)
+        .gte('date', ninetyDaysAgo);
 
       if (error) {
         console.error('Error loading time entries:', error);
+        toast.error('Zeiteinträge konnten nicht geladen werden');
       } else if (data) {
         setTimeEntries(data.map(row => ({
           id: row.id,
@@ -69,6 +73,7 @@ export function useTimeTracking() {
 
     if (error) {
       console.error('Error adding time entry:', error);
+      toast.error('Zeiteintrag konnte nicht gespeichert werden');
       return null;
     }
 
@@ -105,6 +110,7 @@ export function useTimeTracking() {
 
     if (error) {
       console.error('Error updating time entry:', error);
+      toast.error('Zeiteintrag konnte nicht aktualisiert werden');
       return;
     }
 
@@ -123,6 +129,7 @@ export function useTimeTracking() {
 
     if (error) {
       console.error('Error deleting time entry:', error);
+      toast.error('Zeiteintrag konnte nicht gelöscht werden');
       return;
     }
 
@@ -171,6 +178,7 @@ export function useTimeTracking() {
 
     if (error) {
       console.error('Error adding bulk time entries:', error);
+      toast.error('Masseneinträge konnten nicht gespeichert werden');
       return [];
     }
 
