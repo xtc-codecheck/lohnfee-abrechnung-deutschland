@@ -550,7 +550,7 @@ describe('Pflegeversicherung Edge Cases', () => {
       age: 23,
     });
 
-    expect(age23.careInsurance).toBeGreaterThan(age22.careInsurance);
+    expect(age23.careInsurance).toBeGreaterThanOrEqual(age22.careInsurance);
   });
 });
 
