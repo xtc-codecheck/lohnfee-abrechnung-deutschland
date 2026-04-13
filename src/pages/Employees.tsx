@@ -5,18 +5,15 @@ import { EmployeeDashboard } from "@/components/employees/employee-dashboard";
 import { EmployeeWizard } from "@/components/employees/wizard";
 import { SalaryCalculator } from "@/components/salary/salary-calculator";
 import { UltimateSalaryCalculator } from "@/components/salary/ultimate-salary-calculator";
-import { QuickSalaryCalculator } from "@/components/salary/quick-salary-calculator";
 import { TimeTrackingDashboard } from "@/components/time-tracking/time-tracking-dashboard";
 import { WorkingTimeAccounts } from "@/components/time-tracking/working-time-accounts";
 import { ComplianceDashboard } from "@/components/compliance/compliance-dashboard";
 import { AdvancedReports } from "@/components/reports/advanced-reports";
-import { SpecialPaymentsManager } from "@/components/payroll/special-payments-manager";
 import { AdvancedPayrollDashboard } from "@/components/payroll/advanced-payroll-dashboard";
 import { AuthoritiesIntegration } from "@/components/integration/authorities-integration";
-import { AutomationDashboard } from "@/components/automation/automation-dashboard";
 import { ExtendedCalculations } from "@/components/calculations/extended-calculations";
 
-type EmployeeView = 'dashboard' | 'add-employee' | 'salary-calculator' | 'quick-salary-calculator' | 'ultimate-calculator' | 'time-tracking' | 'working-time-accounts' | 'compliance' | 'reports' | 'advanced-payroll' | 'authorities' | 'extended-calc';
+type EmployeeView = 'dashboard' | 'add-employee' | 'salary-calculator' | 'ultimate-calculator' | 'time-tracking' | 'working-time-accounts' | 'compliance' | 'reports' | 'advanced-payroll' | 'authorities' | 'extended-calc';
 
 export default function Employees() {
   const navigate = useNavigate();
@@ -27,7 +24,7 @@ export default function Employees() {
   useEffect(() => {
     const view = searchParams.get('view');
     if (view === 'salary-calculator') {
-      setCurrentView('quick-salary-calculator');
+      setCurrentView('ultimate-calculator');
     }
   }, [searchParams]);
 
@@ -40,7 +37,7 @@ export default function Employees() {
       setEmployeeData(data);
       setCurrentView('salary-calculator');
     } else {
-      setCurrentView('quick-salary-calculator');
+      setCurrentView('ultimate-calculator');
     }
   };
 
@@ -49,7 +46,6 @@ export default function Employees() {
   };
 
   const handleSaveEmployee = (data: any) => {
-    // Mitarbeiter wird über useEmployeeStorage gespeichert
     setCurrentView('dashboard');
   };
 
@@ -78,11 +74,6 @@ export default function Employees() {
         <SalaryCalculator 
           onBack={handleBack}
           employeeData={employeeData}
-        />
-      )}
-      {currentView === 'quick-salary-calculator' && (
-        <UltimateSalaryCalculator 
-          onBack={handleBack}
         />
       )}
       {currentView === 'ultimate-calculator' && (

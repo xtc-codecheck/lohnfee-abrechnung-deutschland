@@ -409,3 +409,71 @@ export const PAYROLL_STATUS_VARIANTS: Record<string, 'default' | 'secondary' | '
 export function getPayrollStatusVariant(status: string): 'default' | 'secondary' | 'destructive' | 'outline' {
   return PAYROLL_STATUS_VARIANTS[status] ?? 'secondary';
 }
+
+// ============= Zentrale Status-Farben =============
+
+/**
+ * Payroll-Status-Farben für Badges (CSS-Klassen)
+ */
+export const PAYROLL_STATUS_COLORS: Record<string, string> = {
+  draft: 'bg-muted text-muted-foreground',
+  calculated: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
+  approved: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
+  paid: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
+  finalized: 'bg-muted text-muted-foreground',
+} as const;
+
+/**
+ * Gibt die CSS-Klassen für einen Payroll-Status zurück
+ */
+export function getPayrollStatusColor(status: string): string {
+  return PAYROLL_STATUS_COLORS[status] ?? 'bg-muted text-muted-foreground';
+}
+
+/**
+ * Gibt das Label für einen Payroll-Status zurück
+ */
+export function getPayrollStatusLabel(status: string): string {
+  return PAYROLL_STATUS_LABELS[status] ?? status;
+}
+
+/**
+ * Meldewesen-Status-Farben
+ */
+export const MELDEWESEN_STATUS_COLORS: Record<string, string> = {
+  entwurf: 'bg-muted text-muted-foreground',
+  erstellt: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
+  uebermittelt: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
+  storniert: 'bg-destructive text-destructive-foreground',
+} as const;
+
+export function getMeldwesenStatusColor(status: string): string {
+  return MELDEWESEN_STATUS_COLORS[status] ?? 'bg-muted text-muted-foreground';
+}
+
+/**
+ * Traffic-Light-Status (Zeiterfassung, Compliance)
+ */
+export function getTrafficLightColor(status: 'green' | 'yellow' | 'red'): string {
+  switch (status) {
+    case 'green': return 'bg-green-50 border-green-200 text-green-800 dark:bg-green-900/30 dark:border-green-800 dark:text-green-300';
+    case 'yellow': return 'bg-yellow-50 border-yellow-200 text-yellow-800 dark:bg-yellow-900/30 dark:border-yellow-800 dark:text-yellow-300';
+    case 'red': return 'bg-red-50 border-red-200 text-red-800 dark:bg-red-900/30 dark:border-red-800 dark:text-red-300';
+  }
+}
+
+export function getTrafficLightDot(status: 'green' | 'yellow' | 'red'): string {
+  switch (status) {
+    case 'green': return 'bg-green-500';
+    case 'yellow': return 'bg-yellow-500';
+    case 'red': return 'bg-red-500';
+  }
+}
+
+export function getTrafficLightLabel(status: 'green' | 'yellow' | 'red'): string {
+  switch (status) {
+    case 'green': return 'Normal';
+    case 'yellow': return 'Warnung';
+    case 'red': return 'Kritisch';
+  }
+}

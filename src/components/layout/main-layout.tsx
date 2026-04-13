@@ -4,6 +4,7 @@ import { Menu, X, LogOut, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/auth-context";
 import { TenantSwitcher } from "@/components/settings/tenant-switcher";
+import { DarkModeToggle } from "@/components/ui/dark-mode-toggle";
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -65,6 +66,7 @@ export function MainLayout({ children }: MainLayoutProps) {
               ))}
               <div className="flex items-center gap-2 ml-4 pl-4 border-l border-border">
                 <TenantSwitcher />
+                <DarkModeToggle />
                 <User className="h-4 w-4 text-muted-foreground" />
                 <span className="text-sm text-muted-foreground truncate max-w-[150px]">
                   {user?.email}
@@ -132,24 +134,15 @@ export function MainLayout({ children }: MainLayoutProps) {
             </div>
             
             <nav className="flex flex-wrap justify-center gap-4 text-sm">
-              <button 
-                onClick={() => handleNavigation("/")}
-                className="text-muted-foreground hover:text-primary transition-colors"
-              >
-                Dashboard
-              </button>
-              <button 
-                onClick={() => handleNavigation("/employees")}
-                className="text-muted-foreground hover:text-primary transition-colors"
-              >
-                Mitarbeiter
-              </button>
-              <button 
-                onClick={() => handleNavigation("/payroll")}
-                className="text-muted-foreground hover:text-primary transition-colors"
-              >
-                Abrechnung
-              </button>
+              {navItems.map((item) => (
+                <button 
+                  key={item.path}
+                  onClick={() => handleNavigation(item.path)}
+                  className="text-muted-foreground hover:text-primary transition-colors"
+                >
+                  {item.label}
+                </button>
+              ))}
             </nav>
 
             <p className="text-sm text-muted-foreground">
