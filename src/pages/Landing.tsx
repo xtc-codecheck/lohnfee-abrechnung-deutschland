@@ -1,4 +1,5 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Navigate } from "react-router-dom";
+import { useAuth } from "@/contexts/auth-context";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -80,6 +81,10 @@ const benefits = [
 
 export default function Landing() {
   const navigate = useNavigate();
+  const { session, loading } = useAuth();
+
+  if (loading) return null;
+  if (session) return <Navigate to="/dashboard" replace />;
 
   return (
     <div className="min-h-screen bg-background text-foreground">
