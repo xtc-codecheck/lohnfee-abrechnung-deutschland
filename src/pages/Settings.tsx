@@ -10,6 +10,7 @@ import { Building2, Users, Shield } from "lucide-react";
 export default function Settings() {
   return (
     <MainLayout>
+      <PageSeo title="Einstellungen" description="Unternehmenseinstellungen, Benutzerverwaltung und Datenschutz konfigurieren." path="/settings" />
       <Tabs defaultValue="company" className="space-y-6">
         <TabsList>
           <TabsTrigger value="company" className="flex items-center gap-2">

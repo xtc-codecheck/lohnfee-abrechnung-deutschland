@@ -59,6 +59,7 @@ export default function Employees() {
 
   return (
     <MainLayout>
+      <PageSeo title="Mitarbeiter" description="Mitarbeiter verwalten, Stammdaten pflegen und Gehaltsdaten einsehen." path="/employees" />
       {currentView === 'dashboard' && (
         <EmployeeDashboard 
           onAddEmployee={handleAddEmployee}

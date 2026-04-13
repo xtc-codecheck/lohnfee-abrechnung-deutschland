@@ -28,6 +28,7 @@ export default function Meldewesen() {
 
   return (
     <MainLayout>
+      <PageSeo title="Meldewesen" description="SV-Meldungen, Beitragsnachweise und Lohnsteuerbescheinigungen erstellen und übermitteln." path="/meldewesen" />
       <div className="space-y-6 animate-fade-in">
         <PageHeader title="Meldewesen" description="Gesetzliche Meldungen und Bescheinigungen" onBack={() => navigate("/dashboard")} />
 

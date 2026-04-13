@@ -12,6 +12,7 @@ export default function TimeTracking() {
 
   return (
     <MainLayout>
+      <PageSeo title="Zeiterfassung" description="Arbeitszeiten erfassen, Überstunden verwalten und Abwesenheiten dokumentieren." path="/time-tracking" />
       <TimeTrackingDashboard onBack={handleBack} />
     </MainLayout>
   );

@@ -20,6 +20,7 @@ export default function Payroll() {
 
   return (
     <MainLayout>
+      <PageSeo title="Lohnabrechnung" description="Lohnabrechnungen erstellen, Sonderzahlungen verwalten und DATEV-Export durchführen." path="/payroll" />
       {currentView === 'dashboard' && (
         <PayrollDashboard 
           onBack={() => navigate("/dashboard")}
