@@ -11,7 +11,7 @@ interface MainLayoutProps {
 }
 
 const navItems = [
-  { path: "/", label: "Dashboard" },
+  { path: "/dashboard", label: "Dashboard" },
   { path: "/employees", label: "Mitarbeiter" },
   { path: "/payroll", label: "Abrechnung" },
   { path: "/time-tracking", label: "Zeiterfassung" },
