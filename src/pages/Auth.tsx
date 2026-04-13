@@ -33,7 +33,7 @@ export default function Auth() {
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -44,8 +44,11 @@ export default function Auth() {
     setLoading(false);
     if (error) {
       toast({ title: 'Registrierung fehlgeschlagen', description: error.message, variant: 'destructive' });
+    } else if (data.session) {
+      toast({ title: 'Willkommen!', description: 'Ihr Konto wurde erstellt.' });
+      navigate('/');
     } else {
-      toast({ title: 'Registrierung erfolgreich', description: 'Ihr Konto wurde erstellt. Sie können sich jetzt anmelden.' });
+      toast({ title: 'Registrierung erfolgreich', description: 'Bitte bestätigen Sie Ihre E-Mail-Adresse.' });
     }
   };
 
