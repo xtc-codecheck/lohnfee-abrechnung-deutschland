@@ -69,7 +69,7 @@ export function useTimePayrollIntegration() {
       // Finde oder erstelle Abrechnungszeitraum
       let period = payrollPeriods.find(p => p.year === year && p.month === month);
       if (!period) {
-        period = createPayrollPeriod(year, month);
+        period = await createPayrollPeriod(year, month) as PayrollPeriod;
       }
 
       // Hole existierende Einträge
