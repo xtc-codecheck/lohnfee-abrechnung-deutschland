@@ -5,9 +5,11 @@
 import { AlertCircle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { LabelWithHelp } from '@/components/ui/help-tooltip';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
+import { HELP } from '@/constants/help-glossary';
 import { WizardStepProps } from './types';
 
 function FieldError({ error }: { error?: string }) {
@@ -62,16 +64,18 @@ export function EmploymentDataStep({ formData, errors, onInputChange }: WizardSt
         {/* Beschäftigungsart, Abteilung, Position */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="employmentType">Beschäftigungsart*</Label>
+            <LabelWithHelp htmlFor="employmentType" help={HELP.employmentType.help} example={HELP.employmentType.example} required>
+              Beschäftigungsart
+            </LabelWithHelp>
             <Select value={formData.employmentType} onValueChange={(value) => onInputChange('employmentType', value)}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="minijob">Minijob (bis 556€)</SelectItem>
-                <SelectItem value="midijob">Midijob (556,01€ - 2.000€)</SelectItem>
-                <SelectItem value="parttime">Teilzeit</SelectItem>
-                <SelectItem value="fulltime">Vollzeit</SelectItem>
+                <SelectItem value="minijob">Minijob (bis 556€) – pauschale Abgaben</SelectItem>
+                <SelectItem value="midijob">Midijob (556–2.000€) – reduzierte SV</SelectItem>
+                <SelectItem value="parttime">Teilzeit – weniger als Vollzeit-Stunden</SelectItem>
+                <SelectItem value="fulltime">Vollzeit – reguläres Arbeitsverhältnis</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -192,7 +196,9 @@ export function EmploymentDataStep({ formData, errors, onInputChange }: WizardSt
                   checked={formData.mealsProvided}
                   onCheckedChange={(checked) => onInputChange('mealsProvided', checked)}
                 />
-                <Label htmlFor="mealsProvided">Mahlzeiten werden gestellt</Label>
+                <LabelWithHelp htmlFor="mealsProvided" help={HELP.sachbezugMahlzeiten.help}>
+                  Mahlzeiten werden gestellt
+                </LabelWithHelp>
               </div>
               <div className="flex items-center space-x-2">
                 <Checkbox
@@ -241,7 +247,9 @@ export function EmploymentDataStep({ formData, errors, onInputChange }: WizardSt
         {/* Eintrittsdatum, Wochenstunden, Urlaubstage */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="startDate">Eintrittsdatum*</Label>
+            <LabelWithHelp htmlFor="startDate" help={HELP.startDate.help} required>
+              Eintrittsdatum
+            </LabelWithHelp>
             <Input
               id="startDate"
               type="date"
@@ -252,7 +260,9 @@ export function EmploymentDataStep({ formData, errors, onInputChange }: WizardSt
             <FieldError error={errors.startDate} />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="weeklyHours">Wochenstunden*</Label>
+            <LabelWithHelp htmlFor="weeklyHours" help={HELP.weeklyHours.help} example={HELP.weeklyHours.example} required>
+              Wochenstunden
+            </LabelWithHelp>
             <Input
               id="weeklyHours"
               type="number"
@@ -263,7 +273,9 @@ export function EmploymentDataStep({ formData, errors, onInputChange }: WizardSt
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="vacationDays">Urlaubstage pro Jahr*</Label>
+            <LabelWithHelp htmlFor="vacationDays" help={HELP.vacationDays.help} hint={HELP.vacationDays.hint} required>
+              Urlaubstage pro Jahr
+            </LabelWithHelp>
             <Input
               id="vacationDays"
               type="number"
@@ -398,12 +410,12 @@ export function EmploymentDataStep({ formData, errors, onInputChange }: WizardSt
 
         {formData.isFixedTerm && (
           <div className="space-y-2">
-            <Label htmlFor="endDate">Austrittsdatum</Label>
+            <Label htmlFor="fixedTermEndDate">Befristung endet am</Label>
             <Input
-              id="endDate"
+              id="fixedTermEndDate"
               type="date"
-              value={formData.endDate}
-              onChange={(e) => onInputChange('endDate', e.target.value)}
+              value={formData.fixedTermEndDate}
+              onChange={(e) => onInputChange('fixedTermEndDate', e.target.value)}
             />
           </div>
         )}

@@ -5,9 +5,11 @@
 import { AlertCircle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { LabelWithHelp } from '@/components/ui/help-tooltip';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { SOCIAL_INSURANCE_RATES_2025 } from '@/constants/social-security';
+import { HELP } from '@/constants/help-glossary';
 import { WizardStepProps } from './types';
 
 function FieldError({ error }: { error?: string }) {
@@ -31,13 +33,11 @@ export function SalaryDataStep({ formData, errors, onInputChange }: WizardStepPr
     const hasChildlessSurcharge = formData.childAllowances === 0;
     const careRate = hasChildlessSurcharge ? SOCIAL_INSURANCE_RATES_2025.careChildless : SOCIAL_INSURANCE_RATES_2025.care;
 
-    // Arbeitgeber-Anteile
     const employerHealthInsurance = (grossSalary * (basicHealthInsuranceRate / 2 + formData.healthInsuranceRate / 2)) / 100;
     const employerPension = (grossSalary * SOCIAL_INSURANCE_RATES_2025.pension.employer) / 100;
     const employerUnemployment = (grossSalary * SOCIAL_INSURANCE_RATES_2025.unemployment.employer) / 100;
     const employerCare = (grossSalary * careRate.employer) / 100;
 
-    // Arbeitnehmer-Anteile
     const employeeHealthInsurance = (grossSalary * (basicHealthInsuranceRate / 2 + formData.healthInsuranceRate / 2)) / 100;
     const employeePension = (grossSalary * SOCIAL_INSURANCE_RATES_2025.pension.employee) / 100;
     const employeeUnemployment = (grossSalary * SOCIAL_INSURANCE_RATES_2025.unemployment.employee) / 100;
@@ -71,7 +71,9 @@ export function SalaryDataStep({ formData, errors, onInputChange }: WizardStepPr
       <CardContent className="space-y-6">
         {/* Lohnart */}
         <div className="space-y-2">
-          <Label htmlFor="salaryType">Lohnart*</Label>
+          <LabelWithHelp htmlFor="salaryType" help={HELP.salaryType.help} required>
+            Lohnart
+          </LabelWithHelp>
           <Select value={formData.salaryType} onValueChange={(value) => onInputChange('salaryType', value)}>
             <SelectTrigger>
               <SelectValue />
@@ -87,7 +89,9 @@ export function SalaryDataStep({ formData, errors, onInputChange }: WizardStepPr
         {/* Bruttogehalt */}
         {formData.salaryType === 'fixed' && (
           <div className="space-y-2">
-            <Label htmlFor="grossSalary">Bruttogehalt pro Monat*</Label>
+            <LabelWithHelp htmlFor="grossSalary" help={HELP.grossSalary.help} example={HELP.grossSalary.example} hint={HELP.grossSalary.hint} required>
+              Bruttogehalt pro Monat
+            </LabelWithHelp>
             <Input
               id="grossSalary"
               type="number"
@@ -105,7 +109,9 @@ export function SalaryDataStep({ formData, errors, onInputChange }: WizardStepPr
         {/* Stundenlohn */}
         {(formData.salaryType === 'hourly' || formData.employmentType === 'minijob') && (
           <div className="space-y-2">
-            <Label htmlFor="hourlyWage">Stundenlohn*</Label>
+            <LabelWithHelp htmlFor="hourlyWage" help={HELP.hourlyWage.help} hint={HELP.hourlyWage.hint} required>
+              Stundenlohn
+            </LabelWithHelp>
             <Input
               id="hourlyWage"
               type="number"
@@ -120,7 +126,9 @@ export function SalaryDataStep({ formData, errors, onInputChange }: WizardStepPr
 
         {/* Zusatzbeitrag */}
         <div className="space-y-2">
-          <Label htmlFor="healthInsuranceRate">KV-Zusatzbeitrag (%)*</Label>
+          <LabelWithHelp htmlFor="healthInsuranceRate" help={HELP.healthInsuranceRate.help} example={HELP.healthInsuranceRate.example} required>
+            KV-Zusatzbeitrag (%)
+          </LabelWithHelp>
           <Input
             id="healthInsuranceRate"
             type="number"
