@@ -1,5 +1,5 @@
+import { useState } from "react";
 import { useNavigate, Navigate } from "react-router-dom";
-import { useAuth } from "@/contexts/auth-context";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -19,6 +19,8 @@ import {
   BarChart3,
   Lock,
   Building2,
+  Menu,
+  X,
 } from "lucide-react";
 
 const features = [
