@@ -2,253 +2,222 @@
 
 Multi-Tenant SaaS-Anwendung für Lohn- und Gehaltsabrechnung nach deutschem Recht (2025).
 
+---
+
+## Schnellstart
+
+```bash
+# Abhängigkeiten installieren
+npm install
+
+# Entwicklungsserver starten
+npm run dev
+
+# Tests ausführen
+npx vitest run
+
+# Build erstellen
+npm run build
+```
+
+> **Voraussetzung:** Node.js ≥ 18, npm ≥ 9. Das Backend läuft über Lovable Cloud – kein eigener Server nötig.
+
+---
+
 ## Tech-Stack
 
-- **Frontend:** React 18, Vite 5, TypeScript 5, Tailwind CSS v3, shadcn/ui
-- **Backend:** Lovable Cloud (Supabase) – Authentifizierung, Datenbank, RLS
-- **Tests:** Vitest (311 Tests in 11 Suites)
+| Schicht | Technologie |
+|---------|-------------|
+| **Frontend** | React 18, Vite 5, TypeScript 5, Tailwind CSS v3, shadcn/ui |
+| **State** | TanStack React Query + React Context |
+| **Routing** | React Router v6 (Code-Split via `React.lazy`) |
+| **Backend** | Lovable Cloud (Supabase) – PostgreSQL, Auth, RLS, Edge Functions |
+| **Tests** | Vitest (485 Tests in 19 Suites) |
+| **SEO** | react-helmet-async + JSON-LD |
 
 ---
 
 ## Architektur
 
-### Frontend-only SPA
+### Provider-Hierarchie
 
-Die App ist eine reine Client-Anwendung. Alle Backend-Funktionen (Auth, DB, Storage) laufen über Lovable Cloud (Supabase). Es gibt keinen eigenen Server.
+```
+ErrorBoundary
+  └── HelmetProvider
+       └── QueryClientProvider
+            └── TooltipProvider
+                 └── BrowserRouter
+                      └── AuthProvider (Auth-State, Rollen)
+                           └── TenantProvider (Mandanten-Isolation)
+                                └── EmployeeProvider (Mitarbeiter-Cache)
+                                     └── Routes (17 lazy-loaded)
+```
 
 ### Multi-Tenant-Isolation
 
-- **Jede Tabelle** hat eine `tenant_id`-Spalte
-- **RLS-Policies** auf allen Tabellen prüfen Tenant-Zugehörigkeit via `is_tenant_member(auth.uid(), tenant_id)`
-- Ein Nutzer kann mehreren Tenants angehören (`tenant_members`-Tabelle)
-- Standard-Tenant wird via `get_default_tenant(user_id)` ermittelt
+- **Jede operative Tabelle** hat eine `tenant_id`-Spalte
+- **RLS-Policies** prüfen Tenant-Zugehörigkeit via `is_tenant_member(auth.uid(), tenant_id)`
+- Rollen (`admin`, `sachbearbeiter`, `leserecht`) sind **mandantenspezifisch** in `user_roles`
+- Prüfung über `SECURITY DEFINER`-Funktionen (keine RLS-Rekursion)
 
 ### Rollen-System
 
-Enum `app_role` mit drei Stufen:
-
 | Rolle | Rechte |
 |-------|--------|
-| `admin` | Vollzugriff, Nutzerverwaltung, Einstellungen |
-| `sachbearbeiter` | Mitarbeiter anlegen, Abrechnungen erstellen |
+| `admin` | Vollzugriff, Nutzerverwaltung, Einstellungen, Löschung |
+| `sachbearbeiter` | Mitarbeiter anlegen, Abrechnungen erstellen/bearbeiten |
 | `leserecht` | Nur Lesen |
-
-Rollen werden in `user_roles`-Tabelle gespeichert (niemals in `profiles`). Prüfung via `has_role(user_id, role)` (SECURITY DEFINER Funktion).
 
 ### Authentifizierung
 
-- Email + Passwort (auto-confirm ist aktiviert)
-- HIBP-Passwort-Check ist aktiviert
+- Email + Passwort (HIBP-Passwort-Check aktiviert)
 - Passwort-Reset via `/reset-password`
-- Bei Registrierung wird automatisch ein Tenant + Tenant-Membership erstellt
+- Bei Registrierung: automatische Tenant- + Rollenerstellung (1. User → Admin)
 
 ---
 
-## Datenbank-Schema (13 Tabellen)
+## Datenbank-Schema (18 Tabellen)
 
-### Kern-Tabellen
+### Kern
 
-| Tabelle | Zweck | Wichtige Spalten |
-|---------|-------|------------------|
-| `tenants` | Mandanten (Firmen) | `name`, `betriebsnummer`, `tax_number`, Adresse |
-| `tenant_members` | Nutzer-Mandant-Zuordnung | `user_id`, `tenant_id`, `is_default` |
-| `profiles` | Nutzerprofile | `user_id`, `display_name`, `email` |
-| `user_roles` | Rollenverteilung | `user_id`, `role` (app_role Enum) |
+| Tabelle | Zweck |
+|---------|-------|
+| `tenants` | Mandanten (Firmen) |
+| `tenant_members` | User ↔ Tenant Zuordnung (N:M) |
+| `profiles` | Nutzerprofile (auto via Trigger) |
+| `user_roles` | Rollenverteilung pro Tenant |
+| `platform_admins` | System-Administratoren |
 
 ### Mitarbeiter & Abrechnung
 
-| Tabelle | Zweck | Wichtige Spalten |
-|---------|-------|------------------|
-| `employees` | Mitarbeiterstammdaten | `personal_number` (auto via Trigger), `first_name`, `last_name`, `gross_salary`, `tax_class`, `health_insurance`, `sv_number`, `tax_id`, bAV-Felder, Dienstwagen-Felder |
-| `payroll_periods` | Abrechnungszeiträume | `year`, `month`, `status` (draft/calculated/approved/paid/finalized) |
-| `payroll_entries` | Einzelne Abrechnungen | `employee_id`, `gross_salary`, `net_salary`, `final_net_salary`, alle Steuer- und SV-Felder einzeln (AN/AG), `audit_data` (JSON) |
+| Tabelle | Zweck |
+|---------|-------|
+| `employees` | Stammdaten (35 Felder, Personalnummer auto-generiert) |
+| `payroll_periods` | Abrechnungszeiträume (Status-Workflow) |
+| `payroll_entries` | Einzelabrechnungen (Steuer + SV detailliert AN/AG) |
+| `time_entries` | Zeiterfassung |
+| `special_payments` | Sonderzahlungen (Krankengeld, Mutterschutz, KuG) |
 
-### Meldewesen
+### Meldewesen (DEÜV)
 
-| Tabelle | Zweck | Wichtige Spalten |
-|---------|-------|------------------|
-| `beitragsnachweise` | SV-Beitragsnachweise pro KK | `krankenkasse`, `month`, `year`, KV/RV/AV/PV je AN/AG, Umlagen |
-| `lohnsteuerbescheinigungen` | Elektronische LStB | `employee_id`, `year`, Zeilen 3-26 (Brutto, LSt, Soli, KiSt, SV-Anteile) |
-| `sv_meldungen` | SV-Meldungen (An-/Abmeldung) | `employee_id`, `meldegrund`, `zeitraum_von/bis`, `sv_brutto` |
+| Tabelle | Zweck |
+|---------|-------|
+| `sv_meldungen` | SV-Meldungen (An-/Abmeldung, Jahresmeldung) |
+| `beitragsnachweise` | Monatliche Beitragsnachweise pro KK |
+| `lohnsteuerbescheinigungen` | Elektronische LStB (Zeilen 3–26) |
 
 ### Verwaltung
 
 | Tabelle | Zweck |
 |---------|-------|
-| `company_settings` | Firmeneinstellungen (Name, Steuernummer, Bank) |
-| `gdpr_requests` | DSGVO-Anfragen (Auskunft, Löschung) |
-| `audit_log` | Audit-Trail aller Änderungen |
+| `company_settings` | Firmeneinstellungen |
+| `compliance_alerts` | Compliance-Warnungen |
+| `gdpr_requests` | DSGVO-Anfragen |
+| `audit_log` | Manipulationssicherer Audit-Trail (nur via DB-Trigger) |
+| `autolohn_settings` | Autolohn-Konfiguration |
 
 ### DB-Funktionen
 
-| Funktion | Typ | Zweck |
-|----------|-----|-------|
-| `has_role(user_id, role)` | SECURITY DEFINER | Rollenprüfung ohne RLS-Rekursion |
-| `has_any_role(user_id)` | SECURITY DEFINER | Prüft ob Nutzer mindestens eine Rolle hat |
-| `is_tenant_member(user_id, tenant_id)` | SECURITY DEFINER | Tenant-Zugehörigkeitsprüfung |
-| `get_default_tenant(user_id)` | SECURITY DEFINER | Standard-Tenant eines Nutzers |
-
-### Trigger
-
-| Trigger | Tabelle | Zweck |
-|---------|---------|-------|
-| `trg_generate_personal_number` | `employees` | Auto-Generierung der Personalnummer (1001, 1002, ...) pro Tenant |
-
----
-
-## Seiten & Routing
-
-Alle Routen außer `/auth` und `/reset-password` sind durch `<ProtectedRoute>` geschützt.
-
-| Route | Seite | Komponente |
-|-------|-------|------------|
-| `/` | Dashboard | `main-dashboard.tsx` |
-| `/employees` | Mitarbeiterverwaltung | `employee-dashboard.tsx` (4-Schritt-Wizard) |
-| `/payroll` | Lohnabrechnung | `advanced-payroll-dashboard.tsx` |
-| `/autolohn` | Automatische Abrechnung | `autolohn-dashboard.tsx` |
-| `/time-tracking` | Zeiterfassung | `time-tracking-dashboard.tsx` |
-| `/settings` | Einstellungen | Firmeneinstellungen, Admin, DSGVO |
-| `/meldewesen` | Meldewesen | Beitragsnachweise, eLStB, SV-Meldungen |
-| `/auth` | Login/Registrierung | `Auth.tsx` |
-| `/reset-password` | Passwort zurücksetzen | `ResetPassword.tsx` |
+| Funktion | Zweck |
+|----------|-------|
+| `has_role(user_id, role)` | Rollenprüfung (SECURITY DEFINER) |
+| `has_role_in_tenant(user_id, role, tenant_id)` | Tenant-spezifische Rollenprüfung |
+| `is_tenant_member(user_id, tenant_id)` | Tenant-Zugehörigkeit |
+| `is_primary_admin(user_id)` | Platform-Admin-Prüfung |
+| `get_default_tenant(user_id)` | Standard-Tenant ermitteln |
+| `generate_personal_number()` | Auto-Personalnummer (Trigger) |
+| `audit_trigger_func()` | Audit-Log-Trigger |
 
 ---
 
 ## Berechnungslogik (Kernmodul)
 
-### Steuerberechnung
+### Steuerberechnung (`src/utils/tax-calculation.ts`)
 
-**Datei:** `src/utils/tax-calculation.ts`
+- Vollständige Lohnsteuer nach § 32a EStG 2025
+- Alle 6 Steuerklassen, Solidaritätszuschlag, Kirchensteuer
+- Besondere Lohnsteuertabelle für Beamte/PKV
+- Minijob-Pauschalbesteuerung (2%), Midijob-Gleitzone
 
-- Vollständige Lohnsteuerberechnung nach deutschem Recht 2025
-- Unterstützt alle 6 Steuerklassen
-- Solidaritätszuschlag (5,5% mit Freigrenze 19.950 €/Jahr)
-- Kirchensteuer (8% oder 9% je nach Bundesland)
-- Kinderfreibeträge
-- Besondere Lohnsteuertabelle (`src/utils/besondere-lohnsteuertabelle.ts`)
+### Sozialversicherung (`src/constants/social-security.ts`)
 
-### Sozialversicherung
-
-**Datei:** `src/constants/social-security.ts` (~7.900 Zeilen)
-
-Enthält alle SV-Konstanten für 2025:
-- Beitragsbemessungsgrenzen (BBG) Ost/West
-- Beitragssätze: KV 14,6%, RV 18,6%, AV 2,6%, PV 3,4%
-- Zusatzbeitrag KV (durchschnittlich 2,5%)
-- Minijob-Grenze: 556 €, Midijob-Grenze: 2.000 €
-- Steuerliche Freibeträge (Grundfreibetrag 12.096 €)
-- Vollständige Lohnsteuertabelle 2025
-
-### Payroll-Calculator
-
-**Datei:** `src/utils/payroll-calculator.ts`
-
-Zentrale Berechnungsfunktion `calculatePayrollEntry()`:
-1. Bruttolohn + Zuschläge berechnen
-2. Lohnsteuer berechnen (inkl. Soli, KiSt)
-3. SV-Beiträge berechnen (AN + AG getrennt)
-4. Nettolohn = Brutto - Steuern - SV (AN)
-5. Arbeitgeberkosten = Brutto + SV (AG)
+- BBG Ost/West, alle Beitragssätze 2025
+- Lohnsteuertabelle 2025 (7.000+ Einträge)
+- Minijob ≤556€, Midijob ≤2.000€, Gleitzonenfaktor 0,6683
 
 ### Branchenmodule
 
 | Modul | Datei | Features |
 |-------|-------|----------|
-| **Bau** | `construction-payroll.ts` | SOKA-BAU, Winterbeschäftigung, Auslösung, 13. Monatseinkommen |
-| **Gastronomie** | `gastronomy-payroll.ts` | Sachbezugswerte (Mahlzeiten), Trinkgeld, Saisonarbeit |
-| **Pflege** | `nursing-payroll.ts` | Schichtzuschläge, Pflegezulage, Bereitschaftsdienst |
+| Bau | `construction-payroll.ts` | SOKA-BAU, Wintergeld, Auslösung, 13. ME |
+| Gastronomie | `gastronomy-payroll.ts` | Sachbezugswerte, Trinkgeld, Saisonarbeit |
+| Pflege | `nursing-payroll.ts` | Schichtzuschläge, Pflegezulage, Bereitschaft |
 
 ### Zusatzmodule
 
-| Modul | Datei | Zweck |
-|-------|-------|-------|
-| bAV-Berechnung | `bav-calculation.ts` | Betriebliche Altersvorsorge, Entgeltumwandlung |
-| Dienstwagen | `company-car-calculation.ts` | 1%-Methode, 0,25%/0,5% E-Auto, Fahrtenbuch |
-| Netto→Brutto | `net-to-gross-calculation.ts` | Hochrechnung vom Wunschnetto |
-| Gehaltsprognose | `salary-forecast.ts` | Gehaltsprojektion über Jahre |
-| DATEV-Export | `datev-export.ts` | Export im DATEV-Format |
-| Anomalie-Erkennung | `anomaly-detection.ts` | Abweichungsprüfung zwischen Abrechnungen |
+| Modul | Datei |
+|-------|-------|
+| bAV-Berechnung | `bav-calculation.ts` |
+| Dienstwagen (1%/0,5%/0,25%) | `company-car-calculation.ts` |
+| Netto→Brutto-Umkehr | `net-to-gross-calculation.ts` |
+| DATEV-Export (SKR03/04) | `datev-export.ts` |
+| Anomalie-Erkennung | `anomaly-detection.ts` |
+| Gehaltsprognose | `salary-forecast.ts` |
+| KV-Vergleichsrechner | `health-insurance-comparison.ts` |
 
 ---
 
-## Meldewesen
+## Seiten & Routing
 
-### Beitragsnachweise
+Alle Routen außer Landing, Auth, Legal sind durch `<ProtectedRoute>` geschützt und via `React.lazy()` code-gesplittet.
 
-**Komponente:** `src/components/meldewesen/beitragsnachweis-page.tsx`
-
-- Generierung pro Krankenkasse und Monat
-- Aufschlüsselung: KV, RV, AV, PV (jeweils AN/AG)
-- Umlagen U1, U2, Insolvenzgeldumlage
-- Status-Workflow: Entwurf → Übermittelt
-
-### Elektronische Lohnsteuerbescheinigung (eLStB)
-
-**Komponente:** `src/components/meldewesen/lohnsteuerbescheinigung-page.tsx`
-
-- Zeile 3: Bruttoarbeitslohn
-- Zeile 4: Einbehaltene Lohnsteuer
-- Zeile 5: Solidaritätszuschlag
-- Zeile 6/7: Kirchensteuer (AN/Ehegatte)
-- Zeilen 22-26: SV-Beiträge (AN/AG je Zweig)
-
-### SV-Meldungen
-
-**Komponente:** `src/components/meldewesen/sv-meldungen-page.tsx`
-
-- Anmeldung (10), Abmeldung (30), Jahresmeldung (50)
-- Unterbrechungsmeldung, sonstige Gründe
-- Stornierung mit Begründung
+| Route | Beschreibung |
+|-------|-------------|
+| `/` | Marketing-Landingpage |
+| `/dashboard` | Haupt-Dashboard (KPIs, Übersicht) |
+| `/employees` | Mitarbeiterverwaltung (4-Schritt-Wizard) |
+| `/payroll` | Lohnabrechnung (Journal, Lohnkonto, DATEV) |
+| `/autolohn` | Automatische Abrechnung |
+| `/time-tracking` | Zeiterfassung |
+| `/meldewesen` | Beitragsnachweise, eLStB, SV-Meldungen |
+| `/reports` | Berichte & Auswertungen |
+| `/compliance` | Compliance-Dashboard |
+| `/settings` | Firma, Benutzer, DSGVO |
+| `/salary-calculator` | Gehaltsrechner |
 
 ---
 
 ## Testsuite
 
-**Konfiguration:** `vitest.config.ts`
+**485 Tests** in **19 Suites** – alle bestanden ✅
 
-311 Tests in 11 Suites:
-
-| Suite | Datei | Tests | Prüft |
-|-------|-------|-------|-------|
-| Steuerberechnung | `tax-calculation.test.ts` | ~40 | Alle Steuerklassen, Soli, KiSt |
-| Sozialversicherung | `social-security.test.ts` | ~30 | BBG, Gleitzone, Minijob |
-| Golden-Master | `golden-master-payroll.test.ts` | ~20 | Referenzwerte gegen DATEV |
-| Property-Based | `property-based-payroll.test.ts` | ~30 | Invarianten (Netto < Brutto etc.) |
-| Bau | `construction-payroll.test.ts` | ~25 | SOKA, Wintergeld |
-| Gastro | `gastronomy-payroll.test.ts` | ~20 | Sachbezüge, Trinkgeld |
-| Pflege | `nursing-payroll.test.ts` | ~20 | Schichtzuschläge |
-| Sonderzahlungen | `special-payments.test.ts` | ~15 | 13. Gehalt, Urlaubsgeld |
-| Edge Cases | `edge-cases.test.ts` | ~20 | Grenzwerte, 0€-Gehalt |
-| Mitarbeiter-Validierung | `employee.test.ts` | ~15 | Pflichtfelder, Formate |
-| Branchenlogik | `use-industry-payroll.test.ts` | ~10 | Hook-Integration |
+| Bereich | Tests |
+|---------|-------|
+| Steuerberechnung | ~52 |
+| Sozialversicherung | ~40 |
+| Tax-Params-Factory | ~24 |
+| Golden-Master Payroll | ~25 |
+| Property-Based Payroll | ~18 |
+| Edge-Cases | ~22 |
+| DATEV-Export | ~32 |
+| Baulohn | ~28 |
+| Gastronomie | ~26 |
+| Pflege | ~30 |
+| Sonderzahlungen | ~20 |
+| Supabase-Mapper | ~30 |
+| Hook-Mapper | ~22 |
+| Branchenmodul-Integration | ~15 |
+| Formatters | ~12 |
+| Employee-Validierung | ~42 |
+| German-Checksums | ~14 |
+| BMF-Referenz-Steuer | ~33 |
 
 ```bash
-# Tests ausführen
-npx vitest run
-
-# Tests im Watch-Modus
-npx vitest
+npx vitest run        # Alle Tests
+npx vitest            # Watch-Modus
 ```
 
 ---
-
-## Jährliche Wartung
-
-**Checkliste:** `src/constants/ANNUAL_UPDATE_CHECKLIST.md`
-
-Jedes Jahr zum 1. Januar müssen aktualisiert werden:
-1. Beitragsbemessungsgrenzen (BBG)
-2. SV-Beitragssätze
-3. Minijob/Midijob-Grenzen
-4. Steuerliche Freibeträge
-5. Lohnsteuertabelle (komplett ersetzen)
-6. Sachbezugswerte
-7. SOKA-BAU-Beiträge
-8. Dienstwagen-Prozentsätze
-9. KV-Zusatzbeiträge pro Kasse
-
----
-
 
 ## Verzeichnisstruktur
 
@@ -269,27 +238,52 @@ src/
 │   ├── time-tracking/         # Zeiterfassung
 │   └── ui/                    # shadcn/ui Komponenten
 ├── constants/
-│   └── social-security.ts     # Alle SV-Konstanten 2025 (~7.900 Zeilen)
-├── contexts/
-│   ├── auth-context.tsx       # Auth + Rollen
-│   └── tenant-context.tsx     # Multi-Tenant-Kontext
-├── hooks/                     # Custom Hooks (Employees, Payroll, Time-Tracking)
+│   └── social-security.ts     # Alle SV-Konstanten 2025
+├── contexts/                  # Auth, Tenant, Employee Context
+├── hooks/                     # React Query Hooks
 ├── types/                     # TypeScript-Definitionen
-├── utils/                     # Berechnungslogik (Steuer, SV, Branchen)
-│   └── __tests__/             # 311 Tests
+├── utils/                     # Berechnungslogik
+│   └── __tests__/             # 485 Tests
 ├── pages/                     # Seiten-Komponenten
 └── integrations/supabase/     # Auto-generiert (NICHT editieren!)
-    ├── client.ts
-    └── types.ts
+docs/
+├── IMPROVEMENTS-SUMMARY.md    # Verbesserungsplan-Zusammenfassung
+└── LohnPro-SubApp-Spezifikation.md  # Vollständige SubApp-Spezifikation
 ```
 
 ---
 
-## Wichtige Hinweise für die Weiterentwicklung
+## Jährliche Wartung
 
-1. **`src/integrations/supabase/client.ts` und `types.ts` NIEMALS manuell editieren** – diese werden automatisch generiert
+**Checkliste:** `src/constants/ANNUAL_UPDATE_CHECKLIST.md`
+
+Jedes Jahr zum 1. Januar aktualisieren:
+1. Beitragsbemessungsgrenzen (BBG Ost/West)
+2. SV-Beitragssätze
+3. Minijob/Midijob-Grenzen
+4. Steuerliche Freibeträge (Grundfreibetrag)
+5. Lohnsteuertabelle (komplett ersetzen)
+6. Sachbezugswerte (Gastronomie)
+7. SOKA-BAU-Beiträge
+8. KV-Zusatzbeiträge pro Kasse
+
+---
+
+## Wichtige Hinweise
+
+1. **`src/integrations/supabase/client.ts` und `types.ts` NIEMALS manuell editieren** – werden automatisch generiert
 2. **`.env` NIEMALS manuell editieren** – wird automatisch verwaltet
 3. **Rollen NIEMALS in `profiles` speichern** – immer `user_roles`-Tabelle verwenden
 4. **Alle neuen Tabellen brauchen `tenant_id`** + RLS-Policy mit `is_tenant_member()`
-5. **Konstanten-Update:** Jährlich zum 1.1. via Checkliste in `src/constants/ANNUAL_UPDATE_CHECKLIST.md`
-6. **Steuerberechnung:** Bei Änderungen immer Golden-Master-Tests aktualisieren
+5. **Platform-Admin-Seeding:** Erster Admin muss per SQL-Migration eingetragen werden (`platform_admins`)
+
+---
+
+## Dokumentation
+
+| Dokument | Pfad | Inhalt |
+|----------|------|--------|
+| README (dieses) | `README.md` | Setup, Architektur, Tech-Stack |
+| SubApp-Spezifikation | `docs/LohnPro-SubApp-Spezifikation.md` | Vollständige Integrationsanleitung |
+| Verbesserungsplan | `docs/IMPROVEMENTS-SUMMARY.md` | Umgesetzte Optimierungen |
+| Jahres-Checkliste | `src/constants/ANNUAL_UPDATE_CHECKLIST.md` | Jährliche Parameter-Updates |
