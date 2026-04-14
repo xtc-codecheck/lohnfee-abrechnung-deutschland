@@ -129,8 +129,8 @@ export function FibuJournalPage({ onBack }: FibuJournalPageProps) {
         title="Finanzbuchhaltung"
         description="Automatische Buchungssätze aus Lohnabrechnungen"
         breadcrumbs={[
-          { label: 'Dashboard', href: '/' },
-          { label: 'Abrechnung', href: '/payroll' },
+          { label: 'Dashboard', path: '/' },
+          { label: 'Abrechnung', path: '/payroll' },
           { label: 'Finanzbuchhaltung' },
         ]}
       />
