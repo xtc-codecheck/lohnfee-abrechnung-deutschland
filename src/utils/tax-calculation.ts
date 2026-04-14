@@ -41,6 +41,7 @@ export interface TaxCalculationParams {
   isEastGermany: boolean; // für BBG Unterschiede
   isChildless: boolean; // für Pflegeversicherung
   age: number; // für Pflegeversicherung
+  numberOfChildren?: number; // Für PV-Kinderabschläge (seit 07/2023)
   employmentType?: 'minijob' | 'midijob' | 'fulltime' | 'parttime'; // für spezielle Behandlung
   useBesondereLohnsteuertabelle?: boolean; // Besondere Tabelle für Beamte/PKV
   privateHealthInsuranceMonthly?: number; // PKV-Basisbeitrag (nur bei besonderer Tabelle)
