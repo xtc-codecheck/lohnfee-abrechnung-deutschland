@@ -664,6 +664,7 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
             value={selectedMonth}
             onChange={e => setSelectedMonth(Number(e.target.value))}
             className="rounded-md border border-input bg-background px-3 py-2 text-sm"
+            disabled={autoRunActive}
           >
             {MONTHS.map((m, i) => (
               <option key={i} value={i + 1}>{m}</option>
@@ -673,12 +674,28 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
             value={selectedYear}
             onChange={e => setSelectedYear(Number(e.target.value))}
             className="rounded-md border border-input bg-background px-3 py-2 text-sm"
+            disabled={autoRunActive}
           >
             {[2024, 2025, 2026].map(y => (
               <option key={y} value={y}>{y}</option>
             ))}
           </select>
-          <Button variant="outline" onClick={onBack}>
+          {!autoRunActive && !autoRunPaused && (
+            <Button onClick={startAutoRun} className="bg-gradient-primary hover:opacity-90">
+              <FastForward className="h-4 w-4 mr-2" /> Auto-Run
+            </Button>
+          )}
+          {autoRunActive && (
+            <Button onClick={stopAutoRun} variant="destructive">
+              <Pause className="h-4 w-4 mr-2" /> Stopp
+            </Button>
+          )}
+          {autoRunPaused && (
+            <Button onClick={resumeAutoRun} className="bg-gradient-primary hover:opacity-90">
+              <FastForward className="h-4 w-4 mr-2" /> Weiter (bestätigen)
+            </Button>
+          )}
+          <Button variant="outline" onClick={onBack} disabled={autoRunActive}>
             <ArrowLeft className="h-4 w-4 mr-2" /> Zurück
           </Button>
         </div>
