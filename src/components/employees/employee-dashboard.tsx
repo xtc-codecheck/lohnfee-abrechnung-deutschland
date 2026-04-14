@@ -11,6 +11,7 @@ import { ELStAMValidationCard } from "./elstam-validation-card";
 import { EmployeeReports } from "@/components/reports/employee-reports";
 import { useToast } from "@/hooks/use-toast";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { NetworkErrorAlert } from "@/components/ui/network-error-alert";
 
 interface EmployeeDashboardProps {
   onAddEmployee: () => void;
@@ -28,7 +29,7 @@ export function EmployeeDashboard({ onAddEmployee, onCalculateSalary, onShowComp
   const [showReports, setShowReports] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const { employees, updateEmployee, deleteEmployee } = useEmployees();
+  const { employees, updateEmployee, deleteEmployee, error: empError } = useEmployees();
   const { toast } = useToast();
 
   const filteredEmployees = employees.filter(employee =>
