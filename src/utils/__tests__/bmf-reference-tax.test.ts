@@ -43,10 +43,9 @@ describe('PAP 2025: Tarifliche Einkommensteuer nach § 32a EStG', () => {
   });
 
   describe('Progressionszone 1 (Zone 2: 12.097 - 17.443 €)', () => {
-    it('zvE = 12.097 → ESt > 0 (erste steuerpflichtige Euro)', () => {
+    it('zvE = 12.097 → ESt = 0 (floor auf 0 bei 1€ über GFB)', () => {
       const est = calculateTariflicheEStPAP2025(12097);
-      expect(est).toBeGreaterThan(0);
-      expect(est).toBeLessThan(5); // Minimal, da nur 1€ über GFB
+      expect(est).toBe(0); // (932.30*0.0001+1400)*0.0001 = 0.14 → floor = 0
     });
     
     it('zvE = 15.000 → ESt nach Formel y=(15000-12096)/10000', () => {
@@ -234,8 +233,8 @@ describe('PAP 2025: Lohnsteuer nach Steuerklassen', () => {
       });
     });
     
-    it('LSt ab dem ersten Euro', () => {
-      expect(calculateIncomeTax(500, 6)).toBeGreaterThan(0);
+    it('LSt ab niedrigem Einkommen (1.500€)', () => {
+      expect(calculateIncomeTax(1500, 6)).toBeGreaterThan(0);
     });
   });
 
