@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Save, Building, Mail, Calendar, Settings } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Save, Building, Mail, Calendar, Settings, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,40 +10,20 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { AutolohnSettings, CompanyData } from "@/types/autolohn";
 import { GERMAN_STATES, GERMAN_STATE_NAMES } from "@/types/employee";
+import { useAutolohnSettings } from "@/hooks/use-autolohn-settings";
 
 export function AutolohnDashboard() {
   const { toast } = useToast();
+  const { settings: savedSettings, isLoading: isLoadingSettings, saveSettings, isSaving } = useAutolohnSettings();
   
-  const [settings, setSettings] = useState<AutolohnSettings>({
-    companyData: {
-      name: "",
-      street: "",
-      houseNumber: "",
-      postalCode: "",
-      city: "",
-      state: "nordrhein-westfalen",
-      country: "Deutschland",
-      taxNumber: "",
-      operationNumber: ""
-    },
-    socialSecurityReporting: {
-      enabled: true,
-      daysBefore: 10
-    },
-    payrollTaxReporting: {
-      enabled: true,
-      dayOfNextMonth: 1
-    },
-    employeeNotifications: {
-      enabled: true,
-      sendOnPayrollCreation: true
-    },
-    managerNotifications: {
-      enabled: true,
-      managerEmail: "",
-      daysBefore: 12
+  const [settings, setSettings] = useState<AutolohnSettings>(savedSettings);
+
+  // Sync local state when saved settings load
+  useEffect(() => {
+    if (!isLoadingSettings) {
+      setSettings(savedSettings);
     }
-  });
+  }, [savedSettings, isLoadingSettings]);
 
   const handleCompanyDataChange = (field: keyof CompanyData, value: string) => {
     setSettings(prev => ({
@@ -95,13 +75,20 @@ export function AutolohnDashboard() {
     }));
   };
 
-  const handleSave = () => {
-    // TODO: Hier würde die Speicherung der Einstellungen erfolgen
-    // Speicherung in localStorage oder Backend implementieren
-    toast({
-      title: "Einstellungen gespeichert",
-      description: "Die Autolohn-Einstellungen wurden erfolgreich gespeichert.",
-    });
+  const handleSave = async () => {
+    try {
+      await saveSettings(settings);
+      toast({
+        title: "Einstellungen gespeichert",
+        description: "Die Autolohn-Einstellungen wurden erfolgreich gespeichert.",
+      });
+    } catch (err) {
+      toast({
+        title: "Fehler beim Speichern",
+        description: "Die Einstellungen konnten nicht gespeichert werden.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -460,10 +447,11 @@ export function AutolohnDashboard() {
       <div className="flex justify-center">
         <Button 
           onClick={handleSave}
+          disabled={isSaving}
           className="flex items-center gap-2 bg-gradient-primary hover:opacity-90"
         >
-          <Save className="h-4 w-4" />
-          Einstellungen speichern
+          {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+          {isSaving ? 'Wird gespeichert...' : 'Einstellungen speichern'}
         </Button>
       </div>
     </div>
