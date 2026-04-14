@@ -102,15 +102,13 @@ export function calculateTariflicheEStPAP2025(zvE: number): number {
 
 /**
  * Berechnet die Vorsorgepauschale für die allgemeine Lohnsteuertabelle
- * nach § 39b Abs. 2 Satz 5 Nr. 3 EStG
+ * nach § 39b Abs. 2 Satz 5 Nr. 3 EStG (PAP 2025)
  * 
  * Bestandteile:
- * 1. Teilbetrag Rentenversicherung: AN-Anteil RV (begrenzt auf BBG)
- * 2. Teilbetrag Kranken-/Pflegeversicherung:
- *    a) KV-Basisbeitrag (AN-Anteil, 7,3% + halber Zusatzbeitrag)
- *    b) PV-Beitrag (AN-Anteil)
- *    Zusammen begrenzt auf Höchstbetrag (1.900/3.000 €)
- * 3. Minimum: max(0, berechnete Vorsorgepauschale)
+ * 1. VSP1: Teilbetrag Rentenversicherung (AN-Anteil, begrenzt auf BBG)
+ * 2. VSP2: Pauschaler Ansatz = min(12% × Brutto, Höchstbetrag 1.900/3.000 €)
+ * 3. VSP3: Tatsächliche KV-Basis + PV (AN-Anteil)
+ * 4. VSPN = VSP1 + max(VSP2, VSP3) — der höhere der beiden Teilbeträge wird genommen
  */
 function calculateVorsorgepauschaleAllgemein(
   grossYearly: number,
@@ -123,26 +121,29 @@ function calculateVorsorgepauschaleAllgemein(
 ): number {
   const bbg = getBBGForRegion(isEastGermany, 'yearly');
   
-  // 1. Teilbetrag Rentenversicherung (voller AN-Anteil)
+  // VSP1: Teilbetrag Rentenversicherung (voller AN-Anteil, 2025: 100% absetzbar)
   const rvBasis = Math.min(grossYearly, bbg.pension);
-  const teilbetragRV = rvBasis * (SOCIAL_INSURANCE_RATES_2025.pension.employee / 100);
+  const vsp1 = rvBasis * (SOCIAL_INSURANCE_RATES_2025.pension.employee / 100);
   
-  // 2. Teilbetrag Kranken-/Pflegeversicherung
+  // VSP2: Pauschaler Ansatz (12% des Bruttos, max. 1.900/3.000 €)
+  const hoechstbetrag = taxClass === 3 ? 3000 : 1900;
+  const vsp2 = Math.min(grossYearly * 0.12, hoechstbetrag);
+  
+  // VSP3: Tatsächliche KV-Basisbeiträge + PV
   const kvBasis = Math.min(grossYearly, bbg.health);
   
-  // KV: Grundbeitrag AN + halber Zusatzbeitrag
-  const kvAN = kvBasis * (SOCIAL_INSURANCE_RATES_2025.health.employee / 100) 
-    + kvBasis * (healthInsuranceAdditionalRate / 2 / 100);
+  // KV: Grundbeitrag AN + halber Zusatzbeitrag (ohne Krankengeldanteil: Faktor 0.96)
+  const kvAN = kvBasis * (SOCIAL_INSURANCE_RATES_2025.health.employee / 100) * 0.96
+    + kvBasis * (healthInsuranceAdditionalRate / 2 / 100) * 0.96;
   
   // PV: AN-Anteil (inkl. Kinderlosenzuschlag/Kinderabschläge)
   const careRate = getCareInsuranceRate(isChildless, age, numberOfChildren);
   const pvAN = kvBasis * (careRate.employee / 100);
   
-  // Höchstbetrag: 1.900 € (StKl I,II,IV,V,VI) oder 3.000 € (StKl III)
-  const hoechstbetrag = taxClass === 3 ? 3000 : 1900;
-  const teilbetragKVPV = Math.min(kvAN + pvAN, hoechstbetrag);
+  const vsp3 = kvAN + pvAN;
   
-  return teilbetragRV + teilbetragKVPV;
+  // PAP 2025: Der HÖHERE der beiden Teilbeträge wird genommen
+  return vsp1 + Math.max(vsp2, vsp3);
 }
 
 // ============= PAP 2025: Lohnsteuer-Berechnung (Allgemeine Tabelle) =============
