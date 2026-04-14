@@ -39,7 +39,7 @@ interface SVMeldungenPageProps {
 }
 
 export function SVMeldungenPage({ onBack }: SVMeldungenPageProps) {
-  const { employees } = useSupabaseEmployees();
+  const { employees } = useEmployees();
   const { tenantId } = useTenant();
   const { toast } = useToast();
   const [meldungen, setMeldungen] = useState<any[]>([]);

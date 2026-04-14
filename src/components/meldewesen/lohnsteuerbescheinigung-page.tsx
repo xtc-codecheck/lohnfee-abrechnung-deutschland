@@ -19,7 +19,7 @@ interface LohnsteuerbescheinigungPageProps {
 }
 
 export function LohnsteuerbescheinigungPage({ onBack }: LohnsteuerbescheinigungPageProps) {
-  const { employees } = useSupabaseEmployees();
+  const { employees } = useEmployees();
   const { tenantId } = useTenant();
   const { toast } = useToast();
   const [bescheinigungen, setBescheinigungen] = useState<any[]>([]);
