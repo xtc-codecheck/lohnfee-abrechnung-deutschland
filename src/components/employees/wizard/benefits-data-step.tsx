@@ -9,6 +9,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Checkbox } from '@/components/ui/checkbox';
 import { WizardStepProps } from './types';
 
+function FieldError({ error }: { error?: string }) {
+  if (!error) return null;
+  return (
+    <p className="text-sm text-destructive flex items-center gap-1 mt-1">
+      <AlertCircle className="h-3 w-3" />
+      {error}
+    </p>
+  );
+}
+
 export function BenefitsDataStep({ formData, errors, onInputChange }: WizardStepProps) {
   const calculateCarBenefit = () => {
     if (!formData.carListPrice) return 0;
@@ -234,6 +244,42 @@ export function BenefitsDataStep({ formData, errors, onInputChange }: WizardStep
             onChange={(e) => onInputChange('taxFreeBenefits', parseFloat(e.target.value) || 0)}
             placeholder="0.00"
           />
+        </div>
+
+        {/* Bankdaten */}
+        <div className="border-t pt-6">
+          <h3 className="font-medium mb-4">Bankverbindung</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="space-y-2 md:col-span-2">
+              <Label htmlFor="iban">IBAN</Label>
+              <Input
+                id="iban"
+                value={formData.iban}
+                onChange={(e) => onInputChange('iban', e.target.value.toUpperCase())}
+                placeholder="DE89370400440532013000"
+                className={errors.iban ? 'border-destructive' : ''}
+              />
+              <FieldError error={errors.iban} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="bic">BIC</Label>
+              <Input
+                id="bic"
+                value={formData.bic}
+                onChange={(e) => onInputChange('bic', e.target.value.toUpperCase())}
+                placeholder="COBADEFFXXX"
+              />
+            </div>
+          </div>
+          <div className="space-y-2 mt-4">
+            <Label htmlFor="bankName">Bankname</Label>
+            <Input
+              id="bankName"
+              value={formData.bankName}
+              onChange={(e) => onInputChange('bankName', e.target.value)}
+              placeholder="Commerzbank"
+            />
+          </div>
         </div>
       </CardContent>
     </Card>
