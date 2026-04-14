@@ -23,9 +23,10 @@ interface PayrollDashboardProps {
   onShowAutomation?: () => void;
   onShowGuardian?: () => void;
   onShowLohnkonto?: () => void;
+  onShowMonthlyWizard?: () => void;
 }
 
-export function PayrollDashboard({ onBack, onShowSpecialPayments, onShowAutomation, onShowGuardian, onShowLohnkonto }: PayrollDashboardProps) {
+export function PayrollDashboard({ onBack, onShowSpecialPayments, onShowAutomation, onShowGuardian, onShowLohnkonto, onShowMonthlyWizard }: PayrollDashboardProps) {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [selectedPayrollId, setSelectedPayrollId] = useState<string | null>(null);
   const [currentView, setCurrentView] = useState<'dashboard' | 'detail' | 'journal' | 'account' | 'manual' | 'settings' | 'enhancements' | 'time-sync'>('dashboard');
@@ -116,6 +117,7 @@ export function PayrollDashboard({ onBack, onShowSpecialPayments, onShowAutomati
         onShowAutomation={onShowAutomation}
         onShowGuardian={onShowGuardian}
         onShowLohnkonto={onShowLohnkonto}
+        onShowMonthlyWizard={onShowMonthlyWizard}
         onShowJournal={() => setCurrentView('journal')}
         onShowManual={() => setCurrentView('manual')}
         onShowTimeSync={() => setCurrentView('time-sync')}
