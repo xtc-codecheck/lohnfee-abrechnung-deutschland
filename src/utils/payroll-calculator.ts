@@ -266,7 +266,8 @@ export function calculatePayrollEntry(input: PayrollCalculationInput): PayrollCa
   // Pflegeversicherung: AG-Anteil kann abweichen
   const careRate = getCareInsuranceRate(
     isChildless,
-    calculateAge(employee.personalData.dateOfBirth)
+    calculateAge(employee.personalData.dateOfBirth),
+    employee.personalData.numberOfChildren ?? 0
   );
   const employerCare = roundCurrency(
     Math.min(totalGrossSalary, bbgHealth) * (careRate.employer / 100)
