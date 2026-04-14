@@ -1,5 +1,5 @@
-// Exakte deutsche Steuerberechnung nach § 32a EStG 2025
-// Programmablaufplan (PAP) 2025 des Bundesministeriums der Finanzen
+// Exakte deutsche Steuerberechnung nach § 32a EStG 2025/2026
+// Programmablaufplan (PAP) des Bundesministeriums der Finanzen
 //
 // ALLGEMEINE LOHNSTEUERTABELLE - für sozialversicherungspflichtige Arbeitnehmer
 // Formelbasierte Berechnung nach § 32a EStG (ersetzt die statische Lookup-Tabelle)
@@ -19,7 +19,8 @@ import {
   MINIJOB_2025,
   MIDIJOB_2025,
   getBBGForRegion,
-  getCareInsuranceRate 
+  getCareInsuranceRate,
+  getYearConfig,
 } from '@/constants/social-security';
 
 export interface TaxCalculationParams {
@@ -37,6 +38,7 @@ export interface TaxCalculationParams {
   useBesondereLohnsteuertabelle?: boolean; // Besondere Tabelle für Beamte/PKV
   privateHealthInsuranceMonthly?: number; // PKV-Basisbeitrag (nur bei besonderer Tabelle)
   privateCareInsuranceMonthly?: number; // PPV-Beitrag (nur bei besonderer Tabelle)
+  year?: number; // Veranlagungsjahr (Default: 2025)
 }
 
 export interface TaxCalculationResult {
@@ -71,31 +73,28 @@ function parseTaxClass(taxClass: string | number): number {
   return TAX_CLASS_MAP[taxClass.trim().toUpperCase()] ?? 1;
 }
 
-// ============= PAP 2025: Tarifliche Einkommensteuer nach § 32a EStG =============
+// ============= PAP: Tarifliche Einkommensteuer nach § 32a EStG =============
 
 /**
- * Berechnet die tarifliche Einkommensteuer nach § 32a EStG 2025
+ * Berechnet die tarifliche Einkommensteuer nach § 32a EStG
  * Exakte Formel aus dem Programmablaufplan (PAP) des BMF
- * 
- * Tarif 2025:
- * Zone 1: 0 € bis 12.096 € → 0 €
- * Zone 2: 12.097 € bis 17.443 € → (932,30 × y + 1.400) × y mit y = (zvE − 12.096) / 10.000
- * Zone 3: 17.444 € bis 68.480 € → (176,64 × z + 2.397) × z + 1.015,13 mit z = (zvE − 17.443) / 10.000
- * Zone 4: 68.481 € bis 277.825 € → 0,42 × zvE − 10.911,92
- * Zone 5: ab 277.826 € → 0,45 × zvE − 19.246,67
+ * Unterstützt 2025 und 2026 über den year-Parameter
  */
-export function calculateTariflicheEStPAP2025(zvE: number): number {
+export function calculateTariflicheEStPAP2025(zvE: number, year: number = 2025): number {
   if (zvE <= 0) return 0;
   
   // Auf ganze Euro abrunden (§ 32a Abs. 1 S. 6 EStG)
   zvE = Math.floor(zvE);
   
-  if (zvE <= TAX_ALLOWANCES_2025.basicAllowance) return 0;
+  const config = getYearConfig(year);
+  const { taxAllowances, taxRates } = config;
 
-  const { progressionZone1, progressionZone2, proportionalZone1, proportionalZone2 } = TAX_RATES_2025;
+  if (zvE <= taxAllowances.basicAllowance) return 0;
+
+  const { progressionZone1, progressionZone2, proportionalZone1, proportionalZone2 } = taxRates;
 
   if (zvE <= progressionZone1.to) {
-    const y = (zvE - TAX_ALLOWANCES_2025.basicAllowance) / 10000;
+    const y = (zvE - taxAllowances.basicAllowance) / 10000;
     return Math.floor((progressionZone1.coefficients[0] * y + progressionZone1.coefficients[1]) * y);
   }
 
@@ -115,13 +114,7 @@ export function calculateTariflicheEStPAP2025(zvE: number): number {
 
 /**
  * Berechnet die Vorsorgepauschale für die allgemeine Lohnsteuertabelle
- * nach § 39b Abs. 2 Satz 5 Nr. 3 EStG (PAP 2025)
- * 
- * Bestandteile:
- * 1. VSP1: Teilbetrag Rentenversicherung (AN-Anteil, begrenzt auf BBG)
- * 2. VSP2: Pauschaler Ansatz = min(12% × Brutto, Höchstbetrag 1.900/3.000 €)
- * 3. VSP3: Tatsächliche KV-Basis + PV (AN-Anteil)
- * 4. VSPN = VSP1 + max(VSP2, VSP3) — der höhere der beiden Teilbeträge wird genommen
+ * nach § 39b Abs. 2 Satz 5 Nr. 3 EStG
  */
 function calculateVorsorgepauschaleAllgemein(
   grossYearly: number,
@@ -130,13 +123,15 @@ function calculateVorsorgepauschaleAllgemein(
   healthInsuranceAdditionalRate: number,
   isChildless: boolean,
   age: number,
-  numberOfChildren: number
+  numberOfChildren: number,
+  year: number = 2025
 ): number {
-  const bbg = getBBGForRegion(isEastGermany, 'yearly');
+  const config = getYearConfig(year);
+  const bbg = getBBGForRegion(isEastGermany, 'yearly', year);
   
-  // VSP1: Teilbetrag Rentenversicherung (voller AN-Anteil, 2025: 100% absetzbar)
+  // VSP1: Teilbetrag Rentenversicherung
   const rvBasis = Math.min(grossYearly, bbg.pension);
-  const vsp1 = rvBasis * (SOCIAL_INSURANCE_RATES_2025.pension.employee / 100);
+  const vsp1 = rvBasis * (config.svRates.pension.employee / 100);
   
   // VSP2: Pauschaler Ansatz (12% des Bruttos, max. 1.900/3.000 €)
   const hoechstbetrag = taxClass === 3 ? 3000 : 1900;
@@ -144,35 +139,22 @@ function calculateVorsorgepauschaleAllgemein(
   
   // VSP3: Tatsächliche KV-Basisbeiträge + PV
   const kvBasis = Math.min(grossYearly, bbg.health);
-  
-  // KV: Grundbeitrag AN + halber Zusatzbeitrag (ohne Krankengeldanteil: Faktor 0.96)
-  const kvAN = kvBasis * (SOCIAL_INSURANCE_RATES_2025.health.employee / 100) * 0.96
+  const kvAN = kvBasis * (config.svRates.health.employee / 100) * 0.96
     + kvBasis * (healthInsuranceAdditionalRate / 2 / 100) * 0.96;
   
-  // PV: AN-Anteil (inkl. Kinderlosenzuschlag/Kinderabschläge)
-  const careRate = getCareInsuranceRate(isChildless, age, numberOfChildren);
+  const careRate = getCareInsuranceRate(isChildless, age, numberOfChildren, year);
   const pvAN = kvBasis * (careRate.employee / 100);
   
   const vsp3 = kvAN + pvAN;
   
-  // PAP 2025: Der HÖHERE der beiden Teilbeträge wird genommen
   return vsp1 + Math.max(vsp2, vsp3);
 }
 
-// ============= PAP 2025: Lohnsteuer-Berechnung (Allgemeine Tabelle) =============
+// ============= PAP: Lohnsteuer-Berechnung (Allgemeine Tabelle) =============
 
 /**
- * Berechnet die monatliche Lohnsteuer nach PAP 2025 (Allgemeine Tabelle)
- * 
- * Ablauf:
- * 1. Jahres-Brutto hochrechnen
- * 2. Werbungskostenpauschale abziehen  
- * 3. Sonderausgabenpauschale abziehen
- * 4. Vorsorgepauschale (SV-basiert) abziehen
- * 5. → zu versteuerndes Einkommen (zvE)
- * 6. Steuerklassenanpassung (Splitting, Entlastung, etc.)
- * 7. Tarifliche ESt nach § 32a
- * 8. Auf Monat umrechnen
+ * Berechnet die monatliche Lohnsteuer nach PAP (Allgemeine Tabelle)
+ * Unterstützt 2025 und 2026
  */
 function calculateLohnsteuerPAP2025(
   grossMonthly: number,
@@ -182,18 +164,19 @@ function calculateLohnsteuerPAP2025(
   healthInsuranceAdditionalRate: number = 1.7,
   isChildless: boolean = true,
   age: number = 30,
-  numberOfChildren: number = 0
+  numberOfChildren: number = 0,
+  year: number = 2025
 ): number {
   if (grossMonthly <= 0) return 0;
   
+  const config = getYearConfig(year);
   const grossYearly = grossMonthly * 12;
   
-  // Abzüge für zvE
-  const werbungskosten = TAX_ALLOWANCES_2025.workRelatedExpenses;
-  const sonderausgaben = TAX_ALLOWANCES_2025.specialExpenses;
+  const werbungskosten = config.taxAllowances.workRelatedExpenses;
+  const sonderausgaben = config.taxAllowances.specialExpenses;
   const vorsorgepauschale = calculateVorsorgepauschaleAllgemein(
     grossYearly, taxClass, isEastGermany, 
-    healthInsuranceAdditionalRate, isChildless, age, numberOfChildren
+    healthInsuranceAdditionalRate, isChildless, age, numberOfChildren, year
   );
   
   let zvE: number;
@@ -203,43 +186,33 @@ function calculateLohnsteuerPAP2025(
     case 1:
     case 4:
       zvE = grossYearly - werbungskosten - sonderausgaben - vorsorgepauschale;
-      est = calculateTariflicheEStPAP2025(Math.max(0, zvE));
+      est = calculateTariflicheEStPAP2025(Math.max(0, zvE), year);
       break;
     case 2: {
-      // Entlastungsbetrag Alleinerziehende: 4.260 € + 240 € je weiteres Kind
       const entlastung = 4260 + Math.max(0, childAllowances - 1) * 240;
       zvE = grossYearly - werbungskosten - sonderausgaben - vorsorgepauschale - entlastung;
-      est = calculateTariflicheEStPAP2025(Math.max(0, zvE));
+      est = calculateTariflicheEStPAP2025(Math.max(0, zvE), year);
       break;
     }
     case 3:
-      // Splittingverfahren: zvE halbieren, ESt berechnen, verdoppeln
-      // StKl III: doppelte Pauschalen
       zvE = grossYearly - werbungskosten - sonderausgaben - vorsorgepauschale;
-      est = calculateTariflicheEStPAP2025(Math.max(0, Math.floor(zvE / 2))) * 2;
+      est = calculateTariflicheEStPAP2025(Math.max(0, Math.floor(zvE / 2)), year) * 2;
       break;
     case 5:
-      // StKl V: Vergleichsberechnung nach PAP 2025
-      // Der Grundfreibetrag wird beim StKl III-Partner verbraucht
-      // Formel: EST_V = 2 * EST(zvE) - 2 * EST(zvE/2)
-      // Dies ergibt: StKl III + StKl V ≈ 2 × StKl IV (bei gleichem Einkommen)
       zvE = grossYearly - werbungskosten - sonderausgaben - vorsorgepauschale;
-      est = 2 * calculateTariflicheEStPAP2025(Math.max(0, zvE)) 
-          - 2 * calculateTariflicheEStPAP2025(Math.max(0, Math.floor(zvE / 2)));
+      est = 2 * calculateTariflicheEStPAP2025(Math.max(0, zvE), year) 
+          - 2 * calculateTariflicheEStPAP2025(Math.max(0, Math.floor(zvE / 2)), year);
       break;
     case 6:
-      // StKl VI: keine Werbungskosten/Sonderausgaben, nur Vorsorgepauschale
-      // Vergleichsberechnung wie StKl V, aber ohne WK/SA
       zvE = grossYearly - vorsorgepauschale;
-      est = 2 * calculateTariflicheEStPAP2025(Math.max(0, zvE)) 
-          - 2 * calculateTariflicheEStPAP2025(Math.max(0, Math.floor(zvE / 2)));
+      est = 2 * calculateTariflicheEStPAP2025(Math.max(0, zvE), year) 
+          - 2 * calculateTariflicheEStPAP2025(Math.max(0, Math.floor(zvE / 2)), year);
       break;
     default:
       zvE = grossYearly - werbungskosten - sonderausgaben - vorsorgepauschale;
-      est = calculateTariflicheEStPAP2025(Math.max(0, zvE));
+      est = calculateTariflicheEStPAP2025(Math.max(0, zvE), year);
   }
   
-  // Monatliche Lohnsteuer: auf Cent abrunden
   return Math.floor(est / 12 * 100) / 100;
 }
 
@@ -365,8 +338,10 @@ function calculateMinijobContributions(grossMonthly: number): {
 export function calculateCompleteTax(params: TaxCalculationParams): TaxCalculationResult {
   const { grossSalaryYearly, taxClass, childAllowances, churchTax, churchTaxRate, 
           healthInsuranceRate, isEastGermany, isChildless, age, numberOfChildren, employmentType,
-          useBesondereLohnsteuertabelle, privateHealthInsuranceMonthly, privateCareInsuranceMonthly } = params;
+          useBesondereLohnsteuertabelle, privateHealthInsuranceMonthly, privateCareInsuranceMonthly,
+          year = 2025 } = params;
 
+  const config = getYearConfig(year);
   const grossMonthly = grossSalaryYearly / 12;
 
   // BESONDERE LOHNSTEUERTABELLE für Beamte / PKV
@@ -381,7 +356,6 @@ export function calculateCompleteTax(params: TaxCalculationParams): TaxCalculati
       privateCareInsuranceMonthly,
     });
     
-    // Keine SV-Beiträge für Beamte/PKV-Versicherte
     return {
       grossYearly: grossSalaryYearly,
       grossMonthly,
@@ -394,26 +368,26 @@ export function calculateCompleteTax(params: TaxCalculationParams): TaxCalculati
       healthInsurance: (privateHealthInsuranceMonthly ?? 300) * 12,
       careInsurance: (privateCareInsuranceMonthly ?? 50) * 12,
       totalTaxes: besResult.totalTax * 12,
-      totalSocialContributions: 0, // Keine GKV-Beiträge
+      totalSocialContributions: 0,
       totalDeductions: besResult.totalTax * 12 + ((privateHealthInsuranceMonthly ?? 300) + (privateCareInsuranceMonthly ?? 50)) * 12,
       netYearly: grossSalaryYearly - besResult.totalTax * 12 - ((privateHealthInsuranceMonthly ?? 300) + (privateCareInsuranceMonthly ?? 50)) * 12,
       netMonthly: grossMonthly - besResult.totalTax - (privateHealthInsuranceMonthly ?? 300) - (privateCareInsuranceMonthly ?? 50),
-      employerCosts: grossSalaryYearly, // Keine AG-SV-Anteile bei Beamten
+      employerCosts: grossSalaryYearly,
     };
   }
 
-  // ⚠️ SPEZIALBEHANDLUNG: Minijob (unter Vorbehalt)
-  if (employmentType === 'minijob' && grossMonthly <= MINIJOB_2025.maxEarnings) {
+  // ⚠️ SPEZIALBEHANDLUNG: Minijob
+  if (employmentType === 'minijob' && grossMonthly <= config.minijob.maxEarnings) {
     const minijobCalc = calculateMinijobContributions(grossMonthly);
     
     return {
       grossYearly: grossSalaryYearly,
       grossMonthly,
-      taxableIncome: 0, // Pauschal versteuert
+      taxableIncome: 0,
       incomeTax: minijobCalc.employeeTax * 12,
       solidarityTax: 0,
       churchTax: 0,
-      pensionInsurance: 0, // Optional für AN
+      pensionInsurance: 0,
       unemploymentInsurance: 0,
       healthInsurance: 0,
       careInsurance: 0,
@@ -426,36 +400,32 @@ export function calculateCompleteTax(params: TaxCalculationParams): TaxCalculati
     };
   }
 
-  // ⚠️ SPEZIALBEHANDLUNG: Midijob (unter Vorbehalt)  
-  if (employmentType === 'midijob' && grossMonthly > MIDIJOB_2025.minEarnings && grossMonthly <= MIDIJOB_2025.maxEarnings) {
-    // Reduzierte Sozialabgaben durch Gleitzonenformel
+  // ⚠️ SPEZIALBEHANDLUNG: Midijob
+  if (employmentType === 'midijob' && grossMonthly > config.midijob.minEarnings && grossMonthly <= config.midijob.maxEarnings) {
     const gleitzonenEntgelt = calculateMidijobGleitzone(grossMonthly);
     const gleitzonenEntgeltYearly = gleitzonenEntgelt * 12;
     
-    // Beitragsbemessungsgrenzen
-    const bbg = getBBGForRegion(isEastGermany, 'yearly');
+    const bbg = getBBGForRegion(isEastGermany, 'yearly', year);
 
-    // Reduzierte Sozialversicherungsbeiträge basierend auf Gleitzonenentgelt
     const pensionBase = Math.min(gleitzonenEntgeltYearly, bbg.pension);
-    const pensionInsurance = pensionBase * (SOCIAL_INSURANCE_RATES_2025.pension.employee / 100);
+    const pensionInsurance = pensionBase * (config.svRates.pension.employee / 100);
 
     const unemploymentBase = Math.min(gleitzonenEntgeltYearly, bbg.pension);
-    const unemploymentInsurance = unemploymentBase * (SOCIAL_INSURANCE_RATES_2025.unemployment.employee / 100);
+    const unemploymentInsurance = unemploymentBase * (config.svRates.unemployment.employee / 100);
 
     const healthBase = Math.min(gleitzonenEntgeltYearly, bbg.health);
-    const healthInsurance = healthBase * (SOCIAL_INSURANCE_RATES_2025.health.employee / 100) + healthBase * (healthInsuranceRate / 2 / 100);
+    const healthInsurance = healthBase * (config.svRates.health.employee / 100) + healthBase * (healthInsuranceRate / 2 / 100);
 
     const careBase = Math.min(gleitzonenEntgeltYearly, bbg.health);
-    const careRate = getCareInsuranceRate(isChildless, age, numberOfChildren ?? 0);
+    const careRate = getCareInsuranceRate(isChildless, age, numberOfChildren ?? 0, year);
     const careInsurance = careBase * (careRate.employee / 100);
 
     const totalSocialContributions = pensionInsurance + unemploymentInsurance + healthInsurance + careInsurance;
     
-    // Lohnsteuer nach PAP 2025
     const taxClassNumber = parseTaxClass(taxClass);
     const incomeTaxMonthly = calculateLohnsteuerPAP2025(
       grossMonthly, taxClassNumber, childAllowances, isEastGermany,
-      healthInsuranceRate, isChildless, age, numberOfChildren ?? 0
+      healthInsuranceRate, isChildless, age, numberOfChildren ?? 0, year
     );
     const incomeTax = incomeTaxMonthly * 12;
     
@@ -468,10 +438,9 @@ export function calculateCompleteTax(params: TaxCalculationParams): TaxCalculati
     const totalDeductions = totalSocialContributions + totalTaxes;
     const netYearly = grossSalaryYearly - totalDeductions;
     
-    // Arbeitgeberkosten (normale Beiträge auf volles Gehalt)
-    const employerSocialContributions = Math.min(grossSalaryYearly, bbg.pension) * (SOCIAL_INSURANCE_RATES_2025.pension.employer / 100) +
-                                      Math.min(grossSalaryYearly, bbg.pension) * (SOCIAL_INSURANCE_RATES_2025.unemployment.employer / 100) +
-                                      Math.min(grossSalaryYearly, bbg.health) * (SOCIAL_INSURANCE_RATES_2025.health.employer / 100) + 
+    const employerSocialContributions = Math.min(grossSalaryYearly, bbg.pension) * (config.svRates.pension.employer / 100) +
+                                      Math.min(grossSalaryYearly, bbg.pension) * (config.svRates.unemployment.employer / 100) +
+                                      Math.min(grossSalaryYearly, bbg.health) * (config.svRates.health.employer / 100) + 
                                       Math.min(grossSalaryYearly, bbg.health) * (healthInsuranceRate / 2 / 100) +
                                       Math.min(grossSalaryYearly, bbg.health) * (careRate.employer / 100);
     
@@ -499,51 +468,44 @@ export function calculateCompleteTax(params: TaxCalculationParams): TaxCalculati
 
   // STANDARD-BERECHNUNG für normale sozialversicherungspflichtige Beschäftigung
 
-  // Beitragsbemessungsgrenzen
-  const bbg = getBBGForRegion(isEastGermany, 'yearly');
+  const bbg = getBBGForRegion(isEastGermany, 'yearly', year);
 
-  // Sozialversicherungsbeiträge (Arbeitnehmeranteil)
   const pensionBase = Math.min(grossSalaryYearly, bbg.pension);
-  const pensionInsurance = pensionBase * (SOCIAL_INSURANCE_RATES_2025.pension.employee / 100);
+  const pensionInsurance = pensionBase * (config.svRates.pension.employee / 100);
 
   const unemploymentBase = Math.min(grossSalaryYearly, bbg.pension);
-  const unemploymentInsurance = unemploymentBase * (SOCIAL_INSURANCE_RATES_2025.unemployment.employee / 100);
+  const unemploymentInsurance = unemploymentBase * (config.svRates.unemployment.employee / 100);
 
   const healthBase = Math.min(grossSalaryYearly, bbg.health);
-  const healthInsurance = healthBase * (SOCIAL_INSURANCE_RATES_2025.health.employee / 100) + healthBase * (healthInsuranceRate / 2 / 100);
+  const healthInsurance = healthBase * (config.svRates.health.employee / 100) + healthBase * (healthInsuranceRate / 2 / 100);
 
   const careBase = Math.min(grossSalaryYearly, bbg.health);
-  const careRate = getCareInsuranceRate(isChildless, age, numberOfChildren ?? 0);
+  const careRate = getCareInsuranceRate(isChildless, age, numberOfChildren ?? 0, year);
   const careInsurance = careBase * (careRate.employee / 100);
 
-  // Zuerst Sozialversicherung berechnen für korrekte Vorsorgepauschale
   const totalSocialContributions = pensionInsurance + unemploymentInsurance + healthInsurance + careInsurance;
   
-  // Lohnsteuer nach PAP 2025 (formelbasiert)
   const monthlyGross = grossSalaryYearly / 12;
   const taxClassNumber = parseTaxClass(taxClass);
   const incomeTaxMonthly = calculateLohnsteuerPAP2025(
     monthlyGross, taxClassNumber, childAllowances, isEastGermany,
-    healthInsuranceRate, isChildless, age, numberOfChildren ?? 0
+    healthInsuranceRate, isChildless, age, numberOfChildren ?? 0, year
   );
   const incomeTax = incomeTaxMonthly * 12;
   
   const solidarityTax = calculateSolidarityTax(incomeTax);
   const churchTaxAmount = churchTax ? calculateChurchTax(incomeTax, churchTaxRate) : 0;
   
-  // Für Informationszwecke: zu versteuerndes Einkommen
   const taxableIncome = calculateTaxableIncome(grossSalaryYearly, childAllowances, totalSocialContributions);
 
-  // Summen
   const totalTaxes = incomeTax + solidarityTax + churchTaxAmount;
   const totalDeductions = totalSocialContributions + totalTaxes;
   
   const netYearly = grossSalaryYearly - totalDeductions;
   
-  // Arbeitgeberkosten (Arbeitgeberanteile)
-  const employerSocialContributions = pensionBase * (SOCIAL_INSURANCE_RATES_2025.pension.employer / 100) +
-                                    unemploymentBase * (SOCIAL_INSURANCE_RATES_2025.unemployment.employer / 100) +
-                                    healthBase * (SOCIAL_INSURANCE_RATES_2025.health.employer / 100) + healthBase * (healthInsuranceRate / 2 / 100) +
+  const employerSocialContributions = pensionBase * (config.svRates.pension.employer / 100) +
+                                    unemploymentBase * (config.svRates.unemployment.employer / 100) +
+                                    healthBase * (config.svRates.health.employer / 100) + healthBase * (healthInsuranceRate / 2 / 100) +
                                     careBase * (careRate.employer / 100);
   
   const employerCosts = grossSalaryYearly + employerSocialContributions;
