@@ -47,10 +47,18 @@ const faqSchema = {
   mainEntity: [
     {
       "@type": "Question",
-      name: "Kann ich LohnPro kostenlos testen?",
+      name: "Ist LohnPro kostenlos?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "Ja! Der Starter-Tarif ist dauerhaft kostenlos und umfasst bis zu 5 Mitarbeiter. Sie können jederzeit auf einen höheren Tarif upgraden.",
+        text: "Ja! Der Starter-Tarif ist dauerhaft kostenlos fuer bis zu 5 Mitarbeiter. Sie brauchen keine Kreditkarte und koennen jederzeit auf einen hoeherern Tarif wechseln.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "Muss ich mich mit Steuern auskennen?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "Nein! LohnPro berechnet Lohnsteuer, Sozialversicherung und alle Abzuege automatisch nach den aktuellen gesetzlichen Vorgaben. Sie geben nur die Mitarbeiterdaten ein.",
       },
     },
     {
@@ -58,39 +66,31 @@ const faqSchema = {
       name: "Sind meine Daten sicher?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "Alle Daten werden verschlüsselt in der Cloud gespeichert. Wir setzen auf mandantenspezifische Datenisolation (Row Level Security), DSGVO-konforme Verarbeitung und regelmäßige Sicherheitsaudits.",
+        text: "Ja. Alle Daten werden verschluesselt gespeichert. Jede Firma hat einen eigenen, vollstaendig abgeschotteten Datenbereich. Niemand kann auf Daten anderer Firmen zugreifen.",
       },
     },
     {
       "@type": "Question",
-      name: "Unterstützt LohnPro DATEV-Export?",
+      name: "Kann mein Steuerberater die Daten nutzen?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "Ja, ab dem Professional-Tarif können Sie alle Abrechnungsdaten im DATEV-Format exportieren und direkt an Ihren Steuerberater übergeben.",
+        text: "Ja, mit dem DATEV-Export koennen Sie Ihre Abrechnungsdaten herunterladen und direkt an Ihren Steuerberater weitergeben. Er kann die Datei in seine Software einlesen.",
       },
     },
     {
       "@type": "Question",
-      name: "Welche Branchen werden unterstützt?",
+      name: "Welche Branchen werden unterstuetzt?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "LohnPro bietet spezielle Branchenmodule für Bau (SOKA-BAU), Gastronomie (Sachbezüge) und Pflege (steuerfreie SFN-Zuschläge). Die allgemeine Lohnabrechnung eignet sich für alle Branchen.",
+        text: "LohnPro eignet sich fuer alle Branchen. Zusaetzlich gibt es spezielle Module fuer Bau, Gastronomie und Pflege mit branchenspezifischen Berechnungen.",
       },
     },
     {
       "@type": "Question",
-      name: "Kann ich mehrere Mandanten verwalten?",
+      name: "Kann ich mehrere Firmen verwalten?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "Ja, mit dem Enterprise-Tarif können Sie beliebig viele Mandanten anlegen – ideal für Steuerkanzleien und Lohnbüros.",
-      },
-    },
-    {
-      "@type": "Question",
-      name: "Wie aktuell sind die Steuer- und SV-Sätze?",
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: "Alle Berechnungsgrundlagen werden zeitnah zu jedem Jahreswechsel aktualisiert. Aktuell sind alle Werte für 2025 hinterlegt.",
+        text: "Ja! Mit dem Enterprise-Tarif koennen Sie beliebig viele Firmen (Mandanten) anlegen. Ideal fuer Unternehmer mit mehreren Betrieben.",
       },
     },
   ],
