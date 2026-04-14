@@ -144,7 +144,20 @@ export function PayrollQuickActions({
         </CardContent>
       </Card>
 
-      <Card className="shadow-card hover:shadow-elegant transition-shadow border-purple-200 bg-gradient-to-br from-purple-50 to-purple-100/50 dark:from-purple-950/20 dark:to-purple-900/10">
+      <Card className="shadow-card hover:shadow-elegant transition-shadow cursor-pointer border-emerald-200 bg-gradient-to-br from-emerald-50 to-emerald-100/50 dark:from-emerald-950/20 dark:to-emerald-900/10 dark:border-emerald-800" onClick={() => onShowFibu?.()}>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <BookOpenCheck className="h-5 w-5 text-emerald-600" />
+            Finanzbuchhaltung
+          </CardTitle>
+          <CardDescription>Automatische Buchungssätze (Soll/Haben) mit Saldenliste</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button variant="outline" className="w-full">Fibu-Journal öffnen</Button>
+        </CardContent>
+      </Card>
+
+      <Card className="shadow-card hover:shadow-elegant transition-shadow border-purple-200 bg-gradient-to-br from-purple-50 to-purple-100/50 dark:from-purple-950/20 dark:to-purple-900/10 dark:border-purple-800">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Download className="h-5 w-5 text-purple-600" />
