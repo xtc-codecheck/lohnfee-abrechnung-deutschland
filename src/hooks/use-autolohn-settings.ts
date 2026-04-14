@@ -56,7 +56,7 @@ export function useAutolohnSettings() {
         .eq('tenant_id', tenantId)
         .maybeSingle();
 
-      const settingsJson = newSettings as unknown as Record<string, unknown>;
+      const settingsJson = JSON.parse(JSON.stringify(newSettings));
 
       if (existing) {
         const { error } = await supabase
@@ -67,7 +67,7 @@ export function useAutolohnSettings() {
       } else {
         const { error } = await supabase
           .from('autolohn_settings')
-          .insert({ tenant_id: tenantId, settings: settingsJson });
+          .insert([{ tenant_id: tenantId, settings: settingsJson }]);
         if (error) throw new Error(error.message);
       }
       return newSettings;
