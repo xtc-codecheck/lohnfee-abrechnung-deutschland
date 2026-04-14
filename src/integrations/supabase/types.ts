@@ -390,6 +390,7 @@ export type Database = {
           id: string
           is_active: boolean | null
           last_name: string
+          number_of_children: number | null
           personal_number: string | null
           position: string | null
           state: string | null
@@ -429,6 +430,7 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           last_name: string
+          number_of_children?: number | null
           personal_number?: string | null
           position?: string | null
           state?: string | null
@@ -468,6 +470,7 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           last_name?: string
+          number_of_children?: number | null
           personal_number?: string | null
           position?: string | null
           state?: string | null
