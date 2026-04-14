@@ -5,9 +5,11 @@
 import { AlertCircle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { LabelWithHelp } from '@/components/ui/help-tooltip';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
+import { HELP } from '@/constants/help-glossary';
 import { WizardStepProps } from './types';
 
 function FieldError({ error }: { error?: string }) {
@@ -49,7 +51,9 @@ export function BenefitsDataStep({ formData, errors, onInputChange }: WizardStep
         {/* Dienstwagen */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="carListPrice">Bruttolistenpreis des Kfz</Label>
+            <LabelWithHelp htmlFor="carListPrice" help={HELP.companyCarListPrice.help} example={HELP.companyCarListPrice.example}>
+              Bruttolistenpreis des Kfz
+            </LabelWithHelp>
             <Input
               id="carListPrice"
               type="number"
@@ -61,7 +65,9 @@ export function BenefitsDataStep({ formData, errors, onInputChange }: WizardStep
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="carType">Fahrzeugtyp</Label>
+            <LabelWithHelp htmlFor="carType" help={HELP.companyCarType.help}>
+              Fahrzeugtyp
+            </LabelWithHelp>
             <Select value={formData.carType} onValueChange={(value) => onInputChange('carType', value)}>
               <SelectTrigger>
                 <SelectValue placeholder="Fahrzeugtyp wählen" />
@@ -121,7 +127,9 @@ export function BenefitsDataStep({ formData, errors, onInputChange }: WizardStep
                     checked={formData.has13thSalary}
                     onCheckedChange={(checked) => onInputChange('has13thSalary', checked)}
                   />
-                  <Label htmlFor="has13thSalary" className="text-sm">13. Monatsgehalt</Label>
+                  <LabelWithHelp htmlFor="has13thSalary" help={HELP.bonus13th.help}>
+                    13. Monatsgehalt
+                  </LabelWithHelp>
                 </div>
                 {formData.has13thSalary && (
                   <div>
@@ -172,7 +180,9 @@ export function BenefitsDataStep({ formData, errors, onInputChange }: WizardStep
         {/* Sachbezüge & Fahrtkostenerstattung */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="benefits">Sachbezüge</Label>
+            <LabelWithHelp htmlFor="benefits" help={HELP.sachbezuege.help} example={HELP.sachbezuege.example}>
+              Sachbezüge
+            </LabelWithHelp>
             <Input
               id="benefits"
               type="number"
@@ -192,7 +202,9 @@ export function BenefitsDataStep({ formData, errors, onInputChange }: WizardStep
             </div>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="travelExpenses">Fahrtkostenerstattung</Label>
+            <LabelWithHelp htmlFor="travelExpenses" help={HELP.travelExpenses.help} example={HELP.travelExpenses.example}>
+              Fahrtkostenerstattung
+            </LabelWithHelp>
             <Input
               id="travelExpenses"
               type="number"
@@ -208,7 +220,9 @@ export function BenefitsDataStep({ formData, errors, onInputChange }: WizardStep
         {/* bAV & VL */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="companyPension">Betriebliche Altersvorsorge (bAV)</Label>
+            <LabelWithHelp htmlFor="companyPension" help={HELP.bav.help} example={HELP.bav.example} hint={HELP.bav.hint}>
+              Betriebliche Altersvorsorge (bAV)
+            </LabelWithHelp>
             <Input
               id="companyPension"
               type="number"
@@ -220,7 +234,9 @@ export function BenefitsDataStep({ formData, errors, onInputChange }: WizardStep
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="capitalFormingBenefits">Vermögenswirksame Leistungen (VL)</Label>
+            <LabelWithHelp htmlFor="capitalFormingBenefits" help={HELP.vl.help} example={HELP.vl.example} hint={HELP.vl.hint}>
+              Vermögenswirksame Leistungen (VL)
+            </LabelWithHelp>
             <Input
               id="capitalFormingBenefits"
               type="number"
@@ -235,7 +251,9 @@ export function BenefitsDataStep({ formData, errors, onInputChange }: WizardStep
 
         {/* Steuerfreie Leistungen */}
         <div className="space-y-2">
-          <Label htmlFor="taxFreeBenefits">Steuerfreie Leistungen</Label>
+          <LabelWithHelp htmlFor="taxFreeBenefits" help={HELP.taxFreeBenefits.help}>
+            Steuerfreie Leistungen
+          </LabelWithHelp>
           <Input
             id="taxFreeBenefits"
             type="number"
@@ -252,7 +270,9 @@ export function BenefitsDataStep({ formData, errors, onInputChange }: WizardStep
           <h3 className="font-medium mb-4">Bankverbindung</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="iban">IBAN</Label>
+              <LabelWithHelp htmlFor="iban" help={HELP.iban.help} example={HELP.iban.example} hint={HELP.iban.hint}>
+                IBAN
+              </LabelWithHelp>
               <Input
                 id="iban"
                 value={formData.iban}
@@ -263,7 +283,9 @@ export function BenefitsDataStep({ formData, errors, onInputChange }: WizardStep
               <FieldError error={errors.iban} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="bic">BIC</Label>
+              <LabelWithHelp htmlFor="bic" help={HELP.bic.help} example={HELP.bic.example}>
+                BIC
+              </LabelWithHelp>
               <Input
                 id="bic"
                 value={formData.bic}

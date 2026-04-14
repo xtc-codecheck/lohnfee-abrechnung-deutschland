@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { Check, ChevronsUpDown, AlertCircle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { LabelWithHelp } from '@/components/ui/help-tooltip';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -18,6 +19,7 @@ import {
   GERMAN_STATE_NAMES, 
   GERMAN_HEALTH_INSURANCES 
 } from '@/types/employee';
+import { HELP } from '@/constants/help-glossary';
 import { WizardStepProps } from './types';
 
 // Fehleranzeige
@@ -157,7 +159,9 @@ export function PersonalDataStep({ formData, errors, onInputChange }: WizardStep
             <FieldError error={errors.city} />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="state">Bundesland*</Label>
+            <LabelWithHelp htmlFor="state" help={HELP.state.help} example={HELP.state.example} required>
+              Bundesland
+            </LabelWithHelp>
             <Select value={formData.state} onValueChange={(value) => onInputChange('state', value)}>
               <SelectTrigger>
                 <SelectValue placeholder="Bundesland wählen" />
@@ -209,7 +213,9 @@ export function PersonalDataStep({ formData, errors, onInputChange }: WizardStep
         {/* Steuer */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="taxId">Steuer-ID*</Label>
+            <LabelWithHelp htmlFor="taxId" help={HELP.taxId.help} example={HELP.taxId.example} hint={HELP.taxId.hint} required>
+              Steuer-ID
+            </LabelWithHelp>
             <Input
               id="taxId"
               value={formData.taxId}
@@ -220,18 +226,20 @@ export function PersonalDataStep({ formData, errors, onInputChange }: WizardStep
             <FieldError error={errors.taxId} />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="taxClass">Steuerklasse*</Label>
+            <LabelWithHelp htmlFor="taxClass" help={HELP.taxClass.help} example={HELP.taxClass.example} hint={HELP.taxClass.hint} required>
+              Steuerklasse
+            </LabelWithHelp>
             <Select value={formData.taxClass} onValueChange={(value) => onInputChange('taxClass', value)}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="I">Klasse I</SelectItem>
-                <SelectItem value="II">Klasse II</SelectItem>
-                <SelectItem value="III">Klasse III</SelectItem>
-                <SelectItem value="IV">Klasse IV</SelectItem>
-                <SelectItem value="V">Klasse V</SelectItem>
-                <SelectItem value="VI">Klasse VI</SelectItem>
+                <SelectItem value="I">Klasse I – Ledige, Geschiedene</SelectItem>
+                <SelectItem value="II">Klasse II – Alleinerziehende</SelectItem>
+                <SelectItem value="III">Klasse III – Verheiratet (Hauptverdiener)</SelectItem>
+                <SelectItem value="IV">Klasse IV – Verheiratet (gleich verdienend)</SelectItem>
+                <SelectItem value="V">Klasse V – Verheiratet (Geringverdiener)</SelectItem>
+                <SelectItem value="VI">Klasse VI – Zweitjob</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -254,7 +262,9 @@ export function PersonalDataStep({ formData, errors, onInputChange }: WizardStep
             </Select>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="religion">Religionszugehörigkeit</Label>
+            <LabelWithHelp htmlFor="religion" help={HELP.religion.help} hint={HELP.religion.hint}>
+              Religionszugehörigkeit
+            </LabelWithHelp>
             <Select value={formData.religion} onValueChange={(value) => onInputChange('religion', value)}>
               <SelectTrigger>
                 <SelectValue />
@@ -296,7 +306,9 @@ export function PersonalDataStep({ formData, errors, onInputChange }: WizardStep
         {/* Sozialversicherung & Kinder */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="socialSecurityNumber">Sozialversicherungsnummer</Label>
+            <LabelWithHelp htmlFor="socialSecurityNumber" help={HELP.socialSecurityNumber.help} example={HELP.socialSecurityNumber.example} hint={HELP.socialSecurityNumber.hint}>
+              Sozialversicherungsnummer
+            </LabelWithHelp>
             <Input
               id="socialSecurityNumber"
               value={formData.socialSecurityNumber}
@@ -307,7 +319,9 @@ export function PersonalDataStep({ formData, errors, onInputChange }: WizardStep
             <FieldError error={errors.socialSecurityNumber} />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="childAllowances">Kinderfreibeträge</Label>
+            <LabelWithHelp htmlFor="childAllowances" help={HELP.childAllowances.help} example={HELP.childAllowances.example} hint={HELP.childAllowances.hint}>
+              Kinderfreibeträge
+            </LabelWithHelp>
             <Input
               id="childAllowances"
               type="number"
@@ -322,7 +336,9 @@ export function PersonalDataStep({ formData, errors, onInputChange }: WizardStep
         {/* Anzahl Kinder für PV */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="numberOfChildren">Anzahl Kinder (für PV-Berechnung)</Label>
+            <LabelWithHelp htmlFor="numberOfChildren" help={HELP.numberOfChildren.help} example={HELP.numberOfChildren.example}>
+              Anzahl Kinder (für PV-Berechnung)
+            </LabelWithHelp>
             <Input
               id="numberOfChildren"
               type="number"
@@ -339,7 +355,9 @@ export function PersonalDataStep({ formData, errors, onInputChange }: WizardStep
 
         {/* Krankenkasse */}
         <div className="space-y-2">
-          <Label htmlFor="healthInsurance">Krankenkasse*</Label>
+          <LabelWithHelp htmlFor="healthInsurance" help={HELP.healthInsurance.help} hint={HELP.healthInsurance.hint} required>
+            Krankenkasse
+          </LabelWithHelp>
           <Popover open={openHealthInsurance} onOpenChange={setOpenHealthInsurance}>
             <PopoverTrigger asChild>
               <Button
