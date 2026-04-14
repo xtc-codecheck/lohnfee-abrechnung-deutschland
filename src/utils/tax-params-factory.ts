@@ -118,6 +118,7 @@ export function buildTaxParamsFromEmployee(
     isEastGermany,
     isChildless,
     age,
+    numberOfChildren,
     employmentType: employmentData.employmentType,
   };
   
