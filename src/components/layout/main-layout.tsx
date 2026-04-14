@@ -115,6 +115,19 @@ export function MainLayout({ children }: MainLayoutProps) {
                   <TenantSwitcher />
                   <DarkModeToggle />
                 </div>
+                <div className="flex items-center gap-2 px-4 pt-2">
+                  <User className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground truncate flex-1">
+                    {user?.email}
+                  </span>
+                </div>
+                <button
+                  onClick={() => { signOut(); setMobileMenuOpen(false); }}
+                  className="flex items-center gap-2 px-4 py-3 text-destructive hover:bg-destructive/10 rounded-lg transition-colors mt-1"
+                >
+                  <LogOut className="h-4 w-4" />
+                  Abmelden
+                </button>
               </div>
             </nav>
           )}
