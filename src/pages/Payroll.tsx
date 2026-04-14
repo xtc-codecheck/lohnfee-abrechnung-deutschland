@@ -7,8 +7,16 @@ import { SpecialPaymentsManager } from "@/components/payroll/special-payments-ma
 import { AutomationDashboard } from "@/components/automation/automation-dashboard";
 import { PayrollGuardianDashboard } from "@/components/payroll/payroll-guardian-dashboard";
 import { LohnkontoPage } from "@/components/payroll/lohnkonto-page";
+import { AppBreadcrumb } from "@/components/ui/app-breadcrumb";
 
 type PayrollView = 'dashboard' | 'special-payments' | 'automation' | 'guardian' | 'lohnkonto';
+
+const viewLabels: Record<Exclude<PayrollView, 'dashboard'>, string> = {
+  'special-payments': 'Sonderzahlungen',
+  'automation': 'Automatisierung',
+  'guardian': 'Payroll Guardian',
+  'lohnkonto': 'Lohnkonto',
+};
 
 export default function Payroll() {
   const navigate = useNavigate();
@@ -18,9 +26,17 @@ export default function Payroll() {
     setCurrentView('dashboard');
   };
 
+  const breadcrumbSegments = currentView === 'dashboard'
+    ? []
+    : [
+        { label: "Abrechnung", path: "/payroll" },
+        { label: viewLabels[currentView] },
+      ];
+
   return (
     <MainLayout>
       <PageSeo title="Lohnabrechnung" description="Lohnabrechnungen erstellen, Sonderzahlungen verwalten und DATEV-Export durchführen." path="/payroll" />
+      {breadcrumbSegments.length > 0 && <AppBreadcrumb segments={breadcrumbSegments} />}
       {currentView === 'dashboard' && (
         <PayrollDashboard 
           onBack={() => navigate("/dashboard")}

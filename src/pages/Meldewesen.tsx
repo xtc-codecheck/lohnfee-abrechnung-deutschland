@@ -7,23 +7,38 @@ import { LohnsteuerbescheinigungPage } from "@/components/meldewesen/lohnsteuerb
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/page-header";
+import { AppBreadcrumb } from "@/components/ui/app-breadcrumb";
 import { FileText, Send, ClipboardList } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 type MeldewesenView = 'overview' | 'sv-meldungen' | 'beitragsnachweise' | 'lstb';
 
+const viewLabels: Record<Exclude<MeldewesenView, 'overview'>, string> = {
+  'sv-meldungen': 'SV-Meldungen',
+  'beitragsnachweise': 'Beitragsnachweise',
+  'lstb': 'Lohnsteuerbescheinigung',
+};
+
 export default function Meldewesen() {
   const navigate = useNavigate();
   const [currentView, setCurrentView] = useState<MeldewesenView>('overview');
 
-  if (currentView === 'sv-meldungen') {
-    return <MainLayout><SVMeldungenPage onBack={() => setCurrentView('overview')} /></MainLayout>;
-  }
-  if (currentView === 'beitragsnachweise') {
-    return <MainLayout><BeitragsnachweisPage onBack={() => setCurrentView('overview')} /></MainLayout>;
-  }
-  if (currentView === 'lstb') {
-    return <MainLayout><LohnsteuerbescheinigungPage onBack={() => setCurrentView('overview')} /></MainLayout>;
+  if (currentView !== 'overview') {
+    const subBreadcrumbs = [
+      { label: "Meldewesen", path: "/meldewesen" },
+      { label: viewLabels[currentView] },
+    ];
+
+    const handleBack = () => setCurrentView('overview');
+
+    return (
+      <MainLayout>
+        <AppBreadcrumb segments={subBreadcrumbs} />
+        {currentView === 'sv-meldungen' && <SVMeldungenPage onBack={handleBack} />}
+        {currentView === 'beitragsnachweise' && <BeitragsnachweisPage onBack={handleBack} />}
+        {currentView === 'lstb' && <LohnsteuerbescheinigungPage onBack={handleBack} />}
+      </MainLayout>
+    );
   }
 
   return (
