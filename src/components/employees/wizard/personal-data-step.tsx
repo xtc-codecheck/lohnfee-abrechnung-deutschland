@@ -302,7 +302,9 @@ export function PersonalDataStep({ formData, errors, onInputChange }: WizardStep
               value={formData.socialSecurityNumber}
               onChange={(e) => onInputChange('socialSecurityNumber', e.target.value)}
               placeholder="12345678901"
+              className={errors.socialSecurityNumber ? 'border-destructive' : ''}
             />
+            <FieldError error={errors.socialSecurityNumber} />
           </div>
           <div className="space-y-2">
             <Label htmlFor="childAllowances">Kinderfreibeträge</Label>
