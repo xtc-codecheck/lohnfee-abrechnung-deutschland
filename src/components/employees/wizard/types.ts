@@ -77,6 +77,11 @@ export interface EmployeeFormData {
   companyPension: number;
   capitalFormingBenefits: number;
   taxFreeBenefits: number;
+  
+  // Bankdaten
+  iban: string;
+  bic: string;
+  bankName: string;
 }
 
 export interface WorkDayData {
@@ -171,6 +176,11 @@ export const initialFormData: EmployeeFormData = {
   companyPension: 0,
   capitalFormingBenefits: 0,
   taxFreeBenefits: 0,
+  
+  // Bankdaten
+  iban: '',
+  bic: '',
+  bankName: '',
 };
 
 // ============= Step Konfiguration =============
