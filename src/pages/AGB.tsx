@@ -1,13 +1,9 @@
-import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
 import { PageSeo } from "@/components/seo/page-seo";
-import { ArrowLeft } from "lucide-react";
+import { LegalLayout } from "@/components/layout/legal-layout";
 
 export default function AGB() {
-  const navigate = useNavigate();
-
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <LegalLayout>
       <PageSeo
         title="Allgemeine Geschäftsbedingungen"
         description="AGB der LohnPro Lohnabrechnungssoftware – Nutzungsbedingungen, Leistungsumfang, Haftung und Datenschutz."
@@ -15,11 +11,6 @@ export default function AGB() {
       />
 
       <div className="container mx-auto max-w-3xl px-6 py-12">
-        <Button variant="ghost" onClick={() => navigate(-1 as any)} className="mb-8">
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Zurück
-        </Button>
-
         <h1 className="text-3xl font-bold mb-8">Allgemeine Geschäftsbedingungen (AGB)</h1>
 
         <div className="prose prose-neutral dark:prose-invert max-w-none space-y-8">

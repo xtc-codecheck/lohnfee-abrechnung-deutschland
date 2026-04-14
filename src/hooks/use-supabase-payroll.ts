@@ -7,6 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useTenant } from '@/contexts/tenant-context';
 import { PayrollPeriod, PayrollEntry, PayrollReport, PayrollStatus } from '@/types/payroll';
 import { Tables } from '@/integrations/supabase/types';
+import { Employee } from '@/types/employee';
 import { useSupabaseEmployees } from './use-supabase-employees';
 
 type DbPeriod = Tables<'payroll_periods'>;
@@ -30,13 +31,13 @@ function dbToPeriod(row: DbPeriod): PayrollPeriod {
  * Da die DB-Struktur flach ist, werden die verschachtelten Typen
  * aus den flachen Feldern rekonstruiert.
  */
-function dbToPayrollEntry(row: DbEntry, employeeMap: Map<string, any>): PayrollEntry {
+function dbToPayrollEntry(row: DbEntry, employeeMap: Map<string, Employee>): PayrollEntry {
   const emp = employeeMap.get(row.employee_id);
   return {
     id: row.id,
     employeeId: row.employee_id,
     payrollPeriodId: row.payroll_period_id,
-    employee: emp ?? {} as any,
+    employee: emp ?? ({} as Employee),
     workingData: {
       regularHours: 0,
       overtimeHours: Number(row.overtime_hours ?? 0),
@@ -144,7 +145,7 @@ export function useSupabasePayroll() {
   }, []);
 
   const updatePayrollPeriodStatus = useCallback(async (periodId: string, status: PayrollStatus) => {
-    const updates: any = { status };
+    const updates: Record<string, string> = { status };
     if (status === 'finalized') updates.processed_at = new Date().toISOString();
     
     const { error: err } = await supabase.from('payroll_periods').update(updates).eq('id', periodId);
