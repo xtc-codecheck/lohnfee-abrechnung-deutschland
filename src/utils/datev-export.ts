@@ -163,7 +163,29 @@ export interface DatevExportConfig {
   wirtschaftsjahrBeginn: Date;
   sachkontenlaenge: 4 | 5 | 6 | 7 | 8;
   exportName: string;
+  /** Umlagen-Konfiguration (optional) */
+  umlagen?: UmlagenConfig;
 }
+
+/**
+ * Umlagen-Konfiguration für den DATEV-Export
+ * U1: Entgeltfortzahlung, U2: Mutterschaft, Insolvenzgeldumlage
+ */
+export interface UmlagenConfig {
+  /** U1-Umlagesatz in % (z.B. 2.5 für 2,5%) */
+  u1Rate?: number;
+  /** U2-Umlagesatz in % (z.B. 0.44 für 0,44%) */
+  u2Rate?: number;
+  /** Insolvenzgeldumlagesatz in % (2025: 0,06%) */
+  insolvenzgeldRate?: number;
+}
+
+/** Standard-Umlagesätze 2025 */
+export const DEFAULT_UMLAGEN_2025: Required<UmlagenConfig> = {
+  u1Rate: 2.5,    // Variiert je nach KK und Erstattungssatz
+  u2Rate: 0.44,   // Variiert je nach KK
+  insolvenzgeldRate: 0.06, // Bundeseinheitlich 2025
+} as const;
 
 // ============= Quoting Helpers =============
 
