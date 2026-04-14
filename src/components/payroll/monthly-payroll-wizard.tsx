@@ -594,22 +594,135 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
           </div>
         );
 
-      case 4: // Export
+      case 4: { // Export & Zusammenfassung
+        const totalGross = activeEmployees.reduce((s, e) => s + (e.salaryData?.grossSalary || 0), 0);
+        // Use real payroll entries if available, otherwise estimate
+        const periodEntries = payrollEntries.filter(pe => {
+          const period = payrollPeriods.find(p => p.id === pe.payrollPeriodId);
+          return period && period.month === selectedMonth && period.year === selectedYear;
+        });
+        const hasRealData = periodEntries.length > 0;
+
+        const summaryData = hasRealData ? {
+          gross: periodEntries.reduce((s, e) => s + e.salaryCalculation.grossSalary, 0),
+          netTotal: periodEntries.reduce((s, e) => s + e.salaryCalculation.netSalary, 0),
+          taxTotal: periodEntries.reduce((s, e) => s + e.salaryCalculation.taxTotal, 0),
+          taxIncome: periodEntries.reduce((s, e) => s + e.salaryCalculation.incomeTax, 0),
+          taxSoli: periodEntries.reduce((s, e) => s + e.salaryCalculation.solidaritySurcharge, 0),
+          taxChurch: periodEntries.reduce((s, e) => s + e.salaryCalculation.churchTax, 0),
+          svEmployee: periodEntries.reduce((s, e) => s + e.salaryCalculation.socialSecurityEmployee, 0),
+          svEmployer: periodEntries.reduce((s, e) => s + e.salaryCalculation.socialSecurityEmployer, 0),
+          svHealth: periodEntries.reduce((s, e) => s + (e.salaryCalculation.healthInsurance || 0), 0),
+          svPension: periodEntries.reduce((s, e) => s + (e.salaryCalculation.pensionInsurance || 0), 0),
+          svCare: periodEntries.reduce((s, e) => s + (e.salaryCalculation.careInsurance || 0), 0),
+          svUnemploy: periodEntries.reduce((s, e) => s + (e.salaryCalculation.unemploymentInsurance || 0), 0),
+          employerCosts: periodEntries.reduce((s, e) => s + e.salaryCalculation.employerCosts, 0),
+        } : {
+          gross: totalGross,
+          netTotal: totalGross * 0.65,
+          taxTotal: totalGross * 0.18,
+          taxIncome: totalGross * 0.15,
+          taxSoli: totalGross * 0.008,
+          taxChurch: totalGross * 0.012,
+          svEmployee: totalGross * 0.20,
+          svEmployer: totalGross * 0.21,
+          svHealth: totalGross * 0.073,
+          svPension: totalGross * 0.093,
+          svCare: totalGross * 0.017,
+          svUnemploy: totalGross * 0.013,
+          employerCosts: totalGross * 1.21,
+        };
+
+        const fmt = (v: number) => v.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
         return (
           <div className="space-y-4">
-            <Alert className="bg-green-50 border-green-200 dark:bg-green-950/30 dark:border-green-800">
-              <CheckCircle2 className="h-4 w-4 text-green-600" />
-              <AlertTitle className="text-green-800 dark:text-green-200">Fast geschafft!</AlertTitle>
-              <AlertDescription className="text-green-700 dark:text-green-300">
-                Alle Schritte sind geprüft. Geben Sie die Abrechnung jetzt frei.
-              </AlertDescription>
-            </Alert>
+            {/* ── Zusammenfassung ── */}
+            <Card className="border-primary/20">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Calculator className="h-5 w-5 text-primary" />
+                  Zusammenfassung {MONTHS[selectedMonth - 1]} {selectedYear}
+                  {!hasRealData && (
+                    <Badge variant="outline" className="text-xs ml-auto font-normal">Schätzwerte</Badge>
+                  )}
+                </CardTitle>
+                <CardDescription>
+                  {activeEmployees.length} Mitarbeiter · Alle Beträge in Euro
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* Brutto / Netto Overview */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {[
+                    { label: 'Brutto gesamt', value: summaryData.gross, color: 'text-foreground' },
+                    { label: 'Netto gesamt', value: summaryData.netTotal, color: 'text-green-700 dark:text-green-400' },
+                    { label: 'AG-Gesamtkosten', value: summaryData.employerCosts, color: 'text-primary' },
+                    { label: 'Abgabenlast', value: summaryData.taxTotal + summaryData.svEmployee, color: 'text-orange-600 dark:text-orange-400' },
+                  ].map((item, i) => (
+                    <div key={i} className="bg-muted/40 rounded-lg p-3 text-center">
+                      <div className={`text-xl font-bold ${item.color}`}>{fmt(item.value)}€</div>
+                      <div className="text-xs text-muted-foreground mt-0.5">{item.label}</div>
+                    </div>
+                  ))}
+                </div>
 
+                {/* Steuern */}
+                <div className="rounded-lg border p-4 space-y-2">
+                  <div className="font-medium text-sm flex items-center gap-2 mb-3">
+                    <FileText className="h-4 w-4 text-primary" /> Steuern (AN-Anteil)
+                  </div>
+                  {[
+                    { label: 'Lohnsteuer', value: summaryData.taxIncome },
+                    { label: 'Solidaritätszuschlag', value: summaryData.taxSoli },
+                    { label: 'Kirchensteuer', value: summaryData.taxChurch },
+                  ].map((row, i) => (
+                    <div key={i} className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">{row.label}</span>
+                      <span className="font-medium">{fmt(row.value)}€</span>
+                    </div>
+                  ))}
+                  <div className="flex justify-between text-sm font-bold pt-2 border-t mt-2">
+                    <span>Steuern gesamt</span>
+                    <span>{fmt(summaryData.taxTotal)}€</span>
+                  </div>
+                </div>
+
+                {/* Sozialversicherung */}
+                <div className="rounded-lg border p-4 space-y-2">
+                  <div className="font-medium text-sm flex items-center gap-2 mb-3">
+                    <CheckCircle2 className="h-4 w-4 text-primary" /> Sozialversicherung
+                  </div>
+                  <div className="grid grid-cols-3 text-xs text-muted-foreground font-medium mb-1">
+                    <span></span><span className="text-right">AN-Anteil</span><span className="text-right">AG-Anteil</span>
+                  </div>
+                  {[
+                    { label: 'Krankenversicherung', an: summaryData.svHealth, ag: summaryData.svHealth },
+                    { label: 'Rentenversicherung', an: summaryData.svPension, ag: summaryData.svPension },
+                    { label: 'Pflegeversicherung', an: summaryData.svCare, ag: summaryData.svCare * 0.9 },
+                    { label: 'Arbeitslosenvers.', an: summaryData.svUnemploy, ag: summaryData.svUnemploy },
+                  ].map((row, i) => (
+                    <div key={i} className="grid grid-cols-3 text-sm">
+                      <span className="text-muted-foreground">{row.label}</span>
+                      <span className="text-right font-medium">{fmt(row.an)}€</span>
+                      <span className="text-right font-medium">{fmt(row.ag)}€</span>
+                    </div>
+                  ))}
+                  <div className="grid grid-cols-3 text-sm font-bold pt-2 border-t mt-2">
+                    <span>SV gesamt</span>
+                    <span className="text-right">{fmt(summaryData.svEmployee)}€</span>
+                    <span className="text-right">{fmt(summaryData.svEmployer)}€</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Export-Optionen */}
             <div className="space-y-3">
               {[
-                { title: 'DATEV-Export', desc: 'Buchungsdaten im EXTF v7.0 Format für die Buchhaltung', icon: Download },
-                { title: 'GoBD-Archiv', desc: 'Revisionssichere Archivierung aller Abrechnungsdaten', icon: FileText },
-                { title: 'Zahlungsliste', desc: 'Überweisungsliste für alle Nettogehälter', icon: Calculator },
+                { title: 'DATEV-Export', desc: 'Buchungsdaten im EXTF v7.0 Format', icon: Download },
+                { title: 'GoBD-Archiv', desc: 'Revisionssichere Archivierung', icon: FileText },
+                { title: 'Zahlungsliste', desc: 'Überweisungsliste Nettogehälter', icon: Calculator },
               ].map((item, i) => (
                 <Card key={i}>
                   <CardContent className="pt-4 pb-4">
@@ -628,6 +741,7 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
               ))}
             </div>
 
+            {/* Freigabe */}
             <Card className="border-primary/30 bg-gradient-to-br from-primary/5 to-primary/10">
               <CardContent className="pt-6">
                 <div className="text-center space-y-3">
@@ -647,6 +761,7 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
             </Card>
           </div>
         );
+      }
 
       default:
         return null;
