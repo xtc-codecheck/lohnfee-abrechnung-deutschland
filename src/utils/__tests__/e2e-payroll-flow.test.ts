@@ -47,7 +47,7 @@ function createTestEmployee(overrides: Partial<Employee> = {}): Employee {
     },
     salaryData: {
       grossSalary: 4000,
-      salaryType: 'monthly',
+      salaryType: 'fixed',
       additionalBenefits: {},
       bankingData: { iban: 'DE89370400440532013000', bic: 'COBADEFFXXX', bankName: 'Commerzbank', accountHolder: 'Anna Schmidt' },
     },
