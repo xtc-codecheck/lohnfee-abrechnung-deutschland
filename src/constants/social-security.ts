@@ -283,13 +283,30 @@ export const TAX_RATES_2026 = {
 
 // ============= Typ-Definitionen für jahresübergreifenden Zugriff =============
 
-type BBGYearly = typeof BBG_2025_YEARLY;
-type BBGMonthly = typeof BBG_2025_MONTHLY;
-type SocialInsuranceRates = typeof SOCIAL_INSURANCE_RATES_2025;
-type TaxAllowances = typeof TAX_ALLOWANCES_2025;
-type TaxRates = typeof TAX_RATES_2025;
-type MinijobConstants = typeof MINIJOB_2025;
-type MidijobConstants = typeof MIDIJOB_2025;
+type BBGYearly = { readonly pensionWest: number; readonly pensionEast: number; readonly healthCare: number };
+type BBGMonthly = { readonly pensionWest: number; readonly pensionEast: number; readonly healthCare: number };
+type SocialInsuranceRates = {
+  readonly pension: { readonly total: number; readonly employee: number; readonly employer: number };
+  readonly unemployment: { readonly total: number; readonly employee: number; readonly employer: number };
+  readonly health: { readonly total: number; readonly employee: number; readonly employer: number; readonly averageAdditional: number };
+  readonly care: { readonly total: number; readonly employee: number; readonly employer: number };
+  readonly careChildless: { readonly total: number; readonly employee: number; readonly employer: number };
+};
+type TaxAllowances = {
+  readonly basicAllowance: number; readonly childAllowance: number;
+  readonly workRelatedExpenses: number; readonly specialExpenses: number;
+  readonly retirementProvision: number; readonly solidarityTaxFreeAmount: number;
+  readonly solidarityReductionLimit: number;
+};
+type TaxRates = {
+  readonly progressionZone1: { readonly from: number; readonly to: number; readonly formula: string; readonly coefficients: readonly number[] };
+  readonly progressionZone2: { readonly from: number; readonly to: number; readonly formula: string; readonly coefficients: readonly number[]; readonly constant: number };
+  readonly proportionalZone1: { readonly from: number; readonly to: number; readonly rate: number; readonly constant: number };
+  readonly proportionalZone2: { readonly from: number; readonly rate: number; readonly constant: number };
+  readonly solidarityTax: number;
+};
+type MinijobConstants = { readonly maxEarnings: number; readonly taxRate: number; readonly employerRates: { readonly health: number; readonly pension: number; readonly total: number } };
+type MidijobConstants = { readonly minEarnings: number; readonly maxEarnings: number; readonly factor: number; readonly lowerThreshold: number; readonly upperThreshold: number; readonly formula: { readonly factor: number; readonly lowerBound: number; readonly upperBound: number } };
 type PVChildDiscounts = typeof PV_CHILD_DISCOUNTS_2025;
 
 const YEAR_CONFIG: Record<number, {
