@@ -251,5 +251,3 @@ export function useSupabasePayroll() {
     refreshData: fetchData,
   };
 }
-
-export { useSupabasePayroll as usePayrollStorage };
