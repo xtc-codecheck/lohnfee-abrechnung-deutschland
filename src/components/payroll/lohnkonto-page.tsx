@@ -24,7 +24,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { PageHeader } from '@/components/ui/page-header';
 import { supabase } from '@/integrations/supabase/client';
-import { useSupabaseEmployees } from '@/hooks/use-supabase-employees';
+import { useEmployees } from '@/contexts/employee-context';
 import { Tables } from '@/integrations/supabase/types';
 
 type DbEntry = Tables<'payroll_entries'>;
