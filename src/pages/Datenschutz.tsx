@@ -237,6 +237,6 @@ export default function Datenschutz() {
           und lassen Sie diese Datenschutzerklärung von einem Rechtsanwalt prüfen.
         </p>
       </div>
-    </div>
+    </LegalLayout>
   );
 }

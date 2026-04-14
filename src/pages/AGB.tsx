@@ -233,6 +233,6 @@ export default function AGB() {
           und lassen Sie diese AGB von einem Rechtsanwalt prüfen.
         </p>
       </div>
-    </div>
+    </LegalLayout>
   );
 }
