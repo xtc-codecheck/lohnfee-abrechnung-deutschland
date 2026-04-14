@@ -88,6 +88,7 @@ const App = () => (
                   </Routes>
                 </Suspense>
               </EmployeeProvider>
+              </SystaxProvider>
             </TenantProvider>
           </AuthProvider>
         </BrowserRouter>
