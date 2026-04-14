@@ -14,13 +14,13 @@ describe('employee validation - PersonalData', () => {
       city: 'Berlin',
       state: 'berlin',
       country: 'Deutschland',
-      taxId: '12345678901',
+      taxId: '65929970489',
       taxClass: 'I',
       religion: 'none',
       relationshipStatus: 'single',
       healthInsurance: 'TK',
       healthInsuranceRate: 1.7,
-      socialSecurityNumber: '123456789012',
+      socialSecurityNumber: '',
       childAllowances: 0,
     });
     expect(result.success).toBe(true);
