@@ -19,4 +19,35 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Core React framework
+          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+          // UI component library
+          'vendor-radix': [
+            '@radix-ui/react-dialog',
+            '@radix-ui/react-select',
+            '@radix-ui/react-tabs',
+            '@radix-ui/react-popover',
+            '@radix-ui/react-dropdown-menu',
+            '@radix-ui/react-tooltip',
+            '@radix-ui/react-accordion',
+            '@radix-ui/react-checkbox',
+            '@radix-ui/react-switch',
+            '@radix-ui/react-label',
+          ],
+          // Charts
+          'vendor-charts': ['recharts'],
+          // Data fetching
+          'vendor-query': ['@tanstack/react-query'],
+          // Date utilities
+          'vendor-date': ['date-fns'],
+          // Supabase
+          'vendor-supabase': ['@supabase/supabase-js'],
+        },
+      },
+    },
+  },
 }));
