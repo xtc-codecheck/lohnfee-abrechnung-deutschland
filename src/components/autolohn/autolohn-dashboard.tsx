@@ -35,7 +35,7 @@ export function AutolohnDashboard() {
     }));
   };
 
-  const handleSocialSecurityChange = (field: string, value: any) => {
+  const handleSocialSecurityChange = (field: string, value: string | number | boolean) => {
     setSettings(prev => ({
       ...prev,
       socialSecurityReporting: {
@@ -45,7 +45,7 @@ export function AutolohnDashboard() {
     }));
   };
 
-  const handlePayrollTaxChange = (field: string, value: any) => {
+  const handlePayrollTaxChange = (field: string, value: string | number | boolean) => {
     setSettings(prev => ({
       ...prev,
       payrollTaxReporting: {
@@ -55,7 +55,7 @@ export function AutolohnDashboard() {
     }));
   };
 
-  const handleEmployeeNotificationsChange = (field: string, value: any) => {
+  const handleEmployeeNotificationsChange = (field: string, value: string | number | boolean) => {
     setSettings(prev => ({
       ...prev,
       employeeNotifications: {
@@ -65,7 +65,7 @@ export function AutolohnDashboard() {
     }));
   };
 
-  const handleManagerNotificationsChange = (field: string, value: any) => {
+  const handleManagerNotificationsChange = (field: string, value: string | number | boolean) => {
     setSettings(prev => ({
       ...prev,
       managerNotifications: {

@@ -14,7 +14,7 @@ import { CalendarIcon, Plus, Heart, Baby, Users, ChevronLeft } from "lucide-reac
 import { format } from "date-fns";
 import { de } from "date-fns/locale";
 import { cn } from "@/lib/utils";
-import { useEmployeeStorage } from "@/hooks/use-employee-storage";
+import { useEmployees } from "@/contexts/employee-context";
 import { useSpecialPayments } from "@/hooks/use-special-payments";
 import { calculateSickPay, calculateMaternityBenefits, calculateShortTimeWork } from "@/utils/special-payments-calculation";
 import { Employee } from "@/types/employee";
@@ -24,7 +24,7 @@ interface SpecialPaymentsManagerProps {
 }
 
 export function SpecialPaymentsManager({ onBack }: SpecialPaymentsManagerProps) {
-  const { employees } = useEmployeeStorage();
+  const { employees } = useEmployees();
   const {
     sickPayments,
     maternityBenefits,

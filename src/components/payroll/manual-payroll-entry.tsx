@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
-import { useEmployeeStorage } from "@/hooks/use-employee-storage";
+import { useEmployees } from "@/contexts/employee-context";
 
 interface ManualPayrollData {
   employeeId: string;
@@ -35,7 +35,7 @@ export function ManualPayrollEntry({
   selectedYear = new Date().getFullYear() 
 }: ManualPayrollEntryProps) {
   const { toast } = useToast();
-  const { employees } = useEmployeeStorage();
+  const { employees } = useEmployees();
   const [payrollData, setPayrollData] = useState<Record<string, ManualPayrollData>>({});
   const [selectedEmployees, setSelectedEmployees] = useState<string[]>([]);
   const [isSaving, setIsSaving] = useState(false);

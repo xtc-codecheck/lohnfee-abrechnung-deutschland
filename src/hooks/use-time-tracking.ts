@@ -4,14 +4,28 @@
 import { useCallback, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { TimeEntry, BulkTimeEntry, EmployeeTimeStatus, TimeTrackingStats, TimeEntryType } from '@/types/time-tracking';
-import { useEmployeeStorage } from '@/hooks/use-employee-storage';
+import { useEmployees } from '@/contexts/employee-context';
 import { useTenant } from '@/contexts/tenant-context';
 import { supabase } from '@/integrations/supabase/client';
 import { addDays, isSameDay, isWeekend, differenceInDays, subDays } from 'date-fns';
 import { toast } from 'sonner';
 import { queryKeys } from '@/lib/query-keys';
 
-function rowToEntry(row: any): TimeEntry {
+interface TimeEntryRow {
+  id: string;
+  employee_id: string;
+  date: string;
+  type: string;
+  hours_worked: number | null;
+  start_time: string | null;
+  end_time: string | null;
+  break_time: number | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+function rowToEntry(row: TimeEntryRow): TimeEntry {
   return {
     id: row.id,
     employeeId: row.employee_id,
@@ -28,7 +42,7 @@ function rowToEntry(row: any): TimeEntry {
 }
 
 export function useTimeTracking() {
-  const { employees } = useEmployeeStorage();
+  const { employees } = useEmployees();
   const { currentTenant } = useTenant();
   const queryClient = useQueryClient();
   const tenantId = currentTenant?.id ?? null;

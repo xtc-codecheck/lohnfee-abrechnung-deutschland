@@ -6,8 +6,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/ui/page-header";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { usePayrollStorage } from "@/hooks/use-payroll-storage";
-import { useEmployeeStorage } from "@/hooks/use-employee-storage";
+import { useSupabasePayroll } from "@/hooks/use-supabase-payroll";
+import { useEmployees } from "@/contexts/employee-context";
 import { Employee } from "@/types/employee";
 
 interface EmployeePayrollAccountProps {
@@ -18,8 +18,8 @@ interface EmployeePayrollAccountProps {
 export function EmployeePayrollAccount({ employeeId, onBack }: EmployeePayrollAccountProps) {
   const [selectedYear, setSelectedYear] = useState<string>("all");
   
-  const { payrollPeriods, payrollEntries } = usePayrollStorage();
-  const { employees } = useEmployeeStorage();
+  const { payrollPeriods, payrollEntries } = useSupabasePayroll();
+  const { employees } = useEmployees();
 
   const employee = employees.find(emp => emp.id === employeeId);
   

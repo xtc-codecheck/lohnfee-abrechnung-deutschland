@@ -2,13 +2,13 @@ import { Users, Calculator, FileText, DollarSign, TrendingUp, AlertCircle, Loade
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { useEmployeeStorage } from "@/hooks/use-employee-storage";
-import { usePayrollStorage } from "@/hooks/use-payroll-storage";
+import { useEmployees } from "@/contexts/employee-context";
+import { useSupabasePayroll } from "@/hooks/use-supabase-payroll";
 
 export function MainDashboard() {
   const navigate = useNavigate();
-  const { employees, isLoading: empLoading } = useEmployeeStorage();
-  const { payrollPeriods, payrollEntries, isLoading: payLoading } = usePayrollStorage();
+  const { employees, isLoading: empLoading } = useEmployees();
+  const { payrollPeriods, payrollEntries, isLoading: payLoading } = useSupabasePayroll();
 
   const isLoading = empLoading || payLoading;
 

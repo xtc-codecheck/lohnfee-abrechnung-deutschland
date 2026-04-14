@@ -24,7 +24,7 @@ interface AuditLogEntry {
   entity: 'employee' | 'payroll' | 'salary' | 'system';
   entityId: string;
   entityName: string;
-  changes: Record<string, { old: any; new: any }>;
+  changes: Record<string, { old: unknown; new: unknown }>;
   ipAddress: string;
   userAgent: string;
   riskLevel: 'low' | 'medium' | 'high';
@@ -321,7 +321,7 @@ export function AuditReport({
                       <div className="text-xs">
                         {Object.entries(log.changes).map(([key, change]) => (
                           <div key={key}>
-                            <span className="font-medium">{key}:</span> {change.old} → {change.new}
+                            <span className="font-medium">{key}:</span> {String(change.old)} → {String(change.new)}
                           </div>
                         ))}
                       </div>

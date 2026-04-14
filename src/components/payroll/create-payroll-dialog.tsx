@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { usePayrollStorage } from "@/hooks/use-payroll-storage";
+import { useSupabasePayroll } from "@/hooks/use-supabase-payroll";
 import { useToast } from "@/hooks/use-toast";
 
 interface CreatePayrollDialogProps {
@@ -14,7 +14,7 @@ interface CreatePayrollDialogProps {
 export function CreatePayrollDialog({ open, onOpenChange }: CreatePayrollDialogProps) {
   const [selectedMonth, setSelectedMonth] = useState<string>("");
   const [selectedYear, setSelectedYear] = useState<string>("");
-  const { createPayrollPeriod, payrollPeriods } = usePayrollStorage();
+  const { createPayrollPeriod, payrollPeriods } = useSupabasePayroll();
   const { toast } = useToast();
 
   const currentYear = new Date().getFullYear();
