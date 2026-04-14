@@ -1,20 +1,9 @@
-import { useState, useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { PageSeo } from "@/components/seo/page-seo";
 import { MainLayout } from "@/components/layout/main-layout";
 import { EmployeeDashboard } from "@/components/employees/employee-dashboard";
 import { EmployeeWizard } from "@/components/employees/wizard";
-import { SalaryCalculator } from "@/components/salary/salary-calculator";
-import { UltimateSalaryCalculator } from "@/components/salary/ultimate-salary-calculator";
-import { TimeTrackingDashboard } from "@/components/time-tracking/time-tracking-dashboard";
-import { WorkingTimeAccounts } from "@/components/time-tracking/working-time-accounts";
-import { ComplianceDashboard } from "@/components/compliance/compliance-dashboard";
-import { AdvancedReports } from "@/components/reports/advanced-reports";
-import { AdvancedPayrollDashboard } from "@/components/payroll/advanced-payroll-dashboard";
-import { AuthoritiesIntegration } from "@/components/integration/authorities-integration";
-import { ExtendedCalculations } from "@/components/calculations/extended-calculations";
-
-type EmployeeView = 'dashboard' | 'add-employee' | 'salary-calculator' | 'ultimate-calculator' | 'time-tracking' | 'working-time-accounts' | 'compliance' | 'reports' | 'advanced-payroll' | 'authorities' | 'extended-calc';
 
 interface EmployeeCalcData {
   grossSalary?: number;
@@ -25,95 +14,36 @@ interface EmployeeCalcData {
 
 export default function Employees() {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const [currentView, setCurrentView] = useState<EmployeeView>('dashboard');
-  const [employeeData, setEmployeeData] = useState<EmployeeCalcData | null>(null);
-
-  useEffect(() => {
-    const view = searchParams.get('view');
-    if (view === 'salary-calculator') {
-      setCurrentView('ultimate-calculator');
-    }
-  }, [searchParams]);
-
-  const handleAddEmployee = () => {
-    setCurrentView('add-employee');
-  };
+  const [showWizard, setShowWizard] = useState(false);
 
   const handleCalculateSalary = (data?: EmployeeCalcData) => {
     if (data) {
-      setEmployeeData(data);
-      setCurrentView('salary-calculator');
+      navigate(`/salary-calculator?mode=simple`);
     } else {
-      setCurrentView('ultimate-calculator');
+      navigate('/salary-calculator');
     }
-  };
-
-  const handleBack = () => {
-    setCurrentView('dashboard');
-  };
-
-  const handleSaveEmployee = (_data: EmployeeCalcData) => {
-    setCurrentView('dashboard');
   };
 
   return (
     <MainLayout>
       <PageSeo title="Mitarbeiter" description="Mitarbeiter verwalten, Stammdaten pflegen und Gehaltsdaten einsehen." path="/employees" />
-      {currentView === 'dashboard' && (
-        <EmployeeDashboard 
-          onAddEmployee={handleAddEmployee}
-          onCalculateSalary={handleCalculateSalary}
-          onShowCompliance={() => setCurrentView('compliance')}
-          onShowReports={() => setCurrentView('reports')}
-          onShowTimeTracking={() => setCurrentView('time-tracking')}
-          onShowAdvancedPayroll={() => setCurrentView('advanced-payroll')}
-          onShowAuthorities={() => setCurrentView('authorities')}
-          onShowExtendedCalc={() => setCurrentView('extended-calc')}
-        />
-      )}
-      {currentView === 'add-employee' && (
+      {showWizard ? (
         <EmployeeWizard 
-          onBack={handleBack}
-          onSave={handleSaveEmployee}
+          onBack={() => setShowWizard(false)}
+          onSave={() => setShowWizard(false)}
           onCalculate={handleCalculateSalary}
         />
-      )}
-      {currentView === 'salary-calculator' && (
-        <SalaryCalculator 
-          onBack={handleBack}
-          employeeData={employeeData}
+      ) : (
+        <EmployeeDashboard 
+          onAddEmployee={() => setShowWizard(true)}
+          onCalculateSalary={handleCalculateSalary}
+          onShowCompliance={() => navigate('/compliance')}
+          onShowReports={() => navigate('/reports')}
+          onShowTimeTracking={() => navigate('/time-tracking')}
+          onShowAdvancedPayroll={() => navigate('/payroll')}
+          onShowAuthorities={() => navigate('/authorities')}
+          onShowExtendedCalc={() => navigate('/extended-calculations')}
         />
-      )}
-      {currentView === 'ultimate-calculator' && (
-        <UltimateSalaryCalculator 
-          onBack={handleBack}
-        />
-      )}
-      {currentView === 'time-tracking' && (
-        <TimeTrackingDashboard 
-          onBack={handleBack}
-        />
-      )}
-      {currentView === 'working-time-accounts' && (
-        <WorkingTimeAccounts 
-          onBack={handleBack}
-        />
-      )}
-      {currentView === 'compliance' && (
-        <ComplianceDashboard onBack={handleBack} />
-      )}
-      {currentView === 'reports' && (
-        <AdvancedReports onBack={handleBack} />
-      )}
-      {currentView === 'advanced-payroll' && (
-        <AdvancedPayrollDashboard onBack={handleBack} />
-      )}
-      {currentView === 'authorities' && (
-        <AuthoritiesIntegration onBack={handleBack} />
-      )}
-      {currentView === 'extended-calc' && (
-        <ExtendedCalculations onBack={handleBack} />
       )}
     </MainLayout>
   );

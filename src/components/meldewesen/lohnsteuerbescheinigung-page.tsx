@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { PageHeader } from '@/components/ui/page-header';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { useSupabaseEmployees } from '@/hooks/use-supabase-employees';
+import { useEmployees } from '@/contexts/employee-context';
 import { useTenant } from '@/contexts/tenant-context';
 
 interface LohnsteuerbescheinigungPageProps {
@@ -19,7 +19,7 @@ interface LohnsteuerbescheinigungPageProps {
 }
 
 export function LohnsteuerbescheinigungPage({ onBack }: LohnsteuerbescheinigungPageProps) {
-  const { employees } = useSupabaseEmployees();
+  const { employees } = useEmployees();
   const { tenantId } = useTenant();
   const { toast } = useToast();
   const [bescheinigungen, setBescheinigungen] = useState<any[]>([]);

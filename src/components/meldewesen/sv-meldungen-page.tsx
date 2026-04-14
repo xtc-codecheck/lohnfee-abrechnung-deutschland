@@ -16,7 +16,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { PageHeader } from '@/components/ui/page-header';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { useSupabaseEmployees } from '@/hooks/use-supabase-employees';
+import { useEmployees } from '@/contexts/employee-context';
 import { useTenant } from '@/contexts/tenant-context';
 
 const MELDEGRUENDE = [
@@ -39,7 +39,7 @@ interface SVMeldungenPageProps {
 }
 
 export function SVMeldungenPage({ onBack }: SVMeldungenPageProps) {
-  const { employees } = useSupabaseEmployees();
+  const { employees } = useEmployees();
   const { tenantId } = useTenant();
   const { toast } = useToast();
   const [meldungen, setMeldungen] = useState<any[]>([]);
