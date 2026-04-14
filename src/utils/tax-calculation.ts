@@ -38,6 +38,7 @@ export interface TaxCalculationParams {
   useBesondereLohnsteuertabelle?: boolean; // Besondere Tabelle für Beamte/PKV
   privateHealthInsuranceMonthly?: number; // PKV-Basisbeitrag (nur bei besonderer Tabelle)
   privateCareInsuranceMonthly?: number; // PPV-Beitrag (nur bei besonderer Tabelle)
+  year?: number; // Veranlagungsjahr (Default: 2025)
 }
 
 export interface TaxCalculationResult {
