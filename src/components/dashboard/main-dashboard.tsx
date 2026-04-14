@@ -7,11 +7,12 @@ import { useEmployees } from "@/contexts/employee-context";
 import { useSupabasePayroll } from "@/hooks/use-supabase-payroll";
 import { useCompanySettings } from "@/hooks/use-company-settings";
 import { OnboardingWizard } from "@/components/onboarding/onboarding-wizard";
+import { NetworkErrorAlert } from "@/components/ui/network-error-alert";
 
 export function MainDashboard() {
   const navigate = useNavigate();
-  const { employees, isLoading: empLoading } = useEmployees();
-  const { payrollPeriods, payrollEntries, isLoading: payLoading } = useSupabasePayroll();
+  const { employees, isLoading: empLoading, error: empError } = useEmployees();
+  const { payrollPeriods, payrollEntries, isLoading: payLoading, error: payError } = useSupabasePayroll();
   const { settings: companySettings, isLoading: compLoading } = useCompanySettings();
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [onboardingDismissed, setOnboardingDismissed] = useState(false);
@@ -58,6 +59,13 @@ export function MainDashboard() {
         </div>
       ) : (
       <>
+      {(empError || payError) && (
+        <NetworkErrorAlert
+          error={empError || payError}
+          onRetry={() => window.location.reload()}
+          context="Dashboard-Daten konnten nicht geladen werden"
+        />
+      )}
       {/* Onboarding Wizard for new users */}
       {showOnboarding && (
         <OnboardingWizard onDismiss={handleDismissOnboarding} />
