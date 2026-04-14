@@ -1,5 +1,5 @@
-// Exakte deutsche Steuerberechnung nach § 32a EStG 2025
-// Programmablaufplan (PAP) 2025 des Bundesministeriums der Finanzen
+// Exakte deutsche Steuerberechnung nach § 32a EStG 2025/2026
+// Programmablaufplan (PAP) des Bundesministeriums der Finanzen
 //
 // ALLGEMEINE LOHNSTEUERTABELLE - für sozialversicherungspflichtige Arbeitnehmer
 // Formelbasierte Berechnung nach § 32a EStG (ersetzt die statische Lookup-Tabelle)
@@ -19,7 +19,8 @@ import {
   MINIJOB_2025,
   MIDIJOB_2025,
   getBBGForRegion,
-  getCareInsuranceRate 
+  getCareInsuranceRate,
+  getYearConfig,
 } from '@/constants/social-security';
 
 export interface TaxCalculationParams {
