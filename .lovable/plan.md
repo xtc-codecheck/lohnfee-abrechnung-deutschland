@@ -6,252 +6,336 @@
 
 ## 1. Codequalität & Sauberkeit
 
-**Gut:**
-- Konsistente Verwendung von TypeScript, shadcn/ui und Tailwind
-- Klare Trennung zwischen DB-Mapper-Funktionen und Hook-Logik (use-supabase-employees.ts, use-supabase-payroll.ts)
-- Zentralisierte Formatierungs-Utilities (formatters.ts) und Tax-Params-Factory
+**Doppelter Code:**
+- `calculateAge()` existiert doppelt: in `tax-params-factory.ts` (exportiert) und `payroll-calculator.ts` (private Kopie). Die Variante in `payroll-calculator.ts` sollte durch einen Import der Factory-Version ersetzt werden.
+- `EAST_GERMAN_STATES` ist in `tax-params-factory.ts` definiert und wird in `payroll-calculator.ts` als inline-Array wiederholt (Zeile 220).
+- Die Hook-Alias-Dateien (`use-employee-storage.ts`, `use-payroll-storage.ts`) sind korrekt als Single-Line-Re-Exports implementiert – sauber.
 
-**Probleme:**
-- **Redundante Re-Exports**: `use-employee-storage.ts` und `use-payroll-storage.ts` sind jeweils nur 1-Zeilen-Re-Exports. Überflüssig, da die Supabase-Hooks auch direkt exportiert werden (Zeile 261 in use-supabase-employees.ts)
-- **`any`-Typen**: `dbToPayrollEntry` verwendet `Map<string, any>` und `emp ?? {} as any` (Zeile 33/39 in use-supabase-payroll.ts); `onCalculateSalary: (data?: any)` in employee-dashboard.tsx
-- **Unvollständige Implementierungen**: `updatePayrollEntry` tut nur `await fetchData()` (Zeile 233-236), Autolohn-Dashboard hat `// TODO`-Kommentare
-- **navigate(-1 as any)** in Impressum/Datenschutz/AGB – Type-Hack statt `navigate(-1)`
-- **Fehlende Kommentare** in vielen Komponenten (z. B. Landing.tsx 500+ Zeilen ohne JSDoc)
+**Veralteter Code:**
+- `GERMAN_HOLIDAYS_2024` in `src/types/payroll.ts` – hartkodierte Feiertage für 2024, aber das System arbeitet mit 2025-Konstanten. Sollte durch eine dynamische Feiertags-Berechnung oder 2025/2026 ersetzt werden.
+- Landing-Page sagt "Steuer- und SV-Sätze für 2026" – aber alle Berechnungslogik nutzt 2025-Konstanten. Inkonsistente Jahreszahl.
+
+**Stil/Konventionen:**
+- Einheitlich TypeScript, deutsche Kommentierung, konsistente Verwendung von Tailwind. Gut.
+- `social-security.ts` ist ~7.900 Zeilen lang (hauptsächlich Lohnsteuertabelle). Funktional korrekt, aber sehr groß. Könnte in eine separate JSON-Datei extrahiert werden.
 
 ---
 
 ## 2. Architektur & Struktur
 
-**Gut:**
-- Saubere Trennung: pages → components → hooks → utils → types
-- Multi-Tenant-Architektur mit RLS und Context-basiertem Tenant-Switching
-- Error Boundary auf Top-Level
+**Positiv:**
+- Saubere Trennung: `types/` → `utils/` → `hooks/` → `contexts/` → `components/` → `pages/`
+- Zentraler Berechnungs-Service (`payroll-calculator.ts`) mit Audit-Trail
+- Tax-Params-Factory eliminiert Duplikation bei Steuerparameter-Erstellung
+- Employee Context verhindert doppelte Queries
+- React Query Migration sauber umgesetzt
 
-**Probleme:**
-- **Employees-Seite als "God Page"**: `Employees.tsx` rendert 11 verschiedene Views (Zeiterfassung, Compliance, Reports, Authorities...) über einen lokalen State-Switch. Viele davon gehören in eigene Routen
-- **Doppelte Datenladung**: `useSupabasePayroll` ruft intern `useSupabaseEmployees` auf → wenn beide Hooks in einer Komponente verwendet werden (z. B. MainDashboard), werden Employees doppelt geladen
-- **Kein React Query/TanStack Query**: Trotz installierter Dependency werden alle Supabase-Queries manuell mit useState/useEffect verwaltet – kein Caching, kein Deduping, keine Background-Refetches
-- **Inkonsistente Navigation**: Manche Views nutzen React Router (`/payroll`, `/time-tracking`), andere sind Sub-Views innerhalb einer Page (Employees-Seite hat Zeiterfassung als View-State)
+**Verbesserungsbedarf:**
+- Payroll-Dashboard (`payroll-dashboard.tsx`, 550 Zeilen) verwaltet 8 Sub-Views via `currentView`-State. Sollte auf Route-basierte Navigation umgestellt werden oder zumindest aufgeteilt werden.
+- Employee-Dashboard ähnlich: 358 Zeilen mit inline Sub-View-Management.
+- Die `Payroll`-Page und `Meldewesen`-Page nutzen unterschiedliche State-Management-Patterns für Sub-Views (mal `activeView`, mal `currentView`).
 
 ---
 
 ## 3. Performance & Effizienz
 
-**Probleme:**
-- **Doppelte Employee-Fetches**: PayrollDashboard lädt Employees über `usePayrollStorage` UND `useEmployeeStorage` (Zeile 6-7 in payroll-dashboard.tsx) – 2 identische Supabase-Queries
-- **employeeMap-Dependency**: `fetchData` in use-supabase-payroll.ts hängt von `employees.length` ab (Zeile 118), nicht von der Map selbst – Entries werden bei jeder Employee-Änderung komplett neu geladen
-- **Kein Pagination**: Employees-Query hat kein Limit (lädt alle), Payroll-Entries begrenzt auf 500, aber ohne Pagination-UI
-- **Landing Page**: 508 Zeilen in einer Datei, Testimonials-Daten sind inline statt in Konstanten extrahiert
+- `staleTime: 30_000` bei Employee-Queries – guter Wert für diese Use-Case.
+- `employeeMap` in `useSupabasePayroll` wird via `useMemo` gecacht – korrekt.
+- 90-Tage-Fenster für Zeiterfassung und 500-Einträge-Limit für Payroll – dokumentiert und umgesetzt.
+- `WAGE_TAX_TABLE_2025` (7.000+ Zeilen) wird bei jedem Import geladen. Für ein Lohnabrechnungssystem akzeptabel, aber bei Bundle-Optimierung könnte Lazy Loading helfen.
 
 ---
 
 ## 4. Stabilität & Zuverlässigkeit
 
-**Gut:**
-- Error Boundary vorhanden
-- Loading-States in allen Dashboards
-- 354 Vitest-Tests in 11 Suites für Berechnungslogik
+**Tests:**
+- 354 Vitest-Tests in 11 Suites vorhanden (Golden-Master, Property-Based, Edge-Cases)
+- Branchenmodule (Bau, Gastro, Pflege) gut abgedeckt
+- **Fehlend:** Keine Tests für Hooks (`use-supabase-employees`, `use-supabase-payroll`), keine Integrationstests für den DATEV-Export, keine E2E-Tests
 
-**Probleme:**
-- **Keine Error-UI in Hooks**: Fehler werden in `error`-State gesetzt, aber nirgends in der UI angezeigt (kein Toast/Alert bei Ladefehler)
-- **Race Conditions**: Auth-State wird doppelt initialisiert (Zeile 50-73 in auth-context.tsx: sowohl `onAuthStateChange` als auch `getSession` können überlappen)
-- **Keine Retry-Logik** bei Netzwerkfehlern
-- **Keine E2E-Tests** oder Integrationstests für Workflows
+**Fehlerbehandlung:**
+- Error Boundary auf App-Ebene vorhanden
+- `validateInput()` im Payroll-Calculator mit klaren Fehlermeldungen
+- Catch-Blöcke in Mutations sind leer (`// error handled by mutation`) – Fehler werden zwar von React Query erfasst, aber dem User nicht angezeigt.
 
 ---
 
 ## 5. Sicherheit & Datenschutz
 
-**Kritisch (Security Scan):**
-- **contact_messages SELECT-Policy** erlaubt ALLEN authentifizierten Nutzern, alle Kontaktnachrichten (mit E-Mail/Namen) zu lesen → **Datenschutz-Verletzung**
-- **contact_messages INSERT-Policy** mit `WITH CHECK (true)` → potentiell Spam-anfällig (kein Rate-Limiting)
+**Positiv:**
+- RLS auf allen 18 Tabellen aktiv
+- Tenant-Isolation via `is_tenant_member()` und `has_role_in_tenant()`
+- Audit-Log ist manipulationssicher (nur INSERT via Trigger, Client blockiert)
+- Kein `localStorage` für Auth-State (nur für Theme-Toggle)
 
-**Weitere Punkte:**
-- RLS-Policies sind sonst gut implementiert (Tenant-Isolation, Rollenprüfung)
-- Keine Foreign Keys zwischen Tabellen → keine referentielle Integrität auf DB-Ebene
-- Auth-Implementierung ist solide (Supabase Auth, kein clientseitiger Rollencheck)
+**Offene Probleme (aus Security-Scan):**
+- `contact_messages` SELECT-Policy erlaubt jedem Admin aller Tenants Zugriff (kein `tenant_id`-Scope)
+- `contact_messages` hat keine UPDATE-Policy → Status kann nicht auf "gelesen" gesetzt werden
+- `tenant_members` INSERT-Policy hat eine Bootstrapping-Schwäche: Neue User ohne Tenant können keinen erstellen (gelöst durch `assign_default_role` Trigger, aber RLS-technisch kritisch)
 
 ---
 
 ## 6. Konsistenz & Wartbarkeit
 
-**Probleme:**
-- **Inkonsistente Layouts**: Legal-Seiten (Impressum, Datenschutz, AGB, Kontakt, Hilfe) haben KEIN MainLayout (eigener Header/Footer), App-Seiten nutzen MainLayout → verschiedene Headers/Footers
-- **Inkonsistente Footer**: Landing-Footer vs. MainLayout-Footer haben verschiedene Link-Sets und Struktur
-- **Gemischte Sprachen**: Deutsche UI-Texte, englische Variablen/Typen/Kommentare – das ist OK, aber nicht immer konsistent (z. B. `handleBack` vs. `handleBackToDashboard`)
-- **Error-Handling**: Manche Hooks setzen `setError(msg)`, andere loggen mit `console.error` – kein einheitliches Pattern
+**Inkonsistenzen:**
+- Jahreszahl: Landing/SEO sagt "2026", Berechnungslogik nutzt "2025"
+- `taxClass` ist in Employee-Type `TaxClass` (string: 'I'-'VI'), aber in `calculateCompleteTax` wird `string` erwartet und via `parseInt()` konvertiert. Fragile Konvertierung.
+- DB-Mapper (`dbToEmployee`) setzt `address.state` auf leeren String → Ost/West-Erkennung funktioniert nie korrekt basierend auf DB-Daten, da `state` nicht in der DB gespeichert wird.
+- `health_insurance_number` in DB existiert, wird aber im Mapper ignoriert.
 
 ---
 
 ## 7. Verweise & Ressourcen
 
-- **Unused Import**: `useNavigate` in Payroll.tsx importiert, `navigate` in Zeile 3 deklariert, aber nur in 1 Callback verwendet
-- **Unused Import**: `Baby`, `Settings` in employee-dashboard.tsx und payroll-dashboard.tsx importiert, möglicherweise nicht verwendet
-- **placeholder.svg** in /public – unklar ob genutzt
-- **Doppelte Toast-Hooks**: `src/hooks/use-toast.ts` und `src/components/ui/use-toast.ts`
+- Keine toten Links im Routing gefunden
+- `public/placeholder.svg` – unklar ob noch benötigt
+- Alle Imports auflösbar (TypeScript-Build ohne Fehler bestätigt)
 
 ---
 
-## 8. Dokumentation & Verständlichkeit
+## 8. Dokumentation
 
-**Gut:**
-- README.md dokumentiert Architektur, DB-Schema, Testsuite
-- ANNUAL_UPDATE_CHECKLIST.md für Jahreswechsel-Updates
-- Memory-Einträge dokumentieren Architekturentscheidungen
-
-**Fehlt:**
-- API-Dokumentation für Hooks und Utilities
-- Kommentare in komplexen Berechnungsfunktionen (tax-calculation.ts, payroll-calculator.ts)
-- Onboarding-Guide für Entwickler
+- README.md dokumentiert Architektur und Testsuite
+- `ANNUAL_UPDATE_CHECKLIST.md` für Jahreswechsel vorhanden
+- Steuerlogik gut kommentiert mit Paragraphen-Referenzen (§ 32a EStG)
+- API-Dokumentation fehlt (DATEV-Export-Schema, Berechnungsformeln)
 
 ---
 
-## 9. Benutzererfahrung & Design
+## 9. UX / Design
 
-**Probleme:**
-- **Inkonsistenter Header**: Landing hat `sticky top-0 bg-card/80 backdrop-blur-lg`, MainLayout hat `sticky top-0 bg-card shadow-card` – unterschiedliche Optik
-- **Legal-Seiten ohne einheitlichen Header/Footer**: Impressum, Datenschutz, AGB haben nur einen "Zurück"-Button, keinen Header mit Logo/Navigation
-- **Mobile Navigation auf Landing**: Navbar-Buttons (Hilfe, Kontakt, Anmelden, Kostenlos starten) werden auf Mobile nicht in ein Hamburger-Menü zusammengefasst
-- **Keine Breadcrumbs** in Sub-Views (z. B. Compliance über Employees erreichbar, aber kein Pfad-Indikator)
+**Positiv:**
+- Konsistenter Header/Footer via `MainLayout`
+- Dark Mode durchgängig implementiert
+- Mobile Hamburger-Menü vorhanden
+- Breadcrumb-Navigation in Sub-Views
+
+**Verbesserungsbedarf:**
+- Footer wiederholt die gesamte Haupt-Navigation → redundant auf kleinen Bildschirmen
+- Landing-Page hat eigenes Layout ohne MainLayout → Design-Bruch (kein Footer mit Impressum/AGB Links für unangemeldete User, aber Links sind vorhanden in eigenem Footer)
+- Kein Skip-to-Content Link für Barrierefreiheit
+- Keine `aria-label` auf den meisten Navigations-Buttons
 
 ---
 
-## 10. Funktionsübersicht
+## 10. Funktionsliste & Verknüpfungen
 
-### Kernfunktionen
+### Alle Systemfunktionen
 
-| Funktion | Beschreibung |
-|---|---|
-| **Mitarbeiterverwaltung** | CRUD-Operationen, 4-Schritt-Wizard, Suche/Filter, Stammdatenpflege, Personalnummern-Generierung |
-| **Lohnabrechnung** | Perioden-Management, Brutto-Netto-Berechnung, Steuer & SV, DATEV-Export, Lohnkonto |
-| **Zeiterfassung** | Arbeitszeiterfassung, Abwesenheiten, Kalender, Massenerfassung, Arbeitszeitkonten |
-| **Meldewesen** | SV-Meldungen, Beitragsnachweise, Lohnsteuerbescheinigungen, Status-Tracking |
-| **Gehaltsrechner** | Brutto-Netto, Netto-Brutto, Gehaltsvergleich, Gehaltskurve, Optimierungstipps |
-| **Sonderzahlungen** | Weihnachtsgeld, Urlaubsgeld, Prämien, Abfindungen mit Fünftelregelung |
-| **Branchenmodule** | Bau (SOKA-BAU), Gastronomie (Sachbezüge), Pflege (SFN-Zuschläge) |
-| **Payroll Guardian** | Anomalie-Erkennung, historische Analyse, Abweichungswarnungen |
-| **Autolohn** | Automatisierte Abrechnungsläufe (TODO: Speicherung unvollständig) |
-| **Compliance** | Mindestlohn-Prüfung, Fristenüberwachung, Alerts, DSGVO-Management |
-| **Multi-Tenant** | Mandantenverwaltung, Tenant-Switching, rollenbasierte Zugriffskontrolle |
-| **Reports** | Lohnkostenübersicht, Krankmeldungen, Steuer/SV, Audit-Report, MA-Statistiken |
-| **Einstellungen** | Firmenstammdaten, Benutzerverwaltung, DSGVO-Requests |
-| **Auth** | Login/Signup, Passwort-Reset, automatische Rollenzuweisung |
-| **SEO** | Meta-Tags, Open Graph, JSON-LD Schema, Sitemap, Robots.txt |
-| **Legal** | Impressum, Datenschutz, AGB, Kontaktformular, Hilfe-Center |
+**1. Authentifizierung & Mandantenverwaltung**
+- Email/Passwort Login mit Auto-Confirm
+- Rollenbasiertes System (admin, sachbearbeiter, leserecht)
+- Multi-Tenancy mit automatischer Tenant-Erstellung
+- Tenant-Switcher im Header
+- Passwort-Reset-Flow
 
-### Verknüpfungen
+**2. Dashboard**
+- KPI-Übersicht (Mitarbeiter, Durchschnittsgehalt, Personalkosten)
+- Quick-Actions zu allen Modulen
+- Echtdaten aus Payroll-Entries und Employees
+- Loading-States mit Spinner
+- Responsive Grid-Layout
+
+**3. Mitarbeiterverwaltung**
+- 4-Schritt-Wizard (Persönlich → Beschäftigung → Gehalt → Benefits)
+- Suche und Filterung
+- Bearbeiten und Löschen mit Bestätigungsdialog
+- Personalakte mit allen Stammdaten
+- Automatische Personalnummern-Generierung (ab 1001)
+
+**4. Lohnabrechnung**
+- Abrechnungszeiträume erstellen/verwalten
+- Steuerberechnung (Allgemeine + Besondere Lohnsteuertabelle)
+- SV-Berechnung mit BBG-Kappung
+- Minijob/Midijob-Sonderberechlung mit Gleitzonenformel
+- Manuelle Lohnerfassung
+
+**5. Gehaltsrechner (Ultimate)**
+- Brutto-Netto-Berechnung
+- Dienstwagen-Konfigurator (1%/0,5%/0,25%/Fahrtenbuch)
+- bAV-Optimierer mit Rentenprognose
+- PKV vs. GKV Vergleich
+- Baulohn (SOKA-BAU), Gastronomie, Pflege-Module
+- Gehalts-Benchmarking
+
+**6. Zeiterfassung**
+- Tageseinträge mit Start/Ende/Pause
+- Bulk-Erfassung
+- Abwesenheitstypen (Urlaub, Krank, Feiertag)
+- Integration in Lohnabrechnung
+- 90-Tage-Fenster für Performance
+
+**7. Meldewesen (DEÜV)**
+- SV-Meldungen mit Meldegrund und Zeitraum
+- Beitragsnachweise (monatlich, nach KK gruppiert)
+- Lohnsteuerbescheinigungen (eLStB)
+- Duplikat-Vermeidung via Unique Constraints
+- Storno-Funktion
+
+**8. Compliance & DSGVO**
+- Compliance-Alerts mit Severity-Levels
+- DSGVO-Verwaltung (Auskunftsansprüche, Löschanträge)
+- Aufbewahrungsfristen-Management
+- Automatische Prüfungen
+
+**9. DATEV-Export**
+- SKR03 und SKR04 Kontenrahmen
+- Vollständige Buchungssätze (Brutto → Netto → Steuern → SV)
+- Summen-Buchungen für Sammelüberweisungen
+- DATEV ASCII-Format Version 7.0
+
+**10. Reports**
+- Personalkostenübersicht
+- Krankheits-/Urlaubsstatistik
+- Steuer- und SV-Report
+- Audit-Report
+- Mitarbeiterstatistik
+- Export-Manager
+
+**11. Payroll Guardian (Anomalie-Erkennung)**
+- Gehaltsabweichungen erkennen
+- Historienvergleich
+- Auflösungs-Workflow
+
+**12. Sonderzahlungen**
+- Krankengeld-Berechnung
+- Mutterschutz
+- Kurzarbeit
+- Verwaltung mit Status-Tracking
+
+**13. Autolohn (Automatisierung)**
+- Regelbasierte Lohnläufe
+- E-Mail-Benachrichtigungen (geplant)
+- Zeitplan-Management
+
+**14. Behörden-Integration**
+- ELSTER-Anbindung (Oberfläche, keine echte API)
+- SV-Meldestelle
+- Finanzamt-Kommunikation
+
+**15. Admin-Bereich**
+- Benutzer- und Rollenverwaltung
+- Firmeneinstellungen
+- Kontaktnachrichten (Admin-only)
+- DSGVO-Management
+
+### Verknüpfungen zwischen Modulen
 
 ```text
-Auth ──► Tenant-Context ──► Alle geschützten Seiten
-                │
-                ▼
-         Employee-Hook ◄──── Employee-Dashboard
-                │                    │
-                ▼                    ▼
-         Payroll-Hook ◄──── Payroll-Dashboard
-                │                    │
-                ├──► DATEV-Export     ├──► Lohnkonto
-                ├──► Tax-Calculation ├──► Journal
-                └──► SV-Calculation  └──► Guardian
-                                         │
-         Time-Tracking-Hook ◄───── TimeTracking-Dashboard
-                │
-                └──► Time-Payroll-Integration ──► Payroll
+Employee ──→ Payroll (Gehaltsdaten → Brutto-Netto)
+Employee ──→ TimeTracking (Zuordnung Zeiteinträge)
+Employee ──→ Compliance (Vertragsprüfungen)
+Employee ──→ Meldewesen (SV-Meldungen, eLStB)
+Employee ──→ SpecialPayments (Krankengeld, Mutterschutz)
+Employee ──→ Reports (Personalkostenberichte)
 
-         Meldewesen ──► SV-Meldungen (braucht Employees)
-                    ──► Beitragsnachweise (braucht Employees)
-                    ──► Lohnsteuerbescheinigungen (braucht Employees)
+TimeTracking ──→ Payroll (via TimePayrollSync)
+    Arbeitsstunden → Zuschlagsberechnung → Gesamtbrutto
 
-         Compliance-Hook ──► Compliance-Dashboard (über Employees-Page)
-         Special-Payments ──► Payroll-Page Sub-View
+Payroll ──→ DATEV (Buchungssätze generieren)
+Payroll ──→ Meldewesen (Beitragsnachweise aus Abrechnungsdaten)
+Payroll ──→ Reports (Lohnjournal, Kostenübersicht)
+Payroll ──→ PayrollGuardian (Anomalie-Erkennung)
+Payroll ──→ Lohnkonto (§41 EStG kumulierte Aufzeichnung)
 
-         Landing ──► Auth ──► Dashboard ──► {Employees, Payroll, TimeTracking, Meldewesen, Autolohn, Settings}
-         Footer ──► {Impressum, Datenschutz, AGB, Kontakt, Hilfe}
+TaxCalculation ──→ PayrollCalculator (via buildTaxParamsFromEmployee)
+SocialSecurity ──→ TaxCalculation (BBG, Beitragssätze)
+BesondereLSt ──→ TaxCalculation (PKV/Beamte-Sonderfall)
+
+Auth ──→ Tenant ──→ alle Module (Datenisolation)
+Roles ──→ RLS (Zugriffssteuerung auf DB-Ebene)
 ```
 
-**Fehlende/unvollständige Verknüpfungen:**
-- Autolohn-Dashboard: Speicherung nicht implementiert (TODO)
-- Time-Payroll-Sync existiert als Komponente, aber die Integration überträgt keine echten Daten
-- Authorities-Integration (ELSTER etc.) ist nur UI-Mockup ohne echte API-Anbindung
-- Automation-Dashboard ist funktional isoliert (kein echter Cron/Scheduler)
-- Kontaktformular-Nachrichten: kein Admin-UI zum Lesen/Beantworten
+### Fehlende/Unvollständige Verknüpfungen
+
+1. **Employee → DB: `state`-Feld fehlt** → Ost/West-Erkennung basierend auf DB-Daten funktioniert nicht, da `state` nicht in der `employees`-Tabelle gespeichert wird. Die Steuerberechnung fällt immer auf "West" zurück.
+2. **Payroll → eLStB**: Die Lohnsteuerbescheinigung wird separat verwaltet, aber nicht automatisch aus Payroll-Entries befüllt. Die kumulierten Werte (Zeile 3-26) müssen manuell eingegeben werden.
+3. **Autolohn**: Die Automatisierungs-Oberfläche existiert, speichert Einstellungen aber nur als TODO-Kommentar. Keine Persistenz.
+4. **DATEV → FiBu/Bilanz**: Der DATEV-Export generiert Lohnbuchungen korrekt, aber es gibt **keine FiBu-Module** im System. Der Pfad Lohnbuchung → Hauptbuch → Bilanz (HB/StB) → EÜR → Steuererklärungen (ESt, GewSt, KSt, USt) existiert **nicht**. LohnPro ist ein reines Lohnabrechnungssystem – die Finanzbuchhaltung und Steuererklärungen sind **nicht implementiert** und gehören in ein separates System (DATEV, Lexware, etc.).
+5. **Contact Messages**: Kein UPDATE-RLS → Status "gelesen"/"beantwortet" kann nicht gespeichert werden.
 
 ---
 
 ## 11. Design-Konsistenz
 
-| Bereich | Status | Problem |
-|---|---|---|
-| Landing Header | ⚠️ | Andere Styles als MainLayout-Header, kein Mobile-Menü |
-| Landing Footer | ⚠️ | Andere Struktur als MainLayout-Footer |
-| Legal-Seiten | ❌ | Kein einheitlicher Header/Footer, nur "Zurück"-Button |
-| App-Seiten | ✅ | Konsistent via MainLayout |
-| Dark Mode | ✅ | Durchgängig unterstützt |
-| Responsivität | ⚠️ | Landing-Navbar bricht auf Mobile, Legal-Seiten haben keinen Nav-Zugang |
+- **MainLayout**: Header mit Navigation, Logo, Tenant-Switcher, Dark Mode, User-Info – konsistent über alle geschützten Routen.
+- **Landing-Page**: Eigenes Layout mit separatem Header/Footer. Funktioniert, aber der Footer-Stil unterscheidet sich leicht.
+- **Legal-Layout**: Eigenes Layout für Impressum/AGB/Datenschutz mit Back-Button – konsistent untereinander.
+- **Responsive**: Mobile Navigation funktioniert. Tabellen in Reports könnten auf kleinen Bildschirmen abgeschnitten werden (keine horizontale Scroll-Lösung sichtbar).
+
+---
+
+## Steuerlogik & Berechnungsschema – Bewertung
+
+### Was implementiert ist:
+
+```text
+Bruttolohn
+  ├── Lohnsteuer (Allgemeine Tabelle 2025, alle 6 Steuerklassen)
+  ├── Besondere Lohnsteuertabelle (Beamte/PKV)
+  ├── Solidaritätszuschlag (5,5%, Freigrenze €19.950)
+  ├── Kirchensteuer (8%/9% je Bundesland)
+  ├── Rentenversicherung (9,3% AN, BBG West €90.600)
+  ├── Krankenversicherung (7,3% + Zusatzbeitrag/2)
+  ├── Arbeitslosenversicherung (1,3%)
+  ├── Pflegeversicherung (1,7%/2,4% kinderlos)
+  ├── Minijob-Sonderbehandlung (556€, 2% Pauschalsteuer)
+  ├── Midijob-Gleitzone (556,01€-2.000€, Faktor 0,6683)
+  ├── Zuschläge (Überstunden 25%, Nacht 25%, Sonntag 50%, Feiertag 100%)
+  └── Netto-Brutto-Umkehr (binäre Suche)
+```
+
+### Was NICHT implementiert ist (und auch nicht der Scope dieses Systems ist):
+
+- **Finanzbuchhaltung (FiBu)**: Keine Hauptbuch-Führung, keine Konten-Salden
+- **Bilanz (HB/StB)**: Kein Jahresabschluss-Modul
+- **EÜR**: Keine Einnahmen-Überschussrechnung
+- **ESt-Erklärung**: Nicht im Scope (DATEV-Export dient als Schnittstelle)
+- **GewSt/KSt/USt**: Nicht implementiert – irrelevant für Lohnabrechnungssoftware
+
+**Bewertung**: LohnPro ist ein Lohnabrechnungssystem, kein FiBu-System. Der DATEV-Export stellt die korrekte Schnittstelle zur Finanzbuchhaltung dar. Die Buchungssätze (Soll/Haben) sind fachlich korrekt implementiert.
 
 ---
 
 ## Kritischste Punkte (Zusammenfassung)
 
-1. **SICHERHEIT**: contact_messages-Tabelle exponiert personenbezogene Daten an alle authentifizierten Nutzer
-2. **ARCHITEKTUR**: Employees-Page ist ein monolithischer View-Switch mit 11 Sub-Views statt echtem Routing
-3. **PERFORMANCE**: Doppelte Employee-Fetches durch verschachtelte Hook-Aufrufe
-4. **DESIGN**: Legal-Seiten ohne einheitliches Layout/Navigation, Landing ohne Mobile-Menü
-5. **UNVOLLSTÄNDIG**: Autolohn-Speicherung, Time-Payroll-Integration, Authorities-Integration sind Stubs
+| # | Problem | Priorität |
+|---|---------|-----------|
+| 1 | `state`-Feld fehlt in DB → Ost/West-Erkennung kaputt | **Hoch** |
+| 2 | `contact_messages` ohne tenant_id-Scope und ohne UPDATE-Policy | **Hoch** |
+| 3 | `calculateAge()` dupliziert in payroll-calculator | Mittel |
+| 4 | GERMAN_HOLIDAYS_2024 veraltet | Mittel |
+| 5 | Landing-Page sagt "2026", Logik ist 2025 | Mittel |
+| 6 | Autolohn-Einstellungen werden nicht persistiert | Mittel |
+| 7 | eLStB nicht automatisch aus Payroll-Entries befüllt | Mittel |
+| 8 | Keine Tests für Hooks und DATEV-Export | Niedrig |
+| 9 | Payroll-Dashboard zu groß (550 Zeilen) | Niedrig |
+| 10 | Keine Accessibility-Attribute (aria-labels, skip-link) | Niedrig |
 
 ---
 
-## Verbesserungsvorschläge nach Priorität
+## Verbesserungsplan (Phasen)
 
-### Hoch
-1. RLS-Policy für `contact_messages` einschränken (nur Admins dürfen lesen)
-2. Landing-Navbar Mobile-Menü implementieren
-3. Legal-Seiten in einheitliches Layout einbetten (Header + Footer)
-4. Doppelte Employee-Fetches eliminieren (Shared Context oder React Query)
-5. `any`-Typen durch korrekte Typen ersetzen
+### Phase 1: Kritische Korrekturen (Priorität Hoch)
+1. `state`-Feld zur `employees`-Tabelle hinzufügen und im Mapper/Wizard integrieren
+2. `contact_messages` RLS fixen: UPDATE-Policy + tenant_id-Scope
+3. Jahreszahl-Konsistenz herstellen (2025 überall)
 
-### Mittel
-6. Employees-Page Sub-Views in eigene Routes migrieren
-7. React Query/TanStack Query für Supabase-Queries nutzen (Caching, Dedup)
-8. Error-States in UI anzeigen (Toast bei Ladefehler)
-9. Auth-Context Race Condition beheben
-10. Foreign Keys in der Datenbank hinzufügen
+### Phase 2: Code-Bereinigung (Priorität Mittel)
+4. `calculateAge()` deduplizieren → Import aus `tax-params-factory`
+5. `GERMAN_HOLIDAYS_2024` durch dynamische Berechnung ersetzen
+6. Autolohn-Einstellungen in Supabase persistieren
+7. eLStB-Automatik: Kumulierte Werte aus Payroll-Entries berechnen
 
-### Niedrig
-11. Redundante Re-Export-Dateien entfernen
-12. Unused Imports bereinigen
-13. Doppelten Toast-Hook konsolidieren
-14. API/Hook-Dokumentation ergänzen
-15. `navigate(-1 as any)` Type-Hack fixen
+### Phase 3: Qualitätssicherung (Priorität Niedrig)
+8. Hook-Tests für `useSupabaseEmployees` und `useSupabasePayroll`
+9. DATEV-Export-Test (Buchungssatz-Validierung)
+10. Payroll-Dashboard in kleinere Komponenten aufteilen
 
----
+### Phase 4: UX & Accessibility
+11. aria-labels und skip-to-content Link
+12. Responsive Tabellen-Scrolling
+13. Footer-Navigation vereinfachen
 
-## Umsetzungsplan
-
-### Phase 1: Sicherheit & Kritische Fixes (sofort)
-- contact_messages RLS-Policy korrigieren
-- `any`-Typen in Hooks durch korrekte Typen ersetzen
-- Auth-Context Race Condition fixen
-
-### Phase 2: Design-Konsistenz (1-2 Tage)
-- Legal-Seiten (Impressum, Datenschutz, AGB, Kontakt, Hilfe) in ein einheitliches Layout mit Header/Footer einbetten
-- Landing-Navbar: Mobile-Hamburger-Menü hinzufügen
-- Footer-Struktur zwischen Landing und MainLayout angleichen
-
-### Phase 3: Architektur-Refactoring (2-3 Tage)
-- Employees-Page Sub-Views in eigene Routes migrieren (/compliance, /reports, /authorities etc.)
-- Doppelte Employee-Fetches eliminieren (Shared Employee-Context oder React Query Migration)
-- Error-States mit User-Feedback (Toast/Alert) in allen Hooks
-
-### Phase 4: Cleanup & Wartbarkeit (1 Tag)
-- Unused Imports, redundante Re-Exports, doppelte Toast-Hooks bereinigen
-- `navigate(-1 as any)` Hacks fixen
-- Autolohn-TODO und Stub-Funktionen dokumentieren oder entfernen
-- Foreign Keys per Migration hinzufügen
-
-### Phase 5: Erweiterungen (optional)
-- React Query Migration für alle Supabase-Queries
-- Admin-UI für Kontaktnachrichten
-- Breadcrumb-Navigation in Sub-Views
-- Pagination für Employees und Payroll-Entries
+**Wichtig**: Alle Änderungen an Berechnungslogik, DATEV-Export und Steuerformeln sollten erst nach Prüfung gegen die Golden-Master-Testdaten erfolgen. Bestehende Tests MÜSSEN weiterhin bestanden werden.
 
