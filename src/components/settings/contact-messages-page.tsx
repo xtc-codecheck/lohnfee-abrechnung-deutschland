@@ -60,11 +60,11 @@ export function ContactMessagesPage() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'new':
-        return <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"><Clock className="h-3 w-3 mr-1" />Neu</Badge>;
+        return <Badge variant="default"><Clock className="h-3 w-3 mr-1" />Neu</Badge>;
       case 'read':
         return <Badge variant="secondary"><Eye className="h-3 w-3 mr-1" />Gelesen</Badge>;
       case 'replied':
-        return <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"><CheckCircle className="h-3 w-3 mr-1" />Beantwortet</Badge>;
+        return <Badge variant="outline" className="border-primary text-primary"><CheckCircle className="h-3 w-3 mr-1" />Beantwortet</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -101,7 +101,7 @@ export function ContactMessagesPage() {
         <Card>
           <CardHeader className="pb-2">
             <CardDescription>Neue Nachrichten</CardDescription>
-            <CardTitle className="text-2xl flex items-center gap-2 text-blue-600">
+            <CardTitle className="text-2xl flex items-center gap-2 text-primary">
               <Mail className="h-5 w-5" />
               {newCount}
             </CardTitle>
