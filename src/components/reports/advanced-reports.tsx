@@ -122,10 +122,13 @@ export function AdvancedReports({ onBack }: AdvancedReportsProps) {
           <h1 className="text-3xl font-bold">Erweiterte Berichte</h1>
           <p className="text-muted-foreground">Umfassende Analysen und Statistiken</p>
         </div>
-        <Button variant="outline" onClick={onBack}>
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Zurück
-        </Button>
+        <div className="flex gap-2">
+          <GoBDExportDialog />
+          <Button variant="outline" onClick={onBack}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Zurück
+          </Button>
+        </div>
       </div>
 
       {/* Report Selection */}
