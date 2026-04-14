@@ -719,9 +719,21 @@ Jährlich zu aktualisieren:
 | Besondere Lohnsteuertabelle | ✅ 2025 + 2026 |
 | Entgeltfortzahlung | ✅ 42-Tage-Regel |
 | Jahresausgleich (§42b) | ✅ UI + Berechnung |
-| Lohnkorrektur (§41c) | ✅ UI + Differenzberechnung |
+| Lohnkorrektur (§41c) | ✅ UI + Differenzberechnung + **DB-Persistenz** |
 | GoBD-Export | ✅ Betriebsprüfungsfähig |
 | ELStAM-Validierung | ✅ Score + Ampel |
+| Rollen-Zuweisung bei Registrierung | ✅ Jeder neue User = Admin im eigenen Tenant |
+| Lohnkorrektur DB-Persistenz | ✅ `updatePayrollEntry()` vollständig implementiert |
+
+---
+
+### Letzte Änderungen (14. April 2026)
+
+| Fix | Beschreibung |
+|---|---|
+| `assign_default_role()` | **Kritisch:** Neue Benutzer erhalten jetzt immer `admin` in ihrem eigenen Tenant (vorher nur der allererste User im System) |
+| `updatePayrollEntry()` | **Kritisch:** Lohnkorrekturen werden jetzt vollständig in der DB persistiert (30+ Felder inkl. Tax/SV AG+AN) |
+| Payroll-Dashboard Refactoring | ⚠️ **Offen:** 550-Zeilen-Komponente noch nicht in Sub-Views aufgeteilt |
 
 ---
 
