@@ -52,6 +52,7 @@ const App = () => (
                 <Route path="/datenschutz" element={<Datenschutz />} />
                 <Route path="/agb" element={<AGB />} />
                 <Route path="/kontakt" element={<Kontakt />} />
+                <Route path="/hilfe" element={<HilfeCenter />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </TenantProvider>
