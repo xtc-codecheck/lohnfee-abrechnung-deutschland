@@ -69,7 +69,7 @@ interface LohnkontoPageProps {
 }
 
 export function LohnkontoPage({ onBack }: LohnkontoPageProps) {
-  const { employees } = useSupabaseEmployees();
+  const { employees } = useEmployees();
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>('');
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
   const [entries, setEntries] = useState<DbEntry[]>([]);
