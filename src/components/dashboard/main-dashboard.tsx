@@ -59,6 +59,13 @@ export function MainDashboard() {
         </div>
       ) : (
       <>
+      {(empError || payError) && (
+        <NetworkErrorAlert
+          error={empError || payError}
+          onRetry={() => window.location.reload()}
+          context="Dashboard-Daten konnten nicht geladen werden"
+        />
+      )}
       {/* Onboarding Wizard for new users */}
       {showOnboarding && (
         <OnboardingWizard onDismiss={handleDismissOnboarding} />
