@@ -17,82 +17,8 @@
  * nur die private Kranken-/Pflegeversicherung (Basisbeitrag) berücksichtigt.
  */
 
-import { 
-  TAX_ALLOWANCES_2025, 
-  TAX_RATES_2025 
-} from '@/constants/social-security';
-
-// ============= Typen =============
-
-export interface BesondereTaxParams {
-  grossMonthly: number;
-  taxClass: number; // 1-6
-  childAllowances: number;
-  churchTax: boolean;
-  churchTaxRate: number; // 8 oder 9
-  privateHealthInsuranceMonthly?: number; // PKV-Basisbeitrag pro Monat
-  privateCareInsuranceMonthly?: number; // PPV-Beitrag pro Monat
-}
-
-export interface BesondereTaxResult {
-  incomeTax: number; // Monatliche Lohnsteuer
-  solidarityTax: number;
-  churchTax: number;
-  totalTax: number;
-  effectiveRate: number; // Effektiver Steuersatz in %
-}
-
-// ============= PAP 2025 Implementierung =============
-
-/**
- * Berechnet das zu versteuernde Einkommen für die besondere Tabelle.
- * 
- * Vorsorgepauschale nach § 39b Abs. 2 Satz 5 Nr. 3 EStG:
- * - Keine RV-/AV-Anteile
- * - Nur PKV-Basisbeitrag (max. 1/12 des Höchstbetrags nach § 10 Abs. 4 EStG)
- *   = 2.800 € / 12 = 233,33 € für StKl III, sonst 1.900 € / 12 = 158,33 €
- */
-function calculateBesondereVorsorgepauschale(
-  taxClass: number,
-  privateHealthMonthly: number,
-  privateCareMonthly: number,
-): number {
-  // Höchstbetrag für Vorsorgeaufwendungen (Basiskranken- + Pflege)
-  const maxBasisbeitrag = taxClass === 3 ? 233.33 : 158.33;
-  
-  // Basisbeitrag = 96% des PKV-Beitrags (Arbeitgeberzuschuss ausgenommen)
-  // In der Praxis: Mindestens der Arbeitnehmeranteil
-  const basiskrankenversicherung = Math.min(privateHealthMonthly * 0.96, maxBasisbeitrag);
-  const pflegeversicherung = privateCareMonthly;
-  
-  return basiskrankenversicherung + pflegeversicherung;
-}
-
-/**
- * Einkommensteuerberechnung nach § 32a EStG (PAP 2025)
- * Berechnet die tarifliche Einkommensteuer auf das zu versteuernde Einkommen
- */
-function calculateTariflicheESt(zvE: number): number {
-  if (zvE <= TAX_ALLOWANCES_2025.basicAllowance) return 0;
-
-  const { progressionZone1, progressionZone2, proportionalZone1, proportionalZone2 } = TAX_RATES_2025;
-
-  if (zvE <= progressionZone1.to) {
-    const y = (zvE - TAX_ALLOWANCES_2025.basicAllowance) / 10000;
-    return Math.floor((progressionZone1.coefficients[0] * y + progressionZone1.coefficients[1]) * y);
-  }
-
-  if (zvE <= progressionZone2.to) {
-    const z = (zvE - progressionZone2.from + 1) / 10000;
-    return Math.floor((progressionZone2.coefficients[0] * z + progressionZone2.coefficients[1]) * z + progressionZone2.constant);
-  }
-
-  if (zvE <= proportionalZone2.from - 1) {
-    return Math.floor(zvE * proportionalZone1.rate - proportionalZone1.constant);
-  }
-
-  return Math.floor(zvE * proportionalZone2.rate - proportionalZone2.constant);
-}
+import { TAX_ALLOWANCES_2025 } from '@/constants/social-security';
+import { calculateTariflicheEStPAP2025 } from './tax-calculation';
 
 /**
  * Berechnung nach besonderer Lohnsteuertabelle
