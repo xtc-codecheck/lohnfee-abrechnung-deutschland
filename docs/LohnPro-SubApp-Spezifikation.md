@@ -255,7 +255,7 @@ shares_tenant(_user_a, _user_b) → boolean
 | Trigger/Funktion | Tabelle | Beschreibung |
 |---|---|---|
 | `handle_new_user()` | `auth.users` → `profiles` | Erstellt Profil bei Registrierung |
-| `assign_default_role()` | `auth.users` → `user_roles` + `tenants` + `tenant_members` | Erstellt Tenant + weist Rolle zu (erster User → admin, weitere → leserecht) |
+| `assign_default_role()` | `auth.users` → `user_roles` + `tenants` + `tenant_members` | Erstellt Tenant + weist **immer admin-Rolle** zu (jeder neue User ist Admin in seinem eigenen Tenant) |
 | `generate_personal_number()` | `employees` | Generiert Personalnummer ab 1001 pro Tenant |
 | `audit_trigger_func()` | Diverse | Schreibt Audit-Log bei INSERT/UPDATE/DELETE |
 | `update_updated_at_column()` | Diverse | Aktualisiert `updated_at` Timestamp |
@@ -374,10 +374,13 @@ Orchestriert die gesamte Lohnberechnung mit:
 ### 7.7 Lohnkorrektur (§ 41c EStG) – NEU Phase B
 
 **UI:** `src/components/payroll/payroll-correction-dialog.tsx` (integriert in `payroll-detail.tsx`)
+**Persistenz:** `updatePayrollEntry()` in `src/hooks/use-supabase-payroll.ts`
 
 - Differenzberechnung Original vs. Korrektur (Brutto, Netto, LSt, SV)
 - Automatische Nachberechnung
 - Korrekturzeitraum-Validierung
+- **Vollständige DB-Persistenz**: Alle 30+ Felder (Tax, SV AG/AN, Brutto/Netto) werden in `payroll_entries` gespeichert
+- Cache-Invalidierung nach Update für sofortige UI-Aktualisierung
 
 ### 7.8 Märzklausel – NEU Phase B
 
@@ -716,9 +719,21 @@ Jährlich zu aktualisieren:
 | Besondere Lohnsteuertabelle | ✅ 2025 + 2026 |
 | Entgeltfortzahlung | ✅ 42-Tage-Regel |
 | Jahresausgleich (§42b) | ✅ UI + Berechnung |
-| Lohnkorrektur (§41c) | ✅ UI + Differenzberechnung |
+| Lohnkorrektur (§41c) | ✅ UI + Differenzberechnung + **DB-Persistenz** |
 | GoBD-Export | ✅ Betriebsprüfungsfähig |
 | ELStAM-Validierung | ✅ Score + Ampel |
+| Rollen-Zuweisung bei Registrierung | ✅ Jeder neue User = Admin im eigenen Tenant |
+| Lohnkorrektur DB-Persistenz | ✅ `updatePayrollEntry()` vollständig implementiert |
+
+---
+
+### Letzte Änderungen (14. April 2026)
+
+| Fix | Beschreibung |
+|---|---|
+| `assign_default_role()` | **Kritisch:** Neue Benutzer erhalten jetzt immer `admin` in ihrem eigenen Tenant (vorher nur der allererste User im System) |
+| `updatePayrollEntry()` | **Kritisch:** Lohnkorrekturen werden jetzt vollständig in der DB persistiert (30+ Felder inkl. Tax/SV AG+AN) |
+| Payroll-Dashboard Refactoring | ⚠️ **Offen:** 550-Zeilen-Komponente noch nicht in Sub-Views aufgeteilt |
 
 ---
 
