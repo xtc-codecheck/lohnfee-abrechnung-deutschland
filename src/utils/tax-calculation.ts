@@ -205,15 +205,20 @@ function calculateLohnsteuerPAP2025(
       est = calculateTariflicheEStPAP2025(Math.max(0, Math.floor(zvE / 2))) * 2;
       break;
     case 5:
-      // StKl V: normaler Tarif, kein eigener Grundfreibetrag
-      // (der GFB wird beim StKl III-Partner verbraucht)
+      // StKl V: Vergleichsberechnung nach PAP 2025
+      // Der Grundfreibetrag wird beim StKl III-Partner verbraucht
+      // Formel: EST_V = 2 * EST(zvE) - 2 * EST(zvE/2)
+      // Dies ergibt: StKl III + StKl V ≈ 2 × StKl IV (bei gleichem Einkommen)
       zvE = grossYearly - werbungskosten - sonderausgaben - vorsorgepauschale;
-      est = calculateTariflicheEStPAP2025(Math.max(0, zvE));
+      est = 2 * calculateTariflicheEStPAP2025(Math.max(0, zvE)) 
+          - 2 * calculateTariflicheEStPAP2025(Math.max(0, Math.floor(zvE / 2)));
       break;
     case 6:
-      // StKl VI: keine Pauschalen, nur Vorsorgepauschale
+      // StKl VI: keine Werbungskosten/Sonderausgaben, nur Vorsorgepauschale
+      // Vergleichsberechnung wie StKl V, aber ohne WK/SA
       zvE = grossYearly - vorsorgepauschale;
-      est = calculateTariflicheEStPAP2025(Math.max(0, zvE));
+      est = 2 * calculateTariflicheEStPAP2025(Math.max(0, zvE)) 
+          - 2 * calculateTariflicheEStPAP2025(Math.max(0, Math.floor(zvE / 2)));
       break;
     default:
       zvE = grossYearly - werbungskosten - sonderausgaben - vorsorgepauschale;
