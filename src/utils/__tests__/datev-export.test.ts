@@ -401,19 +401,26 @@ describe('validateDatevConfig', () => {
     expect(validateDatevConfig(createTestConfig())).toEqual([]);
   });
 
-  it('meldet fehlende Beraternummer', () => {
+  it('meldet Beraternummer außerhalb des Bereichs', () => {
     const errors = validateDatevConfig(createTestConfig({ beraterNr: '' }));
-    expect(errors).toContain('Beraternummer ist erforderlich');
+    expect(errors.some(e => e.includes('Beraternummer'))).toBe(true);
   });
 
-  it('meldet fehlende Mandantennummer', () => {
+  it('meldet Mandantennummer außerhalb des Bereichs', () => {
     const errors = validateDatevConfig(createTestConfig({ mandantenNr: '' }));
-    expect(errors).toContain('Mandantennummer ist erforderlich');
+    expect(errors.some(e => e.includes('Mandantennummer'))).toBe(true);
   });
 
   it('meldet ungültige Sachkontenlänge', () => {
     const errors = validateDatevConfig(createTestConfig({ sachkontenlaenge: 3 as any }));
     expect(errors.some(e => e.includes('Sachkontenlänge'))).toBe(true);
+  });
+
+  it('validiert Beraternummer-Bereich (1001-9999999)', () => {
+    expect(validateDatevConfig(createTestConfig({ beraterNr: '1000' }))).not.toEqual([]);
+    expect(validateDatevConfig(createTestConfig({ beraterNr: '1001' }))).toEqual([]);
+    expect(validateDatevConfig(createTestConfig({ beraterNr: '9999999' }))).toEqual([]);
+    expect(validateDatevConfig(createTestConfig({ beraterNr: '10000000' }))).not.toEqual([]);
   });
 });
 
