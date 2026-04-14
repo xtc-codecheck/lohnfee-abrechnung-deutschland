@@ -88,7 +88,10 @@ export function buildTaxParamsFromEmployee(
     : DEFAULTS.age;
   
   // Kinderlos-Status bestimmen
-  const isChildless = (personalData.childAllowances ?? 0) === 0;
+  const isChildless = (personalData.childAllowances ?? 0) === 0 && (personalData.numberOfChildren ?? 0) === 0;
+  
+  // Anzahl Kinder für PV-Berechnung
+  const numberOfChildren = personalData.numberOfChildren ?? 0;
   
   // Ost-/West-Status
   const isEastGermany = isEastGermanState(personalData.address?.state ?? '');
