@@ -1,10 +1,11 @@
 /**
  * DATEV-Export Utilities
  * 
- * Implementiert den Export von Lohnabrechnungsdaten im DATEV-ASCII-Format
- * mit Unterstützung für SKR03 und SKR04 Kontenrahmen.
+ * Implementiert den Export von Lohnabrechnungsdaten im DATEV-ASCII-Format (CSV)
+ * gemäß der offiziellen DATEV-Schnittstellenbeschreibung.
  * 
- * Basiert auf DATEV-Format Version 7.0 für Buchungsstapel
+ * Header: 31 Felder, Versionsnummer 700
+ * Buchungsstapel: Formatkategorie 21, Formatversion 13
  */
 
 import { PayrollEntry, PayrollPeriod } from '@/types/payroll';
@@ -17,145 +18,130 @@ export type Kontenrahmen = 'SKR03' | 'SKR04';
 
 /**
  * SKR03 Kontenrahmen - Prozessgliederungsprinzip
- * Häufig verwendet von kleineren und mittleren Unternehmen
  */
 export const SKR03_KONTEN = {
-  // Klasse 4: Personalaufwand
-  loehneGehalt: '4100',              // Löhne und Gehälter
-  gehaltGeschaeftsfuehrung: '4110',  // Geschäftsführergehälter
-  aushilfsloehne: '4120',            // Löhne für Aushilfen
-  ueberstunden: '4125',              // Überstundenzuschläge
-  praemien: '4130',                  // Prämien und Gratifikationen
-  urlaubsgeld: '4140',               // Urlaubsgeld
-  weihnachtsgeld: '4145',            // Weihnachtsgeld
-  
-  // Sozialversicherung Arbeitgeber
-  svAnteilAg: '4130',                // Gesetzliche Sozialaufwendungen
-  krankenversicherungAg: '4138',     // Arbeitgeberanteil KV
-  rentenversicherungAg: '4139',      // Arbeitgeberanteil RV
-  arbeitslosenversicherungAg: '4141',// Arbeitgeberanteil ALV
-  pflegeversicherungAg: '4142',      // Arbeitgeberanteil PV
-  berufsgenossenschaft: '4150',      // BG-Beiträge
-  sokaBau: '4155',                   // SOKA-BAU
-  
-  // Sonstige Personalkosten
-  vermoegenswirksameLeistungen: '4170', // VL
-  betrieblicheAltersvorsorge: '4165',   // bAV Arbeitgeberanteil
-  sachbezuege: '4945',                  // Sachbezüge
-  
-  // Verbindlichkeiten
-  verbindlichkeitenLoehne: '1740',      // Verb. aus Lohn/Gehalt
-  verbindlichkeitenFinanzamt: '1741',   // Verb. an Finanzamt (Lohnsteuer)
-  verbindlichkeitenSv: '1742',          // Verb. an SV-Träger
-  verbindlichkeitenKrankenkasse: '1743',// Verb. an Krankenkassen
-  
-  // Steuern (Aufwand)
-  lohnsteuerAbfuehrung: '1741',         // Lohnsteuerabführung
-  kirchensteuerAbfuehrung: '1741',      // Kirchensteuerabführung
-  solidaritaetszuschlag: '1741',        // Solidaritätszuschlag
-  
-  // Bank
-  bank: '1200',                         // Bank
+  loehneGehalt: '4100',
+  gehaltGeschaeftsfuehrung: '4110',
+  aushilfsloehne: '4120',
+  ueberstunden: '4125',
+  praemien: '4130',
+  urlaubsgeld: '4140',
+  weihnachtsgeld: '4145',
+  svAnteilAg: '4130',
+  krankenversicherungAg: '4138',
+  rentenversicherungAg: '4139',
+  arbeitslosenversicherungAg: '4141',
+  pflegeversicherungAg: '4142',
+  berufsgenossenschaft: '4150',
+  sokaBau: '4155',
+  vermoegenswirksameLeistungen: '4170',
+  betrieblicheAltersvorsorge: '4165',
+  sachbezuege: '4945',
+  verbindlichkeitenLoehne: '1740',
+  verbindlichkeitenFinanzamt: '1741',
+  verbindlichkeitenSv: '1742',
+  verbindlichkeitenKrankenkasse: '1743',
+  lohnsteuerAbfuehrung: '1741',
+  kirchensteuerAbfuehrung: '1741',
+  solidaritaetszuschlag: '1741',
+  bank: '1200',
 } as const;
 
 /**
  * SKR04 Kontenrahmen - Abschlussgliederungsprinzip
- * Orientiert sich an der Bilanzgliederung
  */
 export const SKR04_KONTEN = {
-  // Klasse 6: Personalaufwand
-  loehneGehalt: '6000',              // Löhne und Gehälter
-  gehaltGeschaeftsfuehrung: '6010',  // Geschäftsführergehälter
-  aushilfsloehne: '6020',            // Löhne für Aushilfen
-  ueberstunden: '6025',              // Überstundenzuschläge
-  praemien: '6030',                  // Prämien und Gratifikationen
-  urlaubsgeld: '6040',               // Urlaubsgeld
-  weihnachtsgeld: '6045',            // Weihnachtsgeld
-  
-  // Sozialversicherung Arbeitgeber
-  svAnteilAg: '6110',                // Gesetzliche Sozialaufwendungen
-  krankenversicherungAg: '6120',     // Arbeitgeberanteil KV
-  rentenversicherungAg: '6130',      // Arbeitgeberanteil RV
-  arbeitslosenversicherungAg: '6140',// Arbeitgeberanteil ALV
-  pflegeversicherungAg: '6150',      // Arbeitgeberanteil PV
-  berufsgenossenschaft: '6160',      // BG-Beiträge
-  sokaBau: '6165',                   // SOKA-BAU
-  
-  // Sonstige Personalkosten
-  vermoegenswirksameLeistungen: '6200', // VL
-  betrieblicheAltersvorsorge: '6210',   // bAV Arbeitgeberanteil
-  sachbezuege: '6800',                  // Sachbezüge
-  
-  // Verbindlichkeiten
-  verbindlichkeitenLoehne: '3720',      // Verb. aus Lohn/Gehalt
-  verbindlichkeitenFinanzamt: '3730',   // Verb. an Finanzamt
-  verbindlichkeitenSv: '3740',          // Verb. an SV-Träger
-  verbindlichkeitenKrankenkasse: '3741',// Verb. an Krankenkassen
-  
-  // Steuern (Aufwand)
-  lohnsteuerAbfuehrung: '3730',         // Lohnsteuerabführung
-  kirchensteuerAbfuehrung: '3730',      // Kirchensteuerabführung
-  solidaritaetszuschlag: '3730',        // Solidaritätszuschlag
-  
-  // Bank
-  bank: '1800',                         // Bank
+  loehneGehalt: '6000',
+  gehaltGeschaeftsfuehrung: '6010',
+  aushilfsloehne: '6020',
+  ueberstunden: '6025',
+  praemien: '6030',
+  urlaubsgeld: '6040',
+  weihnachtsgeld: '6045',
+  svAnteilAg: '6110',
+  krankenversicherungAg: '6120',
+  rentenversicherungAg: '6130',
+  arbeitslosenversicherungAg: '6140',
+  pflegeversicherungAg: '6150',
+  berufsgenossenschaft: '6160',
+  sokaBau: '6165',
+  vermoegenswirksameLeistungen: '6200',
+  betrieblicheAltersvorsorge: '6210',
+  sachbezuege: '6800',
+  verbindlichkeitenLoehne: '3720',
+  verbindlichkeitenFinanzamt: '3730',
+  verbindlichkeitenSv: '3740',
+  verbindlichkeitenKrankenkasse: '3741',
+  lohnsteuerAbfuehrung: '3730',
+  kirchensteuerAbfuehrung: '3730',
+  solidaritaetszuschlag: '3730',
+  bank: '1800',
 } as const;
 
 export type KontenrahmenKonten = typeof SKR03_KONTEN | typeof SKR04_KONTEN;
 
-// ============= DATEV Header Format =============
+// ============= DATEV Header (31 Felder gemäß Spezifikation) =============
 
 export interface DatevHeader {
-  formatkennung: 'EXTF';         // Externes Format
-  versionsnummer: number;        // Format-Version (700 = 7.0)
-  datenkategorie: number;        // 21 = Buchungsstapel
-  formatname: string;            // z.B. "Buchungsstapel"
-  formatversion: number;         // Format-Unterversion
-  erzeugtAm: string;            // YYYYMMDDHHMMSS
-  importiert: string;           // Leer bei Export
-  herkunft: string;             // RE = Rechnungswesen
-  exportiertVon: string;        // z.B. "LohnPro"
-  importiertVon: string;        // Leer
-  beraterNr: string;            // 7-stellig
-  mandantenNr: string;          // 5-stellig
-  wirtschaftsjahrBeginn: string;// YYYYMMDD
-  sachkontenlaenge: number;     // 4-8
-  datumVon: string;             // YYYYMMDD
-  datumBis: string;             // YYYYMMDD
-  bezeichnung: string;          // Stapelbezeichnung
-  diktatKuerzel: string;        // Optional
-  buchungstyp: number;          // 1 = Fibu, 2 = Jahresabschluss
-  rechnungslegungszweck: number;// 0 = unbekannt
-  festschreibung: number;       // 0 = nicht festgeschrieben
-  waehrungskennzeichen: string; // EUR
+  formatkennung: 'EXTF' | 'DTVF';  // Feld 1
+  versionsnummer: 700;               // Feld 2
+  formatkategorie: number;           // Feld 3: 21 = Buchungsstapel
+  formatname: string;                // Feld 4
+  formatversion: number;             // Feld 5: 13 für Buchungsstapel
+  erzeugtAm: string;                // Feld 6: YYYYMMDDHHMMSSFFFXXX
+  importiert: '';                    // Feld 7: leer
+  herkunft: string;                  // Feld 8: max 2 Zeichen
+  exportiertVon: string;            // Feld 9: max 25 Zeichen
+  importiertVon: '';                // Feld 10: leer
+  beraterNr: number;                // Feld 11: 1001-9999999
+  mandantenNr: number;              // Feld 12: 1-99999
+  wirtschaftsjahrBeginn: string;    // Feld 13: YYYYMMDD
+  sachkontenlaenge: number;          // Feld 14: 4-8
+  datumVon: string;                  // Feld 15: YYYYMMDD (nur Bewegungsdaten)
+  datumBis: string;                  // Feld 16: YYYYMMDD (nur Bewegungsdaten)
+  bezeichnung: string;               // Feld 17: max 30 Zeichen
+  diktatKuerzel: string;             // Feld 18: 2 Großbuchstaben
+  buchungstyp: 1 | 2;               // Feld 19: 1=FiBu, 2=JA
+  rechnungslegungszweck: number;     // Feld 20: 0,30,40,50,64
+  festschreibung: 0 | 1;            // Feld 21
+  waehrung: string;                  // Feld 22: ISO 4217 z.B. EUR
+  // Feld 23: reserviert (leer)
+  // Feld 24: Derivatskennzeichen (leer)
+  // Feld 25: reserviert (leer)
+  // Feld 26: reserviert (leer)
+  sachkontenrahmen: string;          // Feld 27: z.B. "03" oder "04"
+  branchenloesung: string;           // Feld 28: max 4 Ziffern
+  // Feld 29: reserviert (leer)
+  // Feld 30: reserviert (leer)
+  anwendungsinformation: string;     // Feld 31: max 16 Zeichen
 }
 
 // ============= DATEV Buchungssatz =============
 
 export interface DatevBuchung {
-  umsatz: number;               // Betrag (positiv = Soll, negativ = Haben)
-  sollHaben: 'S' | 'H';        // Soll oder Haben
-  waehrung: string;            // EUR
-  kurs: string;                // Wechselkurs (leer bei EUR)
-  basisUmsatz: string;         // Basisumsatz (leer bei EUR)
-  konto: string;               // Kontierungskonto
-  gegenKonto: string;          // Gegenkonto
-  buSchluessel: string;        // Buchungsschlüssel
-  belegDatum: string;          // DDMM
-  belegfeld1: string;          // Belegnummer
-  belegfeld2: string;          // Belegfeld 2
-  skonto: string;              // Skonto
-  buchungstext: string;        // Buchungstext (max. 60 Zeichen)
-  postensperre: string;        // 0 oder 1
-  diverseAdressnummer: string; // KOST1
-  diverseAdressart: string;    // Art
-  kostenmenge: string;         // Kostenmenge
-  kostenstelleNr: string;      // KOST1
-  kostentraegerNr: string;     // KOST2
-  buWert: string;              // Buchungswert
-  euLand: string;              // EU-Land
-  euUstId: string;             // EU-USt-ID
-  euSteuersatz: string;        // EU-Steuersatz
+  umsatz: number;
+  sollHaben: 'S' | 'H';
+  waehrung: string;
+  kurs: string;
+  basisUmsatz: string;
+  konto: string;
+  gegenKonto: string;
+  buSchluessel: string;
+  belegDatum: string;
+  belegfeld1: string;
+  belegfeld2: string;
+  skonto: string;
+  buchungstext: string;
+  postensperre: string;
+  diverseAdressnummer: string;
+  diverseAdressart: string;
+  kostenmenge: string;
+  kostenstelleNr: string;
+  kostentraegerNr: string;
+  buWert: string;
+  euLand: string;
+  euUstId: string;
+  euSteuersatz: string;
 }
 
 // ============= Export-Konfiguration =============
@@ -169,64 +155,77 @@ export interface DatevExportConfig {
   exportName: string;
 }
 
+// ============= Quoting Helpers =============
+
+/** Wraps a string value in double quotes for DATEV CSV */
+function q(val: string): string {
+  return `"${val}"`;
+}
+
+/** Formats a timestamp as DATEV Feld 6: YYYYMMDDHHMMSSfff */
+function datevTimestamp(d: Date): string {
+  const yyyy = d.getFullYear().toString();
+  const MM = (d.getMonth() + 1).toString().padStart(2, '0');
+  const dd = d.getDate().toString().padStart(2, '0');
+  const HH = d.getHours().toString().padStart(2, '0');
+  const mm = d.getMinutes().toString().padStart(2, '0');
+  const ss = d.getSeconds().toString().padStart(2, '0');
+  const fff = d.getMilliseconds().toString().padStart(3, '0');
+  return `${yyyy}${MM}${dd}${HH}${mm}${ss}${fff}`;
+}
+
 // ============= Haupt-Export-Funktionen =============
 
 /**
- * Erstellt den DATEV-Header für den Buchungsstapel
+ * Erstellt den DATEV-Header (31 Felder) gemäß offizieller Spezifikation.
+ * Gibt ein Array mit korrekt formatierten und gequoteten Feldern zurück.
  */
 export function createDatevHeader(
   config: DatevExportConfig,
   periode: PayrollPeriod
 ): string[] {
   const now = new Date();
-  const header: DatevHeader = {
-    formatkennung: 'EXTF',
-    versionsnummer: 700,
-    datenkategorie: 21,
-    formatname: 'Buchungsstapel',
-    formatversion: 12,
-    erzeugtAm: format(now, 'yyyyMMddHHmmss'),
-    importiert: '',
-    herkunft: 'RE',
-    exportiertVon: 'LohnPro',
-    importiertVon: '',
-    beraterNr: config.beraterNr.padStart(7, '0'),
-    mandantenNr: config.mandantenNr.padStart(5, '0'),
-    wirtschaftsjahrBeginn: format(config.wirtschaftsjahrBeginn, 'yyyyMMdd'),
-    sachkontenlaenge: config.sachkontenlaenge,
-    datumVon: format(periode.startDate, 'yyyyMMdd'),
-    datumBis: format(periode.endDate, 'yyyyMMdd'),
-    bezeichnung: `Lohnbuchungen ${format(periode.startDate, 'MM/yyyy')}`,
-    diktatKuerzel: '',
-    buchungstyp: 1,
-    rechnungslegungszweck: 0,
-    festschreibung: 0,
-    waehrungskennzeichen: 'EUR',
-  };
+  const skr = config.kontenrahmen === 'SKR03' ? '03' : '04';
+  const bezeichnung = `Lohnbuchungen ${format(periode.startDate, 'MM/yyyy')}`.substring(0, 30);
+  const anwendungsinfo = format(periode.startDate, 'MM/yyyy');
 
+  // Berater-/Mandantennummer als Zahl (ohne Padding)
+  const beraterNr = parseInt(config.beraterNr, 10) || 1001;
+  const mandantenNr = parseInt(config.mandantenNr, 10) || 1;
+
+  // 31 Felder in exakter Reihenfolge gemäß DATEV-Spezifikation
   return [
-    header.formatkennung,
-    header.versionsnummer.toString(),
-    header.datenkategorie.toString(),
-    header.formatname,
-    header.formatversion.toString(),
-    header.erzeugtAm,
-    header.importiert,
-    header.herkunft,
-    header.exportiertVon,
-    header.importiertVon,
-    header.beraterNr,
-    header.mandantenNr,
-    header.wirtschaftsjahrBeginn,
-    header.sachkontenlaenge.toString(),
-    header.datumVon,
-    header.datumBis,
-    header.bezeichnung,
-    header.diktatKuerzel,
-    header.buchungstyp.toString(),
-    header.rechnungslegungszweck.toString(),
-    header.festschreibung.toString(),
-    header.waehrungskennzeichen,
+    q('EXTF'),                                          // 1  Kennzeichen
+    '700',                                              // 2  Versionsnummer
+    '21',                                               // 3  Formatkategorie (Buchungsstapel)
+    q('Buchungsstapel'),                                // 4  Formatname
+    '13',                                               // 5  Formatversion
+    datevTimestamp(now),                                 // 6  Erzeugt am
+    '',                                                 // 7  Importiert (leer)
+    q('RE'),                                            // 8  Herkunft
+    q('LohnPro'),                                       // 9  Exportiert von
+    q(''),                                              // 10 Importiert von
+    beraterNr.toString(),                               // 11 Beraternummer
+    mandantenNr.toString(),                             // 12 Mandantennummer
+    format(config.wirtschaftsjahrBeginn, 'yyyyMMdd'),   // 13 WJ-Beginn
+    config.sachkontenlaenge.toString(),                  // 14 Sachkontenlänge
+    format(periode.startDate, 'yyyyMMdd'),               // 15 Datum von
+    format(periode.endDate, 'yyyyMMdd'),                 // 16 Datum bis
+    q(bezeichnung),                                     // 17 Bezeichnung
+    q(''),                                              // 18 Diktatkürzel
+    '1',                                                // 19 Buchungstyp (FiBu)
+    '0',                                                // 20 Rechnungslegungszweck
+    '0',                                                // 21 Festschreibung
+    q('EUR'),                                           // 22 WKZ
+    '',                                                 // 23 Reserviert
+    q(''),                                              // 24 Derivatskennzeichen
+    '',                                                 // 25 Reserviert
+    '',                                                 // 26 Reserviert
+    q(skr),                                             // 27 Sachkontenrahmen
+    '',                                                 // 28 ID Branchenlösung
+    '',                                                 // 29 Reserviert
+    q(''),                                              // 30 Reserviert
+    q(anwendungsinfo),                                  // 31 Anwendungsinformation
   ];
 }
 
@@ -281,8 +280,7 @@ export function generatePayrollBookings(
   
   const buchungen: string[][] = [];
   
-  // ========== 1. BRUTTOLOHN BUCHUNG ==========
-  // Soll: Löhne und Gehälter | Haben: Verbindlichkeiten Löhne
+  // 1. BRUTTOLOHN: Soll Löhne | Haben Verb. Löhne
   buchungen.push(createBookingLine({
     umsatz: entry.salaryCalculation.grossSalary,
     sollHaben: 'S',
@@ -294,7 +292,7 @@ export function generatePayrollBookings(
     kostenstelle: entry.employee.employmentData.department,
   }));
   
-  // ========== 2. ÜBERSTUNDEN (wenn vorhanden) ==========
+  // 2. ÜBERSTUNDEN
   if (entry.additions.overtimePay > 0) {
     buchungen.push(createBookingLine({
       umsatz: entry.additions.overtimePay,
@@ -308,8 +306,7 @@ export function generatePayrollBookings(
     }));
   }
   
-  // ========== 3. LOHNSTEUER EINBEHALTUNG ==========
-  // Soll: Verbindlichkeiten Löhne | Haben: Verbindlichkeiten Finanzamt
+  // 3. LOHNSTEUER: Soll Verb. Löhne | Haben Verb. Finanzamt
   if (entry.salaryCalculation.taxes.incomeTax > 0) {
     buchungen.push(createBookingLine({
       umsatz: entry.salaryCalculation.taxes.incomeTax,
@@ -322,7 +319,7 @@ export function generatePayrollBookings(
     }));
   }
   
-  // ========== 4. SOLIDARITÄTSZUSCHLAG ==========
+  // 4. SOLIDARITÄTSZUSCHLAG
   if (entry.salaryCalculation.taxes.solidarityTax > 0) {
     buchungen.push(createBookingLine({
       umsatz: entry.salaryCalculation.taxes.solidarityTax,
@@ -335,7 +332,7 @@ export function generatePayrollBookings(
     }));
   }
   
-  // ========== 5. KIRCHENSTEUER ==========
+  // 5. KIRCHENSTEUER
   if (entry.salaryCalculation.taxes.churchTax > 0) {
     buchungen.push(createBookingLine({
       umsatz: entry.salaryCalculation.taxes.churchTax,
@@ -348,9 +345,7 @@ export function generatePayrollBookings(
     }));
   }
   
-  // ========== 6. SOZIALVERSICHERUNG ARBEITNEHMER ==========
-  
-  // Krankenversicherung AN
+  // 6. SV ARBEITNEHMER
   if (entry.salaryCalculation.socialSecurityContributions.healthInsurance.employee > 0) {
     buchungen.push(createBookingLine({
       umsatz: entry.salaryCalculation.socialSecurityContributions.healthInsurance.employee,
@@ -363,7 +358,6 @@ export function generatePayrollBookings(
     }));
   }
   
-  // Rentenversicherung AN
   if (entry.salaryCalculation.socialSecurityContributions.pensionInsurance.employee > 0) {
     buchungen.push(createBookingLine({
       umsatz: entry.salaryCalculation.socialSecurityContributions.pensionInsurance.employee,
@@ -376,7 +370,6 @@ export function generatePayrollBookings(
     }));
   }
   
-  // Arbeitslosenversicherung AN
   if (entry.salaryCalculation.socialSecurityContributions.unemploymentInsurance.employee > 0) {
     buchungen.push(createBookingLine({
       umsatz: entry.salaryCalculation.socialSecurityContributions.unemploymentInsurance.employee,
@@ -389,7 +382,6 @@ export function generatePayrollBookings(
     }));
   }
   
-  // Pflegeversicherung AN
   if (entry.salaryCalculation.socialSecurityContributions.careInsurance.employee > 0) {
     buchungen.push(createBookingLine({
       umsatz: entry.salaryCalculation.socialSecurityContributions.careInsurance.employee,
@@ -402,9 +394,7 @@ export function generatePayrollBookings(
     }));
   }
   
-  // ========== 7. SOZIALVERSICHERUNG ARBEITGEBER ==========
-  
-  // Krankenversicherung AG
+  // 7. SV ARBEITGEBER
   if (entry.salaryCalculation.socialSecurityContributions.healthInsurance.employer > 0) {
     buchungen.push(createBookingLine({
       umsatz: entry.salaryCalculation.socialSecurityContributions.healthInsurance.employer,
@@ -418,7 +408,6 @@ export function generatePayrollBookings(
     }));
   }
   
-  // Rentenversicherung AG
   if (entry.salaryCalculation.socialSecurityContributions.pensionInsurance.employer > 0) {
     buchungen.push(createBookingLine({
       umsatz: entry.salaryCalculation.socialSecurityContributions.pensionInsurance.employer,
@@ -432,7 +421,6 @@ export function generatePayrollBookings(
     }));
   }
   
-  // Arbeitslosenversicherung AG
   if (entry.salaryCalculation.socialSecurityContributions.unemploymentInsurance.employer > 0) {
     buchungen.push(createBookingLine({
       umsatz: entry.salaryCalculation.socialSecurityContributions.unemploymentInsurance.employer,
@@ -446,7 +434,6 @@ export function generatePayrollBookings(
     }));
   }
   
-  // Pflegeversicherung AG
   if (entry.salaryCalculation.socialSecurityContributions.careInsurance.employer > 0) {
     buchungen.push(createBookingLine({
       umsatz: entry.salaryCalculation.socialSecurityContributions.careInsurance.employer,
@@ -460,8 +447,7 @@ export function generatePayrollBookings(
     }));
   }
   
-  // ========== 8. NETTOLOHN AUSZAHLUNG ==========
-  // Soll: Verbindlichkeiten Löhne | Haben: Bank
+  // 8. NETTOLOHN: Soll Verb. Löhne | Haben Bank
   buchungen.push(createBookingLine({
     umsatz: entry.finalNetSalary,
     sollHaben: 'S',
@@ -499,7 +485,7 @@ function createBookingLine(params: {
     kostenstelle = '',
   } = params;
   
-  // DATEV erwartet Beträge ohne Tausendertrennzeichen und mit Komma als Dezimaltrennzeichen
+  // DATEV: Beträge mit Komma als Dezimaltrennzeichen, keine Tausendertrenner
   const formattedUmsatz = umsatz.toFixed(2).replace('.', ',');
   
   return [
@@ -544,7 +530,7 @@ export function generateDatevExport(
 ): string {
   const lines: string[] = [];
   
-  // 1. Header-Zeile
+  // 1. Header-Zeile (31 Felder, semicolon-getrennt)
   const header = createDatevHeader(config, periode);
   lines.push(header.join(';'));
   
@@ -560,7 +546,7 @@ export function generateDatevExport(
     }
   }
   
-  // 4. Mit Windows-Zeilenumbruch und ISO-8859-1 Encoding-kompatibel
+  // 4. Windows-Zeilenumbruch (DATEV-Standard)
   return lines.join('\r\n');
 }
 
@@ -576,7 +562,6 @@ export function generateSummaryBookings(
   const belegDatum = format(periode.endDate, 'ddMM');
   const belegNr = `LG${format(periode.startDate, 'yyMM')}SUM`;
   
-  // Summen berechnen
   const totals = entries.reduce(
     (acc, entry) => ({
       lohnsteuer: acc.lohnsteuer + entry.salaryCalculation.taxes.incomeTax,
@@ -597,7 +582,6 @@ export function generateSummaryBookings(
   const buchungen: string[][] = [];
   const monat = format(periode.startDate, 'MM/yyyy');
   
-  // Überweisung Lohnsteuer an Finanzamt
   if (totals.lohnsteuer + totals.soli + totals.kirchensteuer > 0) {
     buchungen.push(createBookingLine({
       umsatz: totals.lohnsteuer + totals.soli + totals.kirchensteuer,
@@ -610,7 +594,6 @@ export function generateSummaryBookings(
     }));
   }
   
-  // Überweisung SV an Träger (DRV, BA)
   const rvAlvGesamt = entries.reduce(
     (sum, e) => sum + 
       e.salaryCalculation.socialSecurityContributions.pensionInsurance.total +
@@ -630,7 +613,6 @@ export function generateSummaryBookings(
     }));
   }
   
-  // Überweisung an Krankenkassen
   if (totals.kvGesamt > 0) {
     buchungen.push(createBookingLine({
       umsatz: totals.kvGesamt,
@@ -647,17 +629,19 @@ export function generateSummaryBookings(
 }
 
 /**
- * Validiert die Export-Konfiguration
+ * Validiert die Export-Konfiguration gemäß DATEV-Spezifikation
  */
 export function validateDatevConfig(config: DatevExportConfig): string[] {
   const errors: string[] = [];
   
-  if (!config.beraterNr || config.beraterNr.length < 1) {
-    errors.push('Beraternummer ist erforderlich');
+  const beraterNr = parseInt(config.beraterNr, 10);
+  if (isNaN(beraterNr) || beraterNr < 1001 || beraterNr > 9999999) {
+    errors.push('Beraternummer muss zwischen 1001 und 9999999 liegen');
   }
   
-  if (!config.mandantenNr || config.mandantenNr.length < 1) {
-    errors.push('Mandantennummer ist erforderlich');
+  const mandantenNr = parseInt(config.mandantenNr, 10);
+  if (isNaN(mandantenNr) || mandantenNr < 1 || mandantenNr > 99999) {
+    errors.push('Mandantennummer muss zwischen 1 und 99999 liegen');
   }
   
   if (config.sachkontenlaenge < 4 || config.sachkontenlaenge > 8) {
