@@ -8,9 +8,10 @@ import { AutomationDashboard } from "@/components/automation/automation-dashboar
 import { PayrollGuardianDashboard } from "@/components/payroll/payroll-guardian-dashboard";
 import { LohnkontoPage } from "@/components/payroll/lohnkonto-page";
 import { MonthlyPayrollWizard } from "@/components/payroll/monthly-payroll-wizard";
+import { FibuJournalPage } from "@/components/payroll/fibu-journal";
 import { AppBreadcrumb } from "@/components/ui/app-breadcrumb";
 
-type PayrollView = 'dashboard' | 'special-payments' | 'automation' | 'guardian' | 'lohnkonto' | 'monthly-wizard';
+type PayrollView = 'dashboard' | 'special-payments' | 'automation' | 'guardian' | 'lohnkonto' | 'monthly-wizard' | 'fibu';
 
 const viewLabels: Record<Exclude<PayrollView, 'dashboard'>, string> = {
   'special-payments': 'Sonderzahlungen',
@@ -18,6 +19,7 @@ const viewLabels: Record<Exclude<PayrollView, 'dashboard'>, string> = {
   'guardian': 'Payroll Guardian',
   'lohnkonto': 'Lohnkonto',
   'monthly-wizard': 'Monatsabrechnung',
+  'fibu': 'Finanzbuchhaltung',
 };
 
 export default function Payroll() {
@@ -47,6 +49,7 @@ export default function Payroll() {
           onShowGuardian={() => setCurrentView('guardian')}
           onShowLohnkonto={() => setCurrentView('lohnkonto')}
           onShowMonthlyWizard={() => setCurrentView('monthly-wizard')}
+          onShowFibu={() => setCurrentView('fibu')}
         />
       )}
       {currentView === 'special-payments' && (
@@ -63,6 +66,9 @@ export default function Payroll() {
       )}
       {currentView === 'monthly-wizard' && (
         <MonthlyPayrollWizard onBack={handleBack} onComplete={handleBack} />
+      )}
+      {currentView === 'fibu' && (
+        <FibuJournalPage onBack={handleBack} />
       )}
     </MainLayout>
   );
