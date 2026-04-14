@@ -86,71 +86,225 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
     autoCheckCurrentStep();
   }, [currentStep, selectedMonth, selectedYear]);
 
-  const autoCheckCurrentStep = () => {
-    const newStatuses = [...stepStatuses];
-    const status = { ...newStatuses[currentStep] };
+  const checkStep = useCallback((stepIndex: number, statuses: StepStatus[]): StepStatus => {
+    const status: StepStatus = { completed: false, approved: false, warnings: [], criticalWarnings: [], autoChecked: true };
 
-    switch (currentStep) {
+    switch (stepIndex) {
       case 0: { // Zeiterfassung
         const monthEntries = timeEntries.filter(e => {
           const d = new Date(e.date);
           return d.getMonth() + 1 === selectedMonth && d.getFullYear() === selectedYear;
         });
-        status.warnings = [];
         if (monthEntries.length === 0) {
           status.warnings.push('Keine Zeiteinträge für diesen Monat vorhanden');
         }
         const employeesWithEntries = new Set(monthEntries.map(e => e.employeeId));
         const missing = activeEmployees.filter(e => !employeesWithEntries.has(e.id));
-        if (missing.length > 0) {
+        if (missing.length > 0 && missing.length < activeEmployees.length) {
           status.warnings.push(`${missing.length} Mitarbeiter ohne Zeiterfassung`);
         }
-        status.autoChecked = true;
+        // Critical: ALL employees missing = likely data issue
+        if (activeEmployees.length > 0 && missing.length === activeEmployees.length && monthEntries.length === 0) {
+          status.criticalWarnings.push('Keine Zeiterfassung für alle Mitarbeiter – bitte prüfen');
+        }
         break;
       }
       case 1: { // Sonderzahlungen
-        status.warnings = [];
-        // Check if month has typical special payments (Dec = Weihnachtsgeld, etc.)
         if (selectedMonth === 12) {
-          status.warnings.push('Dezember: Weihnachtsgeld / 13. Gehalt prüfen');
+          status.criticalWarnings.push('Dezember: Weihnachtsgeld / 13. Gehalt prüfen');
         }
         if (selectedMonth === 6) {
-          status.warnings.push('Juni: Urlaubsgeld prüfen');
+          status.criticalWarnings.push('Juni: Urlaubsgeld prüfen');
         }
-        status.autoChecked = true;
         break;
       }
       case 2: { // Abrechnung
         const existingPeriod = payrollPeriods.find(
           p => p.month === selectedMonth && p.year === selectedYear
         );
-        status.warnings = [];
         if (existingPeriod) {
-          status.warnings.push(`Abrechnung für ${MONTHS[selectedMonth - 1]} ${selectedYear} existiert bereits (Status: ${existingPeriod.status})`);
+          status.warnings.push(`Abrechnung existiert bereits (Status: ${existingPeriod.status})`);
           status.completed = true;
         }
         if (activeEmployees.length === 0) {
-          status.warnings.push('Keine aktiven Mitarbeiter vorhanden');
+          status.criticalWarnings.push('Keine aktiven Mitarbeiter vorhanden');
         }
-        status.autoChecked = true;
         break;
       }
       case 3: { // Meldungen
-        status.warnings = [];
         status.warnings.push('SV-Meldungen und Lohnsteueranmeldung werden automatisch vorbereitet');
-        status.autoChecked = true;
         break;
       }
       case 4: { // Export
-        status.warnings = [];
-        status.autoChecked = true;
         break;
       }
     }
+    return status;
+  }, [timeEntries, selectedMonth, selectedYear, activeEmployees, payrollPeriods]);
 
-    newStatuses[currentStep] = status;
+  const autoCheckCurrentStep = useCallback(() => {
+    const newStatuses = [...stepStatuses];
+    const checked = checkStep(currentStep, newStatuses);
+    // Preserve approved state if already approved
+    checked.approved = newStatuses[currentStep].approved;
+    checked.completed = newStatuses[currentStep].completed || checked.completed;
+    newStatuses[currentStep] = checked;
     setStepStatuses(newStatuses);
-  };
+  }, [currentStep, stepStatuses, checkStep]);
+
+  // ─── Auto-Run Engine ──────────────────────────────────────
+  const startAutoRun = useCallback(async () => {
+    setAutoRunActive(true);
+    setAutoRunPaused(false);
+    autoRunRef.current = true;
+    setAutoRunLog([]);
+
+    const log = (msg: string) => setAutoRunLog(prev => [...prev, `${new Date().toLocaleTimeString('de-DE')} – ${msg}`]);
+    const statuses: StepStatus[] = WIZARD_STEPS.map(() => ({ completed: false, approved: false, warnings: [], criticalWarnings: [], autoChecked: true }));
+
+    for (let step = 0; step < WIZARD_STEPS.length; step++) {
+      if (!autoRunRef.current) {
+        log('⏹ Auto-Run abgebrochen');
+        break;
+      }
+
+      setCurrentStep(step);
+      log(`🔍 Schritt ${step + 1}: ${WIZARD_STEPS[step].title} wird geprüft...`);
+
+      // Small delay for UX visibility
+      await new Promise(r => setTimeout(r, 800));
+
+      const checked = checkStep(step, statuses);
+
+      if (checked.criticalWarnings.length > 0) {
+        // Stop and require user attention
+        checked.autoChecked = true;
+        statuses[step] = checked;
+        setStepStatuses([...statuses]);
+        setAutoRunPaused(true);
+        log(`⚠️ Schritt ${step + 1}: ${checked.criticalWarnings.length} Auffälligkeit(en) – Bestätigung erforderlich`);
+        checked.criticalWarnings.forEach(w => log(`   → ${w}`));
+        autoRunRef.current = false;
+        setAutoRunActive(false);
+        return; // Stop here, user must approve
+      }
+
+      // Step 2 special: create payroll if needed
+      if (step === 2 && !checked.completed) {
+        log('📊 Abrechnung wird erstellt...');
+        try {
+          await createPayrollPeriod(selectedYear, selectedMonth);
+          checked.completed = true;
+          log('✅ Abrechnung erfolgreich erstellt');
+        } catch {
+          log('❌ Fehler bei Abrechnungserstellung – Stopp');
+          checked.criticalWarnings.push('Abrechnungserstellung fehlgeschlagen');
+          statuses[step] = checked;
+          setStepStatuses([...statuses]);
+          setAutoRunPaused(true);
+          autoRunRef.current = false;
+          setAutoRunActive(false);
+          return;
+        }
+      }
+
+      // Auto-approve
+      checked.approved = true;
+      checked.completed = true;
+      statuses[step] = checked;
+      setStepStatuses([...statuses]);
+      log(`✅ Schritt ${step + 1}: ${WIZARD_STEPS[step].title} – OK`);
+
+      await new Promise(r => setTimeout(r, 400));
+    }
+
+    if (autoRunRef.current) {
+      log('🎉 Alle Schritte erfolgreich durchlaufen!');
+      setAutoRunActive(false);
+      autoRunRef.current = false;
+    }
+  }, [checkStep, createPayrollPeriod, selectedYear, selectedMonth]);
+
+  const stopAutoRun = useCallback(() => {
+    autoRunRef.current = false;
+    setAutoRunActive(false);
+    setAutoRunPaused(false);
+  }, []);
+
+  const resumeAutoRun = useCallback(() => {
+    // Approve current step and continue
+    const newStatuses = [...stepStatuses];
+    newStatuses[currentStep] = { ...newStatuses[currentStep], approved: true, completed: true, criticalWarnings: [] };
+    setStepStatuses(newStatuses);
+
+    if (currentStep < WIZARD_STEPS.length - 1) {
+      setCurrentStep(prev => prev + 1);
+      // Re-start auto-run from next step
+      setTimeout(() => {
+        startAutoRunFrom(currentStep + 1);
+      }, 300);
+    }
+  }, [stepStatuses, currentStep]);
+
+  const startAutoRunFrom = useCallback(async (fromStep: number) => {
+    setAutoRunActive(true);
+    setAutoRunPaused(false);
+    autoRunRef.current = true;
+
+    const log = (msg: string) => setAutoRunLog(prev => [...prev, `${new Date().toLocaleTimeString('de-DE')} – ${msg}`]);
+    const statuses = [...stepStatuses];
+
+    for (let step = fromStep; step < WIZARD_STEPS.length; step++) {
+      if (!autoRunRef.current) break;
+
+      setCurrentStep(step);
+      log(`🔍 Schritt ${step + 1}: ${WIZARD_STEPS[step].title} wird geprüft...`);
+      await new Promise(r => setTimeout(r, 800));
+
+      const checked = checkStep(step, statuses);
+
+      if (checked.criticalWarnings.length > 0) {
+        checked.autoChecked = true;
+        statuses[step] = checked;
+        setStepStatuses([...statuses]);
+        setAutoRunPaused(true);
+        log(`⚠️ Schritt ${step + 1}: Bestätigung erforderlich`);
+        autoRunRef.current = false;
+        setAutoRunActive(false);
+        return;
+      }
+
+      if (step === 2 && !checked.completed) {
+        log('📊 Abrechnung wird erstellt...');
+        try {
+          await createPayrollPeriod(selectedYear, selectedMonth);
+          checked.completed = true;
+          log('✅ Abrechnung erstellt');
+        } catch {
+          log('❌ Fehler – Stopp');
+          statuses[step] = checked;
+          setStepStatuses([...statuses]);
+          setAutoRunPaused(true);
+          autoRunRef.current = false;
+          setAutoRunActive(false);
+          return;
+        }
+      }
+
+      checked.approved = true;
+      checked.completed = true;
+      statuses[step] = checked;
+      setStepStatuses([...statuses]);
+      log(`✅ Schritt ${step + 1}: OK`);
+      await new Promise(r => setTimeout(r, 400));
+    }
+
+    if (autoRunRef.current) {
+      log('🎉 Alle Schritte erfolgreich!');
+      setAutoRunActive(false);
+      autoRunRef.current = false;
+    }
+  }, [stepStatuses, checkStep, createPayrollPeriod, selectedYear, selectedMonth]);
 
   const approveStep = () => {
     const newStatuses = [...stepStatuses];
