@@ -7,15 +7,17 @@ import { SpecialPaymentsManager } from "@/components/payroll/special-payments-ma
 import { AutomationDashboard } from "@/components/automation/automation-dashboard";
 import { PayrollGuardianDashboard } from "@/components/payroll/payroll-guardian-dashboard";
 import { LohnkontoPage } from "@/components/payroll/lohnkonto-page";
+import { MonthlyPayrollWizard } from "@/components/payroll/monthly-payroll-wizard";
 import { AppBreadcrumb } from "@/components/ui/app-breadcrumb";
 
-type PayrollView = 'dashboard' | 'special-payments' | 'automation' | 'guardian' | 'lohnkonto';
+type PayrollView = 'dashboard' | 'special-payments' | 'automation' | 'guardian' | 'lohnkonto' | 'monthly-wizard';
 
 const viewLabels: Record<Exclude<PayrollView, 'dashboard'>, string> = {
   'special-payments': 'Sonderzahlungen',
   'automation': 'Automatisierung',
   'guardian': 'Payroll Guardian',
   'lohnkonto': 'Lohnkonto',
+  'monthly-wizard': 'Monatsabrechnung',
 };
 
 export default function Payroll() {
@@ -44,6 +46,7 @@ export default function Payroll() {
           onShowAutomation={() => setCurrentView('automation')}
           onShowGuardian={() => setCurrentView('guardian')}
           onShowLohnkonto={() => setCurrentView('lohnkonto')}
+          onShowMonthlyWizard={() => setCurrentView('monthly-wizard')}
         />
       )}
       {currentView === 'special-payments' && (
@@ -57,6 +60,9 @@ export default function Payroll() {
       )}
       {currentView === 'lohnkonto' && (
         <LohnkontoPage onBack={handleBack} />
+      )}
+      {currentView === 'monthly-wizard' && (
+        <MonthlyPayrollWizard onBack={handleBack} onComplete={handleBack} />
       )}
     </MainLayout>
   );
