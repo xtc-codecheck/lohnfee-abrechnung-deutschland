@@ -11,34 +11,61 @@
  * da diese Personengruppen keine oder stark reduzierte SV-Beiträge haben.
  * Dadurch ist die Lohnsteuer HÖHER als bei der allgemeinen Tabelle.
  * 
- * Berechnungsmethode:
- * Statt einer zweiten statischen Tabelle wird die Lohnsteuer nach dem
- * Programmablaufplan (PAP) 2025 des BMF berechnet, wobei die Vorsorgepauschale
- * nur die private Kranken-/Pflegeversicherung (Basisbeitrag) berücksichtigt.
+ * Verwendet die zentrale PAP-2025-Formel aus tax-calculation.ts
+ * (keine duplizierte Steuerformel mehr).
  */
 
 import { TAX_ALLOWANCES_2025 } from '@/constants/social-security';
 import { calculateTariflicheEStPAP2025 } from './tax-calculation';
 
+// ============= Typen =============
+
+export interface BesondereTaxParams {
+  grossMonthly: number;
+  taxClass: number; // 1-6
+  childAllowances: number;
+  churchTax: boolean;
+  churchTaxRate: number; // 8 oder 9
+  privateHealthInsuranceMonthly?: number; // PKV-Basisbeitrag pro Monat
+  privateCareInsuranceMonthly?: number; // PPV-Beitrag pro Monat
+}
+
+export interface BesondereTaxResult {
+  incomeTax: number; // Monatliche Lohnsteuer
+  solidarityTax: number;
+  churchTax: number;
+  totalTax: number;
+  effectiveRate: number; // Effektiver Steuersatz in %
+}
+
+// ============= Vorsorgepauschale =============
+
+/**
+ * Berechnet die Vorsorgepauschale für die besondere Tabelle.
+ * Nur PKV-Basisbeitrag (max. Höchstbetrag nach § 10 Abs. 4 EStG).
+ */
+function calculateBesondereVorsorgepauschale(
+  taxClass: number,
+  privateHealthMonthly: number,
+  privateCareMonthly: number,
+): number {
+  const maxBasisbeitrag = taxClass === 3 ? 233.33 : 158.33;
+  const basiskrankenversicherung = Math.min(privateHealthMonthly * 0.96, maxBasisbeitrag);
+  return basiskrankenversicherung + privateCareMonthly;
+}
+
+// ============= Hauptberechnung =============
+
 /**
  * Berechnung nach besonderer Lohnsteuertabelle
- * 
- * Ablauf:
- * 1. Jahres-Brutto hochrechnen
- * 2. Werbungskostenpauschale abziehen
- * 3. Sonderausgabenpauschale abziehen
- * 4. Vorsorgepauschale (nur PKV-Basis) abziehen
- * 5. Kinderfreibetrag berücksichtigen (bei Soli/KiSt)
- * 6. Tarifliche ESt nach § 32a berechnen
- * 7. Steuerklassenfaktor anwenden
- * 8. Auf Monat umrechnen
+ * Nutzt die zentrale calculateTariflicheEStPAP2025 Funktion.
  */
 export function calculateBesondereLohnsteuer(params: BesondereTaxParams): BesondereTaxResult {
   const { 
     grossMonthly, taxClass, childAllowances, 
     churchTax, churchTaxRate,
-    privateHealthInsuranceMonthly = 300, // Standardwert PKV-Basis
-    privateCareInsuranceMonthly = 50,    // Standardwert PPV
+    privateHealthInsuranceMonthly = 300,
+    privateCareInsuranceMonthly = 50,
   } = params;
 
   if (grossMonthly <= 0) {
@@ -47,7 +74,6 @@ export function calculateBesondereLohnsteuer(params: BesondereTaxParams): Besond
 
   const grossYearly = grossMonthly * 12;
 
-  // Abzüge
   const werbungskosten = TAX_ALLOWANCES_2025.workRelatedExpenses;
   const sonderausgaben = TAX_ALLOWANCES_2025.specialExpenses;
   const vorsorgepauschale = calculateBesondereVorsorgepauschale(
@@ -55,51 +81,42 @@ export function calculateBesondereLohnsteuer(params: BesondereTaxParams): Besond
   ) * 12;
 
   let zvE = grossYearly - werbungskosten - sonderausgaben - vorsorgepauschale;
-
-  // Steuerklassen-Anpassung
-  // StKl III: doppelter Grundfreibetrag (Splitting)
-  // StKl V/VI: kein Grundfreibetrag
   let est: number;
   
   switch (taxClass) {
     case 1:
     case 4:
-      est = calculateTariflicheESt(Math.max(0, zvE));
+      est = calculateTariflicheEStPAP2025(Math.max(0, zvE));
       break;
-    case 2:
-      // Entlastungsbetrag Alleinerziehende: 4.260 € + 240 € je weiteres Kind
+    case 2: {
       const entlastung = 4260 + Math.max(0, childAllowances - 1) * 240;
-      est = calculateTariflicheESt(Math.max(0, zvE - entlastung));
+      est = calculateTariflicheEStPAP2025(Math.max(0, zvE - entlastung));
       break;
+    }
     case 3:
-      // Splittingverfahren: zvE halbieren, ESt berechnen, verdoppeln
-      est = calculateTariflicheESt(Math.max(0, zvE / 2)) * 2;
+      est = calculateTariflicheEStPAP2025(Math.max(0, Math.floor(zvE / 2))) * 2;
       break;
     case 5:
-      // Kein Grundfreibetrag, höhere Belastung
-      est = calculateTariflicheESt(Math.max(0, zvE));
-      // StKl V: Zusätzliche Belastung durch fehlenden GFB des Partners
+      est = 2 * calculateTariflicheEStPAP2025(Math.max(0, zvE)) 
+          - 2 * calculateTariflicheEStPAP2025(Math.max(0, Math.floor(zvE / 2)));
       break;
     case 6:
-      // Kein Grundfreibetrag, keine Pauschalen (außer Vorsorgepauschale)
       zvE = grossYearly - vorsorgepauschale;
-      est = calculateTariflicheESt(Math.max(0, zvE));
+      est = 2 * calculateTariflicheEStPAP2025(Math.max(0, zvE)) 
+          - 2 * calculateTariflicheEStPAP2025(Math.max(0, Math.floor(zvE / 2)));
       break;
     default:
-      est = calculateTariflicheESt(Math.max(0, zvE));
+      est = calculateTariflicheEStPAP2025(Math.max(0, zvE));
   }
 
-  // Monatliche Lohnsteuer
   const monthlyIncomeTax = Math.floor(est / 12 * 100) / 100;
 
-  // Solidaritätszuschlag (Freigrenze: monatlich ~1.662,50 €)
   const soliFreigrenze = TAX_ALLOWANCES_2025.solidarityTaxFreeAmount / 12;
   let solidarityTax = 0;
   if (monthlyIncomeTax > soliFreigrenze) {
     solidarityTax = Math.floor(monthlyIncomeTax * 0.055 * 100) / 100;
   }
 
-  // Kirchensteuer
   const churchTaxAmount = churchTax 
     ? Math.floor(monthlyIncomeTax * (churchTaxRate / 100) * 100) / 100 
     : 0;
