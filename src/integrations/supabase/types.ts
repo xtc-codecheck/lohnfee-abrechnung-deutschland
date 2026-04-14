@@ -569,6 +569,93 @@ export type Database = {
           },
         ]
       }
+      lohnsteueranmeldungen: {
+        Row: {
+          anmeldezeitraum: string
+          anzahl_arbeitnehmer: number
+          created_at: string
+          created_by: string | null
+          finanzamt: string | null
+          gesamtbetrag: number
+          id: string
+          korrektur_von: string | null
+          month: number
+          status: string
+          steuernummer: string | null
+          summe_kirchensteuer_ev: number
+          summe_kirchensteuer_rk: number
+          summe_lohnsteuer: number
+          summe_pauschale_lohnsteuer: number
+          summe_solidaritaetszuschlag: number
+          tenant_id: string | null
+          transfer_ticket: string | null
+          uebermittelt_am: string | null
+          updated_at: string
+          year: number
+        }
+        Insert: {
+          anmeldezeitraum?: string
+          anzahl_arbeitnehmer?: number
+          created_at?: string
+          created_by?: string | null
+          finanzamt?: string | null
+          gesamtbetrag?: number
+          id?: string
+          korrektur_von?: string | null
+          month: number
+          status?: string
+          steuernummer?: string | null
+          summe_kirchensteuer_ev?: number
+          summe_kirchensteuer_rk?: number
+          summe_lohnsteuer?: number
+          summe_pauschale_lohnsteuer?: number
+          summe_solidaritaetszuschlag?: number
+          tenant_id?: string | null
+          transfer_ticket?: string | null
+          uebermittelt_am?: string | null
+          updated_at?: string
+          year: number
+        }
+        Update: {
+          anmeldezeitraum?: string
+          anzahl_arbeitnehmer?: number
+          created_at?: string
+          created_by?: string | null
+          finanzamt?: string | null
+          gesamtbetrag?: number
+          id?: string
+          korrektur_von?: string | null
+          month?: number
+          status?: string
+          steuernummer?: string | null
+          summe_kirchensteuer_ev?: number
+          summe_kirchensteuer_rk?: number
+          summe_lohnsteuer?: number
+          summe_pauschale_lohnsteuer?: number
+          summe_solidaritaetszuschlag?: number
+          tenant_id?: string | null
+          transfer_ticket?: string | null
+          uebermittelt_am?: string | null
+          updated_at?: string
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lohnsteueranmeldungen_korrektur_von_fkey"
+            columns: ["korrektur_von"]
+            isOneToOne: false
+            referencedRelation: "lohnsteueranmeldungen"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lohnsteueranmeldungen_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lohnsteuerbescheinigungen: {
         Row: {
           created_at: string
