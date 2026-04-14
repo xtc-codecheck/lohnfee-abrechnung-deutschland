@@ -1,13 +1,16 @@
-import { useState } from "react";
 import { MainLayout } from "@/components/layout/main-layout";
 import { PageSeo } from "@/components/seo/page-seo";
 import { CompanySettingsPage } from "@/components/settings/company-settings-page";
 import { AdminUsersPage } from "@/components/settings/admin-users-page";
 import { GdprManagementPage } from "@/components/settings/gdpr-management-page";
+import { ContactMessagesPage } from "@/components/settings/contact-messages-page";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Building2, Users, Shield } from "lucide-react";
+import { Building2, Users, Shield, Mail } from "lucide-react";
+import { useAuth } from "@/contexts/auth-context";
 
 export default function Settings() {
+  const { isAdmin } = useAuth();
+
   return (
     <MainLayout>
       <PageSeo title="Einstellungen" description="Unternehmenseinstellungen, Benutzerverwaltung und Datenschutz konfigurieren." path="/settings" />
@@ -25,6 +28,12 @@ export default function Settings() {
             <Shield className="h-4 w-4" />
             DSGVO
           </TabsTrigger>
+          {isAdmin() && (
+            <TabsTrigger value="messages" className="flex items-center gap-2">
+              <Mail className="h-4 w-4" />
+              Nachrichten
+            </TabsTrigger>
+          )}
         </TabsList>
 
         <TabsContent value="company">
@@ -36,6 +45,11 @@ export default function Settings() {
         <TabsContent value="gdpr">
           <GdprManagementPage />
         </TabsContent>
+        {isAdmin() && (
+          <TabsContent value="messages">
+            <ContactMessagesPage />
+          </TabsContent>
+        )}
       </Tabs>
     </MainLayout>
   );
