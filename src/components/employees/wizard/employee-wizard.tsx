@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button';
 import { PageHeader } from '@/components/ui/page-header';
 import { useToast } from '@/hooks/use-toast';
 import { useEmployeeStorage } from '@/hooks/use-employee-storage';
-import { validateEmployeeForm } from '@/lib/validations/employee';
+import { validateEmployeeForm, validatePersonalData, validateEmploymentData, validateSalaryData, getValidationErrors, bankingDataSchema } from '@/lib/validations/employee';
 
 import { WizardProgress } from './wizard-progress';
 import { PersonalDataStep } from './personal-data-step';
@@ -60,8 +60,43 @@ export function EmployeeWizard({ onBack, onSave, onCalculate }: EmployeeWizardPr
     }
   };
 
+  const validateCurrentStep = (): boolean => {
+    let result;
+    switch (currentStep) {
+      case 0:
+        result = validatePersonalData(formData);
+        break;
+      case 1:
+        result = validateEmploymentData(formData);
+        break;
+      case 2:
+        result = validateSalaryData(formData);
+        break;
+      case 3: {
+        result = bankingDataSchema.safeParse(formData);
+        break;
+      }
+      default:
+        return true;
+    }
+    
+    if (!result.success) {
+      const validationErrors = getValidationErrors(result as any);
+      setErrors(validationErrors);
+      toast({
+        title: 'Validierungsfehler',
+        description: 'Bitte prüfen Sie die markierten Felder.',
+        variant: 'destructive'
+      });
+      return false;
+    }
+    
+    setErrors({});
+    return true;
+  };
+
   const goNext = () => {
-    if (!isLastStep) {
+    if (!isLastStep && validateCurrentStep()) {
       setCurrentStep(prev => prev + 1);
     }
   };
