@@ -11,11 +11,12 @@
  * Vision: Vollautark – Nutzer nickt nur noch ab.
  */
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import {
   ArrowLeft, ArrowRight, Check, CheckCircle2, Clock, Gift,
   Calculator, FileText, Download, Play, AlertTriangle, Info,
-  Zap, Loader2, ChevronRight, RefreshCw,
+  Zap, Loader2, ChevronRight, RefreshCw, FastForward, Pause,
+  CircleCheck, OctagonX,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
