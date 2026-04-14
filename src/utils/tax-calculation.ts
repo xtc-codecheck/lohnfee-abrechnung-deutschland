@@ -432,9 +432,12 @@ export function calculateCompleteTax(params: TaxCalculationParams): TaxCalculati
 
     const totalSocialContributions = pensionInsurance + unemploymentInsurance + healthInsurance + careInsurance;
     
-    // Steuer: Steuerklasse I-IV meist keine Lohnsteuer, V/VI können haben
+    // Lohnsteuer nach PAP 2025
     const taxClassNumber = parseInt(taxClass) || 1;
-    const incomeTaxMonthly = getWageTaxFromTable(grossMonthly, taxClassNumber);
+    const incomeTaxMonthly = calculateLohnsteuerPAP2025(
+      grossMonthly, taxClassNumber, childAllowances, isEastGermany,
+      healthInsuranceRate, isChildless, age, numberOfChildren ?? 0
+    );
     const incomeTax = incomeTaxMonthly * 12;
     
     const solidarityTax = calculateSolidarityTax(incomeTax);
@@ -497,10 +500,13 @@ export function calculateCompleteTax(params: TaxCalculationParams): TaxCalculati
   // Zuerst Sozialversicherung berechnen für korrekte Vorsorgepauschale
   const totalSocialContributions = pensionInsurance + unemploymentInsurance + healthInsurance + careInsurance;
   
-  // Lohnsteuer direkt aus Tabelle basierend auf Brutto und Steuerklasse
+  // Lohnsteuer nach PAP 2025 (formelbasiert)
   const monthlyGross = grossSalaryYearly / 12;
   const taxClassNumber = parseInt(taxClass) || 1;
-  const incomeTaxMonthly = getWageTaxFromTable(monthlyGross, taxClassNumber);
+  const incomeTaxMonthly = calculateLohnsteuerPAP2025(
+    monthlyGross, taxClassNumber, childAllowances, isEastGermany,
+    healthInsuranceRate, isChildless, age, numberOfChildren ?? 0
+  );
   const incomeTax = incomeTaxMonthly * 12;
   
   const solidarityTax = calculateSolidarityTax(incomeTax);
