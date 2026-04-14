@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { validateIBAN, validateTaxId, validateSVNumber, validatePLZ, validateBIC } from "./german-checksums";
 
 // Basis-Validierungen
 const nameSchema = z.string()
@@ -7,18 +8,28 @@ const nameSchema = z.string()
   .trim();
 
 const postalCodeSchema = z.string()
-  .regex(/^\d{5}$/, "Ungültige PLZ (5 Ziffern erwartet)");
+  .regex(/^\d{5}$/, "Ungültige PLZ (5 Ziffern erwartet)")
+  .refine((val) => validatePLZ(val).valid, {
+    message: "PLZ existiert nicht oder ist ungültig",
+  });
 
 const taxIdSchema = z.string()
-  .regex(/^\d{11}$/, "Ungültige Steuer-ID (11 Ziffern erwartet)");
+  .regex(/^\d{11}$/, "Ungültige Steuer-ID (11 Ziffern erwartet)")
+  .refine((val) => validateTaxId(val).valid, {
+    message: "Steuer-ID: Prüfziffer ungültig",
+  });
 
 const socialSecurityNumberSchema = z.string()
-  .regex(/^\d{12}$/, "Ungültige Sozialversicherungsnummer (12 Ziffern erwartet)")
+  .refine((val) => val === '' || validateSVNumber(val).valid, {
+    message: "SV-Nummer: Format oder Prüfziffer ungültig",
+  })
   .optional()
   .or(z.literal(""));
 
 const ibanSchema = z.string()
-  .regex(/^DE\d{2}\s?\d{4}\s?\d{4}\s?\d{4}\s?\d{4}\s?\d{2}$/, "Ungültige IBAN")
+  .refine((val) => val === '' || validateIBAN(val).valid, {
+    message: "IBAN: Prüfsumme ungültig",
+  })
   .optional()
   .or(z.literal(""));
 
