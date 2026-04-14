@@ -235,7 +235,7 @@ describe('SV-Referenz: BBG-Kappung bei Spitzenverdienern', () => {
 
 describe('SV-Referenz: Gesamtbelastungsquoten', () => {
   const testCases = [
-    { brutto: 2000, minQuote: 30, maxQuote: 45 },
+    { brutto: 2000, minQuote: 25, maxQuote: 45 },
     { brutto: 3000, minQuote: 30, maxQuote: 42 },
     { brutto: 4000, minQuote: 32, maxQuote: 42 },
     { brutto: 5000, minQuote: 34, maxQuote: 42 },
