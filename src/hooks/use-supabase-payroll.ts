@@ -21,7 +21,7 @@ export function useSupabasePayroll() {
   const periodsKey = queryKeys.payroll.periods(tenantId);
   const entriesKey = queryKeys.payroll.entries(tenantId);
 
-  const { data: payrollPeriods = [], isLoading: periodsLoading } = useQuery({
+  const { data: payrollPeriods = [], isLoading: periodsLoading, error: periodsError } = useQuery({
     queryKey: periodsKey,
     queryFn: async () => {
       const { data, error } = await supabase
@@ -36,7 +36,7 @@ export function useSupabasePayroll() {
     staleTime: 30_000,
   });
 
-  const { data: rawEntries = [], isLoading: entriesLoading } = useQuery({
+  const { data: rawEntries = [], isLoading: entriesLoading, error: entriesError } = useQuery({
     queryKey: entriesKey,
     queryFn: async () => {
       const { data, error } = await supabase
@@ -57,7 +57,7 @@ export function useSupabasePayroll() {
   );
 
   const isLoading = periodsLoading || entriesLoading;
-  const error = null;
+  const error = periodsError?.message || entriesError?.message || null;
 
   const createPeriodMutation = useMutation({
     mutationFn: async ({ year, month }: { year: number; month: number }) => {
