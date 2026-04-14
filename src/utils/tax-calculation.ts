@@ -73,31 +73,28 @@ function parseTaxClass(taxClass: string | number): number {
   return TAX_CLASS_MAP[taxClass.trim().toUpperCase()] ?? 1;
 }
 
-// ============= PAP 2025: Tarifliche Einkommensteuer nach § 32a EStG =============
+// ============= PAP: Tarifliche Einkommensteuer nach § 32a EStG =============
 
 /**
- * Berechnet die tarifliche Einkommensteuer nach § 32a EStG 2025
+ * Berechnet die tarifliche Einkommensteuer nach § 32a EStG
  * Exakte Formel aus dem Programmablaufplan (PAP) des BMF
- * 
- * Tarif 2025:
- * Zone 1: 0 € bis 12.096 € → 0 €
- * Zone 2: 12.097 € bis 17.443 € → (932,30 × y + 1.400) × y mit y = (zvE − 12.096) / 10.000
- * Zone 3: 17.444 € bis 68.480 € → (176,64 × z + 2.397) × z + 1.015,13 mit z = (zvE − 17.443) / 10.000
- * Zone 4: 68.481 € bis 277.825 € → 0,42 × zvE − 10.911,92
- * Zone 5: ab 277.826 € → 0,45 × zvE − 19.246,67
+ * Unterstützt 2025 und 2026 über den year-Parameter
  */
-export function calculateTariflicheEStPAP2025(zvE: number): number {
+export function calculateTariflicheEStPAP2025(zvE: number, year: number = 2025): number {
   if (zvE <= 0) return 0;
   
   // Auf ganze Euro abrunden (§ 32a Abs. 1 S. 6 EStG)
   zvE = Math.floor(zvE);
   
-  if (zvE <= TAX_ALLOWANCES_2025.basicAllowance) return 0;
+  const config = getYearConfig(year);
+  const { taxAllowances, taxRates } = config;
 
-  const { progressionZone1, progressionZone2, proportionalZone1, proportionalZone2 } = TAX_RATES_2025;
+  if (zvE <= taxAllowances.basicAllowance) return 0;
+
+  const { progressionZone1, progressionZone2, proportionalZone1, proportionalZone2 } = taxRates;
 
   if (zvE <= progressionZone1.to) {
-    const y = (zvE - TAX_ALLOWANCES_2025.basicAllowance) / 10000;
+    const y = (zvE - taxAllowances.basicAllowance) / 10000;
     return Math.floor((progressionZone1.coefficients[0] * y + progressionZone1.coefficients[1]) * y);
   }
 
