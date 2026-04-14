@@ -42,6 +42,7 @@ export function dbToEmployee(row: DbEmployee): Employee {
       },
       socialSecurityNumber: row.sv_number ?? '',
       childAllowances: Number(row.children_allowance ?? 0),
+      numberOfChildren: Number((row as any).number_of_children ?? 0),
       relationshipStatus: 'single',
     },
     employmentData: {
