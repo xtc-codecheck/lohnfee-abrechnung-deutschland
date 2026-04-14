@@ -1,16 +1,35 @@
+import { useState, useEffect } from "react";
 import { Users, Calculator, FileText, DollarSign, TrendingUp, AlertCircle, Loader2 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useEmployees } from "@/contexts/employee-context";
 import { useSupabasePayroll } from "@/hooks/use-supabase-payroll";
+import { useCompanySettings } from "@/hooks/use-company-settings";
+import { OnboardingWizard } from "@/components/onboarding/onboarding-wizard";
 
 export function MainDashboard() {
   const navigate = useNavigate();
   const { employees, isLoading: empLoading } = useEmployees();
   const { payrollPeriods, payrollEntries, isLoading: payLoading } = useSupabasePayroll();
+  const { settings: companySettings, isLoading: compLoading } = useCompanySettings();
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [onboardingDismissed, setOnboardingDismissed] = useState(false);
 
-  const isLoading = empLoading || payLoading;
+  const isLoading = empLoading || payLoading || compLoading;
+
+  // Show onboarding if no company settings and no employees
+  useEffect(() => {
+    if (!isLoading && !onboardingDismissed) {
+      const isNew = !companySettings && employees.length === 0;
+      setShowOnboarding(isNew);
+    }
+  }, [isLoading, companySettings, employees.length, onboardingDismissed]);
+
+  const handleDismissOnboarding = () => {
+    setShowOnboarding(false);
+    setOnboardingDismissed(true);
+  };
 
   // Echte AG-Kosten aus Abrechnungen berechnen, Fallback auf Schätzwert
   const totalEmployerCosts = payrollEntries.length > 0
@@ -39,7 +58,14 @@ export function MainDashboard() {
         </div>
       ) : (
       <>
+      {/* Onboarding Wizard for new users */}
+      {showOnboarding && (
+        <OnboardingWizard onDismiss={handleDismissOnboarding} />
+      )}
+
       {/* Statistiken */}
+      {!showOnboarding && (
+      <>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card className="shadow-card hover:shadow-elegant transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -158,6 +184,8 @@ export function MainDashboard() {
             </Button>
           </CardContent>
         </Card>
+      )}
+      </>
       )}
       </>
       )}
