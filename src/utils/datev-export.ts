@@ -557,6 +557,7 @@ function createBookingLine(params: {
   belegNr: string;
   buchungstext: string;
   kostenstelle?: string;
+  kostentraeger?: string;
 }): string[] {
   const {
     umsatz,
@@ -567,6 +568,7 @@ function createBookingLine(params: {
     belegNr,
     buchungstext,
     kostenstelle = '',
+    kostentraeger = '',
   } = params;
   
   // DATEV: Beträge mit Komma als Dezimaltrennzeichen, keine Tausendertrenner
