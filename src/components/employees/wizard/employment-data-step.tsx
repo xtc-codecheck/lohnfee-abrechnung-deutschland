@@ -410,12 +410,12 @@ export function EmploymentDataStep({ formData, errors, onInputChange }: WizardSt
 
         {formData.isFixedTerm && (
           <div className="space-y-2">
-            <Label htmlFor="fixedTermEndDate">Befristung endet am</Label>
+            <Label htmlFor="endDate">Befristung endet am</Label>
             <Input
-              id="fixedTermEndDate"
+              id="endDate"
               type="date"
-              value={formData.fixedTermEndDate}
-              onChange={(e) => onInputChange('fixedTermEndDate', e.target.value)}
+              value={formData.endDate}
+              onChange={(e) => onInputChange('endDate', e.target.value)}
             />
           </div>
         )}
