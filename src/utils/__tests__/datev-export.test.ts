@@ -342,7 +342,7 @@ describe('generateSummaryBookings', () => {
     const periode = createTestPeriod();
     
     const summaries = generateSummaryBookings(entries, config, periode);
-    expect(summaries.length).toBe(3); // LSt, RV+ALV, KV+PV
+    expect(summaries.length).toBe(4); // LSt, RV+ALV, KV+PV, U1+U2+Insolv
     
     const lstBuchung = summaries.find(s => s[13].includes('Lohnsteuer'));
     expect(lstBuchung).toBeDefined();

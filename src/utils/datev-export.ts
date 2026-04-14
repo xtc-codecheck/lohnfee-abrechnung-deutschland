@@ -34,6 +34,10 @@ export const SKR03_KONTEN = {
   pflegeversicherungAg: '4142',
   berufsgenossenschaft: '4150',
   sokaBau: '4155',
+  // Umlagen
+  umlageU1: '4143',
+  umlageU2: '4144',
+  insolvenzgeldumlage: '4146',
   vermoegenswirksameLeistungen: '4170',
   betrieblicheAltersvorsorge: '4165',
   sachbezuege: '4945',
@@ -41,6 +45,7 @@ export const SKR03_KONTEN = {
   verbindlichkeitenFinanzamt: '1741',
   verbindlichkeitenSv: '1742',
   verbindlichkeitenKrankenkasse: '1743',
+  verbindlichkeitenUmlagen: '1744',
   lohnsteuerAbfuehrung: '1741',
   kirchensteuerAbfuehrung: '1741',
   solidaritaetszuschlag: '1741',
@@ -65,6 +70,10 @@ export const SKR04_KONTEN = {
   pflegeversicherungAg: '6150',
   berufsgenossenschaft: '6160',
   sokaBau: '6165',
+  // Umlagen
+  umlageU1: '6145',
+  umlageU2: '6146',
+  insolvenzgeldumlage: '6148',
   vermoegenswirksameLeistungen: '6200',
   betrieblicheAltersvorsorge: '6210',
   sachbezuege: '6800',
@@ -72,6 +81,7 @@ export const SKR04_KONTEN = {
   verbindlichkeitenFinanzamt: '3730',
   verbindlichkeitenSv: '3740',
   verbindlichkeitenKrankenkasse: '3741',
+  verbindlichkeitenUmlagen: '3742',
   lohnsteuerAbfuehrung: '3730',
   kirchensteuerAbfuehrung: '3730',
   solidaritaetszuschlag: '3730',
@@ -153,7 +163,29 @@ export interface DatevExportConfig {
   wirtschaftsjahrBeginn: Date;
   sachkontenlaenge: 4 | 5 | 6 | 7 | 8;
   exportName: string;
+  /** Umlagen-Konfiguration (optional) */
+  umlagen?: UmlagenConfig;
 }
+
+/**
+ * Umlagen-Konfiguration für den DATEV-Export
+ * U1: Entgeltfortzahlung, U2: Mutterschaft, Insolvenzgeldumlage
+ */
+export interface UmlagenConfig {
+  /** U1-Umlagesatz in % (z.B. 2.5 für 2,5%) */
+  u1Rate?: number;
+  /** U2-Umlagesatz in % (z.B. 0.44 für 0,44%) */
+  u2Rate?: number;
+  /** Insolvenzgeldumlagesatz in % (2025: 0,06%) */
+  insolvenzgeldRate?: number;
+}
+
+/** Standard-Umlagesätze 2025 */
+export const DEFAULT_UMLAGEN_2025: Required<UmlagenConfig> = {
+  u1Rate: 2.5,    // Variiert je nach KK und Erstattungssatz
+  u2Rate: 0.44,   // Variiert je nach KK
+  insolvenzgeldRate: 0.06, // Bundeseinheitlich 2025
+} as const;
 
 // ============= Quoting Helpers =============
 
@@ -447,7 +479,59 @@ export function generatePayrollBookings(
     }));
   }
   
-  // 8. NETTOLOHN: Soll Verb. Löhne | Haben Bank
+  // 8. UMLAGEN (U1, U2, Insolvenzgeldumlage) — nur AG-Kosten
+  const umlagen = config.umlagen ?? DEFAULT_UMLAGEN_2025;
+  const umlageBasis = entry.salaryCalculation.grossSalary;
+  
+  if (umlagen.u1Rate && umlagen.u1Rate > 0) {
+    const u1Amount = Math.round(umlageBasis * umlagen.u1Rate) / 100;
+    if (u1Amount > 0) {
+      buchungen.push(createBookingLine({
+        umsatz: u1Amount,
+        sollHaben: 'S',
+        konto: konten.umlageU1,
+        gegenKonto: konten.verbindlichkeitenUmlagen,
+        belegDatum,
+        belegNr,
+        buchungstext: `U1 ${employeeName}`,
+        kostenstelle: entry.employee.employmentData.department,
+      }));
+    }
+  }
+  
+  if (umlagen.u2Rate && umlagen.u2Rate > 0) {
+    const u2Amount = Math.round(umlageBasis * umlagen.u2Rate) / 100;
+    if (u2Amount > 0) {
+      buchungen.push(createBookingLine({
+        umsatz: u2Amount,
+        sollHaben: 'S',
+        konto: konten.umlageU2,
+        gegenKonto: konten.verbindlichkeitenUmlagen,
+        belegDatum,
+        belegNr,
+        buchungstext: `U2 ${employeeName}`,
+        kostenstelle: entry.employee.employmentData.department,
+      }));
+    }
+  }
+  
+  if (umlagen.insolvenzgeldRate && umlagen.insolvenzgeldRate > 0) {
+    const insolvAmount = Math.round(umlageBasis * umlagen.insolvenzgeldRate) / 100;
+    if (insolvAmount > 0) {
+      buchungen.push(createBookingLine({
+        umsatz: insolvAmount,
+        sollHaben: 'S',
+        konto: konten.insolvenzgeldumlage,
+        gegenKonto: konten.verbindlichkeitenUmlagen,
+        belegDatum,
+        belegNr,
+        buchungstext: `Insolv.Uml. ${employeeName}`,
+        kostenstelle: entry.employee.employmentData.department,
+      }));
+    }
+  }
+  
+  // 9. NETTOLOHN: Soll Verb. Löhne | Haben Bank
   buchungen.push(createBookingLine({
     umsatz: entry.finalNetSalary,
     sollHaben: 'S',
@@ -473,6 +557,7 @@ function createBookingLine(params: {
   belegNr: string;
   buchungstext: string;
   kostenstelle?: string;
+  kostentraeger?: string;
 }): string[] {
   const {
     umsatz,
@@ -483,6 +568,7 @@ function createBookingLine(params: {
     belegNr,
     buchungstext,
     kostenstelle = '',
+    kostentraeger = '',
   } = params;
   
   // DATEV: Beträge mit Komma als Dezimaltrennzeichen, keine Tausendertrenner
@@ -512,7 +598,7 @@ function createBookingLine(params: {
     '',                       // Beleginfo Art 1
     '',                       // Beleginfo Inhalt 1
     kostenstelle,            // KOST1
-    '',                       // KOST2
+    kostentraeger,           // KOST2
     '',                       // KOST-Menge
     '',                       // EU-Land
     '',                       // EU-Steuersatz
@@ -622,6 +708,27 @@ export function generateSummaryBookings(
       belegDatum,
       belegNr,
       buchungstext: `KV+PV ${monat} an Krankenkassen`,
+    }));
+  }
+  
+  // 4. UMLAGEN-SAMMELÜBERWEISUNG
+  const umlagen = config.umlagen ?? DEFAULT_UMLAGEN_2025;
+  const totalGross = entries.reduce((sum, e) => sum + e.salaryCalculation.grossSalary, 0);
+  
+  const u1Total = umlagen.u1Rate ? Math.round(totalGross * umlagen.u1Rate) / 100 : 0;
+  const u2Total = umlagen.u2Rate ? Math.round(totalGross * umlagen.u2Rate) / 100 : 0;
+  const insolvTotal = umlagen.insolvenzgeldRate ? Math.round(totalGross * umlagen.insolvenzgeldRate) / 100 : 0;
+  const umlagenTotal = u1Total + u2Total + insolvTotal;
+  
+  if (umlagenTotal > 0) {
+    buchungen.push(createBookingLine({
+      umsatz: Math.round(umlagenTotal * 100) / 100,
+      sollHaben: 'S',
+      konto: konten.verbindlichkeitenUmlagen,
+      gegenKonto: konten.bank,
+      belegDatum,
+      belegNr,
+      buchungstext: `U1+U2+Insolv ${monat} an Krankenkassen`,
     }));
   }
   
