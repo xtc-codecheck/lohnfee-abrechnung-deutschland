@@ -230,6 +230,6 @@ export default function Kontakt() {
           </div>
         </div>
       </div>
-    </div>
+    </LegalLayout>
   );
 }
