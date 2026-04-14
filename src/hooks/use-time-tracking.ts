@@ -85,7 +85,7 @@ export function useTimeTracking() {
   }, [tenantId, addMutation]);
 
   const updateTimeEntry = useCallback(async (id: string, updates: Partial<Omit<TimeEntry, 'id' | 'createdAt'>>) => {
-    const dbUpdates: Record<string, unknown> = {};
+    const dbUpdates: { hours_worked?: number; type?: string; notes?: string | null; start_time?: string | null; end_time?: string | null; break_time?: number | null } = {};
     if (updates.hoursWorked !== undefined) dbUpdates.hours_worked = updates.hoursWorked;
     if (updates.type !== undefined) dbUpdates.type = updates.type;
     if (updates.notes !== undefined) dbUpdates.notes = updates.notes ?? null;
@@ -110,7 +110,7 @@ export function useTimeTracking() {
   const addBulkTimeEntries = useCallback(async (bulkEntry: BulkTimeEntry) => {
     if (!tenantId) return [];
     const { startDate, endDate, employeeId, type, hoursPerDay, excludeWeekends, notes } = bulkEntry;
-    const rows: Array<Record<string, unknown>> = [];
+    const rows: Array<{ tenant_id: string; employee_id: string; date: string; type: string; hours_worked: number | null; notes: string | null }> = [];
 
     let currentDate = new Date(startDate);
     const end = new Date(endDate);
