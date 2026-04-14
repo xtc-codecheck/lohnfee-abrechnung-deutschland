@@ -317,14 +317,14 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "compliance_alerts_employee_id_fkey"
+            foreignKeyName: "fk_compliance_alerts_employee_cascade"
             columns: ["employee_id"]
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "compliance_alerts_tenant_id_fkey"
+            foreignKeyName: "fk_compliance_alerts_tenant_cascade"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
@@ -485,14 +485,7 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "employees_tenant_id_fkey"
-            columns: ["tenant_id"]
-            isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "fk_employees_tenant"
+            foreignKeyName: "fk_employees_tenant_cascade"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
@@ -554,14 +547,7 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "fk_gdpr_requests_tenant"
-            columns: ["tenant_id"]
-            isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "gdpr_requests_tenant_id_fkey"
+            foreignKeyName: "fk_gdpr_requests_tenant_cascade"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
@@ -641,17 +627,17 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "fk_lsta_tenant_cascade"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "lohnsteueranmeldungen_korrektur_von_fkey"
             columns: ["korrektur_von"]
             isOneToOne: false
             referencedRelation: "lohnsteueranmeldungen"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "lohnsteueranmeldungen_tenant_id_fkey"
-            columns: ["tenant_id"]
-            isOneToOne: false
-            referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
         ]
@@ -749,28 +735,14 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "fk_lstb_employee"
+            foreignKeyName: "fk_lstb_employee_cascade"
             columns: ["employee_id"]
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "fk_lstb_tenant"
-            columns: ["tenant_id"]
-            isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "lohnsteuerbescheinigungen_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "employees"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "lohnsteuerbescheinigungen_tenant_id_fkey"
+            foreignKeyName: "fk_lstb_tenant_cascade"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
@@ -880,42 +852,21 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "fk_payroll_entries_employee"
+            foreignKeyName: "fk_payroll_entries_employee_cascade"
             columns: ["employee_id"]
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "fk_payroll_entries_period"
+            foreignKeyName: "fk_payroll_entries_period_cascade"
             columns: ["payroll_period_id"]
             isOneToOne: false
             referencedRelation: "payroll_periods"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "fk_payroll_entries_tenant"
-            columns: ["tenant_id"]
-            isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "payroll_entries_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "employees"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "payroll_entries_payroll_period_id_fkey"
-            columns: ["payroll_period_id"]
-            isOneToOne: false
-            referencedRelation: "payroll_periods"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "payroll_entries_tenant_id_fkey"
+            foreignKeyName: "fk_payroll_entries_tenant_cascade"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
@@ -977,14 +928,14 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "payroll_guardian_anomalies_employee_id_fkey"
+            foreignKeyName: "fk_guardian_anomalies_employee_cascade"
             columns: ["employee_id"]
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "payroll_guardian_anomalies_tenant_id_fkey"
+            foreignKeyName: "fk_guardian_anomalies_tenant_cascade"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
@@ -1031,14 +982,14 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "payroll_guardian_history_employee_id_fkey"
+            foreignKeyName: "fk_guardian_history_employee_cascade"
             columns: ["employee_id"]
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "payroll_guardian_history_tenant_id_fkey"
+            foreignKeyName: "fk_guardian_history_tenant_cascade"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
@@ -1085,14 +1036,7 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "fk_payroll_periods_tenant"
-            columns: ["tenant_id"]
-            isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "payroll_periods_tenant_id_fkey"
+            foreignKeyName: "fk_payroll_periods_tenant_cascade"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
@@ -1187,14 +1131,14 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "special_payments_employee_id_fkey"
+            foreignKeyName: "fk_special_payments_employee_cascade"
             columns: ["employee_id"]
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "special_payments_tenant_id_fkey"
+            foreignKeyName: "fk_special_payments_tenant_cascade"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
@@ -1271,28 +1215,14 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "fk_sv_meldungen_employee"
+            foreignKeyName: "fk_sv_meldungen_employee_cascade"
             columns: ["employee_id"]
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "fk_sv_meldungen_tenant"
-            columns: ["tenant_id"]
-            isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "sv_meldungen_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "employees"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "sv_meldungen_tenant_id_fkey"
+            foreignKeyName: "fk_sv_meldungen_tenant_cascade"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
@@ -1324,14 +1254,7 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "fk_tenant_members_tenant"
-            columns: ["tenant_id"]
-            isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "tenant_members_tenant_id_fkey"
+            foreignKeyName: "fk_tenant_members_tenant_cascade"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
@@ -1429,14 +1352,14 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "time_entries_employee_id_fkey"
+            foreignKeyName: "fk_time_entries_employee_cascade"
             columns: ["employee_id"]
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "time_entries_tenant_id_fkey"
+            foreignKeyName: "fk_time_entries_tenant_cascade"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
@@ -1468,7 +1391,7 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "user_roles_tenant_id_fkey"
+            foreignKeyName: "fk_user_roles_tenant_cascade"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
