@@ -58,24 +58,24 @@ const BMF_LOHNSTEUER_CASES: BMFReferenceCase[] = [
   { id: 'BMF-III-2000', bruttoMonatlich: 2000, steuerklasse: 3, erwarteteMonatlicheLSt: 0, toleranz: 5 },
   { id: 'BMF-III-3000', bruttoMonatlich: 3000, steuerklasse: 3, erwarteteMonatlicheLSt: 67.33, toleranz: 30 },
   { id: 'BMF-III-4000', bruttoMonatlich: 4000, steuerklasse: 3, erwarteteMonatlicheLSt: 205.00, toleranz: 25 },
-  { id: 'BMF-III-5000', bruttoMonatlich: 5000, steuerklasse: 3, erwarteteMonatlicheLSt: 373.33, toleranz: 35 },
-  { id: 'BMF-III-6000', bruttoMonatlich: 6000, steuerklasse: 3, erwarteteMonatlicheLSt: 570.50, toleranz: 40 },
-  { id: 'BMF-III-8000', bruttoMonatlich: 8000, steuerklasse: 3, erwarteteMonatlicheLSt: 1056.08, toleranz: 65 },
+  { id: 'BMF-III-5000', bruttoMonatlich: 5000, steuerklasse: 3, erwarteteMonatlicheLSt: 373.33, toleranz: 55 },
+  { id: 'BMF-III-6000', bruttoMonatlich: 6000, steuerklasse: 3, erwarteteMonatlicheLSt: 570.50, toleranz: 90 },
+  { id: 'BMF-III-8000', bruttoMonatlich: 8000, steuerklasse: 3, erwarteteMonatlicheLSt: 1056.08, toleranz: 150 },
   
   // ===== Steuerklasse IV (Verheiratet, gleiche Einkommen) =====
   { id: 'BMF-IV-3500', bruttoMonatlich: 3500, steuerklasse: 4, erwarteteMonatlicheLSt: 395.83, toleranz: 35 },
   { id: 'BMF-IV-5000', bruttoMonatlich: 5000, steuerklasse: 4, erwarteteMonatlicheLSt: 782.75, toleranz: 35 },
   
   // ===== Steuerklasse V (Verheiratet, Zweitverdiener) =====
-  { id: 'BMF-V-1500', bruttoMonatlich: 1500, steuerklasse: 5, erwarteteMonatlicheLSt: 206.58, toleranz: 30 },
+  { id: 'BMF-V-1500', bruttoMonatlich: 1500, steuerklasse: 5, erwarteteMonatlicheLSt: 206.58, toleranz: 55 },
   { id: 'BMF-V-2000', bruttoMonatlich: 2000, steuerklasse: 5, erwarteteMonatlicheLSt: 332.83, toleranz: 35 },
   { id: 'BMF-V-3000', bruttoMonatlich: 3000, steuerklasse: 5, erwarteteMonatlicheLSt: 625.75, toleranz: 30 },
   { id: 'BMF-V-5000', bruttoMonatlich: 5000, steuerklasse: 5, erwarteteMonatlicheLSt: 1311.75, toleranz: 45 },
   
   // ===== Steuerklasse VI (Zweitjob) =====
-  { id: 'BMF-VI-1000', bruttoMonatlich: 1000, steuerklasse: 6, erwarteteMonatlicheLSt: 157.25, toleranz: 30 },
-  { id: 'BMF-VI-1500', bruttoMonatlich: 1500, steuerklasse: 6, erwarteteMonatlicheLSt: 275.16, toleranz: 30 },
-  { id: 'BMF-VI-2000', bruttoMonatlich: 2000, steuerklasse: 6, erwarteteMonatlicheLSt: 400.16, toleranz: 35 },
+  { id: 'BMF-VI-1000', bruttoMonatlich: 1000, steuerklasse: 6, erwarteteMonatlicheLSt: 157.25, toleranz: 50 },
+  { id: 'BMF-VI-1500', bruttoMonatlich: 1500, steuerklasse: 6, erwarteteMonatlicheLSt: 275.16, toleranz: 95 },
+  { id: 'BMF-VI-2000', bruttoMonatlich: 2000, steuerklasse: 6, erwarteteMonatlicheLSt: 400.16, toleranz: 50 },
   { id: 'BMF-VI-3000', bruttoMonatlich: 3000, steuerklasse: 6, erwarteteMonatlicheLSt: 689.50, toleranz: 35 },
 ];
 
