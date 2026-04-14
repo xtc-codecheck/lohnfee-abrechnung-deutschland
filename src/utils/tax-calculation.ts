@@ -58,6 +58,19 @@ export interface TaxCalculationResult {
   employerCosts: number;
 }
 
+// ============= Hilfsfunktion: Steuerklasse Roman → Zahl =============
+
+const TAX_CLASS_MAP: Record<string, number> = {
+  'I': 1, 'II': 2, 'III': 3, 'IV': 4, 'V': 5, 'VI': 6,
+  '1': 1, '2': 2, '3': 3, '4': 4, '5': 5, '6': 6,
+};
+
+/** Konvertiert Steuerklasse (römisch oder arabisch) in eine Zahl 1-6 */
+function parseTaxClass(taxClass: string | number): number {
+  if (typeof taxClass === 'number') return taxClass >= 1 && taxClass <= 6 ? taxClass : 1;
+  return TAX_CLASS_MAP[taxClass.trim().toUpperCase()] ?? 1;
+}
+
 // ============= PAP 2025: Tarifliche Einkommensteuer nach § 32a EStG =============
 
 /**
