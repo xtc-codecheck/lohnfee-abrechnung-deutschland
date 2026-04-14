@@ -60,6 +60,7 @@ const App = () => (
         <BrowserRouter>
           <AuthProvider>
             <TenantProvider>
+              <SystaxProvider>
               <EmployeeProvider>
                 <Suspense fallback={<PageLoader />}>
                   <Routes>
