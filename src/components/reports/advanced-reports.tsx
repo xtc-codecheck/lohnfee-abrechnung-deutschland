@@ -31,6 +31,7 @@ import { TaxSocialSecurityReport } from "./tax-social-security-report";
 import { AuditReport } from "./audit-report";
 import { EmployeeStatisticsReport } from "./employee-statistics-report";
 import { ExportManager } from "./export-manager";
+import { GoBDExportDialog } from "./gobd-export-dialog";
 
 interface AdvancedReportsProps {
   onBack: () => void;
