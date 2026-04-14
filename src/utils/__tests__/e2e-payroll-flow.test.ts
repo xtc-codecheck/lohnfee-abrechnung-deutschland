@@ -159,7 +159,7 @@ describe('E2E: Kompletter Lohnabrechnungsflow', () => {
             firstName: 'Max', lastName: 'Müller', dateOfBirth: new Date('1985-03-10'),
             address: { street: 'Berliner Str.', houseNumber: '5', postalCode: '10115', city: 'Berlin', state: 'berlin', country: 'DE' },
             taxId: '98765432101', taxClass: 'III' as TaxClass, churchTax: false,
-            relationshipStatus: 'verheiratet',
+            relationshipStatus: 'married',
             healthInsurance: { provider: 'TK', type: 'gesetzlich', additionalRate: 1.7 },
             socialSecurityNumber: '12100385B456', childAllowances: 2, numberOfChildren: 2,
           },
