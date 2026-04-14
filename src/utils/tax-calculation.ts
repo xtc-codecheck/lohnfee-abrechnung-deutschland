@@ -58,6 +58,19 @@ export interface TaxCalculationResult {
   employerCosts: number;
 }
 
+// ============= Hilfsfunktion: Steuerklasse Roman → Zahl =============
+
+const TAX_CLASS_MAP: Record<string, number> = {
+  'I': 1, 'II': 2, 'III': 3, 'IV': 4, 'V': 5, 'VI': 6,
+  '1': 1, '2': 2, '3': 3, '4': 4, '5': 5, '6': 6,
+};
+
+/** Konvertiert Steuerklasse (römisch oder arabisch) in eine Zahl 1-6 */
+function parseTaxClass(taxClass: string | number): number {
+  if (typeof taxClass === 'number') return taxClass >= 1 && taxClass <= 6 ? taxClass : 1;
+  return TAX_CLASS_MAP[taxClass.trim().toUpperCase()] ?? 1;
+}
+
 // ============= PAP 2025: Tarifliche Einkommensteuer nach § 32a EStG =============
 
 /**
@@ -360,7 +373,7 @@ export function calculateCompleteTax(params: TaxCalculationParams): TaxCalculati
   if (useBesondereLohnsteuertabelle) {
     const besResult = calculateBesondereLohnsteuer({
       grossMonthly,
-      taxClass: parseInt(taxClass) || 1,
+      taxClass: parseTaxClass(taxClass),
       childAllowances,
       churchTax,
       churchTaxRate,
@@ -439,7 +452,7 @@ export function calculateCompleteTax(params: TaxCalculationParams): TaxCalculati
     const totalSocialContributions = pensionInsurance + unemploymentInsurance + healthInsurance + careInsurance;
     
     // Lohnsteuer nach PAP 2025
-    const taxClassNumber = parseInt(taxClass) || 1;
+    const taxClassNumber = parseTaxClass(taxClass);
     const incomeTaxMonthly = calculateLohnsteuerPAP2025(
       grossMonthly, taxClassNumber, childAllowances, isEastGermany,
       healthInsuranceRate, isChildless, age, numberOfChildren ?? 0
@@ -508,7 +521,7 @@ export function calculateCompleteTax(params: TaxCalculationParams): TaxCalculati
   
   // Lohnsteuer nach PAP 2025 (formelbasiert)
   const monthlyGross = grossSalaryYearly / 12;
-  const taxClassNumber = parseInt(taxClass) || 1;
+  const taxClassNumber = parseTaxClass(taxClass);
   const incomeTaxMonthly = calculateLohnsteuerPAP2025(
     monthlyGross, taxClassNumber, childAllowances, isEastGermany,
     healthInsuranceRate, isChildless, age, numberOfChildren ?? 0
