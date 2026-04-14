@@ -56,7 +56,7 @@ export function calculateCorrectionPayroll(
     workingData: correctedWorkingData ?? originalEntry.workingData,
   };
 
-  const correctedCalculation = calculatePayroll(correctedInput);
+  const correctedCalculation = calculatePayrollEntry(correctedInput);
 
   // Differenzen berechnen
   const original = originalEntry;
