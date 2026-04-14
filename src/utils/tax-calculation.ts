@@ -531,6 +531,8 @@ export function calculateCompleteTax(params: TaxCalculationParams): TaxCalculati
 }
 
 /**
+ * Berechnet Zuschläge für Überstunden, Nacht-, Sonntags- und Feiertagsarbeit
+ */
 export interface OvertimeCalculation {
   regularHours: number;
   overtimeHours: number;
