@@ -317,6 +317,24 @@ export function PersonalDataStep({ formData, errors, onInputChange }: WizardStep
           </div>
         </div>
 
+        {/* Anzahl Kinder für PV */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="numberOfChildren">Anzahl Kinder (für PV-Berechnung)</Label>
+            <Input
+              id="numberOfChildren"
+              type="number"
+              min="0"
+              step="1"
+              value={formData.numberOfChildren}
+              onChange={(e) => onInputChange('numberOfChildren', parseInt(e.target.value) || 0)}
+            />
+            <p className="text-xs text-muted-foreground">
+              Seit 07/2023: Gestaffelte Pflegeversicherung je nach Kinderzahl (Kinder unter 25 J.)
+            </p>
+          </div>
+        </div>
+
         {/* Krankenkasse */}
         <div className="space-y-2">
           <Label htmlFor="healthInsurance">Krankenkasse*</Label>

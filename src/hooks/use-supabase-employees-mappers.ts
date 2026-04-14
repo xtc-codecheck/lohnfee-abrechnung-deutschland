@@ -93,6 +93,7 @@ export function employeeToInsert(emp: Omit<Employee, 'id' | 'createdAt' | 'updat
     sv_number: emp.personalData.socialSecurityNumber,
     health_insurance: emp.personalData.healthInsurance.name,
     children_allowance: emp.personalData.childAllowances,
+    number_of_children: emp.personalData.numberOfChildren ?? 0,
     gross_salary: emp.salaryData.grossSalary,
     employment_type: emp.employmentData.employmentType,
     weekly_hours: emp.employmentData.weeklyHours,
