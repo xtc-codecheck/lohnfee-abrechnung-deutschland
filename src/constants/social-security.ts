@@ -307,7 +307,7 @@ type TaxRates = {
 };
 type MinijobConstants = { readonly maxEarnings: number; readonly taxRate: number; readonly employerRates: { readonly health: number; readonly pension: number; readonly total: number } };
 type MidijobConstants = { readonly minEarnings: number; readonly maxEarnings: number; readonly factor: number; readonly lowerThreshold: number; readonly upperThreshold: number; readonly formula: { readonly factor: number; readonly lowerBound: number; readonly upperBound: number } };
-type PVChildDiscounts = typeof PV_CHILD_DISCOUNTS_2025;
+type PVChildDiscounts = { readonly baseEmployeeRate: number; readonly childlessSurcharge: number; readonly discountPerChild: number; readonly maxDiscount: number; readonly employerRate: number };
 
 const YEAR_CONFIG: Record<number, {
   bbgYearly: BBGYearly;
