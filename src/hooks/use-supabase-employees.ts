@@ -256,6 +256,3 @@ export function useSupabaseEmployees() {
     refreshData: fetchEmployees,
   };
 }
-
-// Re-export as default employee storage
-export { useSupabaseEmployees as useEmployeeStorage };
