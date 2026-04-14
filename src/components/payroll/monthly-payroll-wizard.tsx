@@ -70,7 +70,7 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
   );
 
   const activeEmployees = useMemo(
-    () => employees.filter(e => e.isActive !== false),
+    () => employees.filter(e => !e.employmentData?.endDate || new Date(e.employmentData.endDate) > new Date()),
     [employees]
   );
 
@@ -93,7 +93,7 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
         if (monthEntries.length === 0) {
           status.warnings.push('Keine Zeiteinträge für diesen Monat vorhanden');
         }
-        const employeesWithEntries = new Set(monthEntries.map(e => e.employee_id));
+        const employeesWithEntries = new Set(monthEntries.map(e => e.employeeId));
         const missing = activeEmployees.filter(e => !employeesWithEntries.has(e.id));
         if (missing.length > 0) {
           status.warnings.push(`${missing.length} Mitarbeiter ohne Zeiterfassung`);
@@ -163,15 +163,7 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
   const handleCreatePayroll = async () => {
     setIsProcessing(true);
     try {
-      const startDate = new Date(selectedYear, selectedMonth - 1, 1);
-      const endDate = new Date(selectedYear, selectedMonth, 0);
-
-      await createPayrollPeriod({
-        year: selectedYear,
-        month: selectedMonth,
-        startDate: startDate.toISOString().split('T')[0],
-        endDate: endDate.toISOString().split('T')[0],
-      });
+      await createPayrollPeriod(selectedYear, selectedMonth);
 
       const newStatuses = [...stepStatuses];
       newStatuses[2] = { ...newStatuses[2], completed: true, approved: true };
@@ -240,7 +232,7 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
                     {timeEntries.filter(e => {
                       const d = new Date(e.date);
                       return d.getMonth() + 1 === selectedMonth && d.getFullYear() === selectedYear;
-                    }).reduce((sum, e) => sum + (e.hours_worked || 0), 0).toFixed(1)}h
+                    }).reduce((sum, e) => sum + (e.hoursWorked || 0), 0).toFixed(1)}h
                   </div>
                   <div className="text-sm text-muted-foreground mt-1">Gesamtstunden</div>
                 </CardContent>
@@ -306,9 +298,9 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
                   {activeEmployees.slice(0, 5).map(emp => (
                     <div key={emp.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
                       <div>
-                        <div className="font-medium">{emp.firstName} {emp.lastName}</div>
+                        <div className="font-medium">{emp.personalData.firstName} {emp.personalData.lastName}</div>
                         <div className="text-sm text-muted-foreground">
-                          Gehalt: {emp.grossSalary?.toLocaleString('de-DE')}€
+                          Gehalt: {emp.salaryData?.grossSalary?.toLocaleString('de-DE')}€
                         </div>
                       </div>
                       <Badge variant="outline" className="text-green-700 border-green-300">
@@ -358,7 +350,7 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
                       </div>
                       <div>
                         <div className="text-2xl font-bold text-foreground">
-                          {activeEmployees.reduce((s, e) => s + (e.grossSalary || 0), 0).toLocaleString('de-DE')}€
+                          {activeEmployees.reduce((s, e) => s + (e.salaryData?.grossSalary || 0), 0).toLocaleString('de-DE')}€
                         </div>
                         <div className="text-xs text-muted-foreground">Brutto gesamt</div>
                       </div>
