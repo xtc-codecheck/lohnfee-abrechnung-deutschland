@@ -33,6 +33,7 @@ const createMockEmployee = (overrides: Partial<Employee> = {}): Employee => ({
     },
     socialSecurityNumber: '123456789012',
     childAllowances: 0,
+    numberOfChildren: 0,
     churchTax: false,
   },
   employmentData: {
