@@ -146,21 +146,24 @@ describe('Kontenrahmen-Definitionen', () => {
 // ============= Header-Tests =============
 
 describe('createDatevHeader', () => {
-  it('erzeugt korrekten DATEV-Header', () => {
+  it('erzeugt 31-Felder DATEV-Header gemäß Spezifikation', () => {
     const header = createDatevHeader(createTestConfig(), createTestPeriod());
-    expect(header[0]).toBe('EXTF');
-    expect(header[1]).toBe('700');
-    expect(header[2]).toBe('21'); // Buchungsstapel
-    expect(header[3]).toBe('Buchungsstapel');
-    expect(header[7]).toBe('RE'); // Rechnungswesen
-    expect(header[8]).toBe('LohnPro');
+    expect(header).toHaveLength(31);
+    expect(header[0]).toBe('"EXTF"');           // Feld 1: gequotet
+    expect(header[1]).toBe('700');              // Feld 2: Versionsnummer
+    expect(header[2]).toBe('21');               // Feld 3: Buchungsstapel
+    expect(header[3]).toBe('"Buchungsstapel"'); // Feld 4: gequotet
+    expect(header[4]).toBe('13');               // Feld 5: Formatversion
+    expect(header[7]).toBe('"RE"');             // Feld 8: Herkunft gequotet
+    expect(header[8]).toBe('"LohnPro"');        // Feld 9: gequotet
+    expect(header[9]).toBe('""');               // Feld 10: leerer gequoteter String
   });
 
-  it('formatiert Berater-/Mandantennummer mit führenden Nullen', () => {
-    const config = createTestConfig({ beraterNr: '123', mandantenNr: '99' });
+  it('gibt Berater-/Mandantennummer als Zahlen aus (ohne Padding)', () => {
+    const config = createTestConfig({ beraterNr: '1234567', mandantenNr: '12345' });
     const header = createDatevHeader(config, createTestPeriod());
-    expect(header[10]).toBe('0000123'); // 7 Stellen
-    expect(header[11]).toBe('00099');   // 5 Stellen
+    expect(header[10]).toBe('1234567');
+    expect(header[11]).toBe('12345');
   });
 
   it('setzt Datumsbereich der Periode korrekt', () => {
@@ -169,9 +172,38 @@ describe('createDatevHeader', () => {
     expect(header[15]).toBe('20250331'); // datumBis
   });
 
-  it('enthält Stapelbezeichnung mit Monat/Jahr', () => {
+  it('enthält Stapelbezeichnung gequotet mit Monat/Jahr', () => {
     const header = createDatevHeader(createTestConfig(), createTestPeriod());
     expect(header[16]).toContain('03/2025');
+    expect(header[16]).toMatch(/^".*"$/); // muss gequotet sein
+  });
+
+  it('enthält Sachkontenrahmen in Feld 27', () => {
+    const header = createDatevHeader(createTestConfig(), createTestPeriod());
+    expect(header[26]).toBe('"03"'); // SKR03
+  });
+
+  it('setzt SKR04 in Feld 27 bei SKR04-Konfiguration', () => {
+    const config = createTestConfig({ kontenrahmen: 'SKR04' });
+    const header = createDatevHeader(config, createTestPeriod());
+    expect(header[26]).toBe('"04"');
+  });
+
+  it('hat korrekte reservierte Felder', () => {
+    const header = createDatevHeader(createTestConfig(), createTestPeriod());
+    expect(header[6]).toBe('');     // Feld 7: importiert (leer)
+    expect(header[22]).toBe('');    // Feld 23: reserviert
+    expect(header[23]).toBe('""'); // Feld 24: Derivatskennzeichen
+    expect(header[24]).toBe('');    // Feld 25: reserviert
+    expect(header[25]).toBe('');    // Feld 26: reserviert
+    expect(header[28]).toBe('');    // Feld 29: reserviert
+    expect(header[29]).toBe('""'); // Feld 30: reserviert
+  });
+
+  it('erzeugt Zeitstempel mit Millisekunden (Feld 6)', () => {
+    const header = createDatevHeader(createTestConfig(), createTestPeriod());
+    // Format: YYYYMMDDHHMMSSfff = 17 Zeichen
+    expect(header[5]).toMatch(/^\d{17}$/);
   });
 });
 
