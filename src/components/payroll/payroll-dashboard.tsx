@@ -119,6 +119,7 @@ export function PayrollDashboard({ onBack, onShowSpecialPayments, onShowAutomati
         onShowGuardian={onShowGuardian}
         onShowLohnkonto={onShowLohnkonto}
         onShowMonthlyWizard={onShowMonthlyWizard}
+        onShowFibu={onShowFibu}
         onShowJournal={() => setCurrentView('journal')}
         onShowManual={() => setCurrentView('manual')}
         onShowTimeSync={() => setCurrentView('time-sync')}
