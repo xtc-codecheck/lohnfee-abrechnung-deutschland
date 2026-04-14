@@ -5,10 +5,10 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useTenant } from '@/contexts/tenant-context';
+import { useEmployees } from '@/contexts/employee-context';
 import { PayrollPeriod, PayrollEntry, PayrollReport, PayrollStatus } from '@/types/payroll';
 import { Tables } from '@/integrations/supabase/types';
 import { Employee } from '@/types/employee';
-import { useSupabaseEmployees } from './use-supabase-employees';
 
 type DbPeriod = Tables<'payroll_periods'>;
 type DbEntry = Tables<'payroll_entries'>;
@@ -94,7 +94,7 @@ export function useSupabasePayroll() {
   const [payrollEntries, setPayrollEntries] = useState<PayrollEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { employees } = useSupabaseEmployees();
+  const { employees } = useEmployees();
   const { tenantId } = useTenant();
 
   const employeeMap = useMemo(() => new Map(employees.map(e => [e.id, e])), [employees]);
