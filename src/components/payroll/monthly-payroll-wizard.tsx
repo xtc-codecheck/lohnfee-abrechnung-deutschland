@@ -710,6 +710,59 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
         <Progress value={overallProgress} className="h-2" />
       </div>
 
+      {/* Auto-Run Status Banner */}
+      {autoRunActive && (
+        <Alert className="border-primary/30 bg-primary/5">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          <AlertTitle>Auto-Run aktiv</AlertTitle>
+          <AlertDescription>
+            Das System führt alle Schritte automatisch durch. Bei Auffälligkeiten wird angehalten.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {autoRunPaused && (
+        <Alert className="border-orange-300 bg-orange-50 dark:bg-orange-950/20 dark:border-orange-800">
+          <AlertTriangle className="h-4 w-4 text-orange-600" />
+          <AlertTitle className="text-orange-800 dark:text-orange-200">Auto-Run pausiert – Ihre Aufmerksamkeit ist nötig</AlertTitle>
+          <AlertDescription className="text-orange-700 dark:text-orange-300">
+            Bei Schritt {currentStep + 1} wurden Auffälligkeiten erkannt. Bitte prüfen und bestätigen Sie, um fortzufahren.
+            <div className="mt-2 flex gap-2">
+              <Button size="sm" onClick={resumeAutoRun} className="bg-gradient-primary hover:opacity-90">
+                <FastForward className="h-3 w-3 mr-1" /> Bestätigen & Weiter
+              </Button>
+              <Button size="sm" variant="outline" onClick={stopAutoRun}>
+                <OctagonX className="h-3 w-3 mr-1" /> Abbrechen
+              </Button>
+            </div>
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* Auto-Run Log */}
+      {autoRunLog.length > 0 && (
+        <Card className="border-muted">
+          <CardHeader className="py-3 px-4">
+            <CardTitle className="text-sm flex items-center gap-2">
+              <Zap className="h-4 w-4 text-primary" />
+              Auto-Run Protokoll
+              {!autoRunActive && !autoRunPaused && (
+                <Button variant="ghost" size="sm" className="ml-auto h-6 text-xs" onClick={() => setAutoRunLog([])}>
+                  Löschen
+                </Button>
+              )}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="px-4 pb-3">
+            <div className="bg-muted/50 rounded-md p-3 max-h-40 overflow-y-auto font-mono text-xs space-y-0.5">
+              {autoRunLog.map((line, i) => (
+                <div key={i} className="text-muted-foreground">{line}</div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Step Navigation */}
       <div className="flex items-center gap-1 overflow-x-auto pb-2">
         {WIZARD_STEPS.map((step, index) => {
