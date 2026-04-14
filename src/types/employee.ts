@@ -24,7 +24,7 @@ export interface PersonalData {
   healthInsurance: HealthInsurance;
   socialSecurityNumber: string;
   childAllowances: number;
-  numberOfChildren: number; // Für PV-Kinderabschläge (seit 07/2023)
+  numberOfChildren?: number; // Für PV-Kinderabschläge (seit 07/2023), default 0
 }
 
 export interface Address {
