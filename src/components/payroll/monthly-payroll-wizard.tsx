@@ -11,11 +11,12 @@
  * Vision: Vollautark – Nutzer nickt nur noch ab.
  */
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import {
   ArrowLeft, ArrowRight, Check, CheckCircle2, Clock, Gift,
   Calculator, FileText, Download, Play, AlertTriangle, Info,
-  Zap, Loader2, ChevronRight, RefreshCw,
+  Zap, Loader2, ChevronRight, RefreshCw, FastForward, Pause,
+  CircleCheck, OctagonX,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -43,6 +44,8 @@ interface StepStatus {
   completed: boolean;
   approved: boolean;
   warnings: string[];
+  /** Warnings that block auto-run (require user attention) */
+  criticalWarnings: string[];
   autoChecked: boolean;
 }
 
@@ -65,8 +68,12 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
   const [selectedYear, setSelectedYear] = useState(now.getFullYear());
   const [currentStep, setCurrentStep] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [autoRunActive, setAutoRunActive] = useState(false);
+  const [autoRunPaused, setAutoRunPaused] = useState(false);
+  const [autoRunLog, setAutoRunLog] = useState<string[]>([]);
+  const autoRunRef = useRef(false);
   const [stepStatuses, setStepStatuses] = useState<StepStatus[]>(
-    WIZARD_STEPS.map(() => ({ completed: false, approved: false, warnings: [], autoChecked: false }))
+    WIZARD_STEPS.map(() => ({ completed: false, approved: false, warnings: [], criticalWarnings: [], autoChecked: false }))
   );
 
   const activeEmployees = useMemo(
@@ -79,71 +86,225 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
     autoCheckCurrentStep();
   }, [currentStep, selectedMonth, selectedYear]);
 
-  const autoCheckCurrentStep = () => {
-    const newStatuses = [...stepStatuses];
-    const status = { ...newStatuses[currentStep] };
+  const checkStep = useCallback((stepIndex: number, statuses: StepStatus[]): StepStatus => {
+    const status: StepStatus = { completed: false, approved: false, warnings: [], criticalWarnings: [], autoChecked: true };
 
-    switch (currentStep) {
+    switch (stepIndex) {
       case 0: { // Zeiterfassung
         const monthEntries = timeEntries.filter(e => {
           const d = new Date(e.date);
           return d.getMonth() + 1 === selectedMonth && d.getFullYear() === selectedYear;
         });
-        status.warnings = [];
         if (monthEntries.length === 0) {
           status.warnings.push('Keine Zeiteinträge für diesen Monat vorhanden');
         }
         const employeesWithEntries = new Set(monthEntries.map(e => e.employeeId));
         const missing = activeEmployees.filter(e => !employeesWithEntries.has(e.id));
-        if (missing.length > 0) {
+        if (missing.length > 0 && missing.length < activeEmployees.length) {
           status.warnings.push(`${missing.length} Mitarbeiter ohne Zeiterfassung`);
         }
-        status.autoChecked = true;
+        // Critical: ALL employees missing = likely data issue
+        if (activeEmployees.length > 0 && missing.length === activeEmployees.length && monthEntries.length === 0) {
+          status.criticalWarnings.push('Keine Zeiterfassung für alle Mitarbeiter – bitte prüfen');
+        }
         break;
       }
       case 1: { // Sonderzahlungen
-        status.warnings = [];
-        // Check if month has typical special payments (Dec = Weihnachtsgeld, etc.)
         if (selectedMonth === 12) {
-          status.warnings.push('Dezember: Weihnachtsgeld / 13. Gehalt prüfen');
+          status.criticalWarnings.push('Dezember: Weihnachtsgeld / 13. Gehalt prüfen');
         }
         if (selectedMonth === 6) {
-          status.warnings.push('Juni: Urlaubsgeld prüfen');
+          status.criticalWarnings.push('Juni: Urlaubsgeld prüfen');
         }
-        status.autoChecked = true;
         break;
       }
       case 2: { // Abrechnung
         const existingPeriod = payrollPeriods.find(
           p => p.month === selectedMonth && p.year === selectedYear
         );
-        status.warnings = [];
         if (existingPeriod) {
-          status.warnings.push(`Abrechnung für ${MONTHS[selectedMonth - 1]} ${selectedYear} existiert bereits (Status: ${existingPeriod.status})`);
+          status.warnings.push(`Abrechnung existiert bereits (Status: ${existingPeriod.status})`);
           status.completed = true;
         }
         if (activeEmployees.length === 0) {
-          status.warnings.push('Keine aktiven Mitarbeiter vorhanden');
+          status.criticalWarnings.push('Keine aktiven Mitarbeiter vorhanden');
         }
-        status.autoChecked = true;
         break;
       }
       case 3: { // Meldungen
-        status.warnings = [];
         status.warnings.push('SV-Meldungen und Lohnsteueranmeldung werden automatisch vorbereitet');
-        status.autoChecked = true;
         break;
       }
       case 4: { // Export
-        status.warnings = [];
-        status.autoChecked = true;
         break;
       }
     }
+    return status;
+  }, [timeEntries, selectedMonth, selectedYear, activeEmployees, payrollPeriods]);
 
-    newStatuses[currentStep] = status;
+  const autoCheckCurrentStep = useCallback(() => {
+    const newStatuses = [...stepStatuses];
+    const checked = checkStep(currentStep, newStatuses);
+    // Preserve approved state if already approved
+    checked.approved = newStatuses[currentStep].approved;
+    checked.completed = newStatuses[currentStep].completed || checked.completed;
+    newStatuses[currentStep] = checked;
     setStepStatuses(newStatuses);
-  };
+  }, [currentStep, stepStatuses, checkStep]);
+
+  // ─── Auto-Run Engine ──────────────────────────────────────
+  const startAutoRun = useCallback(async () => {
+    setAutoRunActive(true);
+    setAutoRunPaused(false);
+    autoRunRef.current = true;
+    setAutoRunLog([]);
+
+    const log = (msg: string) => setAutoRunLog(prev => [...prev, `${new Date().toLocaleTimeString('de-DE')} – ${msg}`]);
+    const statuses: StepStatus[] = WIZARD_STEPS.map(() => ({ completed: false, approved: false, warnings: [], criticalWarnings: [], autoChecked: true }));
+
+    for (let step = 0; step < WIZARD_STEPS.length; step++) {
+      if (!autoRunRef.current) {
+        log('⏹ Auto-Run abgebrochen');
+        break;
+      }
+
+      setCurrentStep(step);
+      log(`🔍 Schritt ${step + 1}: ${WIZARD_STEPS[step].title} wird geprüft...`);
+
+      // Small delay for UX visibility
+      await new Promise(r => setTimeout(r, 800));
+
+      const checked = checkStep(step, statuses);
+
+      if (checked.criticalWarnings.length > 0) {
+        // Stop and require user attention
+        checked.autoChecked = true;
+        statuses[step] = checked;
+        setStepStatuses([...statuses]);
+        setAutoRunPaused(true);
+        log(`⚠️ Schritt ${step + 1}: ${checked.criticalWarnings.length} Auffälligkeit(en) – Bestätigung erforderlich`);
+        checked.criticalWarnings.forEach(w => log(`   → ${w}`));
+        autoRunRef.current = false;
+        setAutoRunActive(false);
+        return; // Stop here, user must approve
+      }
+
+      // Step 2 special: create payroll if needed
+      if (step === 2 && !checked.completed) {
+        log('📊 Abrechnung wird erstellt...');
+        try {
+          await createPayrollPeriod(selectedYear, selectedMonth);
+          checked.completed = true;
+          log('✅ Abrechnung erfolgreich erstellt');
+        } catch {
+          log('❌ Fehler bei Abrechnungserstellung – Stopp');
+          checked.criticalWarnings.push('Abrechnungserstellung fehlgeschlagen');
+          statuses[step] = checked;
+          setStepStatuses([...statuses]);
+          setAutoRunPaused(true);
+          autoRunRef.current = false;
+          setAutoRunActive(false);
+          return;
+        }
+      }
+
+      // Auto-approve
+      checked.approved = true;
+      checked.completed = true;
+      statuses[step] = checked;
+      setStepStatuses([...statuses]);
+      log(`✅ Schritt ${step + 1}: ${WIZARD_STEPS[step].title} – OK`);
+
+      await new Promise(r => setTimeout(r, 400));
+    }
+
+    if (autoRunRef.current) {
+      log('🎉 Alle Schritte erfolgreich durchlaufen!');
+      setAutoRunActive(false);
+      autoRunRef.current = false;
+    }
+  }, [checkStep, createPayrollPeriod, selectedYear, selectedMonth]);
+
+  const stopAutoRun = useCallback(() => {
+    autoRunRef.current = false;
+    setAutoRunActive(false);
+    setAutoRunPaused(false);
+  }, []);
+
+  const resumeAutoRun = useCallback(() => {
+    // Approve current step and continue
+    const newStatuses = [...stepStatuses];
+    newStatuses[currentStep] = { ...newStatuses[currentStep], approved: true, completed: true, criticalWarnings: [] };
+    setStepStatuses(newStatuses);
+
+    if (currentStep < WIZARD_STEPS.length - 1) {
+      setCurrentStep(prev => prev + 1);
+      // Re-start auto-run from next step
+      setTimeout(() => {
+        startAutoRunFrom(currentStep + 1);
+      }, 300);
+    }
+  }, [stepStatuses, currentStep]);
+
+  const startAutoRunFrom = useCallback(async (fromStep: number) => {
+    setAutoRunActive(true);
+    setAutoRunPaused(false);
+    autoRunRef.current = true;
+
+    const log = (msg: string) => setAutoRunLog(prev => [...prev, `${new Date().toLocaleTimeString('de-DE')} – ${msg}`]);
+    const statuses = [...stepStatuses];
+
+    for (let step = fromStep; step < WIZARD_STEPS.length; step++) {
+      if (!autoRunRef.current) break;
+
+      setCurrentStep(step);
+      log(`🔍 Schritt ${step + 1}: ${WIZARD_STEPS[step].title} wird geprüft...`);
+      await new Promise(r => setTimeout(r, 800));
+
+      const checked = checkStep(step, statuses);
+
+      if (checked.criticalWarnings.length > 0) {
+        checked.autoChecked = true;
+        statuses[step] = checked;
+        setStepStatuses([...statuses]);
+        setAutoRunPaused(true);
+        log(`⚠️ Schritt ${step + 1}: Bestätigung erforderlich`);
+        autoRunRef.current = false;
+        setAutoRunActive(false);
+        return;
+      }
+
+      if (step === 2 && !checked.completed) {
+        log('📊 Abrechnung wird erstellt...');
+        try {
+          await createPayrollPeriod(selectedYear, selectedMonth);
+          checked.completed = true;
+          log('✅ Abrechnung erstellt');
+        } catch {
+          log('❌ Fehler – Stopp');
+          statuses[step] = checked;
+          setStepStatuses([...statuses]);
+          setAutoRunPaused(true);
+          autoRunRef.current = false;
+          setAutoRunActive(false);
+          return;
+        }
+      }
+
+      checked.approved = true;
+      checked.completed = true;
+      statuses[step] = checked;
+      setStepStatuses([...statuses]);
+      log(`✅ Schritt ${step + 1}: OK`);
+      await new Promise(r => setTimeout(r, 400));
+    }
+
+    if (autoRunRef.current) {
+      log('🎉 Alle Schritte erfolgreich!');
+      setAutoRunActive(false);
+      autoRunRef.current = false;
+    }
+  }, [stepStatuses, checkStep, createPayrollPeriod, selectedYear, selectedMonth]);
 
   const approveStep = () => {
     const newStatuses = [...stepStatuses];
@@ -503,6 +664,7 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
             value={selectedMonth}
             onChange={e => setSelectedMonth(Number(e.target.value))}
             className="rounded-md border border-input bg-background px-3 py-2 text-sm"
+            disabled={autoRunActive}
           >
             {MONTHS.map((m, i) => (
               <option key={i} value={i + 1}>{m}</option>
@@ -512,12 +674,28 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
             value={selectedYear}
             onChange={e => setSelectedYear(Number(e.target.value))}
             className="rounded-md border border-input bg-background px-3 py-2 text-sm"
+            disabled={autoRunActive}
           >
             {[2024, 2025, 2026].map(y => (
               <option key={y} value={y}>{y}</option>
             ))}
           </select>
-          <Button variant="outline" onClick={onBack}>
+          {!autoRunActive && !autoRunPaused && (
+            <Button onClick={startAutoRun} className="bg-gradient-primary hover:opacity-90">
+              <FastForward className="h-4 w-4 mr-2" /> Auto-Run
+            </Button>
+          )}
+          {autoRunActive && (
+            <Button onClick={stopAutoRun} variant="destructive">
+              <Pause className="h-4 w-4 mr-2" /> Stopp
+            </Button>
+          )}
+          {autoRunPaused && (
+            <Button onClick={resumeAutoRun} className="bg-gradient-primary hover:opacity-90">
+              <FastForward className="h-4 w-4 mr-2" /> Weiter (bestätigen)
+            </Button>
+          )}
+          <Button variant="outline" onClick={onBack} disabled={autoRunActive}>
             <ArrowLeft className="h-4 w-4 mr-2" /> Zurück
           </Button>
         </div>
@@ -531,6 +709,59 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
         </div>
         <Progress value={overallProgress} className="h-2" />
       </div>
+
+      {/* Auto-Run Status Banner */}
+      {autoRunActive && (
+        <Alert className="border-primary/30 bg-primary/5">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          <AlertTitle>Auto-Run aktiv</AlertTitle>
+          <AlertDescription>
+            Das System führt alle Schritte automatisch durch. Bei Auffälligkeiten wird angehalten.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {autoRunPaused && (
+        <Alert className="border-orange-300 bg-orange-50 dark:bg-orange-950/20 dark:border-orange-800">
+          <AlertTriangle className="h-4 w-4 text-orange-600" />
+          <AlertTitle className="text-orange-800 dark:text-orange-200">Auto-Run pausiert – Ihre Aufmerksamkeit ist nötig</AlertTitle>
+          <AlertDescription className="text-orange-700 dark:text-orange-300">
+            Bei Schritt {currentStep + 1} wurden Auffälligkeiten erkannt. Bitte prüfen und bestätigen Sie, um fortzufahren.
+            <div className="mt-2 flex gap-2">
+              <Button size="sm" onClick={resumeAutoRun} className="bg-gradient-primary hover:opacity-90">
+                <FastForward className="h-3 w-3 mr-1" /> Bestätigen & Weiter
+              </Button>
+              <Button size="sm" variant="outline" onClick={stopAutoRun}>
+                <OctagonX className="h-3 w-3 mr-1" /> Abbrechen
+              </Button>
+            </div>
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* Auto-Run Log */}
+      {autoRunLog.length > 0 && (
+        <Card className="border-muted">
+          <CardHeader className="py-3 px-4">
+            <CardTitle className="text-sm flex items-center gap-2">
+              <Zap className="h-4 w-4 text-primary" />
+              Auto-Run Protokoll
+              {!autoRunActive && !autoRunPaused && (
+                <Button variant="ghost" size="sm" className="ml-auto h-6 text-xs" onClick={() => setAutoRunLog([])}>
+                  Löschen
+                </Button>
+              )}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="px-4 pb-3">
+            <div className="bg-muted/50 rounded-md p-3 max-h-40 overflow-y-auto font-mono text-xs space-y-0.5">
+              {autoRunLog.map((line, i) => (
+                <div key={i} className="text-muted-foreground">{line}</div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Step Navigation */}
       <div className="flex items-center gap-1 overflow-x-auto pb-2">
