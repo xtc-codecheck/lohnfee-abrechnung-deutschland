@@ -19,7 +19,7 @@ describe('Employee Validation Schemas', () => {
       city: 'Berlin',
       state: 'berlin',
       country: 'Deutschland',
-      taxId: '12345678901',
+      taxId: '65929970489',
       taxClass: 'I',
       religion: 'none',
       relationshipStatus: 'single',
@@ -60,7 +60,7 @@ describe('Employee Validation Schemas', () => {
     it('should validate 11-digit tax ID', () => {
       const result = personalDataSchema.safeParse({
         ...validPersonalData,
-        taxId: '12345678901',
+        taxId: '65929970489',
       });
       expect(result.success).toBe(true);
     });
@@ -215,7 +215,7 @@ describe('Employee Validation Schemas', () => {
         city: 'Berlin',
         state: 'berlin',
         country: 'Deutschland',
-        taxId: '12345678901',
+        taxId: '65929970489',
         taxClass: 'I',
         religion: 'none',
         relationshipStatus: 'single',
