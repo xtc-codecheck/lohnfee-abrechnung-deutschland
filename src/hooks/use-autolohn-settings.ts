@@ -49,13 +49,27 @@ export function useAutolohnSettings() {
   const saveMutation = useMutation({
     mutationFn: async (newSettings: AutolohnSettings) => {
       if (!tenantId) throw new Error('Kein Mandant ausgewählt');
-      const { error } = await supabase
+      // Check if row exists
+      const { data: existing } = await supabase
         .from('autolohn_settings')
-        .upsert(
-          { tenant_id: tenantId, settings: newSettings as unknown as Record<string, unknown> },
-          { onConflict: 'tenant_id' }
-        );
-      if (error) throw new Error(error.message);
+        .select('id')
+        .eq('tenant_id', tenantId)
+        .maybeSingle();
+
+      const settingsJson = newSettings as unknown as Record<string, unknown>;
+
+      if (existing) {
+        const { error } = await supabase
+          .from('autolohn_settings')
+          .update({ settings: settingsJson })
+          .eq('tenant_id', tenantId);
+        if (error) throw new Error(error.message);
+      } else {
+        const { error } = await supabase
+          .from('autolohn_settings')
+          .insert({ tenant_id: tenantId, settings: settingsJson });
+        if (error) throw new Error(error.message);
+      }
       return newSettings;
     },
     onSuccess: (saved) => {
