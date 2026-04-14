@@ -41,6 +41,7 @@ export interface TaxCalculationParams {
   isEastGermany: boolean; // für BBG Unterschiede
   isChildless: boolean; // für Pflegeversicherung
   age: number; // für Pflegeversicherung
+  numberOfChildren?: number; // Für PV-Kinderabschläge (seit 07/2023)
   employmentType?: 'minijob' | 'midijob' | 'fulltime' | 'parttime'; // für spezielle Behandlung
   useBesondereLohnsteuertabelle?: boolean; // Besondere Tabelle für Beamte/PKV
   privateHealthInsuranceMonthly?: number; // PKV-Basisbeitrag (nur bei besonderer Tabelle)
@@ -228,7 +229,7 @@ function calculateMinijobContributions(grossMonthly: number): {
  */
 export function calculateCompleteTax(params: TaxCalculationParams): TaxCalculationResult {
   const { grossSalaryYearly, taxClass, childAllowances, churchTax, churchTaxRate, 
-          healthInsuranceRate, isEastGermany, isChildless, age, employmentType,
+          healthInsuranceRate, isEastGermany, isChildless, age, numberOfChildren, employmentType,
           useBesondereLohnsteuertabelle, privateHealthInsuranceMonthly, privateCareInsuranceMonthly } = params;
 
   const grossMonthly = grossSalaryYearly / 12;
@@ -310,7 +311,7 @@ export function calculateCompleteTax(params: TaxCalculationParams): TaxCalculati
     const healthInsurance = healthBase * (SOCIAL_INSURANCE_RATES_2025.health.employee / 100) + healthBase * (healthInsuranceRate / 2 / 100);
 
     const careBase = Math.min(gleitzonenEntgeltYearly, bbg.health);
-    const careRate = getCareInsuranceRate(isChildless, age);
+    const careRate = getCareInsuranceRate(isChildless, age, numberOfChildren ?? 0);
     const careInsurance = careBase * (careRate.employee / 100);
 
     const totalSocialContributions = pensionInsurance + unemploymentInsurance + healthInsurance + careInsurance;
@@ -374,7 +375,7 @@ export function calculateCompleteTax(params: TaxCalculationParams): TaxCalculati
   const healthInsurance = healthBase * (SOCIAL_INSURANCE_RATES_2025.health.employee / 100) + healthBase * (healthInsuranceRate / 2 / 100);
 
   const careBase = Math.min(grossSalaryYearly, bbg.health);
-  const careRate = getCareInsuranceRate(isChildless, age);
+  const careRate = getCareInsuranceRate(isChildless, age, numberOfChildren ?? 0);
   const careInsurance = careBase * (careRate.employee / 100);
 
   // Zuerst Sozialversicherung berechnen für korrekte Vorsorgepauschale

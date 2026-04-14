@@ -46,9 +46,24 @@ export const SOCIAL_INSURANCE_RATES_2025 = {
   },
   careChildless: {
     total: 4.0, // Für Kinderlose über 23
-    employee: 2.4, // Korrigiert auf realen Satz 2025
-    employer: 1.6, // AG-Anteil angepasst
+    employee: 2.3, // 1,7% Basis + 0,6% Kinderlosenzuschlag = 2,3%
+    employer: 1.7, // AG-Anteil bleibt bei 1,7%
   },
+} as const;
+
+/**
+ * PV-Kinderabschläge seit 01.07.2023 (PUEG)
+ * Ab dem 2. Kind wird der AN-Beitrag um 0,25% je Kind reduziert (max. 1,0%).
+ * Abschlag gilt nur für Kinder unter 25 Jahren.
+ * 
+ * Quelle: § 55 Abs. 3 SGB XI
+ */
+export const PV_CHILD_DISCOUNTS_2025 = {
+  baseEmployeeRate: 1.7,     // Basis AN-Beitrag (1 Kind oder kinderlos ohne Zuschlag)
+  childlessSurcharge: 0.6,   // Kinderlosenzuschlag für über 23-Jährige
+  discountPerChild: 0.25,    // Abschlag pro Kind ab dem 2. Kind
+  maxDiscount: 1.0,          // Maximaler Abschlag (bei 5+ Kindern)
+  employerRate: 1.7,         // AG-Anteil bleibt immer 1,7%
 } as const;
 
 /**
@@ -7916,7 +7931,47 @@ export const getChurchTaxRate = (state: string, religion: 'catholic' | 'protesta
 
 /**
  * Hilfsfunktion für Pflegeversicherungssatz
+ * 
+ * Gestaffelte Berechnung seit 01.07.2023 (PUEG):
+ * - Kinderlos über 23: 2,3% AN (Basis 1,7% + 0,6% Zuschlag)
+ * - 1 Kind: 1,7% AN
+ * - 2 Kinder: 1,45% AN (Abschlag 0,25%)
+ * - 3 Kinder: 1,2% AN (Abschlag 0,50%)
+ * - 4 Kinder: 0,95% AN (Abschlag 0,75%)
+ * - 5+ Kinder: 0,7% AN (Abschlag 1,0%)
+ * - AG-Anteil immer 1,7%
+ * 
+ * @param isChildless - Ob der AN kinderlos ist
+ * @param age - Alter des AN
+ * @param numberOfChildren - Anzahl der Kinder (für gestaffelte Abschläge)
  */
-export const getCareInsuranceRate = (isChildless: boolean, age: number) => {
-  return (isChildless && age > 23) ? SOCIAL_INSURANCE_RATES_2025.careChildless : SOCIAL_INSURANCE_RATES_2025.care;
+export const getCareInsuranceRate = (
+  isChildless: boolean, 
+  age: number, 
+  numberOfChildren: number = 0
+): { total: number; employee: number; employer: number } => {
+  const { baseEmployeeRate, childlessSurcharge, discountPerChild, maxDiscount, employerRate } = PV_CHILD_DISCOUNTS_2025;
+  
+  let employeeRate: number;
+  
+  if (isChildless && age > 23) {
+    // Kinderlos über 23: Basis + Zuschlag
+    employeeRate = baseEmployeeRate + childlessSurcharge;
+  } else if (numberOfChildren <= 1) {
+    // 0 oder 1 Kind (unter 23 oder mit Kind): Basissatz
+    employeeRate = baseEmployeeRate;
+  } else {
+    // Ab 2 Kindern: Abschlag
+    const discount = Math.min((numberOfChildren - 1) * discountPerChild, maxDiscount);
+    employeeRate = Math.max(baseEmployeeRate - discount, baseEmployeeRate - maxDiscount);
+  }
+  
+  // Auf 2 Dezimalstellen runden
+  employeeRate = Math.round(employeeRate * 100) / 100;
+  
+  return {
+    total: Math.round((employeeRate + employerRate) * 100) / 100,
+    employee: employeeRate,
+    employer: employerRate,
+  };
 };

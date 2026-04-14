@@ -26,6 +26,7 @@ function createMockEmployee(industry: IndustryType = 'standard'): Employee {
       healthInsurance: { name: 'TK', additionalRate: 1.2 },
       socialSecurityNumber: '12345678A123',
       childAllowances: 0,
+      numberOfChildren: 0,
     },
     employmentData: {
       employmentType: 'fulltime',
