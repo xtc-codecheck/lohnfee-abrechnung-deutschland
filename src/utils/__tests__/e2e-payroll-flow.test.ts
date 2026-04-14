@@ -164,7 +164,7 @@ describe('E2E: Kompletter Lohnabrechnungsflow', () => {
             socialSecurityNumber: '12100385B456', childAllowances: 2, numberOfChildren: 2,
           },
           salaryData: {
-            grossSalary: 5000, salaryType: 'monthly' as const, additionalBenefits: {},
+            grossSalary: 5000, salaryType: 'fixed' as const, additionalBenefits: {},
             bankingData: { iban: 'DE12345678901234567890', bic: 'DEUTDEDB', bankName: 'Deutsche Bank', accountHolder: 'Max Müller' },
           },
         } as Partial<Employee>),
