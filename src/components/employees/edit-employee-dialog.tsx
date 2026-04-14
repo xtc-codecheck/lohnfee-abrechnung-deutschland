@@ -43,7 +43,7 @@ export function EditEmployeeDialog({ employee, open, onOpenChange, onSave }: Edi
     }));
   };
 
-  const updateEmploymentData = (field: string, value: string | number | boolean | Date) => {
+  const updateEmploymentData = (field: string, value: string | number | boolean | Date | import('@/types/employee').WorkDay[]) => {
     setFormData(prev => ({
       ...prev,
       employmentData: {
