@@ -11,6 +11,7 @@ import { ELStAMValidationCard } from "./elstam-validation-card";
 import { EmployeeReports } from "@/components/reports/employee-reports";
 import { useToast } from "@/hooks/use-toast";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { NetworkErrorAlert } from "@/components/ui/network-error-alert";
 
 interface EmployeeDashboardProps {
   onAddEmployee: () => void;
@@ -28,7 +29,7 @@ export function EmployeeDashboard({ onAddEmployee, onCalculateSalary, onShowComp
   const [showReports, setShowReports] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const { employees, updateEmployee, deleteEmployee } = useEmployees();
+  const { employees, updateEmployee, deleteEmployee, error: empError } = useEmployees();
   const { toast } = useToast();
 
   const filteredEmployees = employees.filter(employee =>
@@ -85,6 +86,13 @@ export function EmployeeDashboard({ onAddEmployee, onCalculateSalary, onShowComp
 
   return (
     <div className="space-y-8 animate-fade-in">
+      {empError && (
+        <NetworkErrorAlert
+          error={empError}
+          onRetry={() => window.location.reload()}
+          context="Mitarbeiterdaten konnten nicht geladen werden"
+        />
+      )}
       {/* Zentrierter Header */}
       <div className="text-center pb-6 border-b border-border">
         <h1 className="text-3xl font-bold text-foreground">Mitarbeiter-Dashboard</h1>

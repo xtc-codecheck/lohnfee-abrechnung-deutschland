@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { ArrowLeft } from "lucide-react";
+import { NetworkErrorAlert } from "@/components/ui/network-error-alert";
 import { Button } from "@/components/ui/button";
 import { useSupabasePayroll } from "@/hooks/use-supabase-payroll";
 import { useEmployees } from "@/contexts/employee-context";
@@ -29,7 +30,7 @@ export function PayrollDashboard({ onBack, onShowSpecialPayments, onShowAutomati
   const [selectedPayrollId, setSelectedPayrollId] = useState<string | null>(null);
   const [currentView, setCurrentView] = useState<'dashboard' | 'detail' | 'journal' | 'account' | 'manual' | 'settings' | 'enhancements' | 'time-sync'>('dashboard');
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | null>(null);
-  const { payrollPeriods, payrollEntries, getPayrollReport, deletePayrollPeriod } = useSupabasePayroll();
+  const { payrollPeriods, payrollEntries, getPayrollReport, deletePayrollPeriod, error: payrollError } = useSupabasePayroll();
   const { employees } = useEmployees();
 
   const handleBackToDashboard = () => {
@@ -98,6 +99,13 @@ export function PayrollDashboard({ onBack, onShowSpecialPayments, onShowAutomati
 
   return (
     <div className="space-y-6 animate-fade-in">
+      {payrollError && (
+        <NetworkErrorAlert
+          error={payrollError}
+          onRetry={() => window.location.reload()}
+          context="Abrechnungsdaten konnten nicht geladen werden"
+        />
+      )}
       <div className="text-center pb-6 border-b border-border">
         <h1 className="text-3xl font-bold text-foreground">Lohnabrechnung</h1>
         <p className="text-muted-foreground mt-2">Monatliche Lohnabrechnung für alle Mitarbeiter</p>
