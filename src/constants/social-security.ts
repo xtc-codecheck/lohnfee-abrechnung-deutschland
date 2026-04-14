@@ -1,5 +1,7 @@
-// Zentrale Konstanten für deutsche Sozialversicherung und Steuern 2025
+// Zentrale Konstanten für deutsche Sozialversicherung und Steuern 2025/2026
 // Diese Datei ist die einzige Quelle für alle sozialversicherungsrechtlichen Konstanten
+
+// ============= 2025 =============
 
 /**
  * Beitragsbemessungsgrenzen 2025 (jährlich)
@@ -68,10 +70,6 @@ export const PV_CHILD_DISCOUNTS_2025 = {
 
 /**
  * Minijob-Konstanten 2025
- * Verdienstgrenze: bis 556 € pro Monat
- * Sozialversicherung: keine Beiträge zur Kranken-, Pflege- und Arbeitslosenversicherung
- * Rentenversicherungspflicht besteht (Befreiung möglich)
- * Steuer: Pauschalsteuer 2% (zahlt Arbeitgeber) oder individuelle Versteuerung
  */
 export const MINIJOB_2025 = {
   maxEarnings: 556, // €556 monatlich (Stand 2025)
@@ -81,18 +79,10 @@ export const MINIJOB_2025 = {
     pension: 0.15, // 15% Rentenversicherung (AG zahlt)
     total: 0.28, // 28% Gesamtabgaben AG
   },
-  // Beispielrechnung: 556€ × 2% = 11,12€ Steuer (falls Pauschalsteuer)
 } as const;
 
 /**
  * Midijob-Konstanten 2025 (Übergangsbereich)
- * Verdienstgrenze: 556,01€ bis 2.000€ pro Monat
- * Sozialversicherung: volle Versicherungspflicht mit reduzierten AN-Beiträgen
- * Steuer: Steuerklasse I-IV meist keine Lohnsteuer, V/VI können Lohnsteuer haben
- * 
- * Berechnungsformel Übergangsbereich:
- * Gleitzonenentgelt = F × 556,01 + 
- * ([2000 / (2000 – 556,01)] – [556,01 / (2000 – 556,01)] × F) × (Brutto – 556,01)
  */
 export const MIDIJOB_2025 = {
   minEarnings: 556.01, // Untergrenze (Stand 2025)
@@ -100,7 +90,6 @@ export const MIDIJOB_2025 = {
   factor: 0.6683,       // Faktor F für 2025
   lowerThreshold: 556.01,
   upperThreshold: 2000,
-  // Formel-Komponenten für Gleitzonenberechnung
   formula: {
     factor: 0.6683,
     lowerBound: 556.01,
@@ -152,20 +141,212 @@ export const TAX_RATES_2025 = {
   solidarityTax: 0.055, // 5,5%
 } as const;
 
+// ============= 2026 =============
+
+/**
+ * Beitragsbemessungsgrenzen 2026 (jährlich)
+ * Quelle: Sozialversicherungs-Rechengrößenverordnung 2026
+ */
+export const BBG_2026_YEARLY = {
+  pensionWest: 96600, // €96.600 RV/AV West (vereinheitlicht)
+  pensionEast: 96600, // €96.600 RV/AV Ost (ab 2026 einheitlich)
+  healthCare: 66150,  // €66.150 KV/PV bundesweit
+} as const;
+
+/**
+ * Beitragsbemessungsgrenzen 2026 (monatlich)
+ */
+export const BBG_2026_MONTHLY = {
+  pensionWest: 8050, // €8.050 RV/AV West
+  pensionEast: 8050, // €8.050 RV/AV Ost (vereinheitlicht)
+  healthCare: 5512.50,  // €5.512,50 KV/PV bundesweit
+} as const;
+
+/**
+ * Sozialversicherungsbeiträge 2026 (in Prozent)
+ */
+export const SOCIAL_INSURANCE_RATES_2026 = {
+  pension: {
+    total: 18.6,
+    employee: 9.3,
+    employer: 9.3,
+  },
+  unemployment: {
+    total: 2.6,
+    employee: 1.3,
+    employer: 1.3,
+  },
+  health: {
+    total: 14.6,
+    employee: 7.3,
+    employer: 7.3,
+    averageAdditional: 1.0, // Durchschnittlicher Zusatzbeitrag 2026 (leicht gestiegen)
+  },
+  care: {
+    total: 3.6,     // Erhöhung ab 01.01.2026
+    employee: 1.8,
+    employer: 1.8,
+  },
+  careChildless: {
+    total: 4.2,     // Kinderlose über 23
+    employee: 2.4,  // 1,8% Basis + 0,6% Zuschlag
+    employer: 1.8,
+  },
+} as const;
+
+/**
+ * PV-Kinderabschläge 2026 (angepasst an erhöhten Basissatz)
+ */
+export const PV_CHILD_DISCOUNTS_2026 = {
+  baseEmployeeRate: 1.8,     // Basis AN-Beitrag (erhöht)
+  childlessSurcharge: 0.6,   // Kinderlosenzuschlag
+  discountPerChild: 0.25,    // Abschlag pro Kind ab dem 2. Kind
+  maxDiscount: 1.0,          // Maximaler Abschlag (bei 5+ Kindern)
+  employerRate: 1.8,         // AG-Anteil (erhöht)
+} as const;
+
+/**
+ * Minijob-Konstanten 2026
+ * Verdienstgrenze steigt mit Mindestlohn (12,82€ × 130h / 3 ≈ 556€)
+ */
+export const MINIJOB_2026 = {
+  maxEarnings: 556, // €556 monatlich (vorerst unverändert)
+  taxRate: 0.02,
+  employerRates: {
+    health: 0.13,
+    pension: 0.15,
+    total: 0.28,
+  },
+} as const;
+
+/**
+ * Midijob-Konstanten 2026
+ */
+export const MIDIJOB_2026 = {
+  minEarnings: 556.01,
+  maxEarnings: 2000,
+  factor: 0.6683,
+  lowerThreshold: 556.01,
+  upperThreshold: 2000,
+  formula: {
+    factor: 0.6683,
+    lowerBound: 556.01,
+    upperBound: 2000,
+  }
+} as const;
+
+/**
+ * Steuerliche Freibeträge 2026
+ * Grundfreibetrag angehoben nach Inflationsausgleich
+ */
+export const TAX_ALLOWANCES_2026 = {
+  basicAllowance: 12336, // Grundfreibetrag 2026 (erhöht von 12.096)
+  childAllowance: 6672, // Kinderfreibetrag 2026 (erhöht von 6.612)
+  workRelatedExpenses: 1230, // Werbungskostenpauschale (unverändert)
+  specialExpenses: 36, // Sonderausgabenpauschale (unverändert)
+  retirementProvision: 3000, // Max. Vorsorgepauschale (unverändert)
+  solidarityTaxFreeAmount: 19950, // Soli-Freibetrag (unverändert)
+  solidarityReductionLimit: 73483, // Soli-Milderungsgrenze (unverändert)
+} as const;
+
+/**
+ * Steuersätze und -grenzen 2026 (§ 32a EStG)
+ * Tarif angepasst an erhöhten Grundfreibetrag
+ */
+export const TAX_RATES_2026 = {
+  progressionZone1: {
+    from: 12337,
+    to: 17687,
+    formula: 'y',
+    coefficients: [922.98, 1400],
+  },
+  progressionZone2: {
+    from: 17688,
+    to: 68480,
+    formula: 'z',
+    coefficients: [176.64, 2397],
+    constant: 1015.13,
+  },
+  proportionalZone1: {
+    from: 68481,
+    to: 277825,
+    rate: 0.42,
+    constant: 10911.92,
+  },
+  proportionalZone2: {
+    from: 277826,
+    rate: 0.45,
+    constant: 19246.67,
+  },
+  solidarityTax: 0.055,
+} as const;
+
+// ============= Typ-Definitionen für jahresübergreifenden Zugriff =============
+
+type BBGYearly = typeof BBG_2025_YEARLY;
+type BBGMonthly = typeof BBG_2025_MONTHLY;
+type SocialInsuranceRates = typeof SOCIAL_INSURANCE_RATES_2025;
+type TaxAllowances = typeof TAX_ALLOWANCES_2025;
+type TaxRates = typeof TAX_RATES_2025;
+type MinijobConstants = typeof MINIJOB_2025;
+type MidijobConstants = typeof MIDIJOB_2025;
+type PVChildDiscounts = typeof PV_CHILD_DISCOUNTS_2025;
+
+const YEAR_CONFIG: Record<number, {
+  bbgYearly: BBGYearly;
+  bbgMonthly: BBGMonthly;
+  svRates: SocialInsuranceRates;
+  taxAllowances: TaxAllowances;
+  taxRates: TaxRates;
+  minijob: MinijobConstants;
+  midijob: MidijobConstants;
+  pvDiscounts: PVChildDiscounts;
+}> = {
+  2025: {
+    bbgYearly: BBG_2025_YEARLY,
+    bbgMonthly: BBG_2025_MONTHLY,
+    svRates: SOCIAL_INSURANCE_RATES_2025,
+    taxAllowances: TAX_ALLOWANCES_2025,
+    taxRates: TAX_RATES_2025,
+    minijob: MINIJOB_2025,
+    midijob: MIDIJOB_2025,
+    pvDiscounts: PV_CHILD_DISCOUNTS_2025,
+  },
+  2026: {
+    bbgYearly: BBG_2026_YEARLY,
+    bbgMonthly: BBG_2026_MONTHLY,
+    svRates: SOCIAL_INSURANCE_RATES_2026,
+    taxAllowances: TAX_ALLOWANCES_2026,
+    taxRates: TAX_RATES_2026,
+    minijob: MINIJOB_2026,
+    midijob: MIDIJOB_2026,
+    pvDiscounts: PV_CHILD_DISCOUNTS_2026,
+  },
+};
+
+/**
+ * Gibt die Konfiguration für ein bestimmtes Jahr zurück.
+ * Fallback auf das neueste verfügbare Jahr.
+ */
+export function getYearConfig(year: number) {
+  return YEAR_CONFIG[year] ?? YEAR_CONFIG[2026];
+}
+
+/**
+ * Gibt die unterstützten Jahre zurück
+ */
+export function getSupportedYears(): number[] {
+  return Object.keys(YEAR_CONFIG).map(Number).sort();
+}
+
 /**
  * HINWEIS: Die statische WAGE_TAX_TABLE_2025 wurde durch eine formelbasierte
  * Berechnung nach § 32a EStG (PAP 2025) ersetzt.
  * Siehe: src/utils/tax-calculation.ts → calculateTariflicheEStPAP2025()
- * 
- * Dies eliminiert:
- * - ~7.700 Zeilen statische Tabellendaten
- * - Jährliche manuelle Tabellenaktualisierung
- * - Interpolationsfehler bei Gehältern zwischen Tabellenstufen
- * - Extrapolationsprobleme bei Gehältern über 100.000€
  */
 
 /**
- * Kirchensteuersätze nach Bundesländern
+ * Kirchensteuersätze nach Bundesländern (unverändert 2025/2026)
  */
 export const CHURCH_TAX_RATES_2025 = {
   'BW': { catholic: 8, protestant: 8 }, // Baden-Württemberg
@@ -188,9 +369,11 @@ export const CHURCH_TAX_RATES_2025 = {
 
 /**
  * Hilfsfunktionen für BBG-Berechnungen
+ * @param year - Optional: Veranlagungsjahr (Default: 2025 für Rückwärtskompatibilität)
  */
-export const getBBGForRegion = (isEastGermany: boolean, type: 'yearly' | 'monthly' = 'monthly') => {
-  const bbg = type === 'yearly' ? BBG_2025_YEARLY : BBG_2025_MONTHLY;
+export const getBBGForRegion = (isEastGermany: boolean, type: 'yearly' | 'monthly' = 'monthly', year: number = 2025) => {
+  const config = getYearConfig(year);
+  const bbg = type === 'yearly' ? config.bbgYearly : config.bbgMonthly;
   return {
     pension: isEastGermany ? bbg.pensionEast : bbg.pensionWest,
     health: bbg.healthCare,
@@ -206,42 +389,28 @@ export const getChurchTaxRate = (state: string, religion: 'catholic' | 'protesta
 
 /**
  * Hilfsfunktion für Pflegeversicherungssatz
- * 
- * Gestaffelte Berechnung seit 01.07.2023 (PUEG):
- * - Kinderlos über 23: 2,3% AN (Basis 1,7% + 0,6% Zuschlag)
- * - 1 Kind: 1,7% AN
- * - 2 Kinder: 1,45% AN (Abschlag 0,25%)
- * - 3 Kinder: 1,2% AN (Abschlag 0,50%)
- * - 4 Kinder: 0,95% AN (Abschlag 0,75%)
- * - 5+ Kinder: 0,7% AN (Abschlag 1,0%)
- * - AG-Anteil immer 1,7%
- * 
- * @param isChildless - Ob der AN kinderlos ist
- * @param age - Alter des AN
- * @param numberOfChildren - Anzahl der Kinder (für gestaffelte Abschläge)
+ * @param year - Optional: Veranlagungsjahr (Default: 2025)
  */
 export const getCareInsuranceRate = (
   isChildless: boolean, 
   age: number, 
-  numberOfChildren: number = 0
+  numberOfChildren: number = 0,
+  year: number = 2025
 ): { total: number; employee: number; employer: number } => {
-  const { baseEmployeeRate, childlessSurcharge, discountPerChild, maxDiscount, employerRate } = PV_CHILD_DISCOUNTS_2025;
+  const config = getYearConfig(year);
+  const { baseEmployeeRate, childlessSurcharge, discountPerChild, maxDiscount, employerRate } = config.pvDiscounts;
   
   let employeeRate: number;
   
   if (isChildless && age > 23) {
-    // Kinderlos über 23: Basis + Zuschlag
     employeeRate = baseEmployeeRate + childlessSurcharge;
   } else if (numberOfChildren <= 1) {
-    // 0 oder 1 Kind (unter 23 oder mit Kind): Basissatz
     employeeRate = baseEmployeeRate;
   } else {
-    // Ab 2 Kindern: Abschlag
     const discount = Math.min((numberOfChildren - 1) * discountPerChild, maxDiscount);
     employeeRate = Math.max(baseEmployeeRate - discount, baseEmployeeRate - maxDiscount);
   }
   
-  // Auf 2 Dezimalstellen runden
   employeeRate = Math.round(employeeRate * 100) / 100;
   
   return {
