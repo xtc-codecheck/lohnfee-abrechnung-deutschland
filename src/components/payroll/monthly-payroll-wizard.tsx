@@ -44,6 +44,8 @@ interface StepStatus {
   completed: boolean;
   approved: boolean;
   warnings: string[];
+  /** Warnings that block auto-run (require user attention) */
+  criticalWarnings: string[];
   autoChecked: boolean;
 }
 
