@@ -217,8 +217,8 @@ export function calculatePayrollEntry(input: PayrollCalculationInput): PayrollCa
   });
   
   // 6. Konstanten protokollieren
-  const eastGermanStates = ['berlin', 'brandenburg', 'mecklenburg-vorpommern', 'sachsen', 'sachsen-anhalt', 'thueringen'];
-  const isEastGermany = eastGermanStates.includes((employee.personalData.address?.state || '').toLowerCase());
+  const { isEastGermanState } = require('@/utils/tax-params-factory');
+  const isEastGermany = isEastGermanState(employee.personalData.address?.state || '');
   const isChildless = employee.personalData.childAllowances === 0;
   auditLogger.logConstants(isEastGermany ? 'east' : 'west', isChildless);
   

@@ -85,15 +85,18 @@ export const BONUS_RATES = {
   holiday: 1.0, // 100% Feiertagszuschlag
 } as const;
 
-// Deutsche Feiertage (vereinfacht für Demo)
-export const GERMAN_HOLIDAYS_2024 = [
-  new Date('2024-01-01'), // Neujahr
-  new Date('2024-03-29'), // Karfreitag
-  new Date('2024-04-01'), // Ostermontag
-  new Date('2024-05-01'), // Tag der Arbeit
-  new Date('2024-05-09'), // Christi Himmelfahrt
-  new Date('2024-05-20'), // Pfingstmontag
-  new Date('2024-10-03'), // Tag der Deutschen Einheit
-  new Date('2024-12-25'), // 1. Weihnachtsfeiertag
-  new Date('2024-12-26'), // 2. Weihnachtsfeiertag
+// Deutsche Feiertage 2025 (bundesweit gültig)
+export const GERMAN_HOLIDAYS_2025 = [
+  new Date('2025-01-01'), // Neujahr
+  new Date('2025-04-18'), // Karfreitag
+  new Date('2025-04-21'), // Ostermontag
+  new Date('2025-05-01'), // Tag der Arbeit
+  new Date('2025-05-29'), // Christi Himmelfahrt
+  new Date('2025-06-09'), // Pfingstmontag
+  new Date('2025-10-03'), // Tag der Deutschen Einheit
+  new Date('2025-12-25'), // 1. Weihnachtsfeiertag
+  new Date('2025-12-26'), // 2. Weihnachtsfeiertag
 ] as const;
+
+/** @deprecated Verwende GERMAN_HOLIDAYS_2025 */
+export const GERMAN_HOLIDAYS_2024 = GERMAN_HOLIDAYS_2025;

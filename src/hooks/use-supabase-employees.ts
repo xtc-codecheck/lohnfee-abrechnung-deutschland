@@ -25,7 +25,7 @@ function dbToEmployee(row: DbEmployee): Employee {
         houseNumber: '',
         postalCode: row.zip_code ?? '',
         city: row.city ?? '',
-        state: '',
+        state: (row as any).state ?? '',
         country: 'DE',
       },
       taxId: row.tax_id ?? '',
@@ -83,7 +83,7 @@ function taxClassToNumber(tc: TaxClass): number {
 
 // ============= Mapper: App → DB =============
 
-function employeeToInsert(emp: Omit<Employee, 'id' | 'createdAt' | 'updatedAt'>): TablesInsert<'employees'> {
+function employeeToInsert(emp: Omit<Employee, 'id' | 'createdAt' | 'updatedAt'>): TablesInsert<'employees'> & { state?: string } {
   return {
     first_name: emp.personalData.firstName,
     last_name: emp.personalData.lastName,
@@ -91,6 +91,7 @@ function employeeToInsert(emp: Omit<Employee, 'id' | 'createdAt' | 'updatedAt'>)
     street: emp.personalData.address.street,
     zip_code: emp.personalData.address.postalCode,
     city: emp.personalData.address.city,
+    state: emp.personalData.address.state || null,
     tax_id: emp.personalData.taxId,
     tax_class: taxClassToNumber(emp.personalData.taxClass),
     church_tax: emp.personalData.churchTax,
@@ -127,6 +128,7 @@ function employeeToUpdate(updates: Partial<Employee>): TablesUpdate<'employees'>
       result.street = p.address.street;
       result.zip_code = p.address.postalCode;
       result.city = p.address.city;
+      (result as any).state = p.address.state || null;
     }
     if (p.taxId !== undefined) result.tax_id = p.taxId;
     if (p.taxClass) result.tax_class = taxClassToNumber(p.taxClass);

@@ -29,7 +29,7 @@ const features = [
     icon: Calculator,
     title: "Lohnabrechnung",
     description:
-      "Automatisierte Brutto-Netto-Berechnung mit aktuellen Steuer- und SV-Sätzen für 2026.",
+      "Automatisierte Brutto-Netto-Berechnung mit aktuellen Steuer- und SV-Sätzen für 2025.",
   },
   {
     icon: Users,
