@@ -68,8 +68,12 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
   const [selectedYear, setSelectedYear] = useState(now.getFullYear());
   const [currentStep, setCurrentStep] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [autoRunActive, setAutoRunActive] = useState(false);
+  const [autoRunPaused, setAutoRunPaused] = useState(false);
+  const [autoRunLog, setAutoRunLog] = useState<string[]>([]);
+  const autoRunRef = useRef(false);
   const [stepStatuses, setStepStatuses] = useState<StepStatus[]>(
-    WIZARD_STEPS.map(() => ({ completed: false, approved: false, warnings: [], autoChecked: false }))
+    WIZARD_STEPS.map(() => ({ completed: false, approved: false, warnings: [], criticalWarnings: [], autoChecked: false }))
   );
 
   const activeEmployees = useMemo(
