@@ -1,5 +1,6 @@
-import { Link } from "react-router-dom";
 import { PageSeo } from "@/components/seo/page-seo";
+import { LegalLayout } from "@/components/layout/legal-layout";
+import { Link } from "react-router-dom";
 
 export default function AGB() {
   return (
@@ -124,9 +125,9 @@ export default function AGB() {
             </p>
             <p className="text-muted-foreground leading-relaxed mt-2">
               (3) Weitere Einzelheiten entnehmen Sie bitte unserer{" "}
-              <button onClick={() => navigate("/datenschutz")} className="text-primary hover:underline">
+              <Link to="/datenschutz" className="text-primary hover:underline">
                 Datenschutzerklärung
-              </button>.
+              </Link>.
             </p>
           </section>
 
