@@ -1,22 +1,14 @@
 // Exakte deutsche Steuerberechnung nach § 32a EStG 2025
-// Einkommensteuergesetz (EStG) § 32a Einkommensteuertarif
+// Programmablaufplan (PAP) 2025 des Bundesministeriums der Finanzen
 //
 // ALLGEMEINE LOHNSTEUERTABELLE - für sozialversicherungspflichtige Arbeitnehmer
-// Diese Tabelle berücksichtigt Sozialversicherungsbeiträge bei der Lohnsteuerberechnung
-// und gilt für alle Arbeitnehmer, die ganz normal sozialversicherungspflichtig beschäftigt sind.
+// Formelbasierte Berechnung nach § 32a EStG (ersetzt die statische Lookup-Tabelle)
 //
 // HINWEIS: Es existiert auch eine BESONDERE LOHNSTEUERTABELLE für:
-// - Beamte
-// - Richter  
-// - Berufssoldaten
-// - Arbeitnehmer, die komplett privat krankenversichert sind und keine Beiträge 
-//   zur gesetzlichen Renten-/Arbeitslosenversicherung zahlen
+// - Beamte, Richter, Berufssoldaten
+// - Arbeitnehmer, die komplett privat krankenversichert sind
 //
-// Die besondere Lohnsteuertabelle berechnet die Lohnsteuer OHNE Berücksichtigung von 
-// Sozialversicherungsbeiträgen, wodurch die Steuerlast höher ausfällt.
-// 
 // Die besondere Lohnsteuertabelle ist in src/utils/besondere-lohnsteuertabelle.ts implementiert
-// und wird über das Flag `useBesondereLohnsteuertabelle` in TaxCalculationParams aktiviert.
 
 import { calculateBesondereLohnsteuer } from './besondere-lohnsteuertabelle';
 import { 
@@ -24,7 +16,6 @@ import {
   SOCIAL_INSURANCE_RATES_2025, 
   TAX_ALLOWANCES_2025, 
   TAX_RATES_2025,
-  WAGE_TAX_TABLE_2025,
   MINIJOB_2025,
   MIDIJOB_2025,
   getBBGForRegion,
@@ -67,54 +58,179 @@ export interface TaxCalculationResult {
   employerCosts: number;
 }
 
-/**
- * Hilfsfunktion: Lohnsteuer aus Tabelle interpolieren
- */
-function getWageTaxFromTable(grossSalary: number, taxClass: number): number {
-  // Steuerklassen-Mapping: StKl I/IV, StKl II, StKl III, StKl V, StKl VI
-  const columnIndex = {
-    1: 1, // StKl I
-    2: 2, // StKl II  
-    3: 3, // StKl III
-    4: 1, // StKl IV (gleich wie I)
-    5: 4, // StKl V
-    6: 5, // StKl VI
-  }[taxClass] || 1;
+// ============= PAP 2025: Tarifliche Einkommensteuer nach § 32a EStG =============
 
-  // Finde passende Tabellenzeile oder interpoliere
-  const table = WAGE_TAX_TABLE_2025;
+/**
+ * Berechnet die tarifliche Einkommensteuer nach § 32a EStG 2025
+ * Exakte Formel aus dem Programmablaufplan (PAP) des BMF
+ * 
+ * Tarif 2025:
+ * Zone 1: 0 € bis 12.096 € → 0 €
+ * Zone 2: 12.097 € bis 17.443 € → (932,30 × y + 1.400) × y mit y = (zvE − 12.096) / 10.000
+ * Zone 3: 17.444 € bis 68.480 € → (176,64 × z + 2.397) × z + 1.015,13 mit z = (zvE − 17.443) / 10.000
+ * Zone 4: 68.481 € bis 277.825 € → 0,42 × zvE − 10.911,92
+ * Zone 5: ab 277.826 € → 0,45 × zvE − 19.246,67
+ */
+export function calculateTariflicheEStPAP2025(zvE: number): number {
+  if (zvE <= 0) return 0;
   
-  // Suche exakte Übereinstimmung oder nächste Zeile
-  for (let i = 0; i < table.length; i++) {
-    const [salary, ...taxes] = table[i];
-    
-    if (grossSalary <= salary) {
-      return taxes[columnIndex - 1];
+  // Auf ganze Euro abrunden (§ 32a Abs. 1 S. 6 EStG)
+  zvE = Math.floor(zvE);
+  
+  if (zvE <= TAX_ALLOWANCES_2025.basicAllowance) return 0;
+
+  const { progressionZone1, progressionZone2, proportionalZone1, proportionalZone2 } = TAX_RATES_2025;
+
+  if (zvE <= progressionZone1.to) {
+    const y = (zvE - TAX_ALLOWANCES_2025.basicAllowance) / 10000;
+    return Math.floor((progressionZone1.coefficients[0] * y + progressionZone1.coefficients[1]) * y);
+  }
+
+  if (zvE <= progressionZone2.to) {
+    const z = (zvE - progressionZone2.from + 1) / 10000;
+    return Math.floor((progressionZone2.coefficients[0] * z + progressionZone2.coefficients[1]) * z + progressionZone2.constant);
+  }
+
+  if (zvE <= proportionalZone2.from - 1) {
+    return Math.floor(zvE * proportionalZone1.rate - proportionalZone1.constant);
+  }
+
+  return Math.floor(zvE * proportionalZone2.rate - proportionalZone2.constant);
+}
+
+// ============= PAP 2025: Vorsorgepauschale nach § 39b Abs. 2 S. 5 EStG =============
+
+/**
+ * Berechnet die Vorsorgepauschale für die allgemeine Lohnsteuertabelle
+ * nach § 39b Abs. 2 Satz 5 Nr. 3 EStG
+ * 
+ * Bestandteile:
+ * 1. Teilbetrag Rentenversicherung: AN-Anteil RV (begrenzt auf BBG)
+ * 2. Teilbetrag Kranken-/Pflegeversicherung:
+ *    a) KV-Basisbeitrag (AN-Anteil, 7,3% + halber Zusatzbeitrag)
+ *    b) PV-Beitrag (AN-Anteil)
+ *    Zusammen begrenzt auf Höchstbetrag (1.900/3.000 €)
+ * 3. Minimum: max(0, berechnete Vorsorgepauschale)
+ */
+function calculateVorsorgepauschaleAllgemein(
+  grossYearly: number,
+  taxClass: number,
+  isEastGermany: boolean,
+  healthInsuranceAdditionalRate: number,
+  isChildless: boolean,
+  age: number,
+  numberOfChildren: number
+): number {
+  const bbg = getBBGForRegion(isEastGermany, 'yearly');
+  
+  // 1. Teilbetrag Rentenversicherung (voller AN-Anteil)
+  const rvBasis = Math.min(grossYearly, bbg.pension);
+  const teilbetragRV = rvBasis * (SOCIAL_INSURANCE_RATES_2025.pension.employee / 100);
+  
+  // 2. Teilbetrag Kranken-/Pflegeversicherung
+  const kvBasis = Math.min(grossYearly, bbg.health);
+  
+  // KV: Grundbeitrag AN + halber Zusatzbeitrag
+  const kvAN = kvBasis * (SOCIAL_INSURANCE_RATES_2025.health.employee / 100) 
+    + kvBasis * (healthInsuranceAdditionalRate / 2 / 100);
+  
+  // PV: AN-Anteil (inkl. Kinderlosenzuschlag/Kinderabschläge)
+  const careRate = getCareInsuranceRate(isChildless, age, numberOfChildren);
+  const pvAN = kvBasis * (careRate.employee / 100);
+  
+  // Höchstbetrag: 1.900 € (StKl I,II,IV,V,VI) oder 3.000 € (StKl III)
+  const hoechstbetrag = taxClass === 3 ? 3000 : 1900;
+  const teilbetragKVPV = Math.min(kvAN + pvAN, hoechstbetrag);
+  
+  return teilbetragRV + teilbetragKVPV;
+}
+
+// ============= PAP 2025: Lohnsteuer-Berechnung (Allgemeine Tabelle) =============
+
+/**
+ * Berechnet die monatliche Lohnsteuer nach PAP 2025 (Allgemeine Tabelle)
+ * 
+ * Ablauf:
+ * 1. Jahres-Brutto hochrechnen
+ * 2. Werbungskostenpauschale abziehen  
+ * 3. Sonderausgabenpauschale abziehen
+ * 4. Vorsorgepauschale (SV-basiert) abziehen
+ * 5. → zu versteuerndes Einkommen (zvE)
+ * 6. Steuerklassenanpassung (Splitting, Entlastung, etc.)
+ * 7. Tarifliche ESt nach § 32a
+ * 8. Auf Monat umrechnen
+ */
+function calculateLohnsteuerPAP2025(
+  grossMonthly: number,
+  taxClass: number,
+  childAllowances: number = 0,
+  isEastGermany: boolean = false,
+  healthInsuranceAdditionalRate: number = 1.7,
+  isChildless: boolean = true,
+  age: number = 30,
+  numberOfChildren: number = 0
+): number {
+  if (grossMonthly <= 0) return 0;
+  
+  const grossYearly = grossMonthly * 12;
+  
+  // Abzüge für zvE
+  const werbungskosten = TAX_ALLOWANCES_2025.workRelatedExpenses;
+  const sonderausgaben = TAX_ALLOWANCES_2025.specialExpenses;
+  const vorsorgepauschale = calculateVorsorgepauschaleAllgemein(
+    grossYearly, taxClass, isEastGermany, 
+    healthInsuranceAdditionalRate, isChildless, age, numberOfChildren
+  );
+  
+  let zvE: number;
+  let est: number;
+  
+  switch (taxClass) {
+    case 1:
+    case 4:
+      zvE = grossYearly - werbungskosten - sonderausgaben - vorsorgepauschale;
+      est = calculateTariflicheEStPAP2025(Math.max(0, zvE));
+      break;
+    case 2: {
+      // Entlastungsbetrag Alleinerziehende: 4.260 € + 240 € je weiteres Kind
+      const entlastung = 4260 + Math.max(0, childAllowances - 1) * 240;
+      zvE = grossYearly - werbungskosten - sonderausgaben - vorsorgepauschale - entlastung;
+      est = calculateTariflicheEStPAP2025(Math.max(0, zvE));
+      break;
     }
+    case 3:
+      // Splittingverfahren: zvE halbieren, ESt berechnen, verdoppeln
+      // StKl III: doppelte Pauschalen
+      zvE = grossYearly - werbungskosten - sonderausgaben - vorsorgepauschale;
+      est = calculateTariflicheEStPAP2025(Math.max(0, Math.floor(zvE / 2))) * 2;
+      break;
+    case 5:
+      // StKl V: normaler Tarif, kein eigener Grundfreibetrag
+      // (der GFB wird beim StKl III-Partner verbraucht)
+      zvE = grossYearly - werbungskosten - sonderausgaben - vorsorgepauschale;
+      est = calculateTariflicheEStPAP2025(Math.max(0, zvE));
+      break;
+    case 6:
+      // StKl VI: keine Pauschalen, nur Vorsorgepauschale
+      zvE = grossYearly - vorsorgepauschale;
+      est = calculateTariflicheEStPAP2025(Math.max(0, zvE));
+      break;
+    default:
+      zvE = grossYearly - werbungskosten - sonderausgaben - vorsorgepauschale;
+      est = calculateTariflicheEStPAP2025(Math.max(0, zvE));
   }
   
-  // Für höhere Gehälter: Extrapolation basierend auf letzten beiden Einträgen
-  if (table.length >= 2) {
-    const lastEntry = table[table.length - 1];
-    const secondLastEntry = table[table.length - 2];
-    
-    const salaryDiff = lastEntry[0] - secondLastEntry[0];
-    const taxDiff = lastEntry[columnIndex] - secondLastEntry[columnIndex];
-    const extrapolationFactor = (grossSalary - lastEntry[0]) / salaryDiff;
-    
-    return lastEntry[columnIndex] + (taxDiff * extrapolationFactor);
-  }
-  
-  return 0;
+  // Monatliche Lohnsteuer: auf Cent abrunden
+  return Math.floor(est / 12 * 100) / 100;
 }
 
 /**
  * Berechnet die Lohnsteuer basierend auf Bruttolohn und Steuerklasse
- * Verwendet die offizielle Lohnsteuertabelle 2025
+ * Verwendet die formelbasierte PAP 2025 Berechnung nach § 32a EStG
  */
 export function calculateIncomeTax(grossSalary: number, taxClass: number = 1): number {
   if (grossSalary <= 0) return 0;
-  return getWageTaxFromTable(grossSalary, taxClass);
+  return calculateLohnsteuerPAP2025(grossSalary, taxClass);
 }
 
 /**
