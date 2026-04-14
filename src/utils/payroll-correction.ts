@@ -8,7 +8,7 @@
 
 import { PayrollEntry } from '@/types/payroll';
 import { Employee } from '@/types/employee';
-import { calculatePayroll, PayrollCalculationInput, PayrollCalculationOutput } from './payroll-calculator';
+import { calculatePayrollEntry, PayrollCalculationInput, PayrollCalculationOutput } from './payroll-calculator';
 import { roundCurrency } from '@/lib/formatters';
 
 export interface CorrectionInput {
