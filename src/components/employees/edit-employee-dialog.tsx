@@ -33,7 +33,7 @@ export function EditEmployeeDialog({ employee, open, onOpenChange, onSave }: Edi
     }
   };
 
-  const updatePersonalData = (field: string, value: any) => {
+  const updatePersonalData = (field: string, value: string | number | boolean | Date) => {
     setFormData(prev => ({
       ...prev,
       personalData: {
@@ -43,7 +43,7 @@ export function EditEmployeeDialog({ employee, open, onOpenChange, onSave }: Edi
     }));
   };
 
-  const updateEmploymentData = (field: string, value: any) => {
+  const updateEmploymentData = (field: string, value: string | number | boolean | Date) => {
     setFormData(prev => ({
       ...prev,
       employmentData: {
@@ -53,7 +53,7 @@ export function EditEmployeeDialog({ employee, open, onOpenChange, onSave }: Edi
     }));
   };
 
-  const updateSalaryData = (field: string, value: any) => {
+  const updateSalaryData = (field: string, value: string | number | boolean) => {
     setFormData(prev => ({
       ...prev,
       salaryData: {
