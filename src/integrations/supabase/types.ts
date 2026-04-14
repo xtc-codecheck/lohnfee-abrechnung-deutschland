@@ -368,6 +368,7 @@ export type Database = {
           last_name: string
           personal_number: string | null
           position: string | null
+          state: string | null
           street: string | null
           sv_number: string | null
           tax_class: number | null
@@ -406,6 +407,7 @@ export type Database = {
           last_name: string
           personal_number?: string | null
           position?: string | null
+          state?: string | null
           street?: string | null
           sv_number?: string | null
           tax_class?: number | null
@@ -444,6 +446,7 @@ export type Database = {
           last_name?: string
           personal_number?: string | null
           position?: string | null
+          state?: string | null
           street?: string | null
           sv_number?: string | null
           tax_class?: number | null

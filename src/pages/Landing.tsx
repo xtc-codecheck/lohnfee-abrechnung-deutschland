@@ -29,7 +29,7 @@ const features = [
     icon: Calculator,
     title: "Lohnabrechnung",
     description:
-      "Automatisierte Brutto-Netto-Berechnung mit aktuellen Steuer- und SV-Sätzen für 2026.",
+      "Automatisierte Brutto-Netto-Berechnung mit aktuellen Steuer- und SV-Sätzen für 2025.",
   },
   {
     icon: Users,
@@ -475,7 +475,7 @@ export default function Landing() {
                 <AccordionTrigger>Wie aktuell sind die Steuer- und SV-Sätze?</AccordionTrigger>
                 <AccordionContent>
                   Wir aktualisieren alle Berechnungsgrundlagen (Lohnsteuertabellen, Beitragsbemessungsgrenzen,
-                  SV-Sätze) zeitnah zu jedem Jahreswechsel. Aktuell sind alle Werte für 2026 hinterlegt.
+                  SV-Sätze) zeitnah zu jedem Jahreswechsel. Aktuell sind alle Werte für 2025 hinterlegt.
                 </AccordionContent>
               </AccordionItem>
             </Accordion>

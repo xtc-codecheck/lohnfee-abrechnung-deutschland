@@ -14,7 +14,7 @@
 import { Employee, SalaryCalculation } from '@/types/employee';
 import { PayrollEntry, WorkingTimeData, Deductions, Additions, BONUS_RATES } from '@/types/payroll';
 import { calculateCompleteTax, calculateOvertimeAndBonuses, TaxCalculationParams } from '@/utils/tax-calculation';
-import { buildTaxParamsFromEmployee } from '@/utils/tax-params-factory';
+import { buildTaxParamsFromEmployee, isEastGermanState } from '@/utils/tax-params-factory';
 import { roundCurrency, sumCurrency, isValidPayrollAmount } from '@/lib/formatters';
 import { SOCIAL_INSURANCE_RATES_2025, getCareInsuranceRate, BBG_2025_MONTHLY } from '@/constants/social-security';
 import { PayrollAuditLogger, CalculationAudit, createPayrollAudit } from '@/utils/calculation-audit';
@@ -217,8 +217,7 @@ export function calculatePayrollEntry(input: PayrollCalculationInput): PayrollCa
   });
   
   // 6. Konstanten protokollieren
-  const eastGermanStates = ['berlin', 'brandenburg', 'mecklenburg-vorpommern', 'sachsen', 'sachsen-anhalt', 'thueringen'];
-  const isEastGermany = eastGermanStates.includes((employee.personalData.address?.state || '').toLowerCase());
+  const isEastGermany = isEastGermanState(employee.personalData.address?.state || '');
   const isChildless = employee.personalData.childAllowances === 0;
   auditLogger.logConstants(isEastGermany ? 'east' : 'west', isChildless);
   
