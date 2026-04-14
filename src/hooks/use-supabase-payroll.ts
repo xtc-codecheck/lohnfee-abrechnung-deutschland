@@ -145,7 +145,7 @@ export function useSupabasePayroll() {
   }, []);
 
   const updatePayrollPeriodStatus = useCallback(async (periodId: string, status: PayrollStatus) => {
-    const updates: Record<string, string> = { status };
+    const updates: { status: string; processed_at?: string } = { status };
     if (status === 'finalized') updates.processed_at = new Date().toISOString();
     
     const { error: err } = await supabase.from('payroll_periods').update(updates).eq('id', periodId);

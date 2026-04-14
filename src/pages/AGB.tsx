@@ -1,5 +1,5 @@
+import { Link } from "react-router-dom";
 import { PageSeo } from "@/components/seo/page-seo";
-import { LegalLayout } from "@/components/layout/legal-layout";
 
 export default function AGB() {
   return (
