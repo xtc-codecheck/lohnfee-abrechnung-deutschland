@@ -711,6 +711,27 @@ export function generateSummaryBookings(
     }));
   }
   
+  // 4. UMLAGEN-SAMMELÜBERWEISUNG
+  const umlagen = config.umlagen ?? DEFAULT_UMLAGEN_2025;
+  const totalGross = entries.reduce((sum, e) => sum + e.salaryCalculation.grossSalary, 0);
+  
+  const u1Total = umlagen.u1Rate ? Math.round(totalGross * umlagen.u1Rate) / 100 : 0;
+  const u2Total = umlagen.u2Rate ? Math.round(totalGross * umlagen.u2Rate) / 100 : 0;
+  const insolvTotal = umlagen.insolvenzgeldRate ? Math.round(totalGross * umlagen.insolvenzgeldRate) / 100 : 0;
+  const umlagenTotal = u1Total + u2Total + insolvTotal;
+  
+  if (umlagenTotal > 0) {
+    buchungen.push(createBookingLine({
+      umsatz: Math.round(umlagenTotal * 100) / 100,
+      sollHaben: 'S',
+      konto: konten.verbindlichkeitenUmlagen,
+      gegenKonto: konten.bank,
+      belegDatum,
+      belegNr,
+      buchungstext: `U1+U2+Insolv ${monat} an Krankenkassen`,
+    }));
+  }
+  
   return buchungen;
 }
 
