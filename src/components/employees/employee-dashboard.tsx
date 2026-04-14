@@ -86,6 +86,13 @@ export function EmployeeDashboard({ onAddEmployee, onCalculateSalary, onShowComp
 
   return (
     <div className="space-y-8 animate-fade-in">
+      {empError && (
+        <NetworkErrorAlert
+          error={empError}
+          onRetry={() => window.location.reload()}
+          context="Mitarbeiterdaten konnten nicht geladen werden"
+        />
+      )}
       {/* Zentrierter Header */}
       <div className="text-center pb-6 border-b border-border">
         <h1 className="text-3xl font-bold text-foreground">Mitarbeiter-Dashboard</h1>

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { ArrowLeft } from "lucide-react";
+import { NetworkErrorAlert } from "@/components/ui/network-error-alert";
 import { Button } from "@/components/ui/button";
 import { useSupabasePayroll } from "@/hooks/use-supabase-payroll";
 import { useEmployees } from "@/contexts/employee-context";
