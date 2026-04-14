@@ -2,7 +2,7 @@
 
 **Stand:** 14. April 2026  
 **Status:** ✅ **ALLE PUNKTE ABGESCHLOSSEN – Übergabefertig an SYSTAX**  
-**Zeitraum:** Verbesserungsplan Phase 1–4 + Code-Splitting + Onboarding + Refactoring
+**Zeitraum:** Verbesserungsplan Phase 1–4 + Code-Splitting + Onboarding + Refactoring + Fibu + Monats-Wizard
 
 ---
 
@@ -15,6 +15,7 @@
 | 3 | Qualitätssicherung | ✅ Abgeschlossen |
 | 4 | UX & Accessibility | ✅ Abgeschlossen |
 | 5 | Onboarding & Error-Handling | ✅ Abgeschlossen |
+| 6 | Fibu-Buchungslogik & Monats-Wizard | ✅ Abgeschlossen |
 | — | Code-Splitting | ✅ Abgeschlossen |
 
 **Testsuite:** 571 Tests in 26 Suites – alle bestanden ✅
@@ -67,7 +68,7 @@
 
 ---
 
-## Phase 5: Onboarding, Error-Handling & DB-Integrität (NEU)
+## Phase 5: Onboarding, Error-Handling & DB-Integrität
 
 ### 5.1 Interaktiver Onboarding-Wizard ✅
 - 3-Schritt-Wizard für neue Benutzer: Willkommen → Firmendaten → Erster Mitarbeiter
@@ -84,6 +85,31 @@
 - Fehler-Exposure in `useSupabasePayroll`-Hook
 
 ### 5.4 E-Mail-Bestätigung konfiguriert ✅
+
+---
+
+## Phase 6: Fibu-Buchungslogik & Monats-Wizard (NEU)
+
+### 6.1 Fibu-Buchungslogik ✅
+- **Datei:** `src/utils/fibu-booking.ts`
+- Automatische Buchungssätze (Soll/Haben) aus jeder Lohnabrechnung
+- SKR03 & SKR04 Kontenrahmen mit vollständigen Kontenbezeichnungen
+- Buchungsschema: Brutto → Netto (Verb. Löhne) + LSt/Soli/KiSt (Verb. Finanzamt) + SV AN/AG (Verb. SV)
+- Saldenliste pro Konto (Soll/Haben/Saldo mit Differenzprüfung)
+- CSV-Export der Buchungssätze
+
+### 6.2 Fibu-Journal UI ✅
+- **Datei:** `src/components/payroll/fibu-journal.tsx`
+- Journal-Ansicht mit Buchungstabelle (Nr, Soll, Haben, Betrag, Text, Kategorie)
+- Saldenliste-Tab mit Kontenübersicht
+- Filter nach Kategorie, Monat/Jahr-Auswahl, SKR03/SKR04-Umschaltung
+- Hilfe-Tooltips für Laien
+
+### 6.3 Geführter Monats-Wizard ✅
+- **Datei:** `src/components/payroll/monthly-payroll-wizard.tsx`
+- 5-Schritt-Workflow: Zeiterfassung → Sonderzahlungen → Abrechnung → Meldungen → Export
+- **Auto-Run-Modus:** Alle Schritte automatisch, stoppt nur bei Auffälligkeiten
+- **Zusammenfassungsseite:** Kosten, Steuern, SV-Beiträge übersichtlich vor Freigabe
 
 ---
 
@@ -137,11 +163,23 @@
 
 ---
 
+## Verbleibende Einschränkungen (bewusste SYSTAX-Schnittstellen)
+
+| Einschränkung | Auswirkung | Lösung im SYSTAX-Hauptsystem |
+|---------------|-----------|-------------------------------|
+| Kein ELSTER-Direktversand | Meldungen werden vorbereitet, aber nicht elektronisch übermittelt | ELSTER-ERiC-Schnittstelle |
+| Keine echte Bank-Anbindung | Zahlungslisten werden erstellt, keine SEPA-Überweisung | finAPI / SEPA-Modul |
+| Kein DMS | PDF-Abrechnungen werden generiert, aber nicht archiviert | DMS-Integration |
+
+Diese drei Punkte sind **bewusste Integrationspunkte** – keine fehlenden Features.
+
+---
+
 ## Keine offenen Punkte
 
 Alle identifizierten Verbesserungen wurden vollständig umgesetzt. Das System ist **übergabefertig an SYSTAX**.
 
-ELSTER und finAPI sind bereits Bestandteil des SYSTAX-Hauptsystems und müssen nicht in LohnPro implementiert werden.
+ELSTER, finAPI und DMS sind bereits Bestandteil des SYSTAX-Hauptsystems und müssen nicht in LohnPro implementiert werden.
 
 ---
 

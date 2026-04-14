@@ -161,6 +161,7 @@ Alle Fremdschlüssel verwenden `ON DELETE CASCADE` für referenzielle Integritä
 | Dienstwagen (1%/0,5%/0,25%) | `company-car-calculation.ts` |
 | Netto→Brutto-Umkehr | `net-to-gross-calculation.ts` |
 | DATEV-Export (SKR03/04) | `datev-export.ts` |
+| **Fibu-Buchungslogik** | `fibu-booking.ts` |
 | GoBD-Export (Betriebsprüfung) | `gobd-export.ts` |
 | Entgeltfortzahlung (§ 3 EFZG) | `entgeltfortzahlung.ts` |
 | Jahresausgleich (§ 42b EStG) | `annual-tax-reconciliation.ts` |
@@ -181,6 +182,8 @@ Das Payroll-Dashboard wurde in modulare Sub-Komponenten aufgeteilt:
 | `PayrollStatsCards` | `payroll-stats-cards.tsx` | KPI-Karten |
 | `PayrollPeriodsList` | `payroll-periods-list.tsx` | Periodenliste |
 | `PayrollSubViewWrapper` | `payroll-sub-view-wrapper.tsx` | Sub-View-Container |
+| **`MonthlyPayrollWizard`** | `monthly-payroll-wizard.tsx` | **5-Schritt-Wizard mit Auto-Run** |
+| **`FibuJournalPage`** | `fibu-journal.tsx` | **Fibu-Journal mit Buchungssätzen + Saldenliste** |
 
 ---
 

@@ -435,6 +435,7 @@ Konvertiert `Employee`-Objekte in `TaxCalculationParams`. Zentrale Stelle für:
 | bAV-Berechnung | `bav-calculation.ts` | Entgeltumwandlung + Rentenprognose |
 | Sonderzahlungen | `special-payments-calculation.ts` | Krankengeld, Mutterschutz, Kurzarbeit |
 | DATEV-Export | `datev-export.ts` | SKR03/SKR04, EXTF v7.0, 31-Feld-Header |
+| **Fibu-Buchungslogik** | `fibu-booking.ts` | **Automatische Buchungssätze (Soll/Haben), Saldenliste, SKR03/SKR04** |
 | Pfändungsberechnung | `garnishment-calculation.ts` | Pfändungsfreigrenzen |
 | Mehrfachbeschäftigung | `multiple-employment.ts` | BBG-Aufteilung |
 | Mutterschutzgeld | `maternity-benefit.ts` | MuSchG-Berechnung |
@@ -495,6 +496,8 @@ Konvertiert `Employee`-Objekte in `TaxCalculationParams`. Zentrale Stelle für:
 | `PayrollCorrectionDialog` | **§41c Lohnkorrektur (Differenzberechnung)** |
 | `EmployeePayrollAccount` | Lohnkonto pro Mitarbeiter |
 | `LohnkontoPage` | Lohnkonto-Übersicht (§41 EStG) |
+| **`FibuJournalPage`** | **Fibu-Journal mit Buchungssätzen, Saldenliste, CSV-Export** |
+| **`MonthlyPayrollWizard`** | **Geführter 5-Schritt-Wizard mit Auto-Run und Zusammenfassung** |
 | `SpecialPaymentsManager` | Sonderzahlungen |
 | `TimePayrollSync` | Zeiterfassung ↔ Lohn Synchronisation |
 | `PayrollGuardianDashboard` | Anomalie-Erkennung |
@@ -522,12 +525,28 @@ Konvertiert `Employee`-Objekte in `TaxCalculationParams`. Zentrale Stelle für:
 **Kontenrahmen:** SKR03 und SKR04
 **Buchungssätze:** Bruttolohn → Netto → LSt → SolZ → KiSt → RV → KV → AV → PV
 
-### 10.2 GoBD-Export (NEU Phase C)
+### 10.2 Fibu-Buchungslogik (NEU)
+**Datei:** `src/utils/fibu-booking.ts`
+**UI:** `src/components/payroll/fibu-journal.tsx`
+- Automatische Buchungssatz-Generierung (Soll/Haben) aus jeder Lohnabrechnung
+- Kontenrahmen SKR03 und SKR04 mit vollständiger Kontenbezeichnung
+- Buchungsschema: Brutto → Netto (Verb. Löhne) + LSt/Soli/KiSt (Verb. Finanzamt) + SV AN/AG (Verb. SV)
+- **Saldenliste** pro Konto (Soll/Haben/Saldo mit Differenzprüfung)
+- CSV-Export der Buchungssätze
+- Kategoriefilter (Gehalt, Steuer, SV, AG-SV, Nettolohn)
+
+### 10.3 GoBD-Export
 **Format:** GDPdU-konforme index.xml + CSV-Dateien
 **Zweck:** Betriebsprüfung durch Finanzamt
 **Inhalt:** Mitarbeiterstammdaten + Lohnabrechnungsdaten + Prüf-Metadaten
 
-### 10.3 ELSTER (UI-Vorbereitung)
+### 10.4 Geführter Monats-Wizard (NEU)
+**Datei:** `src/components/payroll/monthly-payroll-wizard.tsx`
+- 5-Schritt-Wizard: Zeiterfassung → Sonderzahlungen → Abrechnung → Meldungen → Export
+- **Auto-Run-Modus**: Alle Schritte automatisch, stoppt nur bei Auffälligkeiten
+- **Zusammenfassungsseite**: Kosten, Steuern, SV-Beiträge vor Freigabe
+
+### 10.5 ELSTER (UI-Vorbereitung)
 Oberfläche für zukünftige API-Anbindung an ELSTER (Finanzamt), SV-Meldestelle und BA.
 
 ---
@@ -613,8 +632,10 @@ Validiert: Pflichtfelder, Formate (Steuer-ID, SV-Nummer, IBAN), Logik (Eintritts
 │  Employee    │────▶│  Payroll     │────▶│  DATEV Export    │
 │  (Stammdaten)│     │  (Abrechnung)│     │  (SKR03/04)     │
 │  + ELStAM   │     │  + EFZG      │     │  + GoBD Export   │
-└──────┬──────┘     │  + §42b/§41c │     └─────────────────┘
-       │            └──────┬───────┘
+└──────┬──────┘     │  + §42b/§41c │     │  + Fibu-Journal  │
+       │            └──────┬───────┘     └─────────────────┘
+       │                   │
+       │                   ├────▶ Fibu (Buchungssätze, Saldenliste)
        │                   │
        │                   ├────▶ Meldewesen (SV, eLStB, BN)
        │                   │
@@ -629,6 +650,8 @@ Validiert: Pflichtfelder, Formate (Steuer-ID, SV-Nummer, IBAN), Logik (Eintritts
        ├────▶ SpecialPayments (Krankengeld, Mutterschutz)
        │
        └────▶ Compliance (Vertragsprüfungen, Fristen)
+
+Monats-Wizard (Auto-Run) ──▶ Zeit → Sonderzahlungen → Abrechnung → Meldungen → Export
 
 Auth ──▶ Tenant ──▶ RLS (Datenisolation auf allen 18 Tabellen)
 ```
@@ -666,6 +689,7 @@ src/
 │   ├── elstam-validation.ts        (Datenqualität)
 │   ├── gobd-export.ts              (Betriebsprüfung)
 │   ├── datev-export.ts             (EXTF v7.0)
+│   ├── fibu-booking.ts             (Buchungssätze + Saldenliste)
 │   └── ... (alle weiteren Utils)
 ├── lib/             → formatters.ts, validations/, query-keys.ts
 ├── hooks/           → Alle Hooks (Supabase-Queries)
@@ -722,6 +746,8 @@ Jährlich zu aktualisieren:
 | Lohnkorrektur (§41c) | ✅ UI + Differenzberechnung + **DB-Persistenz** |
 | GoBD-Export | ✅ Betriebsprüfungsfähig |
 | ELStAM-Validierung | ✅ Score + Ampel |
+| Fibu-Buchungslogik | ✅ Soll/Haben, Saldenliste, SKR03/SKR04 |
+| Monats-Wizard (Auto-Run) | ✅ 5 Schritte + Zusammenfassung |
 | Rollen-Zuweisung bei Registrierung | ✅ Jeder neue User = Admin im eigenen Tenant |
 | Lohnkorrektur DB-Persistenz | ✅ `updatePayrollEntry()` vollständig implementiert |
 
@@ -731,6 +757,8 @@ Jährlich zu aktualisieren:
 
 | Änderung | Beschreibung | Status |
 |---|---|---|
+| **Fibu-Buchungslogik** | Automatische Buchungssätze (Soll/Haben) aus Lohnabrechnungen, SKR03/SKR04, Saldenliste, CSV-Export | ✅ |
+| **Monats-Wizard** | 5-Schritt-Wizard (Zeit → Sonderzahlungen → Abrechnung → Meldungen → Export) mit Auto-Run und Zusammenfassung | ✅ |
 | `assign_default_role()` | Neue Benutzer erhalten immer `admin` in ihrem eigenen Tenant | ✅ |
 | `updatePayrollEntry()` | Lohnkorrekturen vollständig in DB persistiert (30+ Felder) | ✅ |
 | Payroll-Dashboard Refactoring | In 4 Sub-Komponenten aufgeteilt (QuickActions, StatsCards, PeriodsList, SubViewWrapper) | ✅ |
@@ -746,11 +774,13 @@ Jährlich zu aktualisieren:
 ### Im Hauptsystem vorhanden (nicht in LohnPro nötig)
 - **ELSTER** – Elektronische Steuermeldungen an Finanzamt
 - **finAPI** – Bankanbindung für SEPA-Überweisungen
+- **DMS** – Dokumentenmanagement und Archivierung
 
 ### Von LohnPro bereitgestellte Schnittstellen-Daten
 - Meldewesen-Daten (SV-Meldungen, LStA, eLStB, Beitragsnachweise) → ELSTER
 - Auszahlungsbeträge (Netto pro Mitarbeiter) → finAPI
 - DATEV-Export (EXTF v7.0) → Buchhaltung
+- **Fibu-Buchungssätze (Soll/Haben, SKR03/SKR04)** → Buchhaltung
 - GoBD-Export → Betriebsprüfung
 
 ### Integrationspunkte
@@ -762,7 +792,7 @@ Jährlich zu aktualisieren:
 ---
 
 *Aktualisiert am: 14. April 2026*  
-*LohnPro Version: Phase F – ✅ ÜBERGABEFERTIG AN SYSTAX*  
+*LohnPro Version: Phase G – ✅ ÜBERGABEFERTIG AN SYSTAX (inkl. Fibu + Monats-Wizard)*  
 *Berechnungsstand: Steuer- und SV-Sätze 2025 + 2026*  
 *Tests: 571 bestanden, 26 Suites, 0 Fehler*  
-*ELSTER + finAPI: Bestandteil des SYSTAX-Hauptsystems*
+*ELSTER + finAPI + DMS: Bestandteil des SYSTAX-Hauptsystems*
