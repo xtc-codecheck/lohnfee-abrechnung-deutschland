@@ -11,7 +11,21 @@ import { addDays, isSameDay, isWeekend, differenceInDays, subDays } from 'date-f
 import { toast } from 'sonner';
 import { queryKeys } from '@/lib/query-keys';
 
-function rowToEntry(row: Record<string, unknown>): TimeEntry {
+interface TimeEntryRow {
+  id: string;
+  employee_id: string;
+  date: string;
+  type: string;
+  hours_worked: number | null;
+  start_time: string | null;
+  end_time: string | null;
+  break_time: number | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+function rowToEntry(row: TimeEntryRow): TimeEntry {
   return {
     id: row.id,
     employeeId: row.employee_id,

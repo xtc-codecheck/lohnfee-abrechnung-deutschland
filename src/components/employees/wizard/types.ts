@@ -95,7 +95,7 @@ export interface WorkDayData {
 export interface WizardStepProps {
   formData: EmployeeFormData;
   errors: Record<string, string>;
-  onInputChange: (field: string, value: string | number | boolean) => void;
+  onInputChange: (field: string, value: string | number | boolean | WorkDayData[]) => void;
 }
 
 // ============= Initial State =============

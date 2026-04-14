@@ -321,7 +321,7 @@ export function AuditReport({
                       <div className="text-xs">
                         {Object.entries(log.changes).map(([key, change]) => (
                           <div key={key}>
-                            <span className="font-medium">{key}:</span> {change.old} → {change.new}
+                            <span className="font-medium">{key}:</span> {String(change.old)} → {String(change.new)}
                           </div>
                         ))}
                       </div>

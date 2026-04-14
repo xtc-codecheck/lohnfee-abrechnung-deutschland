@@ -41,7 +41,7 @@ export function EmployeeWizard({ onBack, onSave, onCalculate }: EmployeeWizardPr
   const isLastStep = currentStep === WIZARD_STEPS.length - 1;
 
   // Input Handler
-  const handleInputChange = useCallback((field: string, value: string | number | boolean) => {
+  const handleInputChange = useCallback((field: string, value: string | number | boolean | import('./types').WorkDayData[]) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     // Fehler löschen
     if (errors[field]) {

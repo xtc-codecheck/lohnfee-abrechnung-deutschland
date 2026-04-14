@@ -360,7 +360,7 @@ export function ExportManager({
           <div className="bg-muted p-4 rounded-lg">
             <h4 className="font-medium mb-2">Export-Zusammenfassung</h4>
             <div className="space-y-1 text-sm">
-              <p>Report: {reportData?.title || 'Erweiterte Berichte'}</p>
+              <p>Report: {(reportData?.title as string) || 'Erweiterte Berichte'}</p>
               <p>Zeitraum: {filters.dateRange.from.toLocaleDateString('de-DE')} - {filters.dateRange.to.toLocaleDateString('de-DE')}</p>
               <p>Format: {exportFormats.find(f => f.id === selectedFormat)?.label}</p>
               <p>Optionen: {[includeCharts && 'Diagramme', includeDetails && 'Details', scheduledExport && 'Automatisch'].filter(Boolean).join(', ') || 'Keine'}</p>
