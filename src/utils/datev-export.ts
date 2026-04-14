@@ -598,7 +598,7 @@ function createBookingLine(params: {
     '',                       // Beleginfo Art 1
     '',                       // Beleginfo Inhalt 1
     kostenstelle,            // KOST1
-    '',                       // KOST2
+    kostentraeger,           // KOST2
     '',                       // KOST-Menge
     '',                       // EU-Land
     '',                       // EU-Steuersatz
