@@ -7,18 +7,19 @@ import { Employee } from '@/types/employee';
 
 const mockEmployee: Employee = {
   id: 'test-emp',
+  createdAt: new Date(),
+  updatedAt: new Date(),
   personalData: {
     firstName: 'Max',
     lastName: 'Mustermann',
     dateOfBirth: new Date('1990-01-01'),
-    gender: 'male',
-    nationality: 'deutsch',
     taxId: '12345678901',
     socialSecurityNumber: '12345678A123',
     taxClass: 'I' as const,
     childAllowances: 0,
     churchTax: false,
     numberOfChildren: 0,
+    relationshipStatus: 'single' as any,
     address: {
       street: 'Musterstr.',
       houseNumber: '1',
@@ -39,11 +40,16 @@ const mockEmployee: Employee = {
     bankingData: { iban: '', bic: '', bankName: '', accountHolder: '' },
   },
   employmentData: {
-    entryDate: new Date('2020-01-01'),
+    startDate: new Date('2020-01-01'),
     position: 'Test',
     department: 'IT',
     employmentType: 'fulltime' as const,
     weeklyHours: 40,
+    vacationDays: 30,
+    workDays: [],
+    isFixedTerm: false,
+    contractSigned: true,
+    dataRetentionDate: new Date('2030-01-01'),
   },
 };
 
