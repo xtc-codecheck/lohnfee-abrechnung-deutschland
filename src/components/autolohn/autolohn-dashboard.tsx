@@ -447,10 +447,11 @@ export function AutolohnDashboard() {
       <div className="flex justify-center">
         <Button 
           onClick={handleSave}
+          disabled={isSaving}
           className="flex items-center gap-2 bg-gradient-primary hover:opacity-90"
         >
-          <Save className="h-4 w-4" />
-          Einstellungen speichern
+          {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+          {isSaving ? 'Wird gespeichert...' : 'Einstellungen speichern'}
         </Button>
       </div>
     </div>
