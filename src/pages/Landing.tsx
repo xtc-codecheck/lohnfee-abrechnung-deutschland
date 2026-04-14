@@ -475,7 +475,7 @@ export default function Landing() {
                 <AccordionTrigger>Wie aktuell sind die Steuer- und SV-Sätze?</AccordionTrigger>
                 <AccordionContent>
                   Wir aktualisieren alle Berechnungsgrundlagen (Lohnsteuertabellen, Beitragsbemessungsgrenzen,
-                  SV-Sätze) zeitnah zu jedem Jahreswechsel. Aktuell sind alle Werte für 2026 hinterlegt.
+                  SV-Sätze) zeitnah zu jedem Jahreswechsel. Aktuell sind alle Werte für 2025 hinterlegt.
                 </AccordionContent>
               </AccordionItem>
             </Accordion>

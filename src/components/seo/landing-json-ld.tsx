@@ -90,7 +90,7 @@ const faqSchema = {
       name: "Wie aktuell sind die Steuer- und SV-Sätze?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "Alle Berechnungsgrundlagen werden zeitnah zu jedem Jahreswechsel aktualisiert. Aktuell sind alle Werte für 2026 hinterlegt.",
+        text: "Alle Berechnungsgrundlagen werden zeitnah zu jedem Jahreswechsel aktualisiert. Aktuell sind alle Werte für 2025 hinterlegt.",
       },
     },
   ],
