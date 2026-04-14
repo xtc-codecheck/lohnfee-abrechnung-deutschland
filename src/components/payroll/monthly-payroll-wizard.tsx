@@ -634,6 +634,10 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
           svPension: totalGross * 0.093,
           svCare: totalGross * 0.017,
           svUnemploy: totalGross * 0.013,
+          svHealthAg: totalGross * 0.073,
+          svPensionAg: totalGross * 0.093,
+          svCareAg: totalGross * 0.015,
+          svUnemployAg: totalGross * 0.013,
           employerCosts: totalGross * 1.21,
         };
 
