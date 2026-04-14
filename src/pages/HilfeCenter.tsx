@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { PageSeo } from "@/components/seo/page-seo";
+import { LegalLayout } from "@/components/layout/legal-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -215,7 +216,7 @@ export default function HilfeCenter() {
     : null;
 
   return (
-    <div className="min-h-screen bg-background">
+    <LegalLayout>
       <PageSeo
         title="Hilfe-Center | LohnPro"
         description="Anleitungen, Tutorials und FAQ für LohnPro – Ihre Lohnabrechnungssoftware. Finden Sie Antworten auf häufige Fragen."
@@ -225,12 +226,6 @@ export default function HilfeCenter() {
       {/* Header */}
       <div className="bg-gradient-to-br from-primary/10 via-primary/5 to-background border-b border-border">
         <div className="container mx-auto px-4 sm:px-6 py-12">
-          <div className="flex items-center gap-2 mb-6">
-            <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
-              <ArrowLeft className="h-4 w-4 mr-1" />
-              Zurück
-            </Button>
-          </div>
 
           <div className="text-center max-w-2xl mx-auto">
             <div className="inline-flex items-center justify-center h-14 w-14 rounded-2xl bg-primary/10 mb-4">
@@ -409,6 +404,6 @@ export default function HilfeCenter() {
           </>
         )}
       </div>
-    </div>
+    </LegalLayout>
   );
 }

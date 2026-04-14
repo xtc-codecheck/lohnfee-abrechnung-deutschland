@@ -1,14 +1,15 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageSeo } from "@/components/seo/page-seo";
+import { LegalLayout } from "@/components/layout/legal-layout";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, Mail, Phone, MapPin, Clock, Send, CheckCircle, MessageSquare, HelpCircle, FileText } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Mail, Phone, MapPin, Clock, Send, CheckCircle, MessageSquare, HelpCircle, FileText } from "lucide-react";
 
 export default function Kontakt() {
   const navigate = useNavigate();
@@ -53,7 +54,7 @@ export default function Kontakt() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <LegalLayout>
       <PageSeo
         title="Kontakt & Support"
         description="Kontaktieren Sie das LohnPro-Team – wir helfen Ihnen bei Fragen zur Lohnabrechnung, Einrichtung und technischem Support."
@@ -61,10 +62,6 @@ export default function Kontakt() {
       />
 
       <div className="container mx-auto max-w-5xl px-6 py-12">
-        <Button variant="ghost" onClick={() => navigate(-1 as any)} className="mb-8">
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Zurück
-        </Button>
 
         <div className="mb-12 text-center">
           <h1 className="text-3xl font-bold sm:text-4xl">Kontakt & Support</h1>
@@ -233,6 +230,6 @@ export default function Kontakt() {
           </div>
         </div>
       </div>
-    </div>
+    </LegalLayout>
   );
 }

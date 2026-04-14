@@ -48,28 +48,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [user, fetchRoles]);
 
   useEffect(() => {
+    let initialSessionHandled = false;
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
 
         if (session?.user) {
-          // Fetch all roles initially (tenant filtering happens when tenant is known)
           setTimeout(() => fetchRoles(session.user.id), 0);
         } else {
           setRoles([]);
         }
         setLoading(false);
+        initialSessionHandled = true;
       }
     );
 
+    // Only fetch initial session if onAuthStateChange hasn't fired yet
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        fetchRoles(session.user.id);
+      if (!initialSessionHandled) {
+        setSession(session);
+        setUser(session?.user ?? null);
+        if (session?.user) {
+          fetchRoles(session.user.id);
+        }
+        setLoading(false);
       }
-      setLoading(false);
     });
 
     return () => subscription.unsubscribe();

@@ -13,7 +13,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 
 interface EmployeeDashboardProps {
   onAddEmployee: () => void;
-  onCalculateSalary: (data?: any) => void;
+  onCalculateSalary: (data?: { grossSalary?: number; taxClass?: string; churchTax?: boolean; state?: string }) => void;
   onShowCompliance: () => void;
   onShowReports: () => void;
   onShowTimeTracking: () => void;
