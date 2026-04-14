@@ -1,4 +1,4 @@
-import { Plus, Settings, ClipboardList, Clock, Shield, Download, BookOpen, Baby, Wand2 } from "lucide-react";
+import { Plus, Settings, ClipboardList, Clock, Shield, Download, BookOpen, Baby, Wand2, BookOpenCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { DatevExportDialog } from "./datev-export-dialog";
@@ -10,6 +10,7 @@ interface PayrollQuickActionsProps {
   onShowGuardian?: () => void;
   onShowLohnkonto?: () => void;
   onShowMonthlyWizard?: () => void;
+  onShowFibu?: () => void;
   onShowJournal: () => void;
   onShowManual: () => void;
   onShowTimeSync: () => void;
@@ -25,6 +26,7 @@ export function PayrollQuickActions({
   onShowGuardian,
   onShowLohnkonto,
   onShowMonthlyWizard,
+  onShowFibu,
   onShowJournal,
   onShowManual,
   onShowTimeSync,
