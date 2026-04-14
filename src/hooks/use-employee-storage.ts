@@ -1,6 +1,5 @@
 /**
  * Mitarbeiter-Storage Hook
- * 
- * Verwendet jetzt Supabase für persistente, sichere Speicherung.
+ * Verwendet jetzt den zentralen EmployeeContext für deduplizierte Daten.
  */
-export { useSupabaseEmployees as useEmployeeStorage } from './use-supabase-employees';
+export { useEmployees as useEmployeeStorage } from '@/contexts/employee-context';
