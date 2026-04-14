@@ -24,8 +24,8 @@ import {
   Calendar,
   Settings
 } from "lucide-react";
-import { useEmployeeStorage } from "@/hooks/use-employee-storage";
-import { usePayrollStorage } from "@/hooks/use-payroll-storage";
+import { useEmployees } from "@/contexts/employee-context";
+import { useSupabasePayroll } from "@/hooks/use-supabase-payroll";
 import { format } from "date-fns";
 import { de } from "date-fns/locale";
 
@@ -34,8 +34,8 @@ interface AuthoritiesIntegrationProps {
 }
 
 export function AuthoritiesIntegration({ onBack }: AuthoritiesIntegrationProps) {
-  const { employees } = useEmployeeStorage();
-  const { payrollPeriods, payrollEntries } = usePayrollStorage();
+  const { employees } = useEmployees();
+  const { payrollPeriods, payrollEntries } = useSupabasePayroll();
   
   const [selectedPeriod, setSelectedPeriod] = useState<string>("");
   const [exports, setExports] = useState<any[]>([]);

@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageHeader } from "@/components/ui/page-header";
 import { Employee } from "@/types/employee";
-import { useEmployeeStorage } from "@/hooks/use-employee-storage";
+import { useEmployees } from "@/contexts/employee-context";
 import { EditEmployeeDialog } from "./edit-employee-dialog";
 import { EmployeeReports } from "@/components/reports/employee-reports";
 import { useToast } from "@/hooks/use-toast";
@@ -27,7 +27,7 @@ export function EmployeeDashboard({ onAddEmployee, onCalculateSalary, onShowComp
   const [showReports, setShowReports] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const { employees, updateEmployee, deleteEmployee } = useEmployeeStorage();
+  const { employees, updateEmployee, deleteEmployee } = useEmployees();
   const { toast } = useToast();
 
   const filteredEmployees = employees.filter(employee =>

@@ -3,8 +3,8 @@ import { ArrowLeft, Plus, FileText, Calendar, DollarSign, Users, Eye, Trash2, Bo
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageHeader } from "@/components/ui/page-header";
-import { usePayrollStorage } from "@/hooks/use-payroll-storage";
-import { useEmployeeStorage } from "@/hooks/use-employee-storage";
+import { useSupabasePayroll } from "@/hooks/use-supabase-payroll";
+import { useEmployees } from "@/contexts/employee-context";
 import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { CreatePayrollDialog } from "./create-payroll-dialog";
@@ -32,8 +32,8 @@ export function PayrollDashboard({ onBack, onShowSpecialPayments, onShowAutomati
   const [selectedPayrollId, setSelectedPayrollId] = useState<string | null>(null);
   const [currentView, setCurrentView] = useState<'dashboard' | 'detail' | 'journal' | 'account' | 'manual' | 'settings' | 'enhancements' | 'time-sync'>('dashboard');
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | null>(null);
-  const { payrollPeriods, payrollEntries, getPayrollReport, deletePayrollPeriod } = usePayrollStorage();
-  const { employees } = useEmployeeStorage();
+  const { payrollPeriods, payrollEntries, getPayrollReport, deletePayrollPeriod } = useSupabasePayroll();
+  const { employees } = useEmployees();
 
 
   const handleDeletePayroll = (periodId: string) => {

@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { useTimeTracking } from './use-time-tracking';
-import { usePayrollStorage } from './use-payroll-storage';
-import { useEmployeeStorage } from './use-employee-storage';
+import { useSupabasePayroll } from './use-supabase-payroll';
+import { useEmployees } from '../contexts/employee-context';
 import { 
   integrateTimeTrackingToPayroll, 
   createPayrollFromTimeTracking,
@@ -24,8 +24,8 @@ export function useTimePayrollIntegration() {
     addPayrollEntry, 
     getPayrollEntriesForPeriod,
     createPayrollPeriod 
-  } = usePayrollStorage();
-  const { employees } = useEmployeeStorage();
+  } = useSupabasePayroll();
+  const { employees } = useEmployees();
   
   const [isProcessing, setIsProcessing] = useState(false);
 

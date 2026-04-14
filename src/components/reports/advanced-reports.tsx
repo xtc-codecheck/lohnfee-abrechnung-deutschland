@@ -23,8 +23,8 @@ import {
   FileSpreadsheet,
   FileBarChart
 } from "lucide-react";
-import { useEmployeeStorage } from "@/hooks/use-employee-storage";
-import { usePayrollStorage } from "@/hooks/use-payroll-storage";
+import { useEmployees } from "@/contexts/employee-context";
+import { useSupabasePayroll } from "@/hooks/use-supabase-payroll";
 import { PayrollCostOverviewReport } from "./payroll-cost-overview-report";
 import { SickLeaveVacationReport } from "./sick-leave-vacation-report";
 import { TaxSocialSecurityReport } from "./tax-social-security-report";
@@ -46,8 +46,8 @@ export function AdvancedReports({ onBack }: AdvancedReportsProps) {
   });
   const [selectedDepartment, setSelectedDepartment] = useState<string>('all');
   
-  const { employees } = useEmployeeStorage();
-  const { payrollPeriods, payrollEntries } = usePayrollStorage();
+  const { employees } = useEmployees();
+  const { payrollPeriods, payrollEntries } = useSupabasePayroll();
 
   const reportTypes = [
     {

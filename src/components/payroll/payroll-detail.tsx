@@ -3,8 +3,8 @@ import { ArrowLeft, Calculator, FileText, Download, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageHeader } from "@/components/ui/page-header";
-import { usePayrollStorage } from "@/hooks/use-payroll-storage";
-import { useEmployeeStorage } from "@/hooks/use-employee-storage";
+import { useSupabasePayroll } from "@/hooks/use-supabase-payroll";
+import { useEmployees } from "@/contexts/employee-context";
 import { PayrollEntry } from "@/types/payroll";
 import { useToast } from "@/hooks/use-toast";
 import { calculatePayrollEntry, createDefaultWorkingData } from "@/utils/payroll-calculator";
@@ -22,8 +22,8 @@ export function PayrollDetail({ payrollId, onBack }: PayrollDetailProps) {
     addPayrollEntry, 
     updatePayrollPeriodStatus,
     getPayrollEntriesForPeriod 
-  } = usePayrollStorage();
-  const { employees } = useEmployeeStorage();
+  } = useSupabasePayroll();
+  const { employees } = useEmployees();
   const { toast } = useToast();
 
   const report = getPayrollReport(payrollId);

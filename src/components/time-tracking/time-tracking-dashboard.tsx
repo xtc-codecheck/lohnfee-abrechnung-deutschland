@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar, Clock, Users, AlertTriangle, TrendingUp, Plus } from "lucide-react";
 import { getTrafficLightColor } from "@/lib/formatters";
-import { useEmployeeStorage } from "@/hooks/use-employee-storage";
+import { useEmployees } from "@/contexts/employee-context";
 import { useTimeTracking } from "@/hooks/use-time-tracking";
 import { EmployeeCalendar } from "./employee-calendar";
 import { BulkEntryDialog } from "./bulk-entry-dialog";
@@ -23,7 +23,7 @@ export function TimeTrackingDashboard({ onBack }: TimeTrackingDashboardProps) {
   const [showBulkEntry, setShowBulkEntry] = useState(false);
   const [view, setView] = useState<'overview' | 'calendar'>('overview');
 
-  const { employees } = useEmployeeStorage();
+  const { employees } = useEmployees();
   const { getTimeTrackingStats } = useTimeTracking();
 
   const startOfCurrentMonth = startOfMonth(currentDate);

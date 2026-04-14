@@ -5,8 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { useEmployeeStorage } from "@/hooks/use-employee-storage";
-import { usePayrollStorage } from "@/hooks/use-payroll-storage";
+import { useEmployees } from "@/contexts/employee-context";
+import { useSupabasePayroll } from "@/hooks/use-supabase-payroll";
 import { useCompliance } from "@/hooks/use-compliance";
 import { ComplianceAlerts } from "./compliance-alerts";
 import { MINIMUM_WAGES } from "@/types/compliance";
@@ -17,8 +17,8 @@ interface ComplianceDashboardProps {
 
 export function ComplianceDashboard({ onBack }: ComplianceDashboardProps) {
   const [activeTab, setActiveTab] = useState("overview");
-  const { employees } = useEmployeeStorage();
-  const { payrollEntries } = usePayrollStorage();
+  const { employees } = useEmployees();
+  const { payrollEntries } = useSupabasePayroll();
   const { 
     generateComplianceReport, 
     activeAlerts, 

@@ -30,8 +30,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { usePayrollGuardian } from '@/hooks/use-payroll-guardian';
-import { useEmployeeStorage } from '@/hooks/use-employee-storage';
-import { usePayrollStorage } from '@/hooks/use-payroll-storage';
+import { useEmployees } from '@/contexts/employee-context';
+import { useSupabasePayroll } from '@/hooks/use-supabase-payroll';
 import { PayrollAnomaly, SalaryForecast } from '@/types/payroll-guardian';
 import { Employee } from '@/types/employee';
 import { 
@@ -59,8 +59,8 @@ interface PayrollGuardianDashboardProps {
 }
 
 export function PayrollGuardianDashboard({ onBack }: PayrollGuardianDashboardProps) {
-  const { employees } = useEmployeeStorage();
-  const { payrollEntries, payrollPeriods } = usePayrollStorage();
+  const { employees } = useEmployees();
+  const { payrollEntries, payrollPeriods } = useSupabasePayroll();
   const {
     anomalies,
     unresolvedAnomalies,

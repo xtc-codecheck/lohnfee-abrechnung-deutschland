@@ -13,7 +13,7 @@ import { ArrowLeft, ArrowRight, Save, Calculator, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { PageHeader } from '@/components/ui/page-header';
 import { useToast } from '@/hooks/use-toast';
-import { useEmployeeStorage } from '@/hooks/use-employee-storage';
+import { useEmployees } from '@/contexts/employee-context';
 import { validateEmployeeForm, validatePersonalData, validateEmploymentData, validateSalaryData, getValidationErrors, bankingDataSchema } from '@/lib/validations/employee';
 
 import { WizardProgress } from './wizard-progress';
@@ -30,7 +30,7 @@ interface EmployeeWizardProps {
 }
 
 export function EmployeeWizard({ onBack, onSave, onCalculate }: EmployeeWizardProps) {
-  const { addEmployee } = useEmployeeStorage();
+  const { addEmployee } = useEmployees();
   const { toast } = useToast();
   
   const [currentStep, setCurrentStep] = useState(0);

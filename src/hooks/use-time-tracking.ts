@@ -4,7 +4,7 @@
 import { useCallback, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { TimeEntry, BulkTimeEntry, EmployeeTimeStatus, TimeTrackingStats, TimeEntryType } from '@/types/time-tracking';
-import { useEmployeeStorage } from '@/hooks/use-employee-storage';
+import { useEmployees } from '@/contexts/employee-context';
 import { useTenant } from '@/contexts/tenant-context';
 import { supabase } from '@/integrations/supabase/client';
 import { addDays, isSameDay, isWeekend, differenceInDays, subDays } from 'date-fns';
@@ -28,7 +28,7 @@ function rowToEntry(row: any): TimeEntry {
 }
 
 export function useTimeTracking() {
-  const { employees } = useEmployeeStorage();
+  const { employees } = useEmployees();
   const { currentTenant } = useTenant();
   const queryClient = useQueryClient();
   const tenantId = currentTenant?.id ?? null;

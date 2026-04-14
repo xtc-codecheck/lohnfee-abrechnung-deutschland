@@ -27,14 +27,14 @@ import {
 import { format } from "date-fns";
 import { de } from "date-fns/locale";
 import { cn } from "@/lib/utils";
-import { useEmployeeStorage } from "@/hooks/use-employee-storage";
+import { useEmployees } from "@/contexts/employee-context";
 
 interface ExtendedCalculationsProps {
   onBack: () => void;
 }
 
 export function ExtendedCalculations({ onBack }: ExtendedCalculationsProps) {
-  const { employees } = useEmployeeStorage();
+  const { employees } = useEmployees();
   const [selectedEmployee, setSelectedEmployee] = useState<string>("");
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
 

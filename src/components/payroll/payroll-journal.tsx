@@ -7,8 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/ui/page-header";
-import { usePayrollStorage } from "@/hooks/use-payroll-storage";
-import { useEmployeeStorage } from "@/hooks/use-employee-storage";
+import { useSupabasePayroll } from "@/hooks/use-supabase-payroll";
+import { useEmployees } from "@/contexts/employee-context";
 import { PayrollEntry } from "@/types/payroll";
 
 interface PayrollJournalProps {
@@ -21,8 +21,8 @@ export function PayrollJournal({ onBack, onViewAccount }: PayrollJournalProps) {
   const [selectedPeriod, setSelectedPeriod] = useState<string>("all");
   const [selectedEmployee, setSelectedEmployee] = useState<string>("all");
   
-  const { payrollPeriods, payrollEntries } = usePayrollStorage();
-  const { employees } = useEmployeeStorage();
+  const { payrollPeriods, payrollEntries } = useSupabasePayroll();
+  const { employees } = useEmployees();
 
   // Filter and sort entries
   const filteredEntries = useMemo(() => {
