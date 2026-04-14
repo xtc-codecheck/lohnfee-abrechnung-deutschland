@@ -18,8 +18,7 @@ import {
 } from "lucide-react";
 import { Employee } from "@/types/employee";
 import { PayrollPeriod, PayrollEntry } from "@/types/payroll";
-import * as XLSX from 'xlsx';
-import jsPDF from 'jspdf';
+// jspdf and xlsx are loaded dynamically to reduce initial bundle size
 
 interface ExportManagerProps {
   reportType: string;
