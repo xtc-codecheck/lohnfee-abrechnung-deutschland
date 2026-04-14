@@ -22,6 +22,7 @@ import Impressum from "./pages/Impressum";
 import Datenschutz from "./pages/Datenschutz";
 import AGB from "./pages/AGB";
 import Kontakt from "./pages/Kontakt";
+import HilfeCenter from "./pages/HilfeCenter";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
