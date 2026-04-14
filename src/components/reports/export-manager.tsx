@@ -152,6 +152,7 @@ export function ExportManager({
   };
 
   const exportToPDF = async () => {
+    const { default: jsPDF } = await import('jspdf');
     const doc = new jsPDF();
     
     // Header
@@ -159,7 +160,7 @@ export function ExportManager({
     doc.text('LohnPro - Erweiterte Berichte', 20, 30);
     
     doc.setFontSize(14);
-    doc.text(`Report: ${reportData?.title || 'Unbekannt'}`, 20, 50);
+    doc.text(`Report: ${(reportData?.title as string) || 'Unbekannt'}`, 20, 50);
     doc.text(`Zeitraum: ${filters.dateRange.from.toLocaleDateString('de-DE')} - ${filters.dateRange.to.toLocaleDateString('de-DE')}`, 20, 65);
     doc.text(`Erstellt am: ${new Date().toLocaleDateString('de-DE')}`, 20, 80);
     
