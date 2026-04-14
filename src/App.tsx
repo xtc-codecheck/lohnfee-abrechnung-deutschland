@@ -9,6 +9,7 @@ import { ErrorBoundary } from "@/components/error-boundary";
 import { AuthProvider } from "@/contexts/auth-context";
 import { TenantProvider } from "@/contexts/tenant-context";
 import { EmployeeProvider } from "@/contexts/employee-context";
+import { SystaxProvider } from "@/contexts/systax-context";
 import { ProtectedRoute } from "@/components/auth/protected-route";
 import { Loader2 } from "lucide-react";
 
@@ -59,6 +60,7 @@ const App = () => (
         <BrowserRouter>
           <AuthProvider>
             <TenantProvider>
+              <SystaxProvider>
               <EmployeeProvider>
                 <Suspense fallback={<PageLoader />}>
                   <Routes>
@@ -86,6 +88,7 @@ const App = () => (
                   </Routes>
                 </Suspense>
               </EmployeeProvider>
+              </SystaxProvider>
             </TenantProvider>
           </AuthProvider>
         </BrowserRouter>
