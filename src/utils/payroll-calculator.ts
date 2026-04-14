@@ -18,6 +18,7 @@ import { buildTaxParamsFromEmployee, isEastGermanState } from '@/utils/tax-param
 import { roundCurrency, sumCurrency, isValidPayrollAmount } from '@/lib/formatters';
 import { SOCIAL_INSURANCE_RATES_2025, getCareInsuranceRate, BBG_2025_MONTHLY } from '@/constants/social-security';
 import { PayrollAuditLogger, CalculationAudit, createPayrollAudit } from '@/utils/calculation-audit';
+import { calculateEFZG, EFZG_DURATION_DAYS } from '@/utils/entgeltfortzahlung';
 
 // ============= Typen =============
 
@@ -30,6 +31,12 @@ export interface PayrollCalculationInput {
   workingData: WorkingTimeData;
   additionalDeductions?: Partial<Deductions>;
   additionalAdditions?: Partial<Additions>;
+  /** Krankheitszeitraum für Entgeltfortzahlung (§ 3 EFZG) */
+  sickLeave?: {
+    startDate: Date;
+    endDate: Date;
+    previousEfzgDaysUsed?: number;
+  };
 }
 
 export interface PayrollCalculationOutput {
@@ -327,7 +334,35 @@ export function calculatePayrollEntry(input: PayrollCalculationInput): PayrollCa
     employerCosts: roundCurrency(taxResult.employerCosts / 12),
   };
   
-  // 10. Finale Nettoauszahlung
+  // 10. Entgeltfortzahlung bei Krankheit (§ 3 EFZG)
+  let efzgResult = null;
+  if (input.sickLeave && workingData.sickDays > 0) {
+    efzgResult = calculateEFZG({
+      employee,
+      sickStartDate: input.sickLeave.startDate,
+      sickEndDate: input.sickLeave.endDate,
+      grossMonthlySalary: baseSalary,
+      previousEfzgDaysUsed: input.sickLeave.previousEfzgDaysUsed,
+    });
+
+    auditLogger.log('EFZG', 'Entgeltfortzahlung berechnet (§ 3 EFZG)', {
+      Krankheitstage: efzgResult.totalDays,
+      EFZG_Tage: efzgResult.employerPaymentDays,
+      Krankengeld_Tage: efzgResult.sickPayDays,
+    }, {
+      EFZG_Betrag: efzgResult.employerPaymentAmount,
+      Krankengeld_Betrag: efzgResult.sickPayAmount,
+      Tagesentgelt: efzgResult.dailyGrossSalary,
+    });
+
+    log.push(`EFZG: ${efzgResult.employerPaymentDays} Tage à ${efzgResult.dailyGrossSalary}€ = ${efzgResult.employerPaymentAmount}€`);
+    if (efzgResult.sickPayDays > 0) {
+      log.push(`Krankengeld: ${efzgResult.sickPayDays} Tage à ${efzgResult.dailySickPay}€ = ${efzgResult.sickPayAmount}€`);
+      warnings.push(`${efzgResult.sickPayDays} Tage über EFZG-Grenze (42 Tage) – Krankengeld durch Krankenkasse`);
+    }
+  }
+
+  // 11. Finale Nettoauszahlung
   const finalNetSalary = roundCurrency(salaryCalculation.netSalary - deductions.total);
   log.push(`Finale Nettoauszahlung: ${finalNetSalary}€`);
   

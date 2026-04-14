@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowLeft, Calculator, FileText, Download, Check } from "lucide-react";
+import { ArrowLeft, Calculator, FileText, Download, Check, RefreshCw, Scale } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageHeader } from "@/components/ui/page-header";
@@ -9,6 +9,9 @@ import { PayrollEntry } from "@/types/payroll";
 import { useToast } from "@/hooks/use-toast";
 import { calculatePayrollEntry, createDefaultWorkingData } from "@/utils/payroll-calculator";
 import { formatCurrency } from "@/lib/formatters";
+import { buildTaxParamsFromEmployee } from "@/utils/tax-params-factory";
+import { AnnualReconciliationDialog } from "./annual-reconciliation-dialog";
+import { PayrollCorrectionDialog } from "./payroll-correction-dialog";
 
 interface PayrollDetailProps {
   payrollId: string;
@@ -234,6 +237,18 @@ export function PayrollDetail({ payrollId, onBack }: PayrollDetailProps) {
                     </div>
                   </div>
                   <div className="flex items-center space-x-2">
+                    <AnnualReconciliationDialog
+                      employeeId={entry.employeeId}
+                      employeeName={`${entry.employee.personalData.firstName} ${entry.employee.personalData.lastName}`}
+                      taxParams={buildTaxParamsFromEmployee(entry.employee)}
+                    />
+                    <PayrollCorrectionDialog
+                      periodLabel={`${report.period.month}/${report.period.year}`}
+                      originalGross={entry.salaryCalculation.grossSalary}
+                      originalNet={entry.finalNetSalary}
+                      originalTax={entry.salaryCalculation.taxes.total}
+                      originalSV={entry.salaryCalculation.socialSecurityContributions.total.employee}
+                    />
                     <Button variant="outline" size="sm" className="flex items-center gap-1">
                       <FileText className="h-3 w-3" />
                       PDF

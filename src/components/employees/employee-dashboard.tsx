@@ -7,6 +7,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { Employee } from "@/types/employee";
 import { useEmployees } from "@/contexts/employee-context";
 import { EditEmployeeDialog } from "./edit-employee-dialog";
+import { ELStAMValidationCard } from "./elstam-validation-card";
 import { EmployeeReports } from "@/components/reports/employee-reports";
 import { useToast } from "@/hooks/use-toast";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
@@ -278,8 +279,9 @@ export function EmployeeDashboard({ onAddEmployee, onCalculateSalary, onShowComp
               filteredEmployees.map((employee) => (
                 <div
                   key={employee.id}
-                  className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-accent transition-colors"
+                  className="space-y-3 p-4 border border-border rounded-lg hover:bg-accent/5 transition-colors"
                 >
+                  <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-4">
                     <div className="h-10 w-10 bg-gradient-primary rounded-full flex items-center justify-center">
                       <span className="text-primary-foreground font-medium">
@@ -340,6 +342,35 @@ export function EmployeeDashboard({ onAddEmployee, onCalculateSalary, onShowComp
                       </AlertDialogContent>
                     </AlertDialog>
                   </div>
+                  </div>
+                  {/* ELStAM-Validierungskarte */}
+                  <ELStAMValidationCard
+                    employeeData={{
+                      taxId: employee.personalData.taxId || '',
+                      taxClass: typeof employee.personalData.taxClass === 'string'
+                        ? ['I','II','III','IV','V','VI'].indexOf(employee.personalData.taxClass) + 1
+                        : Number(employee.personalData.taxClass) || 1,
+                      churchTax: employee.personalData.churchTax || false,
+                      churchTaxRate: 0,
+                      childAllowances: employee.personalData.childAllowances || 0,
+                      numberOfChildren: employee.personalData.numberOfChildren || 0,
+                      dateOfBirth: employee.personalData.dateOfBirth instanceof Date
+                        ? employee.personalData.dateOfBirth.toISOString()
+                        : String(employee.personalData.dateOfBirth || ''),
+                      entryDate: employee.employmentData.startDate instanceof Date
+                        ? employee.employmentData.startDate.toISOString()
+                        : String(employee.employmentData.startDate || ''),
+                      exitDate: employee.employmentData.endDate
+                        ? (employee.employmentData.endDate instanceof Date
+                          ? employee.employmentData.endDate.toISOString()
+                          : String(employee.employmentData.endDate))
+                        : undefined,
+                      svNumber: employee.personalData.socialSecurityNumber || '',
+                      healthInsurance: employee.personalData.healthInsurance?.name || '',
+                      grossSalary: employee.salaryData.grossSalary,
+                      isActive: !employee.employmentData.endDate,
+                    }}
+                  />
                 </div>
               ))
             )}
