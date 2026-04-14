@@ -479,7 +479,59 @@ export function generatePayrollBookings(
     }));
   }
   
-  // 8. NETTOLOHN: Soll Verb. Löhne | Haben Bank
+  // 8. UMLAGEN (U1, U2, Insolvenzgeldumlage) — nur AG-Kosten
+  const umlagen = config.umlagen ?? DEFAULT_UMLAGEN_2025;
+  const umlageBasis = entry.salaryCalculation.grossSalary;
+  
+  if (umlagen.u1Rate && umlagen.u1Rate > 0) {
+    const u1Amount = Math.round(umlageBasis * umlagen.u1Rate) / 100;
+    if (u1Amount > 0) {
+      buchungen.push(createBookingLine({
+        umsatz: u1Amount,
+        sollHaben: 'S',
+        konto: konten.umlageU1,
+        gegenKonto: konten.verbindlichkeitenUmlagen,
+        belegDatum,
+        belegNr,
+        buchungstext: `U1 ${employeeName}`,
+        kostenstelle: entry.employee.employmentData.department,
+      }));
+    }
+  }
+  
+  if (umlagen.u2Rate && umlagen.u2Rate > 0) {
+    const u2Amount = Math.round(umlageBasis * umlagen.u2Rate) / 100;
+    if (u2Amount > 0) {
+      buchungen.push(createBookingLine({
+        umsatz: u2Amount,
+        sollHaben: 'S',
+        konto: konten.umlageU2,
+        gegenKonto: konten.verbindlichkeitenUmlagen,
+        belegDatum,
+        belegNr,
+        buchungstext: `U2 ${employeeName}`,
+        kostenstelle: entry.employee.employmentData.department,
+      }));
+    }
+  }
+  
+  if (umlagen.insolvenzgeldRate && umlagen.insolvenzgeldRate > 0) {
+    const insolvAmount = Math.round(umlageBasis * umlagen.insolvenzgeldRate) / 100;
+    if (insolvAmount > 0) {
+      buchungen.push(createBookingLine({
+        umsatz: insolvAmount,
+        sollHaben: 'S',
+        konto: konten.insolvenzgeldumlage,
+        gegenKonto: konten.verbindlichkeitenUmlagen,
+        belegDatum,
+        belegNr,
+        buchungstext: `Insolv.Uml. ${employeeName}`,
+        kostenstelle: entry.employee.employmentData.department,
+      }));
+    }
+  }
+  
+  // 9. NETTOLOHN: Soll Verb. Löhne | Haben Bank
   buchungen.push(createBookingLine({
     umsatz: entry.finalNetSalary,
     sollHaben: 'S',
