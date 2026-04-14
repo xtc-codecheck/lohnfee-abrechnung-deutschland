@@ -373,7 +373,7 @@ export function calculateCompleteTax(params: TaxCalculationParams): TaxCalculati
   if (useBesondereLohnsteuertabelle) {
     const besResult = calculateBesondereLohnsteuer({
       grossMonthly,
-      taxClass: parseInt(taxClass) || 1,
+      taxClass: parseTaxClass(taxClass),
       childAllowances,
       churchTax,
       churchTaxRate,
@@ -452,7 +452,7 @@ export function calculateCompleteTax(params: TaxCalculationParams): TaxCalculati
     const totalSocialContributions = pensionInsurance + unemploymentInsurance + healthInsurance + careInsurance;
     
     // Lohnsteuer nach PAP 2025
-    const taxClassNumber = parseInt(taxClass) || 1;
+    const taxClassNumber = parseTaxClass(taxClass);
     const incomeTaxMonthly = calculateLohnsteuerPAP2025(
       grossMonthly, taxClassNumber, childAllowances, isEastGermany,
       healthInsuranceRate, isChildless, age, numberOfChildren ?? 0
@@ -521,7 +521,7 @@ export function calculateCompleteTax(params: TaxCalculationParams): TaxCalculati
   
   // Lohnsteuer nach PAP 2025 (formelbasiert)
   const monthlyGross = grossSalaryYearly / 12;
-  const taxClassNumber = parseInt(taxClass) || 1;
+  const taxClassNumber = parseTaxClass(taxClass);
   const incomeTaxMonthly = calculateLohnsteuerPAP2025(
     monthlyGross, taxClassNumber, childAllowances, isEastGermany,
     healthInsuranceRate, isChildless, age, numberOfChildren ?? 0
