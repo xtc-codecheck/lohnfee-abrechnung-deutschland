@@ -168,7 +168,48 @@ export function useSupabasePayroll() {
     await queryClient.invalidateQueries({ queryKey: entriesKey });
   }, [queryClient, periodsKey, entriesKey]);
 
-  const updatePayrollEntry = useCallback(async (_entryId: string, _updates: Partial<PayrollEntry>) => {
+  const updatePayrollEntry = useCallback(async (entryId: string, updates: Partial<PayrollEntry>) => {
+    const dbUpdates: Record<string, unknown> = {};
+    if (updates.salaryCalculation) {
+      const sc = updates.salaryCalculation;
+      dbUpdates.gross_salary = sc.grossSalary;
+      dbUpdates.net_salary = sc.netSalary;
+      dbUpdates.tax_income_tax = sc.taxes.incomeTax;
+      dbUpdates.tax_church = sc.taxes.churchTax;
+      dbUpdates.tax_solidarity = sc.taxes.solidarityTax;
+      dbUpdates.tax_total = sc.taxes.total;
+      dbUpdates.sv_health_employee = sc.socialSecurityContributions.healthInsurance.employee;
+      dbUpdates.sv_health_employer = sc.socialSecurityContributions.healthInsurance.employer;
+      dbUpdates.sv_pension_employee = sc.socialSecurityContributions.pensionInsurance.employee;
+      dbUpdates.sv_pension_employer = sc.socialSecurityContributions.pensionInsurance.employer;
+      dbUpdates.sv_unemployment_employee = sc.socialSecurityContributions.unemploymentInsurance.employee;
+      dbUpdates.sv_unemployment_employer = sc.socialSecurityContributions.unemploymentInsurance.employer;
+      dbUpdates.sv_care_employee = sc.socialSecurityContributions.careInsurance.employee;
+      dbUpdates.sv_care_employer = sc.socialSecurityContributions.careInsurance.employer;
+      dbUpdates.sv_total_employee = sc.socialSecurityContributions.total.employee;
+      dbUpdates.sv_total_employer = sc.socialSecurityContributions.total.employer;
+      dbUpdates.employer_costs = sc.employerCosts;
+    }
+    if (updates.finalNetSalary !== undefined) dbUpdates.final_net_salary = updates.finalNetSalary;
+    if (updates.additions) {
+      dbUpdates.bonus = updates.additions.bonuses;
+      dbUpdates.overtime_pay = updates.additions.overtimePay;
+    }
+    if (updates.workingData) {
+      dbUpdates.overtime_hours = updates.workingData.overtimeHours;
+    }
+    if (updates.deductions) {
+      dbUpdates.deductions = updates.deductions.total;
+      dbUpdates.deduction_description = updates.deductions.description;
+    }
+    if (updates.notes !== undefined) dbUpdates.notes = updates.notes;
+    if (updates.auditData !== undefined) dbUpdates.audit_data = updates.auditData;
+
+    const { error: err } = await supabase
+      .from('payroll_entries')
+      .update(dbUpdates)
+      .eq('id', entryId);
+    if (err) throw new Error(err.message);
     await queryClient.invalidateQueries({ queryKey: entriesKey });
   }, [queryClient, entriesKey]);
 
