@@ -15,7 +15,7 @@
  * (keine duplizierte Steuerformel mehr).
  */
 
-import { TAX_ALLOWANCES_2025 } from '@/constants/social-security';
+import { TAX_ALLOWANCES_2025, getYearConfig } from '@/constants/social-security';
 import { calculateTariflicheEStPAP2025 } from './tax-calculation';
 
 // ============= Typen =============
@@ -28,6 +28,7 @@ export interface BesondereTaxParams {
   churchTaxRate: number; // 8 oder 9
   privateHealthInsuranceMonthly?: number; // PKV-Basisbeitrag pro Monat
   privateCareInsuranceMonthly?: number; // PPV-Beitrag pro Monat
+  year?: number; // Veranlagungsjahr (Default: 2025)
 }
 
 export interface BesondereTaxResult {
@@ -66,16 +67,18 @@ export function calculateBesondereLohnsteuer(params: BesondereTaxParams): Besond
     churchTax, churchTaxRate,
     privateHealthInsuranceMonthly = 300,
     privateCareInsuranceMonthly = 50,
+    year = 2025,
   } = params;
 
   if (grossMonthly <= 0) {
     return { incomeTax: 0, solidarityTax: 0, churchTax: 0, totalTax: 0, effectiveRate: 0 };
   }
 
+  const config = getYearConfig(year);
   const grossYearly = grossMonthly * 12;
 
-  const werbungskosten = TAX_ALLOWANCES_2025.workRelatedExpenses;
-  const sonderausgaben = TAX_ALLOWANCES_2025.specialExpenses;
+  const werbungskosten = config.taxAllowances.workRelatedExpenses;
+  const sonderausgaben = config.taxAllowances.specialExpenses;
   const vorsorgepauschale = calculateBesondereVorsorgepauschale(
     taxClass, privateHealthInsuranceMonthly, privateCareInsuranceMonthly
   ) * 12;
@@ -86,32 +89,32 @@ export function calculateBesondereLohnsteuer(params: BesondereTaxParams): Besond
   switch (taxClass) {
     case 1:
     case 4:
-      est = calculateTariflicheEStPAP2025(Math.max(0, zvE));
+      est = calculateTariflicheEStPAP2025(Math.max(0, zvE), year);
       break;
     case 2: {
       const entlastung = 4260 + Math.max(0, childAllowances - 1) * 240;
-      est = calculateTariflicheEStPAP2025(Math.max(0, zvE - entlastung));
+      est = calculateTariflicheEStPAP2025(Math.max(0, zvE - entlastung), year);
       break;
     }
     case 3:
-      est = calculateTariflicheEStPAP2025(Math.max(0, Math.floor(zvE / 2))) * 2;
+      est = calculateTariflicheEStPAP2025(Math.max(0, Math.floor(zvE / 2)), year) * 2;
       break;
     case 5:
-      est = 2 * calculateTariflicheEStPAP2025(Math.max(0, zvE)) 
-          - 2 * calculateTariflicheEStPAP2025(Math.max(0, Math.floor(zvE / 2)));
+      est = 2 * calculateTariflicheEStPAP2025(Math.max(0, zvE), year) 
+          - 2 * calculateTariflicheEStPAP2025(Math.max(0, Math.floor(zvE / 2)), year);
       break;
     case 6:
       zvE = grossYearly - vorsorgepauschale;
-      est = 2 * calculateTariflicheEStPAP2025(Math.max(0, zvE)) 
-          - 2 * calculateTariflicheEStPAP2025(Math.max(0, Math.floor(zvE / 2)));
+      est = 2 * calculateTariflicheEStPAP2025(Math.max(0, zvE), year) 
+          - 2 * calculateTariflicheEStPAP2025(Math.max(0, Math.floor(zvE / 2)), year);
       break;
     default:
-      est = calculateTariflicheEStPAP2025(Math.max(0, zvE));
+      est = calculateTariflicheEStPAP2025(Math.max(0, zvE), year);
   }
 
   const monthlyIncomeTax = Math.floor(est / 12 * 100) / 100;
 
-  const soliFreigrenze = TAX_ALLOWANCES_2025.solidarityTaxFreeAmount / 12;
+  const soliFreigrenze = config.taxAllowances.solidarityTaxFreeAmount / 12;
   let solidarityTax = 0;
   if (monthlyIncomeTax > soliFreigrenze) {
     solidarityTax = Math.floor(monthlyIncomeTax * 0.055 * 100) / 100;
