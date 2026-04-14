@@ -29,6 +29,7 @@ export interface EmployeeFormData {
   healthInsuranceRate: number;
   socialSecurityNumber: string;
   childAllowances: number;
+  numberOfChildren: number; // Anzahl Kinder für PV-Berechnung
   
   // Beschäftigungsdaten
   employmentType: EmploymentType;
@@ -117,6 +118,7 @@ export const initialFormData: EmployeeFormData = {
   healthInsuranceRate: 2.45,
   socialSecurityNumber: '',
   childAllowances: 0,
+  numberOfChildren: 0,
   
   // Beschäftigungsdaten
   employmentType: 'fulltime',

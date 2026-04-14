@@ -24,7 +24,7 @@ export interface PersonalData {
   healthInsurance: HealthInsurance;
   socialSecurityNumber: string;
   childAllowances: number;
-}
+  numberOfChildren: number; // Für PV-Kinderabschläge (seit 07/2023)
 
 export interface Address {
   street: string;
