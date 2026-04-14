@@ -705,10 +705,10 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
                     <span></span><span className="text-right">AN-Anteil</span><span className="text-right">AG-Anteil</span>
                   </div>
                   {[
-                    { label: 'Krankenversicherung', an: summaryData.svHealth, ag: summaryData.svHealth },
-                    { label: 'Rentenversicherung', an: summaryData.svPension, ag: summaryData.svPension },
-                    { label: 'Pflegeversicherung', an: summaryData.svCare, ag: summaryData.svCare * 0.9 },
-                    { label: 'Arbeitslosenvers.', an: summaryData.svUnemploy, ag: summaryData.svUnemploy },
+                    { label: 'Krankenversicherung', an: summaryData.svHealth, ag: summaryData.svHealthAg },
+                    { label: 'Rentenversicherung', an: summaryData.svPension, ag: summaryData.svPensionAg },
+                    { label: 'Pflegeversicherung', an: summaryData.svCare, ag: summaryData.svCareAg },
+                    { label: 'Arbeitslosenvers.', an: summaryData.svUnemploy, ag: summaryData.svUnemployAg },
                   ].map((row, i) => (
                     <div key={i} className="grid grid-cols-3 text-sm">
                       <span className="text-muted-foreground">{row.label}</span>
