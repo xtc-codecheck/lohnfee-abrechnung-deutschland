@@ -729,15 +729,40 @@ Jährlich zu aktualisieren:
 
 ### Letzte Änderungen (14. April 2026)
 
-| Fix | Beschreibung |
-|---|---|
-| `assign_default_role()` | **Kritisch:** Neue Benutzer erhalten jetzt immer `admin` in ihrem eigenen Tenant (vorher nur der allererste User im System) |
-| `updatePayrollEntry()` | **Kritisch:** Lohnkorrekturen werden jetzt vollständig in der DB persistiert (30+ Felder inkl. Tax/SV AG+AN) |
-| Payroll-Dashboard Refactoring | ⚠️ **Offen:** 550-Zeilen-Komponente noch nicht in Sub-Views aufgeteilt |
+| Änderung | Beschreibung | Status |
+|---|---|---|
+| `assign_default_role()` | Neue Benutzer erhalten immer `admin` in ihrem eigenen Tenant | ✅ |
+| `updatePayrollEntry()` | Lohnkorrekturen vollständig in DB persistiert (30+ Felder) | ✅ |
+| Payroll-Dashboard Refactoring | In 4 Sub-Komponenten aufgeteilt (QuickActions, StatsCards, PeriodsList, SubViewWrapper) | ✅ |
+| FK-Constraints | Alle Fremdschlüssel auf `ON DELETE CASCADE` migriert | ✅ |
+| Onboarding-Wizard | 3-Schritt-Wizard für neue Benutzer (Firmendaten, erster MA) | ✅ |
+| Error-Handling | `NetworkErrorAlert` in Employee- und Payroll-Dashboard | ✅ |
+| E-Mail-Bestätigung | Auth-Konfiguration für sichere Registrierung | ✅ |
 
 ---
 
-*Aktualisiert am: 14. April 2026*
-*LohnPro Version: Phase F (100% Feature-komplett)*
-*Berechnungsstand: Steuer- und SV-Sätze 2025 + 2026*
-*Tests: 571 bestanden, 26 Suites, 0 Fehler*
+## 19. SYSTAX-Integration
+
+### Im Hauptsystem vorhanden (nicht in LohnPro nötig)
+- **ELSTER** – Elektronische Steuermeldungen an Finanzamt
+- **finAPI** – Bankanbindung für SEPA-Überweisungen
+
+### Von LohnPro bereitgestellte Schnittstellen-Daten
+- Meldewesen-Daten (SV-Meldungen, LStA, eLStB, Beitragsnachweise) → ELSTER
+- Auszahlungsbeträge (Netto pro Mitarbeiter) → finAPI
+- DATEV-Export (EXTF v7.0) → Buchhaltung
+- GoBD-Export → Betriebsprüfung
+
+### Integrationspunkte
+1. **Auth**: `AuthProvider` → SYSTAX Auth-System adaptieren
+2. **Tenant**: `TenantProvider` → SYSTAX Mandantenverwaltung
+3. **Routing**: Alle Routen mit Prefix (z.B. `/lohnpro/...`)
+4. **Layout**: `MainLayout` durch SYSTAX-Layout ersetzen
+
+---
+
+*Aktualisiert am: 14. April 2026*  
+*LohnPro Version: Phase F – ✅ ÜBERGABEFERTIG AN SYSTAX*  
+*Berechnungsstand: Steuer- und SV-Sätze 2025 + 2026*  
+*Tests: 571 bestanden, 26 Suites, 0 Fehler*  
+*ELSTER + finAPI: Bestandteil des SYSTAX-Hauptsystems*

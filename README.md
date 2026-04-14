@@ -1,22 +1,17 @@
 # LohnPro – Deutsche Lohnbuchhaltung in Steuerberaterqualität
 
-Multi-Tenant SaaS-Anwendung für Lohn- und Gehaltsabrechnung nach deutschem Recht (2025).
+> **Status: ✅ ÜBERGABEFERTIG an SYSTAX-Hauptsystem**  
+> Multi-Tenant SaaS-Anwendung für Lohn- und Gehaltsabrechnung nach deutschem Recht (2025/2026).  
+> ELSTER und finAPI sind Bestandteil des SYSTAX-Hauptsystems.
 
 ---
 
 ## Schnellstart
 
 ```bash
-# Abhängigkeiten installieren
 npm install
-
-# Entwicklungsserver starten
 npm run dev
-
-# Tests ausführen
 npx vitest run
-
-# Build erstellen
 npm run build
 ```
 
@@ -32,7 +27,7 @@ npm run build
 | **State** | TanStack React Query + React Context |
 | **Routing** | React Router v6 (Code-Split via `React.lazy`) |
 | **Backend** | Lovable Cloud (Supabase) – PostgreSQL, Auth, RLS, Edge Functions |
-| **Tests** | Vitest (485 Tests in 19 Suites) |
+| **Tests** | Vitest (571 Tests in 26 Suites) |
 | **SEO** | react-helmet-async + JSON-LD |
 
 ---
@@ -68,11 +63,12 @@ ErrorBoundary
 | `sachbearbeiter` | Mitarbeiter anlegen, Abrechnungen erstellen/bearbeiten |
 | `leserecht` | Nur Lesen |
 
-### Authentifizierung
+### Authentifizierung & Onboarding
 
 - Email + Passwort (HIBP-Passwort-Check aktiviert)
 - Passwort-Reset via `/reset-password`
-- Bei Registrierung: automatische Tenant- + Rollenerstellung (1. User → Admin)
+- Bei Registrierung: automatische Tenant- + Rollenerstellung (jeder neue User → Admin in eigenem Tenant)
+- **Interaktiver Onboarding-Wizard** für neue Benutzer (Firmendaten, erster Mitarbeiter, erste Abrechnung)
 
 ---
 
@@ -116,6 +112,10 @@ ErrorBoundary
 | `audit_log` | Manipulationssicherer Audit-Trail (nur via DB-Trigger) |
 | `autolohn_settings` | Autolohn-Konfiguration |
 
+### FK-Constraints
+
+Alle Fremdschlüssel verwenden `ON DELETE CASCADE` für referenzielle Integrität. Migriert und verifiziert.
+
 ### DB-Funktionen
 
 | Funktion | Zweck |
@@ -134,15 +134,15 @@ ErrorBoundary
 
 ### Steuerberechnung (`src/utils/tax-calculation.ts`)
 
-- Vollständige Lohnsteuer nach § 32a EStG 2025
+- Vollständige Lohnsteuer nach § 32a EStG **2025 + 2026** (PAP-formelbasiert)
 - Alle 6 Steuerklassen, Solidaritätszuschlag, Kirchensteuer
 - Besondere Lohnsteuertabelle für Beamte/PKV
 - Minijob-Pauschalbesteuerung (2%), Midijob-Gleitzone
 
 ### Sozialversicherung (`src/constants/social-security.ts`)
 
-- BBG Ost/West, alle Beitragssätze 2025
-- Lohnsteuertabelle 2025 (7.000+ Einträge)
+- BBG Ost/West **2025 + 2026**, alle Beitragssätze
+- PUEG-Kinderabschläge
 - Minijob ≤556€, Midijob ≤2.000€, Gleitzonenfaktor 0,6683
 
 ### Branchenmodule
@@ -161,9 +161,34 @@ ErrorBoundary
 | Dienstwagen (1%/0,5%/0,25%) | `company-car-calculation.ts` |
 | Netto→Brutto-Umkehr | `net-to-gross-calculation.ts` |
 | DATEV-Export (SKR03/04) | `datev-export.ts` |
+| GoBD-Export (Betriebsprüfung) | `gobd-export.ts` |
+| Entgeltfortzahlung (§ 3 EFZG) | `entgeltfortzahlung.ts` |
+| Jahresausgleich (§ 42b EStG) | `annual-tax-reconciliation.ts` |
+| Märzklausel | `maerzklausel.ts` |
 | Anomalie-Erkennung | `anomaly-detection.ts` |
 | Gehaltsprognose | `salary-forecast.ts` |
 | KV-Vergleichsrechner | `health-insurance-comparison.ts` |
+
+---
+
+## Payroll-Dashboard (Refactored)
+
+Das Payroll-Dashboard wurde in modulare Sub-Komponenten aufgeteilt:
+
+| Komponente | Datei | Funktion |
+|-----------|-------|----------|
+| `PayrollQuickActions` | `payroll-quick-actions.tsx` | Schnellaktionen |
+| `PayrollStatsCards` | `payroll-stats-cards.tsx` | KPI-Karten |
+| `PayrollPeriodsList` | `payroll-periods-list.tsx` | Periodenliste |
+| `PayrollSubViewWrapper` | `payroll-sub-view-wrapper.tsx` | Sub-View-Container |
+
+---
+
+## Error-Handling
+
+- `NetworkErrorAlert`-Komponente für Datenbankfehler mit Retry-Funktion
+- Integriert in Employee-Dashboard und Payroll-Dashboard
+- `ErrorBoundary` als globaler Fallback
 
 ---
 
@@ -174,7 +199,7 @@ Alle Routen außer Landing, Auth, Legal sind durch `<ProtectedRoute>` geschützt
 | Route | Beschreibung |
 |-------|-------------|
 | `/` | Marketing-Landingpage |
-| `/dashboard` | Haupt-Dashboard (KPIs, Übersicht) |
+| `/dashboard` | Haupt-Dashboard (KPIs, Onboarding-Wizard) |
 | `/employees` | Mitarbeiterverwaltung (4-Schritt-Wizard) |
 | `/payroll` | Lohnabrechnung (Journal, Lohnkonto, DATEV) |
 | `/autolohn` | Automatische Abrechnung |
@@ -189,10 +214,12 @@ Alle Routen außer Landing, Auth, Legal sind durch `<ProtectedRoute>` geschützt
 
 ## Testsuite
 
-**485 Tests** in **19 Suites** – alle bestanden ✅
+**571 Tests** in **26 Suites** – alle bestanden ✅
 
 | Bereich | Tests |
 |---------|-------|
+| BMF-Referenz PAP 2025 | ~33 |
+| Golden-Master 2026 | ~17 |
 | Steuerberechnung | ~52 |
 | Sozialversicherung | ~40 |
 | Tax-Params-Factory | ~24 |
@@ -200,6 +227,7 @@ Alle Routen außer Landing, Auth, Legal sind durch `<ProtectedRoute>` geschützt
 | Property-Based Payroll | ~18 |
 | Edge-Cases | ~22 |
 | DATEV-Export | ~32 |
+| GoBD-Export | ~15 |
 | Baulohn | ~28 |
 | Gastronomie | ~26 |
 | Pflege | ~30 |
@@ -210,7 +238,12 @@ Alle Routen außer Landing, Auth, Legal sind durch `<ProtectedRoute>` geschützt
 | Formatters | ~12 |
 | Employee-Validierung | ~42 |
 | German-Checksums | ~14 |
-| BMF-Referenz-Steuer | ~33 |
+| Entgeltfortzahlung | ~12 |
+| ELStAM-Validierung | ~10 |
+| Jahresausgleich | ~8 |
+| Märzklausel | ~8 |
+| E2E-Flow | ~10 |
+| Payroll-Integration | ~6 |
 
 ```bash
 npx vitest run        # Alle Tests
@@ -219,37 +252,25 @@ npx vitest            # Watch-Modus
 
 ---
 
-## Verzeichnisstruktur
+## SYSTAX-Integration
 
-```
-src/
-├── components/
-│   ├── auth/                  # Login, Protected Route
-│   ├── autolohn/              # Automatische Abrechnung
-│   ├── compliance/            # Compliance-Dashboard
-│   ├── dashboard/             # Haupt-Dashboard
-│   ├── employees/             # Mitarbeiterverwaltung + Wizard
-│   ├── layout/                # Hauptlayout (Sidebar, Navigation)
-│   ├── meldewesen/            # Beitragsnachweise, eLStB, SV-Meldungen
-│   ├── payroll/               # Lohnabrechnung, Journal, DATEV-Export
-│   ├── reports/               # Berichte und Auswertungen
-│   ├── salary/                # Gehaltsrechner, Branchenmodule
-│   ├── settings/              # Firmeneinstellungen, Admin, DSGVO
-│   ├── time-tracking/         # Zeiterfassung
-│   └── ui/                    # shadcn/ui Komponenten
-├── constants/
-│   └── social-security.ts     # Alle SV-Konstanten 2025
-├── contexts/                  # Auth, Tenant, Employee Context
-├── hooks/                     # React Query Hooks
-├── types/                     # TypeScript-Definitionen
-├── utils/                     # Berechnungslogik
-│   └── __tests__/             # 485 Tests
-├── pages/                     # Seiten-Komponenten
-└── integrations/supabase/     # Auto-generiert (NICHT editieren!)
-docs/
-├── IMPROVEMENTS-SUMMARY.md    # Verbesserungsplan-Zusammenfassung
-└── LohnPro-SubApp-Spezifikation.md  # Vollständige SubApp-Spezifikation
-```
+### Bereits im Hauptsystem vorhanden
+- **ELSTER** – Elektronische Steuererklärung/Meldungen
+- **finAPI** – Banküberweisungen (SEPA)
+
+### Von LohnPro bereitgestellt
+- Komplette Lohnberechnung (PAP 2025/2026)
+- Multi-Tenant mit RLS
+- DATEV/GoBD-Export
+- Meldewesen-Datenaufbereitung (SV, LStA, eLStB)
+- Onboarding für Laien-Nutzer
+
+### Integrationspunkte
+1. **Auth**: `AuthProvider` → SYSTAX Auth-System
+2. **Tenant**: `TenantProvider` → SYSTAX Mandantenverwaltung
+3. **Routing**: Alle Routen mit Prefix (z.B. `/lohnpro/...`)
+4. **ELSTER**: Meldewesen-Daten → SYSTAX ELSTER-Modul
+5. **finAPI**: Auszahlungsbeträge → SYSTAX Zahlungsmodul
 
 ---
 
@@ -262,7 +283,7 @@ Jedes Jahr zum 1. Januar aktualisieren:
 2. SV-Beitragssätze
 3. Minijob/Midijob-Grenzen
 4. Steuerliche Freibeträge (Grundfreibetrag)
-5. Lohnsteuertabelle (komplett ersetzen)
+5. PAP-Tarifformel (§ 32a EStG)
 6. Sachbezugswerte (Gastronomie)
 7. SOKA-BAU-Beiträge
 8. KV-Zusatzbeiträge pro Kasse
@@ -275,7 +296,7 @@ Jedes Jahr zum 1. Januar aktualisieren:
 2. **`.env` NIEMALS manuell editieren** – wird automatisch verwaltet
 3. **Rollen NIEMALS in `profiles` speichern** – immer `user_roles`-Tabelle verwenden
 4. **Alle neuen Tabellen brauchen `tenant_id`** + RLS-Policy mit `is_tenant_member()`
-5. **Platform-Admin-Seeding:** Erster Admin muss per SQL-Migration eingetragen werden (`platform_admins`)
+5. **Platform-Admin-Seeding:** Erster Admin muss per SQL-Migration eingetragen werden
 
 ---
 
@@ -283,7 +304,11 @@ Jedes Jahr zum 1. Januar aktualisieren:
 
 | Dokument | Pfad | Inhalt |
 |----------|------|--------|
-| README (dieses) | `README.md` | Setup, Architektur, Tech-Stack |
+| README (dieses) | `README.md` | Setup, Architektur, Tech-Stack, Übergabe |
 | SubApp-Spezifikation | `docs/LohnPro-SubApp-Spezifikation.md` | Vollständige Integrationsanleitung |
 | Verbesserungsplan | `docs/IMPROVEMENTS-SUMMARY.md` | Umgesetzte Optimierungen |
 | Jahres-Checkliste | `src/constants/ANNUAL_UPDATE_CHECKLIST.md` | Jährliche Parameter-Updates |
+
+---
+
+*Status: ✅ Übergabefertig an SYSTAX – 14. April 2026*
