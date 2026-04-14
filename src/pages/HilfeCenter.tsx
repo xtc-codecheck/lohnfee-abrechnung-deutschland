@@ -666,11 +666,11 @@ const faqs = [
   },
   {
     question: "Wie ändere ich die Steuerklasse eines Mitarbeiters?",
-    answer: "Gehen Sie zu Mitarbeiter → wählen Sie den Mitarbeiter aus → klicken Sie auf "Bearbeiten" → ändern Sie die Steuerklasse unter "Gehaltsdaten" → klicken Sie auf "Speichern". Die Änderung gilt ab der nächsten Abrechnung.",
+    answer: 'Gehen Sie zu Mitarbeiter, waehlen Sie den Mitarbeiter aus, klicken Sie auf "Bearbeiten", aendern Sie die Steuerklasse unter "Gehaltsdaten" und klicken Sie auf "Speichern". Die Aenderung gilt ab der naechsten Abrechnung.',
   },
   {
     question: "Was mache ich, wenn eine Abrechnung falsch ist?",
-    answer: "Kein Problem! Öffnen Sie die betroffene Abrechnungsperiode, klicken Sie auf den Mitarbeiter und dann auf "Korrektur erstellen". Das System berechnet automatisch die Differenzen und berücksichtigt diese in der nächsten Abrechnung.",
+    answer: 'Kein Problem! Oeffnen Sie die betroffene Abrechnungsperiode, klicken Sie auf den Mitarbeiter und dann auf "Korrektur erstellen". Das System berechnet automatisch die Differenzen und beruecksichtigt diese in der naechsten Abrechnung.',
   },
   {
     question: "Kann ich eine Abrechnung rückgängig machen?",
@@ -682,7 +682,7 @@ const faqs = [
   },
   {
     question: "Wie sichere ich meine Daten?",
-    answer: "Ihre Daten werden automatisch in der Cloud gespeichert und verschlüsselt. Es sind keine manuellen Backups nötig. Zusätzlich können Sie unter "Berichte → Export" jederzeit alle Daten als Datei herunterladen.",
+    answer: 'Ihre Daten werden automatisch in der Cloud gespeichert und verschluesselt. Es sind keine manuellen Backups noetig. Zusaetzlich koennen Sie unter "Berichte" jederzeit alle Daten als Datei herunterladen.',
   },
   {
     question: "Kann jemand anderes meine Daten sehen?",
@@ -690,7 +690,7 @@ const faqs = [
   },
   {
     question: "Ich habe mein Passwort vergessen – was tun?",
-    answer: "Klicken Sie auf der Anmeldeseite auf "Passwort vergessen?", geben Sie Ihre E-Mail-Adresse ein und folgen Sie dem Link in der E-Mail, die Sie erhalten. Dort können Sie ein neues Passwort festlegen.",
+    answer: 'Klicken Sie auf der Anmeldeseite auf "Passwort vergessen?", geben Sie Ihre E-Mail-Adresse ein und folgen Sie dem Link in der E-Mail. Dort koennen Sie ein neues Passwort festlegen.',
   },
 ];
 
