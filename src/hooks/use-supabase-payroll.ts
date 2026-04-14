@@ -200,14 +200,11 @@ export function useSupabasePayroll() {
     }
     if (updates.deductions) {
       dbUpdates.deductions = updates.deductions.total;
-      dbUpdates.deduction_description = updates.deductions.description;
     }
-    if (updates.notes !== undefined) dbUpdates.notes = updates.notes;
-    if (updates.auditData !== undefined) dbUpdates.audit_data = updates.auditData;
 
     const { error: err } = await supabase
       .from('payroll_entries')
-      .update(dbUpdates)
+      .update(dbUpdates as any)
       .eq('id', entryId);
     if (err) throw new Error(err.message);
     await queryClient.invalidateQueries({ queryKey: entriesKey });
