@@ -87,6 +87,7 @@ const benefits = [
 export default function Landing() {
   const navigate = useNavigate();
   const { session, loading } = useAuth();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   if (loading) return null;
   if (session) return <Navigate to="/dashboard" replace />;
@@ -108,7 +109,8 @@ export default function Landing() {
             </div>
             <span className="text-xl font-bold">LohnPro</span>
           </div>
-          <div className="flex items-center gap-3">
+          {/* Desktop nav */}
+          <div className="hidden md:flex items-center gap-3">
             <DarkModeToggle />
             <Button variant="ghost" onClick={() => navigate("/hilfe")}>
               Hilfe
@@ -124,7 +126,32 @@ export default function Landing() {
               <ArrowRight className="ml-1 h-4 w-4" />
             </Button>
           </div>
+          {/* Mobile hamburger */}
+          <div className="flex items-center gap-2 md:hidden">
+            <DarkModeToggle />
+            <Button variant="ghost" size="icon" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+              {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </Button>
+          </div>
         </div>
+        {/* Mobile menu */}
+        {mobileMenuOpen && (
+          <div className="md:hidden border-t border-border bg-card px-6 py-4 space-y-2">
+            <Button variant="ghost" className="w-full justify-start" onClick={() => { navigate("/hilfe"); setMobileMenuOpen(false); }}>
+              Hilfe
+            </Button>
+            <Button variant="ghost" className="w-full justify-start" onClick={() => { navigate("/kontakt"); setMobileMenuOpen(false); }}>
+              Kontakt
+            </Button>
+            <Button variant="ghost" className="w-full justify-start" onClick={() => { navigate("/auth"); setMobileMenuOpen(false); }}>
+              Anmelden
+            </Button>
+            <Button className="w-full" onClick={() => { navigate("/auth"); setMobileMenuOpen(false); }}>
+              Kostenlos starten
+              <ArrowRight className="ml-1 h-4 w-4" />
+            </Button>
+          </div>
+        )}
       </header>
 
       {/* Hero */}
