@@ -24,7 +24,7 @@ interface AuditLogEntry {
   entity: 'employee' | 'payroll' | 'salary' | 'system';
   entityId: string;
   entityName: string;
-  changes: Record<string, { old: any; new: any }>;
+  changes: Record<string, { old: unknown; new: unknown }>;
   ipAddress: string;
   userAgent: string;
   riskLevel: 'low' | 'medium' | 'high';

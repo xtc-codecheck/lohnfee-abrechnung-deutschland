@@ -37,7 +37,7 @@ export function SalaryCurveChart({ data, currentGross, height = 300 }: SalaryCur
   const formatCurrency = (value: number) => 
     `${value.toLocaleString('de-DE')} €`;
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: Array<{ payload: Record<string, number> }> }) => {
     if (active && payload && payload.length) {
       const point = payload[0].payload;
       return (

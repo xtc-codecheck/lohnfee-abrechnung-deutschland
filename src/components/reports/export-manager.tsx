@@ -23,7 +23,7 @@ import jsPDF from 'jspdf';
 
 interface ExportManagerProps {
   reportType: string;
-  reportData: any;
+  reportData: Record<string, unknown>;
   filters: {
     dateRange: { from: Date; to: Date };
     selectedDepartment: string;

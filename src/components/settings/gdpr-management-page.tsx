@@ -85,7 +85,7 @@ export function GdprManagementPage() {
   };
 
   const updateStatus = async (id: string, status: string) => {
-    const updates: any = { status };
+    const updates: { status: string; processed_at?: string } = { status };
     if (status === 'completed') updates.processed_at = new Date().toISOString();
     
     const { error } = await supabase.from('gdpr_requests').update(updates).eq('id', id);

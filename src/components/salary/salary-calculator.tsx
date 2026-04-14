@@ -9,7 +9,7 @@ import { BBG_2025_MONTHLY, SOCIAL_INSURANCE_RATES_2025 } from "@/constants/socia
 
 interface SalaryCalculatorProps {
   onBack: () => void;
-  employeeData?: any;
+  employeeData?: { grossSalary?: number; taxClass?: string; churchTax?: boolean; employmentType?: string };
 }
 
 export function SalaryCalculator({ onBack, employeeData }: SalaryCalculatorProps) {
