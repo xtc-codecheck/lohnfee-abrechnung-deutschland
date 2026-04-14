@@ -26,7 +26,7 @@ const categories = [
         title: "Wie melde ich mich an?",
         content: `So erstellen Sie Ihr Konto – in 3 einfachen Schritten:
 
-1. Öffnen Sie LohnPro und klicken Sie auf „Registrieren"
+1. Öffnen Sie LohnPro und klicken Sie auf "Registrieren"
 2. Geben Sie Ihren Namen, Ihre E-Mail-Adresse und ein sicheres Passwort ein
 3. Bestätigen Sie Ihre E-Mail-Adresse über den Link, den Sie per E-Mail erhalten
 
@@ -43,17 +43,17 @@ Nach der Anmeldung landen Sie direkt im Dashboard – Ihrem Startbildschirm.`,
 • Ob es offene Aufgaben gibt (z.B. fehlende Daten)
 • Eine Kurzübersicht Ihrer letzten Abrechnungen
 
-Am linken Rand finden Sie das Menü mit allen Bereichen wie „Mitarbeiter", „Abrechnung" oder „Zeiterfassung".
+Am linken Rand finden Sie das Menü mit allen Bereichen wie "Mitarbeiter", "Abrechnung" oder "Zeiterfassung".
 
-💡 Tipp: Die „Erste Schritte"-Box im Dashboard zeigt Ihnen, was als Nächstes zu tun ist.`,
+💡 Tipp: Die "Erste Schritte"-Box im Dashboard zeigt Ihnen, was als Nächstes zu tun ist.`,
         tags: ["Dashboard", "Übersicht", "Start"],
       },
       {
         title: "Wie richte ich meine Firma ein?",
         content: `Bevor Sie Mitarbeiter anlegen, hinterlegen Sie Ihre Firmendaten:
 
-1. Klicken Sie im Menü auf „Einstellungen"
-2. Wählen Sie den Reiter „Firmendaten"
+1. Klicken Sie im Menü auf "Einstellungen"
+2. Wählen Sie den Reiter "Firmendaten"
 3. Füllen Sie aus: Firmenname, Adresse, Betriebsnummer, Steuernummer
 4. Optional: Bankverbindung (IBAN, BIC) für die Lohnauszahlung
 
@@ -72,12 +72,12 @@ Am linken Rand finden Sie das Menü mit allen Bereichen wie „Mitarbeiter", „
 
 👁️ Leserecht – Darf nur anschauen, nichts ändern. Gut für Prüfer oder Mitarbeiter, die ihre eigenen Daten einsehen.
 
-💡 Als Firmeninhaber sind Sie automatisch Admin. Sie können weitere Benutzer unter „Einstellungen → Benutzerverwaltung" einladen.`,
+💡 Als Firmeninhaber sind Sie automatisch Admin. Sie können weitere Benutzer unter "Einstellungen → Benutzerverwaltung" einladen.`,
         tags: ["Rollen", "Berechtigungen", "Admin"],
       },
       {
         title: "Kann ich mehrere Firmen verwalten?",
-        content: `Ja! LohnPro unterstützt sogenannte „Mandanten" – das ist der Fachbegriff für separate Firmen im System.
+        content: `Ja! LohnPro unterstützt sogenannte "Mandanten" – das ist der Fachbegriff für separate Firmen im System.
 
 So wechseln Sie zwischen Firmen:
 • Klicken Sie oben in der Kopfzeile auf den Firmennamen
@@ -144,12 +144,12 @@ Die Steuerklasse bestimmt, wie viel Lohnsteuer abgezogen wird.
         title: "Wie ändere ich die Daten eines Mitarbeiters?",
         content: `So bearbeiten Sie Mitarbeiterdaten:
 
-1. Klicken Sie im Menü auf „Mitarbeiter"
+1. Klicken Sie im Menü auf "Mitarbeiter"
 2. Finden Sie den Mitarbeiter in der Liste (nutzen Sie die Suche oben)
 3. Klicken Sie auf den Namen des Mitarbeiters
-4. Klicken Sie auf „Bearbeiten"
+4. Klicken Sie auf "Bearbeiten"
 5. Ändern Sie die gewünschten Felder
-6. Klicken Sie auf „Speichern"
+6. Klicken Sie auf "Speichern"
 
 ⚠️ Wichtig: Änderungen an Steuerklasse, Gehalt oder Kirchensteuer wirken sich erst auf die nächste Abrechnung aus. Bereits erstellte Abrechnungen bleiben unverändert.
 
@@ -161,18 +161,18 @@ Die Steuerklasse bestimmt, wie viel Lohnsteuer abgezogen wird.
         content: `Wenn ein Mitarbeiter austritt:
 
 1. Öffnen Sie das Profil des Mitarbeiters
-2. Klicken Sie auf „Bearbeiten"
+2. Klicken Sie auf "Bearbeiten"
 3. Tragen Sie das Austrittsdatum ein
 4. Speichern Sie
 
 Was passiert dann automatisch:
-✅ Der Mitarbeiter wird als „inaktiv" markiert
+✅ Der Mitarbeiter wird als "inaktiv" markiert
 ✅ Er erscheint nicht mehr in neuen Abrechnungen
 ✅ Die bisherigen Daten und Abrechnungen bleiben erhalten
 
 ⚠️ Vergessen Sie nicht:
 • Die letzte Abrechnung für den Mitarbeiter zu erstellen
-• Eine Abmeldung bei der Sozialversicherung zu machen (unter „Meldewesen → SV-Meldungen")
+• Eine Abmeldung bei der Sozialversicherung zu machen (unter "Meldewesen → SV-Meldungen")
 • Am Jahresende die Lohnsteuerbescheinigung zu erstellen
 
 💡 Gelöschte Mitarbeiter können nicht wiederhergestellt werden – nutzen Sie daher immer das Austrittsdatum statt den Mitarbeiter zu löschen.`,
@@ -204,10 +204,10 @@ Was passiert dann automatisch:
         title: "Wie erstelle ich eine Lohnabrechnung?",
         content: `Eine monatliche Lohnabrechnung erstellen Sie so:
 
-1. Klicken Sie im Menü auf „Abrechnung"
-2. Klicken Sie auf „Neue Periode erstellen"
+1. Klicken Sie im Menü auf "Abrechnung"
+2. Klicken Sie auf "Neue Periode erstellen"
 3. Wählen Sie den Monat und das Jahr
-4. Klicken Sie auf „Erstellen"
+4. Klicken Sie auf "Erstellen"
 
 Das System berechnet jetzt automatisch für jeden aktiven Mitarbeiter:
 ✅ Das Bruttogehalt
@@ -247,8 +247,8 @@ Das System berechnet jetzt automatisch für jeden aktiven Mitarbeiter:
         title: "Wie zahle ich Weihnachtsgeld oder Prämien aus?",
         content: `Sonderzahlungen wie Weihnachtsgeld, Urlaubsgeld oder Prämien erfassen Sie so:
 
-1. Gehen Sie zu „Abrechnung → Sonderzahlungen"
-2. Klicken Sie auf „Neue Sonderzahlung"
+1. Gehen Sie zu "Abrechnung → Sonderzahlungen"
+2. Klicken Sie auf "Neue Sonderzahlung"
 3. Wählen Sie den Mitarbeiter und die Art der Zahlung
 4. Geben Sie den Betrag und den Zeitraum ein
 5. Speichern Sie
@@ -268,7 +268,7 @@ Das System berechnet automatisch die korrekten Steuern und Sozialversicherungsbe
 So erstellen Sie eine Korrektur:
 1. Öffnen Sie die betroffene Abrechnungsperiode
 2. Klicken Sie auf den Mitarbeiter, bei dem der Fehler ist
-3. Klicken Sie auf „Korrektur erstellen"
+3. Klicken Sie auf "Korrektur erstellen"
 4. Ändern Sie die fehlerhaften Werte
 5. Das System berechnet automatisch die Differenz
 
@@ -292,9 +292,9 @@ Brauche ich das?
 • Wenn Sie gerade erst anfangen → Erstmal nicht nötig
 
 So funktioniert der Export:
-1. Gehen Sie zu „Abrechnung"
+1. Gehen Sie zu "Abrechnung"
 2. Wählen Sie die abgeschlossene Periode
-3. Klicken Sie auf „DATEV-Export"
+3. Klicken Sie auf "DATEV-Export"
 4. Laden Sie die Datei herunter
 5. Senden Sie die Datei an Ihren Steuerberater
 
@@ -312,8 +312,8 @@ Dort sehen Sie auf einen Blick:
 • Sonderzahlungen
 
 So finden Sie es:
-1. Gehen Sie zu „Abrechnung"
-2. Klicken Sie auf „Lohnkonto"
+1. Gehen Sie zu "Abrechnung"
+2. Klicken Sie auf "Lohnkonto"
 3. Wählen Sie den Mitarbeiter und das Jahr
 
 💡 Das Lohnkonto wird bei einer Betriebsprüfung verlangt – gut, dass LohnPro es automatisch führt!`,
@@ -332,14 +332,14 @@ So finden Sie es:
         title: "Wie erfasse ich Arbeitszeiten?",
         content: `Arbeitszeiten für Ihre Mitarbeiter erfassen Sie so:
 
-1. Klicken Sie im Menü auf „Zeiterfassung"
+1. Klicken Sie im Menü auf "Zeiterfassung"
 2. Wählen Sie den Mitarbeiter aus
 3. Klicken Sie auf den gewünschten Tag im Kalender
 4. Geben Sie ein: Arbeitsbeginn, Arbeitsende, Pause
 
 Die Arbeitsstunden werden automatisch berechnet.
 
-💡 Zeitspar-Tipp: Nutzen Sie die „Massenerfassung" um die gleichen Zeiten für mehrere Mitarbeiter oder Tage auf einmal einzutragen.
+💡 Zeitspar-Tipp: Nutzen Sie die "Massenerfassung" um die gleichen Zeiten für mehrere Mitarbeiter oder Tage auf einmal einzutragen.
 
 Beispiel:
 • Start: 08:00 | Ende: 17:00 | Pause: 60 Min
@@ -350,7 +350,7 @@ Beispiel:
         title: "Wie trage ich Urlaub oder Krankheit ein?",
         content: `Abwesenheiten tragen Sie im Kalender ein:
 
-1. Gehen Sie zu „Zeiterfassung"
+1. Gehen Sie zu "Zeiterfassung"
 2. Wählen Sie den Mitarbeiter
 3. Klicken Sie auf den Tag (oder markieren Sie mehrere Tage)
 4. Wählen Sie die Art: Urlaub, Krankheit, Feiertag oder Sonstiges
@@ -400,8 +400,8 @@ LohnPro berechnet Überstunden automatisch:
 📝 Unterbrechung: Bei längerer Krankheit oder Elternzeit
 
 So erstellen Sie eine Meldung:
-1. Gehen Sie zu „Meldewesen → SV-Meldungen"
-2. Klicken Sie auf „Neue Meldung"
+1. Gehen Sie zu "Meldewesen → SV-Meldungen"
+2. Klicken Sie auf "Neue Meldung"
 3. Wählen Sie den Mitarbeiter und den Meldegrund
 4. Das System füllt den Rest automatisch aus
 5. Prüfen und absenden
@@ -418,8 +418,8 @@ So erstellen Sie eine Meldung:
 Einfach erklärt: Sie sagen der Krankenkasse, wie viel Geld Sie für Ihre Mitarbeiter überweisen müssen.
 
 So erstellen Sie einen Beitragsnachweis:
-1. Gehen Sie zu „Meldewesen → Beitragsnachweise"
-2. Klicken Sie auf „Neuen Nachweis erstellen"
+1. Gehen Sie zu "Meldewesen → Beitragsnachweise"
+2. Klicken Sie auf "Neuen Nachweis erstellen"
 3. Wählen Sie Monat, Jahr und Krankenkasse
 4. Das System berechnet automatisch alle Beträge:
    • Krankenversicherung (Arbeitnehmer + Arbeitgeber)
@@ -441,9 +441,9 @@ So erstellen Sie einen Beitragsnachweis:
 Der Mitarbeiter braucht diese Bescheinigung für seine Steuererklärung.
 
 So erstellen Sie sie:
-1. Gehen Sie zu „Meldewesen → Lohnsteuerbescheinigung"
+1. Gehen Sie zu "Meldewesen → Lohnsteuerbescheinigung"
 2. Wählen Sie das Jahr und den Mitarbeiter
-3. Klicken Sie auf „Erstellen"
+3. Klicken Sie auf "Erstellen"
 4. Alle Werte werden automatisch aus den Abrechnungen berechnet
 
 Was steht drauf:
@@ -467,15 +467,15 @@ Was steht drauf:
         title: "Wie ändere ich meine Firmendaten?",
         content: `Firmendaten können Sie jederzeit aktualisieren:
 
-1. Klicken Sie im Menü auf „Einstellungen"
-2. Wählen Sie „Firmendaten"
+1. Klicken Sie im Menü auf "Einstellungen"
+2. Wählen Sie "Firmendaten"
 3. Ändern Sie die gewünschten Felder:
    • Firmenname und Adresse
    • Betriebsnummer
    • Steuernummer und Finanzamt
    • Bankverbindung (IBAN, BIC, Bankname)
    • Kontaktdaten (E-Mail, Telefon)
-4. Klicken Sie auf „Speichern"
+4. Klicken Sie auf "Speichern"
 
 💡 Diese Daten erscheinen auf Ihren Lohnabrechnungen und Meldungen – halten Sie sie aktuell!`,
         tags: ["Firmendaten", "Ändern", "Einstellungen"],
@@ -484,8 +484,8 @@ Was steht drauf:
         title: "Wie lade ich weitere Benutzer ein?",
         content: `Sie können weitere Personen zu LohnPro einladen, z.B. einen Buchhalter oder Assistenten:
 
-1. Gehen Sie zu „Einstellungen → Benutzerverwaltung"
-2. Klicken Sie auf „Benutzer hinzufügen"
+1. Gehen Sie zu "Einstellungen → Benutzerverwaltung"
+2. Klicken Sie auf "Benutzer hinzufügen"
 3. Geben Sie die E-Mail-Adresse ein
 4. Wählen Sie die Rolle:
    • Admin: Voller Zugriff
@@ -509,7 +509,7 @@ Was steht drauf:
 
 🇪🇺 DSGVO-konform: LohnPro erfüllt die europäischen Datenschutzanforderungen. Sie können jederzeit eine Datenauskunft, Löschung oder Berichtigung beantragen.
 
-💡 Unter „Einstellungen → DSGVO" können Sie Datenschutzanfragen verwalten.`,
+💡 Unter "Einstellungen → DSGVO" können Sie Datenschutzanfragen verwalten.`,
         tags: ["Sicherheit", "Datenschutz", "DSGVO", "Verschlüsselung"],
       },
       {
@@ -517,7 +517,7 @@ Was steht drauf:
         content: `So ändern Sie Ihr Passwort:
 
 1. Gehen Sie zur Anmeldeseite
-2. Klicken Sie auf „Passwort vergessen?"
+2. Klicken Sie auf "Passwort vergessen?"
 3. Geben Sie Ihre E-Mail-Adresse ein
 4. Sie erhalten eine E-Mail mit einem Link zum Zurücksetzen
 5. Wählen Sie ein neues, sicheres Passwort
@@ -552,7 +552,7 @@ LohnPro berechnet automatisch:
 ✅ Winterbau-Umlage
 ✅ 13. Monatseinkommen (Bau-Tarif)
 
-💡 Aktivieren Sie das Bau-Modul unter „Abrechnung → Branchenmodule", um diese Berechnungen zu nutzen.`,
+💡 Aktivieren Sie das Bau-Modul unter "Abrechnung → Branchenmodule", um diese Berechnungen zu nutzen.`,
         tags: ["Bau", "Baulohn", "SOKA-BAU"],
       },
       {
@@ -611,17 +611,17 @@ LohnPro berechnet die Zuschläge automatisch anhand der erfassten Arbeitszeiten 
 📊 Audit-Bericht: Welche Änderungen wurden wann von wem vorgenommen?
 
 So erstellen Sie einen Bericht:
-1. Gehen Sie zu „Berichte"
+1. Gehen Sie zu "Berichte"
 2. Wählen Sie den gewünschten Berichtstyp
 3. Filtern Sie nach Zeitraum, Abteilung oder Mitarbeiter
-4. Klicken Sie auf „Export" um den Bericht herunterzuladen
+4. Klicken Sie auf "Export" um den Bericht herunterzuladen
 
 💡 Berichte können als PDF oder CSV (für Excel) exportiert werden.`,
         tags: ["Berichte", "Auswertungen", "Export", "Statistik"],
       },
       {
         title: "Was ist der GoBD-Export?",
-        content: `GoBD steht für „Grundsätze zur ordnungsmäßigen Führung und Aufbewahrung von Büchern" – klingt kompliziert, ist aber einfach erklärt:
+        content: `GoBD steht für "Grundsätze zur ordnungsmäßigen Führung und Aufbewahrung von Büchern" – klingt kompliziert, ist aber einfach erklärt:
 
 Wenn das Finanzamt eine Betriebsprüfung macht, müssen Sie Ihre Buchführungsdaten in einem bestimmten Format vorlegen können.
 
@@ -631,8 +631,8 @@ Der GoBD-Export erstellt genau dieses Format:
 ✅ In einem prüfungsfähigen Format
 
 So erstellen Sie den Export:
-1. Gehen Sie zu „Berichte"
-2. Wählen Sie „GoBD-Export"
+1. Gehen Sie zu "Berichte"
+2. Wählen Sie "GoBD-Export"
 3. Wählen Sie den Zeitraum
 4. Laden Sie die Datei herunter
 
@@ -666,11 +666,11 @@ const faqs = [
   },
   {
     question: "Wie ändere ich die Steuerklasse eines Mitarbeiters?",
-    answer: "Gehen Sie zu Mitarbeiter → wählen Sie den Mitarbeiter aus → klicken Sie auf „Bearbeiten" → ändern Sie die Steuerklasse unter „Gehaltsdaten" → klicken Sie auf „Speichern". Die Änderung gilt ab der nächsten Abrechnung.",
+    answer: "Gehen Sie zu Mitarbeiter → wählen Sie den Mitarbeiter aus → klicken Sie auf "Bearbeiten" → ändern Sie die Steuerklasse unter "Gehaltsdaten" → klicken Sie auf "Speichern". Die Änderung gilt ab der nächsten Abrechnung.",
   },
   {
     question: "Was mache ich, wenn eine Abrechnung falsch ist?",
-    answer: "Kein Problem! Öffnen Sie die betroffene Abrechnungsperiode, klicken Sie auf den Mitarbeiter und dann auf „Korrektur erstellen". Das System berechnet automatisch die Differenzen und berücksichtigt diese in der nächsten Abrechnung.",
+    answer: "Kein Problem! Öffnen Sie die betroffene Abrechnungsperiode, klicken Sie auf den Mitarbeiter und dann auf "Korrektur erstellen". Das System berechnet automatisch die Differenzen und berücksichtigt diese in der nächsten Abrechnung.",
   },
   {
     question: "Kann ich eine Abrechnung rückgängig machen?",
@@ -682,7 +682,7 @@ const faqs = [
   },
   {
     question: "Wie sichere ich meine Daten?",
-    answer: "Ihre Daten werden automatisch in der Cloud gespeichert und verschlüsselt. Es sind keine manuellen Backups nötig. Zusätzlich können Sie unter „Berichte → Export" jederzeit alle Daten als Datei herunterladen.",
+    answer: "Ihre Daten werden automatisch in der Cloud gespeichert und verschlüsselt. Es sind keine manuellen Backups nötig. Zusätzlich können Sie unter "Berichte → Export" jederzeit alle Daten als Datei herunterladen.",
   },
   {
     question: "Kann jemand anderes meine Daten sehen?",
@@ -690,7 +690,7 @@ const faqs = [
   },
   {
     question: "Ich habe mein Passwort vergessen – was tun?",
-    answer: "Klicken Sie auf der Anmeldeseite auf „Passwort vergessen?", geben Sie Ihre E-Mail-Adresse ein und folgen Sie dem Link in der E-Mail, die Sie erhalten. Dort können Sie ein neues Passwort festlegen.",
+    answer: "Klicken Sie auf der Anmeldeseite auf "Passwort vergessen?", geben Sie Ihre E-Mail-Adresse ein und folgen Sie dem Link in der E-Mail, die Sie erhalten. Dort können Sie ein neues Passwort festlegen.",
   },
 ];
 
@@ -751,7 +751,7 @@ export default function HilfeCenter() {
             <div className="relative max-w-md mx-auto">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Was möchten Sie wissen? z.B. „Mitarbeiter anlegen""
+                placeholder="Was möchten Sie wissen? z.B. "Mitarbeiter anlegen""
                 className="pl-10"
                 value={searchQuery}
                 onChange={(e) => {
@@ -845,7 +845,7 @@ export default function HilfeCenter() {
             {searchQuery && (
               <div className="max-w-3xl mx-auto mb-12">
                 <h2 className="text-lg font-semibold text-foreground mb-4">
-                  {filteredCategories.reduce((s, c) => s + c.articles.length, 0) + filteredFaqs.length} Ergebnisse für „{searchQuery}"
+                  {filteredCategories.reduce((s, c) => s + c.articles.length, 0) + filteredFaqs.length} Ergebnisse für "{searchQuery}"
                 </h2>
                 {filteredCategories.map((cat) => (
                   <div key={cat.id} className="mb-6">
