@@ -61,6 +61,7 @@ export default function Kontakt() {
     if (error) {
       toast({ title: "Fehler beim Senden", description: "Bitte versuchen Sie es später erneut.", variant: "destructive" });
     } else {
+      localStorage.setItem(RATE_LIMIT_KEY, Date.now().toString());
       setSubmitted(true);
     }
   };
