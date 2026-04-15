@@ -1,8 +1,10 @@
 import { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useTenant } from '@/contexts/tenant-context';
 import { useAuth } from '@/contexts/auth-context';
 import { DatevEmployee, mapToDbRow } from '@/utils/datev-import';
+import { queryKeys } from '@/lib/query-keys';
 import { toast } from 'sonner';
 
 export type ConflictStrategy = 'skip' | 'overwrite' | 'merge';
@@ -17,6 +19,7 @@ interface ImportProgress {
 export function useDatevImport() {
   const { tenantId } = useTenant();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [isImporting, setIsImporting] = useState(false);
   const [progress, setProgress] = useState<ImportProgress | null>(null);
 
@@ -146,6 +149,8 @@ export function useDatevImport() {
     } finally {
       setIsImporting(false);
       setProgress(result);
+      // Invalidate employee cache so the list refreshes
+      await queryClient.invalidateQueries({ queryKey: queryKeys.employees.all(tenantId) });
     }
 
     return result;
