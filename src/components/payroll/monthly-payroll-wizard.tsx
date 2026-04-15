@@ -154,6 +154,32 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
     setStepStatuses(newStatuses);
   }, [currentStep, stepStatuses, checkStep]);
 
+  const calculateAndPersistEntries = useCallback(async (periodId: string) => {
+    const defaultWorkingData: WorkingTimeData = {
+      regularHours: 160, overtimeHours: 0, nightHours: 0, sundayHours: 0,
+      holidayHours: 0, vacationDays: 0, sickDays: 0,
+      actualWorkingDays: 21, expectedWorkingDays: 21,
+    };
+
+    let saved = 0;
+    for (const emp of activeEmployees) {
+      try {
+        const input: PayrollCalculationInput = {
+          employee: emp,
+          period: { year: selectedYear, month: selectedMonth },
+          workingData: defaultWorkingData,
+        };
+        const result = calculatePayrollEntry(input);
+        const entryToSave = { ...result.entry, payrollPeriodId: periodId };
+        await addPayrollEntry(entryToSave);
+        saved++;
+      } catch (err) {
+        console.error(`Fehler bei ${emp.personalData.firstName} ${emp.personalData.lastName}:`, err);
+      }
+    }
+    return saved;
+  }, [activeEmployees, selectedYear, selectedMonth, addPayrollEntry]);
+
   // ─── Auto-Run Engine ──────────────────────────────────────
   const startAutoRun = useCallback(async () => {
     setAutoRunActive(true);
@@ -331,31 +357,7 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
     }
   };
 
-  const calculateAndPersistEntries = useCallback(async (periodId: string) => {
-    const defaultWorkingData: WorkingTimeData = {
-      regularHours: 160, overtimeHours: 0, nightHours: 0, sundayHours: 0,
-      holidayHours: 0, vacationDays: 0, sickDays: 0,
-      actualWorkingDays: 21, expectedWorkingDays: 21,
-    };
 
-    let saved = 0;
-    for (const emp of activeEmployees) {
-      try {
-        const input: PayrollCalculationInput = {
-          employee: emp,
-          period: { year: selectedYear, month: selectedMonth },
-          workingData: defaultWorkingData,
-        };
-        const result = calculatePayrollEntry(input);
-        const entryToSave = { ...result.entry, payrollPeriodId: periodId };
-        await addPayrollEntry(entryToSave);
-        saved++;
-      } catch (err) {
-        console.error(`Fehler bei ${emp.personalData.firstName} ${emp.personalData.lastName}:`, err);
-      }
-    }
-    return saved;
-  }, [activeEmployees, selectedYear, selectedMonth, addPayrollEntry]);
 
   const handleCreatePayroll = async () => {
     setIsProcessing(true);
