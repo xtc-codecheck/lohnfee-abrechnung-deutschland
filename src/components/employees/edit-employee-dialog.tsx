@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Switch } from "@/components/ui/switch";
 import { Employee, EmploymentType, TaxClass, RelationshipStatus, Religion, CHURCH_TAX_RATES, GERMAN_STATES, GERMAN_STATE_NAMES } from "@/types/employee";
 import { Checkbox } from "@/components/ui/checkbox";
+import { PersonalstammUpload } from "./personalstamm-upload";
 
 interface EditEmployeeDialogProps {
   employee: Employee | null;
