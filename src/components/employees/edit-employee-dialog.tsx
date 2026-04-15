@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Switch } from "@/components/ui/switch";
 import { Employee, EmploymentType, TaxClass, RelationshipStatus, Religion, CHURCH_TAX_RATES, GERMAN_STATES, GERMAN_STATE_NAMES } from "@/types/employee";
 import { Checkbox } from "@/components/ui/checkbox";
+import { PersonalstammUpload } from "./personalstamm-upload";
 
 interface EditEmployeeDialogProps {
   employee: Employee | null;
@@ -90,10 +91,11 @@ export function EditEmployeeDialog({ employee, open, onOpenChange, onSave }: Edi
         </DialogHeader>
 
         <Tabs defaultValue="personal" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="personal">Persönliche Daten</TabsTrigger>
             <TabsTrigger value="employment">Beschäftigung</TabsTrigger>
             <TabsTrigger value="salary">Gehalt</TabsTrigger>
+            <TabsTrigger value="import">Daten nachladen</TabsTrigger>
           </TabsList>
 
           <TabsContent value="personal" className="space-y-4">
@@ -315,6 +317,36 @@ export function EditEmployeeDialog({ employee, open, onOpenChange, onSave }: Edi
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="import" className="space-y-4">
+            {employee && (
+              <PersonalstammUpload
+                personalNumber=""
+                employeeId={employee.id}
+                currentFields={{
+                  taxClass: typeof employee.personalData.taxClass === 'string'
+                    ? ['I','II','III','IV','V','VI'].indexOf(employee.personalData.taxClass) + 1 || null
+                    : Number(employee.personalData.taxClass) || null,
+                  taxId: employee.personalData.taxId || null,
+                  svNumber: employee.personalData.socialSecurityNumber || null,
+                  healthInsurance: employee.personalData.healthInsurance?.name || null,
+                  weeklyHours: employee.employmentData.weeklyHours || null,
+                  churchTax: employee.personalData.churchTax ?? null,
+                  churchTaxRate: null,
+                  iban: employee.salaryData.bankingData?.iban || null,
+                  bic: employee.salaryData.bankingData?.bic || null,
+                  dateOfBirth: employee.personalData.dateOfBirth
+                    ? (employee.personalData.dateOfBirth instanceof Date
+                      ? employee.personalData.dateOfBirth.toISOString()
+                      : String(employee.personalData.dateOfBirth))
+                    : null,
+                }}
+                onUpdated={() => {
+                  onSave(formData);
+                }}
+              />
+            )}
           </TabsContent>
         </Tabs>
 
