@@ -276,15 +276,15 @@ export function DatevImportWizard() {
                 <Progress value={(progress.imported + progress.skipped) / progress.total * 100} />
                 <div className="grid grid-cols-3 gap-4 text-center">
                   <div>
-                    <p className="text-2xl font-bold text-green-600">{progress.imported}</p>
+                  <p className="text-2xl font-bold text-primary">{progress.imported}</p>
                     <p className="text-sm text-muted-foreground">Importiert</p>
                   </div>
                   <div>
-                    <p className="text-2xl font-bold text-yellow-600">{progress.skipped}</p>
+                    <p className="text-2xl font-bold text-muted-foreground">{progress.skipped}</p>
                     <p className="text-sm text-muted-foreground">Übersprungen</p>
                   </div>
                   <div>
-                    <p className="text-2xl font-bold text-red-600">{progress.errors.length}</p>
+                    <p className="text-2xl font-bold text-destructive">{progress.errors.length}</p>
                     <p className="text-sm text-muted-foreground">Fehler</p>
                   </div>
                 </div>

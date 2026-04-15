@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useTenant } from '@/contexts/tenant-context';
 import { useAuth } from '@/contexts/auth-context';
-import { DatevEmployee, DatevEmployeeDbRow, mapToDbRow } from '@/utils/datev-import';
+import { DatevEmployee, mapToDbRow } from '@/utils/datev-import';
 import { toast } from 'sonner';
 
 export type ConflictStrategy = 'skip' | 'overwrite' | 'merge';
@@ -15,7 +15,7 @@ interface ImportProgress {
 }
 
 export function useDatevImport() {
-  const { currentTenant } = useTenant();
+  const { tenantId } = useTenant();
   const { user } = useAuth();
   const [isImporting, setIsImporting] = useState(false);
   const [progress, setProgress] = useState<ImportProgress | null>(null);
@@ -24,7 +24,7 @@ export function useDatevImport() {
     employees: DatevEmployee[],
     conflictStrategy: ConflictStrategy = 'skip'
   ): Promise<ImportProgress> => {
-    if (!currentTenant || !user) {
+    if (!tenantId || !user) {
       toast.error('Kein Mandant oder Benutzer aktiv');
       return { total: 0, imported: 0, skipped: 0, errors: ['Nicht authentifiziert'] };
     }
@@ -38,7 +38,7 @@ export function useDatevImport() {
       const { data: existing } = await supabase
         .from('employees')
         .select('id, personal_number, sv_number, first_name, last_name')
-        .eq('tenant_id', currentTenant);
+        .eq('tenant_id', tenantId);
 
       const existingByPnr = new Map(
         (existing || []).filter(e => e.personal_number).map(e => [e.personal_number!, e])
@@ -61,18 +61,34 @@ export function useDatevImport() {
             }
 
             if (conflictStrategy === 'overwrite' || conflictStrategy === 'merge') {
-              const updateData: Record<string, unknown> = {};
-              const entries = Object.entries(dbRow) as [string, unknown][];
-              
-              for (const [key, value] of entries) {
-                if (conflictStrategy === 'overwrite' || (value !== undefined && value !== null && value !== '')) {
-                  updateData[key] = value;
-                }
-              }
-
               const { error } = await supabase
                 .from('employees')
-                .update(updateData)
+                .update({
+                  first_name: dbRow.first_name,
+                  last_name: dbRow.last_name,
+                  date_of_birth: dbRow.date_of_birth ?? null,
+                  gender: dbRow.gender ?? null,
+                  street: dbRow.street ?? null,
+                  zip_code: dbRow.zip_code ?? null,
+                  city: dbRow.city ?? null,
+                  iban: dbRow.iban ?? null,
+                  bic: dbRow.bic ?? null,
+                  sv_number: dbRow.sv_number ?? null,
+                  tax_id: dbRow.tax_id ?? null,
+                  tax_class: dbRow.tax_class ?? null,
+                  church_tax: dbRow.church_tax,
+                  church_tax_rate: dbRow.church_tax_rate ?? null,
+                  children_allowance: dbRow.children_allowance ?? null,
+                  health_insurance: dbRow.health_insurance ?? null,
+                  gross_salary: dbRow.gross_salary,
+                  weekly_hours: dbRow.weekly_hours ?? null,
+                  entry_date: dbRow.entry_date ?? null,
+                  exit_date: dbRow.exit_date ?? null,
+                  position: dbRow.position ?? null,
+                  employment_type: dbRow.employment_type,
+                  is_active: dbRow.is_active,
+                  personal_number: dbRow.personal_number,
+                })
                 .eq('id', conflict.id);
 
               if (error) {
@@ -88,8 +104,31 @@ export function useDatevImport() {
           const { error } = await supabase
             .from('employees')
             .insert({
-              ...dbRow,
-              tenant_id: currentTenant,
+              first_name: dbRow.first_name,
+              last_name: dbRow.last_name,
+              date_of_birth: dbRow.date_of_birth ?? null,
+              gender: dbRow.gender ?? null,
+              street: dbRow.street ?? null,
+              zip_code: dbRow.zip_code ?? null,
+              city: dbRow.city ?? null,
+              iban: dbRow.iban ?? null,
+              bic: dbRow.bic ?? null,
+              sv_number: dbRow.sv_number ?? null,
+              tax_id: dbRow.tax_id ?? null,
+              tax_class: dbRow.tax_class ?? null,
+              church_tax: dbRow.church_tax,
+              church_tax_rate: dbRow.church_tax_rate ?? null,
+              children_allowance: dbRow.children_allowance ?? null,
+              health_insurance: dbRow.health_insurance ?? null,
+              gross_salary: dbRow.gross_salary,
+              weekly_hours: dbRow.weekly_hours ?? null,
+              entry_date: dbRow.entry_date ?? null,
+              exit_date: dbRow.exit_date ?? null,
+              position: dbRow.position ?? null,
+              employment_type: dbRow.employment_type,
+              is_active: dbRow.is_active,
+              personal_number: dbRow.personal_number,
+              tenant_id: tenantId,
               created_by: user.id,
             });
 
