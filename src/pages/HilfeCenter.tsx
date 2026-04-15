@@ -831,6 +831,34 @@ const faqs = [
     question: "Ich habe mein Passwort vergessen – was tun?",
     answer: 'Klicken Sie auf der Anmeldeseite auf "Passwort vergessen?", geben Sie Ihre E-Mail-Adresse ein und folgen Sie dem Link in der E-Mail. Dort können Sie ein neues Passwort festlegen.',
   },
+  {
+    question: "Was ist der Unterschied zwischen Brutto und Netto?",
+    answer: "Brutto ist das Gehalt vor allen Abzügen – also der Betrag, der im Arbeitsvertrag steht. Davon werden Steuern (Lohnsteuer, Soli, ggf. Kirchensteuer) und Sozialversicherungsbeiträge (KV, RV, AV, PV) abgezogen. Was übrig bleibt, ist das Netto – der Betrag, der auf dem Konto landet.",
+  },
+  {
+    question: "Wie funktioniert der Monats-Wizard?",
+    answer: "Der Wizard führt Sie in 5 Schritten durch die monatliche Abrechnung: 1) Zeiterfassung prüfen, 2) Sonderzahlungen prüfen, 3) Abrechnung berechnen und speichern, 4) Meldungen vorbereiten, 5) Export und Freigabe. Sie können den Wizard auch per Auto-Run automatisch durchlaufen lassen – er stoppt nur, wenn eine manuelle Prüfung nötig ist.",
+  },
+  {
+    question: "Was bedeutet 'Beitragsbemessungsgrenze'?",
+    answer: "Die Beitragsbemessungsgrenze (BBG) ist ein Höchstbetrag, bis zu dem Sozialversicherungsbeiträge berechnet werden. Verdient ein Mitarbeiter mehr als die BBG, werden die SV-Beiträge nur bis zur Grenze berechnet. 2025 liegt die BBG für die Renten-/Arbeitslosenversicherung bei 8.050 € (West) bzw. 7.450 € (Ost) monatlich.",
+  },
+  {
+    question: "Was ist ein Minijob und was muss ich beachten?",
+    answer: "Ein Minijob ist eine geringfügige Beschäftigung mit maximal 556 € Gehalt pro Monat (Stand 2025). Der Arbeitgeber zahlt pauschale Abgaben (2% Steuer + SV-Pauschalen). Der Arbeitnehmer muss keine Steuern zahlen. LohnPro erkennt Minijobs automatisch anhand des Gehalts und wendet die richtigen Pauschalen an.",
+  },
+  {
+    question: "Wie lade ich eine Entgeltabrechnung als PDF herunter?",
+    answer: 'Gehen Sie zum Lohnjournal (Abrechnung → Lohnjournal) und klicken Sie auf das PDF-Symbol neben dem gewünschten Eintrag. Die Abrechnung wird als druckfertiges PDF mit allen Details (Brutto, Steuern, SV-Beiträge, Netto) heruntergeladen.',
+  },
+  {
+    question: "Was bedeutet die Märzklausel?",
+    answer: "Die Märzklausel regelt, dass Einmalzahlungen (z.B. Weihnachtsgeld, Jahresbonus) in den Monaten Januar bis März dem Vorjahr zugeordnet werden können, wenn das Arbeitsverhältnis schon im Vorjahr bestand. LohnPro prüft dies automatisch und wendet die Regelung korrekt an.",
+  },
+  {
+    question: "Gibt es eine Schnittstelle zu SYSTAX?",
+    answer: "Ja! LohnPro ist als Sub-App für die spätere Integration in das SYSTAX-Hauptsystem konzipiert. Die technischen Schnittstellen (Service-Layer für ELSTER und Bankanbindung) sind vorbereitet. Bei einem Upgrade auf SYSTAX werden Ihre Daten nahtlos übernommen.",
+  },
 ];
 
 export default function HilfeCenter() {
