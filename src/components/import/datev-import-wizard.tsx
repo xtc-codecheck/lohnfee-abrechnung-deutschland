@@ -7,12 +7,22 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
-import { Upload, FileText, AlertTriangle, CheckCircle2, Users, ArrowLeft, ArrowRight, Loader2 } from 'lucide-react';
-import { parseDatevFile, mergeDatevResults, DatevEmployee, DatevImportResult, DatevLohnart } from '@/utils/datev-import';
+import { Upload, FileText, AlertTriangle, CheckCircle2, Users, ArrowLeft, ArrowRight, Loader2, Info } from 'lucide-react';
+import { parseDatevFile, mergeDatevResults, DatevEmployee, DatevImportResult } from '@/utils/datev-import';
 import { useDatevImport, ConflictStrategy } from '@/hooks/use-datev-import';
 import { toast } from 'sonner';
 
 type WizardStep = 'upload' | 'preview' | 'conflicts' | 'import';
+
+/**
+ * Read a File as Windows-1252 (CP1252) text.
+ * DATEV exports use this encoding; reading as UTF-8 corrupts umlauts.
+ */
+async function readFileAsCP1252(file: File): Promise<string> {
+  const buffer = await file.arrayBuffer();
+  const decoder = new TextDecoder('windows-1252');
+  return decoder.decode(buffer);
+}
 
 export function DatevImportWizard() {
   const [step, setStep] = useState<WizardStep>('upload');
@@ -37,7 +47,7 @@ export function DatevImportWizard() {
 
     const results: DatevImportResult[] = [];
     for (const file of fileArr) {
-      const content = await file.text();
+      const content = await readFileAsCP1252(file);
       const result = parseDatevFile(content);
       results.push(result);
     }
@@ -76,6 +86,9 @@ export function DatevImportWizard() {
     setImportDone(false);
     setConflictStrategy('skip');
   };
+
+  // Quality summary
+  const qualitySummary = parseResults ? getQualitySummary(parseResults.employees) : null;
 
   return (
     <div className="space-y-6">
@@ -125,6 +138,14 @@ export function DatevImportWizard() {
               />
             </div>
 
+            <Alert className="mt-4">
+              <Info className="h-4 w-4" />
+              <AlertTitle>Tipp</AlertTitle>
+              <AlertDescription>
+                Für beste Datenqualität laden Sie sowohl die SD-Datei (Stammdaten) als auch die Personalstamm-Dateien (00xxx_*.txt) hoch. Die Personalstamm-Dateien enthalten detailliertere Informationen wie Steuerklasse, Steuer-ID und SV-Nummer.
+              </AlertDescription>
+            </Alert>
+
             {files.length > 0 && (
               <div className="mt-4 space-y-2">
                 <p className="text-sm font-medium">Geladene Dateien:</p>
@@ -157,6 +178,46 @@ export function DatevImportWizard() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            {/* Quality Summary */}
+            {qualitySummary && (
+              <div className="grid grid-cols-3 gap-3">
+                <div className="rounded-lg border p-3 text-center">
+                  <p className="text-2xl font-bold text-green-600">{qualitySummary.complete}</p>
+                  <p className="text-xs text-muted-foreground">🟢 Vollständig</p>
+                </div>
+                <div className="rounded-lg border p-3 text-center">
+                  <p className="text-2xl font-bold text-yellow-600">{qualitySummary.partial}</p>
+                  <p className="text-xs text-muted-foreground">🟡 Warnungen</p>
+                </div>
+                <div className="rounded-lg border p-3 text-center">
+                  <p className="text-2xl font-bold text-red-600">{qualitySummary.critical}</p>
+                  <p className="text-xs text-muted-foreground">🔴 Kritisch</p>
+                </div>
+              </div>
+            )}
+
+            {/* Missing fields hint */}
+            {qualitySummary && qualitySummary.missingFields.length > 0 && (
+              <Alert>
+                <AlertTriangle className="h-4 w-4" />
+                <AlertTitle>Häufig fehlende Felder</AlertTitle>
+                <AlertDescription>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {qualitySummary.missingFields.map(({ field, count }) => (
+                      <Badge key={field} variant="outline" className="text-xs">
+                        {field}: {count}×
+                      </Badge>
+                    ))}
+                  </div>
+                  {qualitySummary.hasOnlySDData && (
+                    <p className="mt-2 text-sm">
+                      💡 Laden Sie zusätzlich die Personalstamm-Dateien (00xxx_*.txt) hoch, um fehlende Felder zu ergänzen.
+                    </p>
+                  )}
+                </AlertDescription>
+              </Alert>
+            )}
+
             {parseResults.warnings.length > 0 && (
               <Alert variant="destructive">
                 <AlertTriangle className="h-4 w-4" />
@@ -181,6 +242,7 @@ export function DatevImportWizard() {
                     <TableHead>Gehalt</TableHead>
                     <TableHead>StKl</TableHead>
                     <TableHead>Krankenkasse</TableHead>
+                    <TableHead>Bundesland</TableHead>
                     <TableHead>Status</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -193,7 +255,8 @@ export function DatevImportWizard() {
                       <TableCell>{emp.entryDate || '–'}</TableCell>
                       <TableCell>{emp.grossSalary ? `${emp.grossSalary.toLocaleString('de-DE')} €` : '–'}</TableCell>
                       <TableCell>{emp.taxClass ?? '–'}</TableCell>
-                      <TableCell className="max-w-32 truncate">{emp.healthInsurance || '–'}</TableCell>
+                      <TableCell className="max-w-32 truncate">{emp.healthInsurance || emp.healthInsuranceNumber || '–'}</TableCell>
+                      <TableCell className="text-xs">{emp.state || '–'}</TableCell>
                       <TableCell>
                         <FieldCompleteness employee={emp} />
                       </TableCell>
@@ -237,7 +300,7 @@ export function DatevImportWizard() {
                 <RadioGroupItem value="merge" id="merge" className="mt-0.5" />
                 <Label htmlFor="merge" className="cursor-pointer">
                   <p className="font-medium">Zusammenführen</p>
-                  <p className="text-sm text-muted-foreground">Nur leere Felder werden aus DATEV übernommen.</p>
+                  <p className="text-sm text-muted-foreground">Nur leere Felder werden aus DATEV übernommen, vorhandene bleiben.</p>
                 </Label>
               </div>
               <div className="flex items-start space-x-3 p-3 rounded-lg border">
@@ -276,7 +339,7 @@ export function DatevImportWizard() {
                 <Progress value={(progress.imported + progress.skipped) / progress.total * 100} />
                 <div className="grid grid-cols-3 gap-4 text-center">
                   <div>
-                  <p className="text-2xl font-bold text-primary">{progress.imported}</p>
+                    <p className="text-2xl font-bold text-primary">{progress.imported}</p>
                     <p className="text-sm text-muted-foreground">Importiert</p>
                   </div>
                   <div>
@@ -315,18 +378,91 @@ export function DatevImportWizard() {
   );
 }
 
+// ─── Quality helpers ──────────────────────────────────
+
+const CRITICAL_FIELDS: { key: keyof DatevEmployee; label: string }[] = [
+  { key: 'taxClass', label: 'Steuerklasse' },
+  { key: 'taxId', label: 'Steuer-ID' },
+  { key: 'svNumber', label: 'SV-Nummer' },
+  { key: 'grossSalary', label: 'Gehalt' },
+];
+
+const IMPORTANT_FIELDS: { key: keyof DatevEmployee; label: string }[] = [
+  { key: 'iban', label: 'IBAN' },
+  { key: 'healthInsurance', label: 'Krankenkasse' },
+  { key: 'weeklyHours', label: 'Wochenstunden' },
+  { key: 'entryDate', label: 'Eintrittsdatum' },
+  { key: 'dateOfBirth', label: 'Geburtsdatum' },
+  { key: 'churchTax', label: 'Kirchensteuer' },
+  { key: 'state', label: 'Bundesland' },
+];
+
+function getEmployeeQuality(emp: DatevEmployee): 'complete' | 'partial' | 'critical' {
+  const missingCritical = CRITICAL_FIELDS.filter(f => {
+    const v = emp[f.key];
+    return v === undefined || v === null || v === '';
+  });
+  if (missingCritical.length > 0) return 'critical';
+
+  const missingImportant = IMPORTANT_FIELDS.filter(f => {
+    const v = emp[f.key];
+    return v === undefined || v === null || v === '';
+  });
+  if (missingImportant.length > 2) return 'partial';
+
+  return 'complete';
+}
+
+function getQualitySummary(employees: DatevEmployee[]) {
+  let complete = 0, partial = 0, critical = 0;
+  const fieldMissCounts = new Map<string, number>();
+  let sdOnly = 0;
+
+  for (const emp of employees) {
+    const q = getEmployeeQuality(emp);
+    if (q === 'complete') complete++;
+    else if (q === 'partial') partial++;
+    else critical++;
+
+    if (emp.source === 'SD') sdOnly++;
+
+    for (const f of [...CRITICAL_FIELDS, ...IMPORTANT_FIELDS]) {
+      const v = emp[f.key];
+      if (v === undefined || v === null || v === '') {
+        fieldMissCounts.set(f.label, (fieldMissCounts.get(f.label) || 0) + 1);
+      }
+    }
+  }
+
+  const missingFields = Array.from(fieldMissCounts.entries())
+    .map(([field, count]) => ({ field, count }))
+    .filter(x => x.count >= 3)
+    .sort((a, b) => b.count - a.count);
+
+  return {
+    complete,
+    partial,
+    critical,
+    missingFields,
+    hasOnlySDData: sdOnly === employees.length && employees.length > 2,
+  };
+}
+
 function FieldCompleteness({ employee }: { employee: DatevEmployee }) {
-  const fields = [
-    employee.taxId, employee.svNumber, employee.iban,
-    employee.grossSalary, employee.taxClass, employee.healthInsurance,
-    employee.entryDate, employee.dateOfBirth,
-  ];
-  const filled = fields.filter(f => f !== undefined && f !== null && f !== '').length;
-  const pct = Math.round((filled / fields.length) * 100);
+  const quality = getEmployeeQuality(employee);
+  const allFields = [...CRITICAL_FIELDS, ...IMPORTANT_FIELDS];
+  const filled = allFields.filter(f => {
+    const v = employee[f.key];
+    return v !== undefined && v !== null && v !== '';
+  }).length;
+  const pct = Math.round((filled / allFields.length) * 100);
+
+  const variant = quality === 'complete' ? 'default' : quality === 'partial' ? 'secondary' : 'destructive';
+  const icon = quality === 'complete' ? '🟢' : quality === 'partial' ? '🟡' : '🔴';
 
   return (
-    <Badge variant={pct >= 75 ? 'default' : pct >= 50 ? 'secondary' : 'destructive'}>
-      {pct}%
+    <Badge variant={variant} className="text-xs">
+      {icon} {pct}%
     </Badge>
   );
 }

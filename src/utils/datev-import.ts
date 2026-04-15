@@ -23,8 +23,10 @@ export interface DatevEmployee {
   taxClass?: number;
   churchTax?: boolean;
   churchTaxDenomination?: string;
+  churchTaxRate?: number;
   childrenAllowance?: number;
   healthInsurance?: string;
+  healthInsuranceNumber?: string;
   grossSalary?: number;
   weeklyHours?: number;
   entryDate?: string; // ISO
@@ -32,6 +34,7 @@ export interface DatevEmployee {
   employmentType?: string;
   position?: string;
   department?: string;
+  state?: string;
   /** Quellformat */
   source: 'SD' | 'personalstamm';
 }
@@ -69,6 +72,9 @@ function parseDatevDate(val: string | undefined): string | undefined {
   // dd.mm.yyyy → yyyy-mm-dd
   const m = val.trim().match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
   if (m) return `${m[3]}-${m[2]}-${m[1]}`;
+  // Also handle ddmmyyyy
+  const m2 = val.trim().match(/^(\d{2})(\d{2})(\d{4})$/);
+  if (m2) return `${m2[3]}-${m2[2]}-${m2[1]}`;
   return undefined;
 }
 
@@ -103,15 +109,100 @@ function parseSemicolonCSV(line: string): string[] {
   return fields;
 }
 
+/**
+ * Normalize a string for fuzzy header matching:
+ * lowercase, remove umlauts, ß, and extra whitespace
+ */
+function normalizeHeader(s: string): string {
+  return s
+    .toLowerCase()
+    .replace(/ä/g, 'ae').replace(/ö/g, 'oe').replace(/ü/g, 'ue').replace(/ß/g, 'ss')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+// ─── PLZ → Bundesland Mapping ─────────────────────────
+
+const PLZ_BUNDESLAND_MAP: [number, number, string][] = [
+  [1, 9, 'Sachsen'], // 01-09 Ost
+  [10, 12, 'Berlin'],
+  [13, 16, 'Brandenburg'],
+  [17, 19, 'Mecklenburg-Vorpommern'],
+  [20, 22, 'Hamburg'],
+  [23, 24, 'Schleswig-Holstein'],
+  [25, 25, 'Schleswig-Holstein'],
+  [26, 27, 'Niedersachsen'],
+  [28, 28, 'Bremen'],
+  [29, 29, 'Niedersachsen'],
+  [30, 31, 'Niedersachsen'],
+  [32, 33, 'Nordrhein-Westfalen'],
+  [34, 34, 'Hessen'],
+  [35, 36, 'Hessen'],
+  [37, 37, 'Niedersachsen'],
+  [38, 39, 'Niedersachsen'],
+  [40, 42, 'Nordrhein-Westfalen'],
+  [44, 48, 'Nordrhein-Westfalen'],
+  [49, 49, 'Niedersachsen'],
+  [50, 53, 'Nordrhein-Westfalen'],
+  [54, 56, 'Rheinland-Pfalz'],
+  [57, 57, 'Nordrhein-Westfalen'],
+  [58, 59, 'Nordrhein-Westfalen'],
+  [60, 63, 'Hessen'],
+  [64, 65, 'Hessen'],
+  [66, 66, 'Saarland'],
+  [67, 67, 'Rheinland-Pfalz'],
+  [68, 69, 'Baden-Württemberg'],
+  [70, 76, 'Baden-Württemberg'],
+  [77, 79, 'Baden-Württemberg'],
+  [80, 83, 'Bayern'],
+  [84, 87, 'Bayern'],
+  [88, 88, 'Baden-Württemberg'],
+  [89, 89, 'Baden-Württemberg'],
+  [90, 96, 'Bayern'],
+  [97, 97, 'Bayern'],
+  [98, 99, 'Thüringen'],
+  [43, 43, 'Nordrhein-Westfalen'],
+];
+
+export function plzToBundesland(plz: string | undefined): string | undefined {
+  if (!plz || plz.length < 2) return undefined;
+  const prefix = parseInt(plz.substring(0, 2), 10);
+  if (isNaN(prefix)) return undefined;
+  for (const [from, to, state] of PLZ_BUNDESLAND_MAP) {
+    if (prefix >= from && prefix <= to) return state;
+  }
+  return undefined;
+}
+
+// ─── Church tax denomination → rate mapping ───────────
+
+function churchTaxRateForState(state?: string): number {
+  // Bayern and Baden-Württemberg: 8%, all others: 9%
+  if (state === 'Bayern' || state === 'Baden-Württemberg') return 8;
+  return 9;
+}
+
+// ─── Konfession mapping ──────────────────────────────
+
+function parseKonfession(val: string | undefined): { churchTax: boolean; denomination?: string } {
+  if (!val || val.trim() === '' || val.trim() === '0') return { churchTax: false };
+  const v = val.trim().toLowerCase();
+  if (v === 'keine' || v === 'kein' || v === 'vd' || v === '--' || v === '-') return { churchTax: false };
+  if (v.includes('rk') || v.includes('katholisch') || v.includes('röm')) return { churchTax: true, denomination: 'rk' };
+  if (v.includes('ev') || v.includes('evangelisch') || v.includes('lt')) return { churchTax: true, denomination: 'ev' };
+  // Any other value means church tax applies
+  return { churchTax: true, denomination: v };
+}
+
 // ─── Format Detection ─────────────────────────────────
 
 export function detectDatevFormat(content: string): 'SD' | 'LA' | 'personalstamm' | 'unknown' {
   const firstLine = content.split('\n')[0] || '';
-  if (firstLine.includes('"Beraternummer"') && firstLine.includes('"Personalnummer"')) {
-    if (firstLine.includes('"Lohnart"')) return 'LA';
-    if (firstLine.includes('"Familienname"') && firstLine.includes('"Standardentlohnung"')) return 'SD';
-    // Fallback for SD-like
-    if (firstLine.includes('"Familienname"')) return 'SD';
+  const normalizedFirst = normalizeHeader(firstLine);
+  
+  if (normalizedFirst.includes('beraternummer') && normalizedFirst.includes('personalnummer')) {
+    if (normalizedFirst.includes('lohnart')) return 'LA';
+    if (normalizedFirst.includes('familienname')) return 'SD';
   }
   if (content.trimStart().startsWith('Adresse / Name') || /^\s*Mitarbeiternummer\s+\d+/m.test(content)) {
     return 'personalstamm';
@@ -119,20 +210,33 @@ export function detectDatevFormat(content: string): 'SD' | 'LA' | 'personalstamm
   return 'unknown';
 }
 
-// ─── SD Parser ────────────────────────────────────────
+// ─── SD Parser (with fuzzy column matching) ───────────
 
 export function parseDatevStammdatenASCII(content: string): DatevImportResult {
   const lines = content.split('\n').filter(l => l.trim());
   if (lines.length < 2) return { employees: [], lohnarten: [], warnings: ['Keine Datenzeilen gefunden'], fileType: 'SD' };
 
   const headerFields = parseSemicolonCSV(lines[0]);
-  const headerMap = new Map<string, number>();
-  headerFields.forEach((h, i) => headerMap.set(stripQuotes(h).trim(), i));
+  
+  // Build TWO maps: exact and normalized for fuzzy matching
+  const headerMapExact = new Map<string, number>();
+  const headerMapNorm = new Map<string, number>();
+  headerFields.forEach((h, i) => {
+    const exact = stripQuotes(h).trim();
+    headerMapExact.set(exact, i);
+    headerMapNorm.set(normalizeHeader(exact), i);
+  });
 
-  const col = (row: string[], name: string): string => {
-    const idx = headerMap.get(name);
-    if (idx === undefined || idx >= row.length) return '';
-    return stripQuotes(row[idx]).trim();
+  const col = (row: string[], ...names: string[]): string => {
+    for (const name of names) {
+      // Try exact match first
+      let idx = headerMapExact.get(name);
+      if (idx !== undefined && idx < row.length) return stripQuotes(row[idx]).trim();
+      // Try normalized/fuzzy match
+      idx = headerMapNorm.get(normalizeHeader(name));
+      if (idx !== undefined && idx < row.length) return stripQuotes(row[idx]).trim();
+    }
+    return '';
   };
 
   const employees: DatevEmployee[] = [];
@@ -150,24 +254,60 @@ export function parseDatevStammdatenASCII(content: string): DatevImportResult {
       continue;
     }
 
-    // Map tax class from Steuerklasse field or embedded value
+    // Tax class
+    const taxClassRaw = col(fields, 'Steuerklasse', 'Steuerklasse (aus Steuerkarte)', 'StKl');
     let taxClass: number | undefined;
+    if (taxClassRaw) {
+      const tc = parseInt(taxClassRaw, 10);
+      if (tc >= 1 && tc <= 6) taxClass = tc;
+    }
 
-    const grossStr = col(fields, 'Standardentlohnung');
+    // Tax ID
+    const taxId = col(fields, 'IdNr', 'IdNr.', 'Identifikationsnummer', 'Steuer-IdNr') || undefined;
+
+    // Gross salary
+    const grossStr = col(fields, 'Standardentlohnung', 'Gehalt', 'Bruttogehalt');
     const grossSalary = parseDecimal(grossStr);
 
-    // Map gender
+    // Gender
     const genderRaw = col(fields, 'Geschlecht');
     let gender: string | undefined;
-    if (genderRaw.toLowerCase().includes('weiblich') || genderRaw === 'W') gender = 'weiblich';
-    else if (genderRaw.toLowerCase().includes('männlich') || genderRaw.toLowerCase().includes('m') || genderRaw === 'M') gender = 'männlich';
+    if (genderRaw.toLowerCase().includes('weiblich') || genderRaw === 'W' || genderRaw === '2') gender = 'weiblich';
+    else if (genderRaw.toLowerCase().includes('männlich') || genderRaw.toLowerCase().includes('maennlich') || genderRaw === 'M' || genderRaw === '1') gender = 'männlich';
 
-    // Health insurance from Krankenkasse column or nearby
-    const kk = col(fields, 'Krankenkasse') || col(fields, 'KK-Zusatzinformation');
+    // Health insurance: try name first, fall back to number
+    const kkName = col(fields, 'KK-Zusatzinformation', 'Krankenkassenbezeichnung', 'KK-Name') || undefined;
+    const kkNumber = col(fields, 'Krankenkasse', 'Betriebsnummer KK', 'Krankenkassen-Betriebsnummer') || undefined;
 
-    // Extract weekly hours
-    const weeklyHoursRaw = col(fields, 'Wöchentliche Arbeitszeit');
+    // Weekly hours
+    const weeklyHoursRaw = col(fields, 'Wöchentliche Arbeitszeit', 'Woechentliche Arbeitszeit', 'Wochenstunden', 'WAZ');
     const weeklyHours = parseDecimal(weeklyHoursRaw);
+
+    // Konfession / church tax
+    const konfessionRaw = col(fields, 'Konfession', 'Konfession AN', 'Religion');
+    const { churchTax, denomination } = parseKonfession(konfessionRaw);
+
+    // Children allowance
+    const childrenRaw = col(fields, 'Kinderfreibetrag', 'Kinderfreibeträge', 'Kinder');
+    const childrenAllowance = parseDecimal(childrenRaw);
+
+    // Street – may be split across "Straße/Postfach" + "Hausnummer" or combined
+    const streetPart = col(fields, 'Straße/Postfach', 'Strasse/Postfach', 'Straße', 'Strasse');
+    const houseNr = col(fields, 'Hausnummer', 'HausNr', 'Haus-Nr.');
+    let street: string | undefined;
+    if (streetPart && houseNr) {
+      street = `${streetPart} ${houseNr}`;
+    } else if (streetPart) {
+      street = streetPart;
+    } else if (houseNr) {
+      street = houseNr;
+    }
+
+    const zipCode = col(fields, 'PLZ', 'Postleitzahl') || undefined;
+    const city = col(fields, 'Ort', 'Wohnort') || undefined;
+    
+    // Derive state from PLZ
+    const state = plzToBundesland(zipCode);
 
     const employee: DatevEmployee = {
       personalNumber: pnr.replace(/^0+/, ''),
@@ -175,25 +315,31 @@ export function parseDatevStammdatenASCII(content: string): DatevImportResult {
       firstName,
       dateOfBirth: parseDatevDate(col(fields, 'Geburtsdatum')),
       gender,
-      street: col(fields, 'Straße/Postfach') || col(fields, 'Straße/Postfach'),
-      zipCode: col(fields, 'PLZ'),
-      city: col(fields, 'Ort'),
-      iban: col(fields, 'IBAN'),
-      bic: col(fields, 'BIC'),
-      svNumber: col(fields, 'Versicherungsnummer'),
+      street,
+      zipCode,
+      city,
+      iban: col(fields, 'IBAN') || undefined,
+      bic: col(fields, 'BIC') || undefined,
+      svNumber: col(fields, 'Versicherungsnummer', 'SV-Nummer', 'Sozialversicherungsnummer') || undefined,
       entryDate: parseDatevDate(col(fields, 'Eintrittsdatum')) || parseDatevDate(col(fields, 'Datum erster Eintritt')),
       exitDate: parseDatevDate(col(fields, 'Austrittsdatum')),
       grossSalary,
-      healthInsurance: kk || undefined,
+      healthInsurance: kkName || undefined,
+      healthInsuranceNumber: kkNumber,
       weeklyHours,
-      position: col(fields, 'Berufsbezeichnung') || undefined,
+      position: col(fields, 'Berufsbezeichnung', 'Tätigkeit', 'Position') || undefined,
       taxClass,
+      taxId,
+      churchTax,
+      churchTaxDenomination: denomination,
+      churchTaxRate: churchTax ? churchTaxRateForState(state) : undefined,
+      childrenAllowance,
+      state,
       source: 'SD',
     };
 
-    // Try to find Lohnarten embedded in SD (columns like 2000, 2480, etc.)
+    // Try to find gross salary from Lohnart 2000 if not found
     if (!employee.grossSalary) {
-      // Search for field patterns like lohnart nr = 2000 followed by amount
       for (let fi = 0; fi < fields.length - 1; fi++) {
         const fv = stripQuotes(fields[fi]).trim();
         if (fv === '2000') {
@@ -219,13 +365,22 @@ export function parseDatevLohnarten(content: string): DatevImportResult {
   if (lines.length < 2) return { employees: [], lohnarten: [], warnings: ['Keine Lohnarten gefunden'], fileType: 'LA' };
 
   const headerFields = parseSemicolonCSV(lines[0]);
-  const headerMap = new Map<string, number>();
-  headerFields.forEach((h, i) => headerMap.set(stripQuotes(h).trim(), i));
+  const headerMapExact = new Map<string, number>();
+  const headerMapNorm = new Map<string, number>();
+  headerFields.forEach((h, i) => {
+    const exact = stripQuotes(h).trim();
+    headerMapExact.set(exact, i);
+    headerMapNorm.set(normalizeHeader(exact), i);
+  });
 
-  const col = (row: string[], name: string): string => {
-    const idx = headerMap.get(name);
-    if (idx === undefined || idx >= row.length) return '';
-    return stripQuotes(row[idx]).trim();
+  const col = (row: string[], ...names: string[]): string => {
+    for (const name of names) {
+      let idx = headerMapExact.get(name);
+      if (idx !== undefined && idx < row.length) return stripQuotes(row[idx]).trim();
+      idx = headerMapNorm.get(normalizeHeader(name));
+      if (idx !== undefined && idx < row.length) return stripQuotes(row[idx]).trim();
+    }
+    return '';
   };
 
   const lohnarten: DatevLohnart[] = [];
@@ -263,7 +418,6 @@ export function parseDatevLohnarten(content: string): DatevImportResult {
         source: 'SD',
       });
     }
-    // Set gross salary from Lohnart 2000 (Gehalt)
     if (la.lohnartNr === 2000 && la.betrag > 0) {
       const emp = empMap.get(la.personalNumber)!;
       emp.grossSalary = la.betrag;
@@ -278,9 +432,7 @@ export function parseDatevLohnarten(content: string): DatevImportResult {
 export function parseDatevPersonalstamm(content: string): DatevImportResult {
   const warnings: string[] = [];
 
-  // Extract key-value pairs
   const extract = (key: string): string | undefined => {
-    // Match "  Key                    Value" pattern, handling multi-word keys
     const escaped = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const regex = new RegExp(`^\\s*${escaped}\\s{2,}(.+?)$`, 'm');
     const m = content.match(regex);
@@ -288,8 +440,6 @@ export function parseDatevPersonalstamm(content: string): DatevImportResult {
   };
 
   const extractWithDate = (key: string): string | undefined => {
-    // For fields like "Steuerklasse / gültig ab  5 / 08/2019"
-    // Get the LAST occurrence (most recent)
     const escaped = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const regex = new RegExp(`^\\s*${escaped}[^\n]*?\\s{2,}(.+?)$`, 'gm');
     let last: string | undefined;
@@ -308,7 +458,7 @@ export function parseDatevPersonalstamm(content: string): DatevImportResult {
   const lastName = extract('Familienname') || '';
   const firstName = extract('Vorname') || '';
 
-  // Tax class — get latest value
+  // Tax class
   const taxClassRaw = extractWithDate('Steuerklasse / g');
   let taxClass: number | undefined;
   if (taxClassRaw) {
@@ -318,16 +468,7 @@ export function parseDatevPersonalstamm(content: string): DatevImportResult {
 
   // Church tax
   const konfession = extractWithDate('Konfession AN / g');
-  let churchTax = false;
-  let churchTaxDenomination: string | undefined;
-  if (konfession && !konfession.toLowerCase().includes('keine') && konfession.trim() !== '') {
-    churchTax = true;
-    if (konfession.includes('rk') || konfession.toLowerCase().includes('katholisch')) {
-      churchTaxDenomination = 'rk';
-    } else if (konfession.includes('ev') || konfession.toLowerCase().includes('evangelisch')) {
-      churchTaxDenomination = 'ev';
-    }
-  }
+  const churchResult = parseKonfession(konfession);
 
   // Children
   const childrenRaw = extractWithDate('Kinderfreibetrag / g');
@@ -361,32 +502,52 @@ export function parseDatevPersonalstamm(content: string): DatevImportResult {
     else if (genderRaw.toLowerCase().includes('nnlich')) gender = 'männlich';
   }
 
+  // Address
+  const streetName = extract('Straße') || extract('Strasse');
+  const houseNr = extract('Hausnummer');
+  const street = [streetName, houseNr].filter(Boolean).join(' ') || undefined;
+  const zipCode = extract('Postleitzahl');
+  const state = plzToBundesland(zipCode);
+
+  // Tax ID
+  const taxId = extract('IdNr') || extract('Identifikationsnummer');
+
+  // SV number
+  const svRaw = extract('Versicherungsnummer / g') || extractWithDate('Versicherungsnummer / g');
+  let svNumber: string | undefined;
+  if (svRaw) {
+    const svMatch = svRaw.match(/^(\S+)/);
+    svNumber = svMatch ? svMatch[1] : svRaw;
+  }
+
+  // Gross salary from Lohnart 2000
+  let grossSalary: number | undefined;
+  const lohnartMatch = content.match(/Lohnart\s+2000\b[^\n]*?\n[^\n]*?(\d[\d.,]*)/);
+  if (lohnartMatch) {
+    grossSalary = parseDecimal(lohnartMatch[1]);
+  }
+
   const employee: DatevEmployee = {
     personalNumber: personalNumber.replace(/^0+/, ''),
     lastName,
     firstName,
     dateOfBirth: parseDatevDate(extract('Geburtsdatum')),
     gender,
-    street: [extract('Straße') || extract('Straße'), extract('Hausnummer')].filter(Boolean).join(' ') || undefined,
-    zipCode: extract('Postleitzahl'),
+    street,
+    zipCode,
     city: extract('Ort'),
     iban: extract('IBAN'),
     bic: extract('BIC'),
-    svNumber: (() => {
-      const sv = extract('Versicherungsnummer / g');
-      if (sv) {
-        const svMatch = sv.match(/^(\S+)/);
-        return svMatch ? svMatch[1] : sv;
-      }
-      return undefined;
-    })(),
-    taxId: extract('IdNr'),
+    svNumber,
+    taxId,
     taxClass,
-    churchTax,
-    churchTaxDenomination,
+    churchTax: churchResult.churchTax,
+    churchTaxDenomination: churchResult.denomination,
+    churchTaxRate: churchResult.churchTax ? churchTaxRateForState(state) : undefined,
     childrenAllowance,
     healthInsurance,
     weeklyHours,
+    grossSalary,
     entryDate: parseDatevDate(extract('Eintrittsdatum')),
     exitDate: parseDatevDate(extract('Austrittsdatum')),
     position: (() => {
@@ -397,10 +558,10 @@ export function parseDatevPersonalstamm(content: string): DatevImportResult {
       }
       return undefined;
     })(),
+    state,
     source: 'personalstamm',
   };
 
-  // Validate required fields
   if (!employee.lastName) warnings.push('Familienname fehlt');
   if (!employee.firstName) warnings.push('Vorname fehlt');
 
@@ -434,15 +595,18 @@ export function mergeDatevResults(results: DatevImportResult[]): DatevImportResu
     for (const emp of result.employees) {
       const existing = empMap.get(emp.personalNumber);
       if (existing) {
-        // Merge: prefer personalstamm data over SD/LA (more detailed)
-        const merged: DatevEmployee = {
-          ...existing,
-          ...Object.fromEntries(
-            Object.entries(emp).filter(([, v]) => v !== undefined && v !== '')
-          ),
-          // Keep the more detailed source
-          source: emp.source === 'personalstamm' ? 'personalstamm' : existing.source,
-        };
+        // Merge: prefer personalstamm data, only fill empty fields
+        const merged: DatevEmployee = { ...existing };
+        for (const [key, value] of Object.entries(emp)) {
+          if (value !== undefined && value !== '' && value !== null) {
+            const existingVal = (existing as Record<string, unknown>)[key];
+            // Personalstamm always wins, otherwise only fill empty
+            if (emp.source === 'personalstamm' || existingVal === undefined || existingVal === '' || existingVal === null) {
+              (merged as Record<string, unknown>)[key] = value;
+            }
+          }
+        }
+        if (emp.source === 'personalstamm') merged.source = 'personalstamm';
         empMap.set(emp.personalNumber, merged);
       } else {
         empMap.set(emp.personalNumber, { ...emp });
@@ -478,6 +642,7 @@ export interface DatevEmployeeDbRow {
   church_tax_rate?: number;
   children_allowance?: number;
   health_insurance?: string;
+  health_insurance_number?: string;
   gross_salary: number;
   weekly_hours?: number;
   entry_date?: string;
@@ -485,16 +650,17 @@ export interface DatevEmployeeDbRow {
   position?: string;
   employment_type: string;
   is_active: boolean;
+  state?: string;
 }
 
 export function mapToDbRow(emp: DatevEmployee): DatevEmployeeDbRow {
-  // Determine church tax rate from denomination
+  // Church tax rate
   let churchTaxRate = 0;
   if (emp.churchTax) {
-    churchTaxRate = 9; // Default for most states
+    churchTaxRate = emp.churchTaxRate ?? churchTaxRateForState(emp.state);
   }
 
-  // Determine employment type
+  // Employment type
   let employmentType = 'vollzeit';
   if (emp.weeklyHours !== undefined) {
     if (emp.weeklyHours < 10) employmentType = 'minijob';
@@ -504,7 +670,6 @@ export function mapToDbRow(emp: DatevEmployee): DatevEmployeeDbRow {
     employmentType = 'minijob';
   }
 
-  // Determine if active
   const isActive = !emp.exitDate || new Date(emp.exitDate) > new Date();
 
   return {
@@ -525,6 +690,7 @@ export function mapToDbRow(emp: DatevEmployee): DatevEmployeeDbRow {
     church_tax_rate: churchTaxRate,
     children_allowance: emp.childrenAllowance,
     health_insurance: emp.healthInsurance,
+    health_insurance_number: emp.healthInsuranceNumber,
     gross_salary: emp.grossSalary ?? 0,
     weekly_hours: emp.weeklyHours,
     entry_date: emp.entryDate,
@@ -532,5 +698,6 @@ export function mapToDbRow(emp: DatevEmployee): DatevEmployeeDbRow {
     position: emp.position,
     employment_type: employmentType,
     is_active: isActive,
+    state: emp.state,
   };
 }

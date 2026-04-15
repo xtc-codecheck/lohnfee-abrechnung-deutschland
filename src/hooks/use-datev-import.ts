@@ -40,7 +40,7 @@ export function useDatevImport() {
       // Load existing employees for conflict detection
       const { data: existing } = await supabase
         .from('employees')
-        .select('id, personal_number, sv_number, first_name, last_name')
+        .select('id, personal_number, sv_number, first_name, last_name, tax_class, tax_id, sv_number, iban, health_insurance, weekly_hours, street, zip_code, city, state, church_tax, church_tax_rate, children_allowance, gross_salary, entry_date, exit_date, position, gender, date_of_birth, health_insurance_number')
         .eq('tenant_id', tenantId);
 
       const existingByPnr = new Map(
@@ -63,7 +63,63 @@ export function useDatevImport() {
               continue;
             }
 
-            if (conflictStrategy === 'overwrite' || conflictStrategy === 'merge') {
+            if (conflictStrategy === 'merge') {
+              // Merge: only fill fields that are currently empty/null in DB
+              const updateData: Record<string, unknown> = {};
+              const mergeField = (dbKey: string, newVal: unknown) => {
+                const existingVal = (conflict as Record<string, unknown>)[dbKey];
+                if (
+                  (existingVal === null || existingVal === undefined || existingVal === '' || existingVal === 0) &&
+                  newVal !== null && newVal !== undefined && newVal !== '' && newVal !== 0
+                ) {
+                  updateData[dbKey] = newVal;
+                }
+              };
+
+              mergeField('first_name', dbRow.first_name);
+              mergeField('last_name', dbRow.last_name);
+              mergeField('date_of_birth', dbRow.date_of_birth);
+              mergeField('gender', dbRow.gender);
+              mergeField('street', dbRow.street);
+              mergeField('zip_code', dbRow.zip_code);
+              mergeField('city', dbRow.city);
+              mergeField('state', dbRow.state);
+              mergeField('iban', dbRow.iban);
+              mergeField('bic', dbRow.bic);
+              mergeField('sv_number', dbRow.sv_number);
+              mergeField('tax_id', dbRow.tax_id);
+              mergeField('tax_class', dbRow.tax_class);
+              mergeField('church_tax_rate', dbRow.church_tax_rate);
+              mergeField('children_allowance', dbRow.children_allowance);
+              mergeField('health_insurance', dbRow.health_insurance);
+              mergeField('health_insurance_number', dbRow.health_insurance_number);
+              mergeField('gross_salary', dbRow.gross_salary);
+              mergeField('weekly_hours', dbRow.weekly_hours);
+              mergeField('entry_date', dbRow.entry_date);
+              mergeField('exit_date', dbRow.exit_date);
+              mergeField('position', dbRow.position);
+              // church_tax bool: only set if currently false and new is true
+              if (!conflict.church_tax && dbRow.church_tax) {
+                updateData.church_tax = true;
+              }
+
+              if (Object.keys(updateData).length > 0) {
+                const { error } = await supabase
+                  .from('employees')
+                  .update(updateData)
+                  .eq('id', conflict.id);
+                if (error) {
+                  result.errors.push(`${emp.firstName} ${emp.lastName}: ${error.message}`);
+                } else {
+                  result.imported++;
+                }
+              } else {
+                result.skipped++;
+              }
+              continue;
+            }
+
+            if (conflictStrategy === 'overwrite') {
               const { error } = await supabase
                 .from('employees')
                 .update({
@@ -74,6 +130,7 @@ export function useDatevImport() {
                   street: dbRow.street ?? null,
                   zip_code: dbRow.zip_code ?? null,
                   city: dbRow.city ?? null,
+                  state: dbRow.state ?? null,
                   iban: dbRow.iban ?? null,
                   bic: dbRow.bic ?? null,
                   sv_number: dbRow.sv_number ?? null,
@@ -83,6 +140,7 @@ export function useDatevImport() {
                   church_tax_rate: dbRow.church_tax_rate ?? null,
                   children_allowance: dbRow.children_allowance ?? null,
                   health_insurance: dbRow.health_insurance ?? null,
+                  health_insurance_number: dbRow.health_insurance_number ?? null,
                   gross_salary: dbRow.gross_salary,
                   weekly_hours: dbRow.weekly_hours ?? null,
                   entry_date: dbRow.entry_date ?? null,
@@ -114,6 +172,7 @@ export function useDatevImport() {
               street: dbRow.street ?? null,
               zip_code: dbRow.zip_code ?? null,
               city: dbRow.city ?? null,
+              state: dbRow.state ?? null,
               iban: dbRow.iban ?? null,
               bic: dbRow.bic ?? null,
               sv_number: dbRow.sv_number ?? null,
@@ -123,6 +182,7 @@ export function useDatevImport() {
               church_tax_rate: dbRow.church_tax_rate ?? null,
               children_allowance: dbRow.children_allowance ?? null,
               health_insurance: dbRow.health_insurance ?? null,
+              health_insurance_number: dbRow.health_insurance_number ?? null,
               gross_salary: dbRow.gross_salary,
               weekly_hours: dbRow.weekly_hours ?? null,
               entry_date: dbRow.entry_date ?? null,
@@ -149,7 +209,6 @@ export function useDatevImport() {
     } finally {
       setIsImporting(false);
       setProgress(result);
-      // Invalidate employee cache so the list refreshes
       await queryClient.invalidateQueries({ queryKey: queryKeys.employees.all(tenantId) });
     }
 
