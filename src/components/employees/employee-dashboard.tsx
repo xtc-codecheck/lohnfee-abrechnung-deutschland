@@ -47,12 +47,12 @@ export function EmployeeDashboard({ onAddEmployee, onCalculateSalary, onShowComp
         tax_id: emp.personalData.taxId || null,
         sv_number: emp.personalData.socialSecurityNumber || null,
         gross_salary: emp.salaryData.grossSalary,
-        iban: emp.personalData.iban || null,
+        iban: emp.personalData.address?.street || null,
         health_insurance: emp.personalData.healthInsurance?.name || null,
         weekly_hours: emp.employmentData.weeklyHours || null,
         entry_date: emp.employmentData.startDate ? String(emp.employmentData.startDate) : null,
         date_of_birth: emp.personalData.dateOfBirth ? String(emp.personalData.dateOfBirth) : null,
-        state: emp.personalData.state || null,
+        state: emp.personalData.address?.state || null,
       }));
     }
     return map;
