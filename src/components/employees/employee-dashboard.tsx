@@ -1,10 +1,13 @@
-import { useState } from "react";
-import { Plus, Users, Calculator, FileText, Search, Edit, Trash2, BarChart3, Shield, Clock } from "lucide-react";
+import { useState, useMemo } from "react";
+import { Plus, Users, Calculator, FileText, Search, Edit, Trash2, BarChart3, Shield, Clock, AlertCircle, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageHeader } from "@/components/ui/page-header";
+import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import { Employee } from "@/types/employee";
+import { getEmployeeCompleteness } from "@/utils/datev-import";
 import { useEmployees } from "@/contexts/employee-context";
 import { EditEmployeeDialog } from "./edit-employee-dialog";
 import { ELStAMValidationCard } from "./elstam-validation-card";
@@ -29,14 +32,45 @@ export function EmployeeDashboard({ onAddEmployee, onCalculateSalary, onShowComp
   const [showReports, setShowReports] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [showOnlyIncomplete, setShowOnlyIncomplete] = useState(false);
   const { employees, updateEmployee, deleteEmployee, error: empError } = useEmployees();
   const { toast } = useToast();
 
-  const filteredEmployees = employees.filter(employee =>
-    `${employee.personalData.firstName} ${employee.personalData.lastName}`
+  // Compute completeness for each employee
+  const employeeCompleteness = useMemo(() => {
+    const map = new Map<string, { status: 'complete' | 'warning' | 'critical'; missing: string[] }>();
+    for (const emp of employees) {
+      map.set(emp.id, getEmployeeCompleteness({
+        tax_class: typeof emp.personalData.taxClass === 'string'
+          ? ['I','II','III','IV','V','VI'].indexOf(emp.personalData.taxClass) + 1 || null
+          : Number(emp.personalData.taxClass) || null,
+        tax_id: emp.personalData.taxId || null,
+        sv_number: emp.personalData.socialSecurityNumber || null,
+        gross_salary: emp.salaryData.grossSalary,
+        iban: emp.personalData.address?.street || null,
+        health_insurance: emp.personalData.healthInsurance?.name || null,
+        weekly_hours: emp.employmentData.weeklyHours || null,
+        entry_date: emp.employmentData.startDate ? String(emp.employmentData.startDate) : null,
+        date_of_birth: emp.personalData.dateOfBirth ? String(emp.personalData.dateOfBirth) : null,
+        state: emp.personalData.address?.state || null,
+      }));
+    }
+    return map;
+  }, [employees]);
+
+  const filteredEmployees = employees.filter(employee => {
+    const matchesSearch = `${employee.personalData.firstName} ${employee.personalData.lastName}`
       .toLowerCase()
-      .includes(searchTerm.toLowerCase())
-  );
+      .includes(searchTerm.toLowerCase());
+    if (!matchesSearch) return false;
+    if (showOnlyIncomplete) {
+      const comp = employeeCompleteness.get(employee.id);
+      return comp?.status !== 'complete';
+    }
+    return true;
+  });
+
+  const incompleteCount = Array.from(employeeCompleteness.values()).filter(c => c.status !== 'complete').length;
 
   const handleEditEmployee = (employee: Employee) => {
     setEditingEmployee(employee);
@@ -255,14 +289,27 @@ export function EmployeeDashboard({ onAddEmployee, onCalculateSalary, onShowComp
         <CardHeader>
           <CardTitle>Mitarbeiterübersicht</CardTitle>
           <CardDescription>Verwaltung aller Mitarbeiter und deren Stammdaten</CardDescription>
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-            <Input
-              placeholder="Mitarbeiter suchen..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
+          <div className="flex gap-2 items-center">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+              <Input
+                placeholder="Mitarbeiter suchen..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            {incompleteCount > 0 && (
+              <Button
+                variant={showOnlyIncomplete ? "default" : "outline"}
+                size="sm"
+                onClick={() => setShowOnlyIncomplete(!showOnlyIncomplete)}
+                className="whitespace-nowrap"
+              >
+                <AlertCircle className="h-4 w-4 mr-1" />
+                {incompleteCount} unvollständig
+              </Button>
+            )}
           </div>
         </CardHeader>
         <CardContent>
@@ -297,9 +344,36 @@ export function EmployeeDashboard({ onAddEmployee, onCalculateSalary, onShowComp
                       </span>
                     </div>
                     <div>
-                      <h4 className="font-medium text-foreground">
-                        {employee.personalData.firstName} {employee.personalData.lastName}
-                      </h4>
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-medium text-foreground">
+                          {employee.personalData.firstName} {employee.personalData.lastName}
+                        </h4>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger>
+                              {(() => {
+                                const comp = employeeCompleteness.get(employee.id);
+                                if (!comp) return null;
+                                if (comp.status === 'complete') return <CheckCircle2 className="h-4 w-4 text-primary" />;
+                                if (comp.status === 'warning') return <AlertCircle className="h-4 w-4 text-yellow-500" />;
+                                return <AlertCircle className="h-4 w-4 text-destructive" />;
+                              })()}
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              {(() => {
+                                const comp = employeeCompleteness.get(employee.id);
+                                if (!comp || comp.status === 'complete') return <p>Alle Pflichtfelder vorhanden</p>;
+                                return (
+                                  <div className="text-xs">
+                                    <p className="font-medium mb-1">Fehlende Felder:</p>
+                                    {comp.missing.map(f => <p key={f}>• {f}</p>)}
+                                  </div>
+                                );
+                              })()}
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </div>
                       <p className="text-sm text-muted-foreground">
                         {employee.employmentData.employmentType === 'fulltime' ? 'Vollzeit' : 
                          employee.employmentData.employmentType === 'parttime' ? 'Teilzeit' : 

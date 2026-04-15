@@ -621,6 +621,126 @@ export function mergeDatevResults(results: DatevImportResult[]): DatevImportResu
   };
 }
 
+// ─── Smart Defaults Engine ────────────────────────────
+
+export interface InferredFields {
+  taxClass?: { value: number; reason: string };
+  weeklyHours?: { value: number; reason: string };
+  churchTaxRate?: { value: number; reason: string };
+  healthInsurance?: { value: string; reason: string };
+  state?: { value: string; reason: string };
+}
+
+/**
+ * Infer missing fields from context (employment type, salary, co-workers).
+ * Returns suggestions with reasons — never silently overwrites.
+ */
+export function inferMissingFields(
+  emp: DatevEmployee,
+  allEmployees: DatevEmployee[]
+): InferredFields {
+  const result: InferredFields = {};
+
+  // Tax class
+  if (emp.taxClass === undefined) {
+    if (emp.grossSalary !== undefined && emp.grossSalary <= 556) {
+      result.taxClass = { value: 1, reason: 'Minijob – Pauschalversteuerung üblich, StKl 1 als Fallback' };
+    } else {
+      result.taxClass = { value: 1, reason: 'Standard-Steuerklasse für ledige Arbeitnehmer' };
+    }
+  }
+
+  // Weekly hours
+  if (emp.weeklyHours === undefined) {
+    if (emp.grossSalary !== undefined && emp.grossSalary <= 556) {
+      // Minijob: estimate from minimum wage
+      const minWage = 12.82;
+      const estimatedMonthlyHours = emp.grossSalary / minWage;
+      const weeklyEst = Math.round((estimatedMonthlyHours / 4.33) * 10) / 10;
+      result.weeklyHours = { value: Math.min(weeklyEst, 15), reason: `Geschätzt aus Gehalt/${minWage}€ Mindestlohn` };
+    } else {
+      // Check if full-time salary range
+      const fullTimeEmployees = allEmployees.filter(e => e.weeklyHours && e.weeklyHours >= 35);
+      if (fullTimeEmployees.length > 0) {
+        const avgSalary = fullTimeEmployees.reduce((s, e) => s + (e.grossSalary || 0), 0) / fullTimeEmployees.length;
+        if (emp.grossSalary && emp.grossSalary < avgSalary * 0.6) {
+          const ratio = emp.grossSalary / avgSalary;
+          const estHours = Math.round(40 * ratio * 10) / 10;
+          result.weeklyHours = { value: Math.max(estHours, 10), reason: `Teilzeit geschätzt aus Gehaltsverhältnis (${Math.round(ratio * 100)}% des VZ-Durchschnitts)` };
+        } else {
+          result.weeklyHours = { value: 40, reason: 'Vollzeit-Standard' };
+        }
+      } else {
+        result.weeklyHours = { value: 40, reason: 'Vollzeit-Standard (keine Vergleichsdaten)' };
+      }
+    }
+  }
+
+  // Church tax rate from state
+  if (emp.churchTax && emp.churchTaxRate === undefined && emp.state) {
+    const rate = (emp.state === 'Bayern' || emp.state === 'Baden-Württemberg') ? 8 : 9;
+    result.churchTaxRate = { value: rate, reason: `${rate}% für ${emp.state}` };
+  }
+
+  // Health insurance: suggest most common from co-workers
+  if (!emp.healthInsurance) {
+    const kkCounts = new Map<string, number>();
+    for (const e of allEmployees) {
+      if (e.healthInsurance && e.personalNumber !== emp.personalNumber) {
+        kkCounts.set(e.healthInsurance, (kkCounts.get(e.healthInsurance) || 0) + 1);
+      }
+    }
+    if (kkCounts.size > 0) {
+      const sorted = Array.from(kkCounts.entries()).sort((a, b) => b[1] - a[1]);
+      result.healthInsurance = { 
+        value: sorted[0][0], 
+        reason: `Häufigste KK im Betrieb (${sorted[0][1]}× verwendet)` 
+      };
+    }
+  }
+
+  return result;
+}
+
+/**
+ * Check which critical/important fields are missing for a DB employee record.
+ */
+export function getEmployeeCompleteness(emp: {
+  tax_class?: number | null;
+  tax_id?: string | null;
+  sv_number?: string | null;
+  gross_salary?: number | null;
+  iban?: string | null;
+  health_insurance?: string | null;
+  weekly_hours?: number | null;
+  entry_date?: string | null;
+  date_of_birth?: string | null;
+  state?: string | null;
+}): { status: 'complete' | 'warning' | 'critical'; missing: string[] } {
+  const missing: string[] = [];
+  
+  // Critical fields
+  if (!emp.tax_class) missing.push('Steuerklasse');
+  if (!emp.tax_id) missing.push('Steuer-ID');
+  if (!emp.sv_number) missing.push('SV-Nummer');
+  if (emp.gross_salary === null || emp.gross_salary === undefined) missing.push('Gehalt');
+  
+  // Important fields
+  if (!emp.iban) missing.push('IBAN');
+  if (!emp.health_insurance) missing.push('Krankenkasse');
+  if (!emp.weekly_hours) missing.push('Wochenstunden');
+  if (!emp.entry_date) missing.push('Eintrittsdatum');
+  if (!emp.date_of_birth) missing.push('Geburtsdatum');
+  if (!emp.state) missing.push('Bundesland');
+
+  const criticalMissing = ['Steuerklasse', 'Steuer-ID', 'SV-Nummer', 'Gehalt']
+    .filter(f => missing.includes(f));
+  
+  if (criticalMissing.length > 0) return { status: 'critical', missing };
+  if (missing.length > 2) return { status: 'warning', missing };
+  return { status: 'complete', missing };
+}
+
 // ─── Map to DB format ─────────────────────────────────
 
 export interface DatevEmployeeDbRow {
