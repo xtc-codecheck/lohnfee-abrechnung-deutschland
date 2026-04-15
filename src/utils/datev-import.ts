@@ -599,10 +599,9 @@ export function mergeDatevResults(results: DatevImportResult[]): DatevImportResu
         const merged: DatevEmployee = { ...existing };
         for (const [key, value] of Object.entries(emp)) {
           if (value !== undefined && value !== '' && value !== null) {
-            const existingVal = (existing as Record<string, unknown>)[key];
-            // Personalstamm always wins, otherwise only fill empty
+            const existingVal = (existing as unknown as Record<string, unknown>)[key];
             if (emp.source === 'personalstamm' || existingVal === undefined || existingVal === '' || existingVal === null) {
-              (merged as Record<string, unknown>)[key] = value;
+              (merged as unknown as Record<string, unknown>)[key] = value;
             }
           }
         }

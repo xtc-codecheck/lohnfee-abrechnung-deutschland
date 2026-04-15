@@ -182,15 +182,15 @@ export function DatevImportWizard() {
             {qualitySummary && (
               <div className="grid grid-cols-3 gap-3">
                 <div className="rounded-lg border p-3 text-center">
-                  <p className="text-2xl font-bold text-green-600">{qualitySummary.complete}</p>
+                  <p className="text-2xl font-bold text-primary">{qualitySummary.complete}</p>
                   <p className="text-xs text-muted-foreground">🟢 Vollständig</p>
                 </div>
                 <div className="rounded-lg border p-3 text-center">
-                  <p className="text-2xl font-bold text-yellow-600">{qualitySummary.partial}</p>
+                  <p className="text-2xl font-bold text-accent-foreground">{qualitySummary.partial}</p>
                   <p className="text-xs text-muted-foreground">🟡 Warnungen</p>
                 </div>
                 <div className="rounded-lg border p-3 text-center">
-                  <p className="text-2xl font-bold text-red-600">{qualitySummary.critical}</p>
+                  <p className="text-2xl font-bold text-destructive">{qualitySummary.critical}</p>
                   <p className="text-xs text-muted-foreground">🔴 Kritisch</p>
                 </div>
               </div>
