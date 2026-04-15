@@ -392,6 +392,15 @@ export function DatevImportWizard() {
           </CardContent>
         </Card>
       )}
+
+      {/* Step 5: Data Completion */}
+      {step === 'complete' && parseResults && (
+        <DataCompletionStep 
+          employees={parseResults.employees} 
+          onBack={() => setStep('import')}
+          onDone={reset}
+        />
+      )}
     </div>
   );
 }
