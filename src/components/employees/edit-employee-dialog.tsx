@@ -322,7 +322,7 @@ export function EditEmployeeDialog({ employee, open, onOpenChange, onSave }: Edi
           <TabsContent value="import" className="space-y-4">
             {employee && (
               <PersonalstammUpload
-                personalNumber={employee.id.substring(0, 8)}
+                personalNumber=""
                 employeeId={employee.id}
                 currentFields={{
                   taxClass: typeof employee.personalData.taxClass === 'string'
