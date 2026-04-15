@@ -937,6 +937,20 @@ export default function HilfeCenter() {
                   setSelectedCategory(null);
                 }}
               />
+              {!searchQuery && (
+                <div className="flex flex-wrap gap-2 mt-3 justify-center">
+                  {popularSearches.map((term) => (
+                    <Badge
+                      key={term}
+                      variant="outline"
+                      className="cursor-pointer hover:bg-primary/10 transition-colors text-xs"
+                      onClick={() => { setSearchQuery(term); setSelectedCategory(null); }}
+                    >
+                      {term}
+                    </Badge>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
