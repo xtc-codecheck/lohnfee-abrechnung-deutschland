@@ -318,6 +318,36 @@ export function EditEmployeeDialog({ employee, open, onOpenChange, onSave }: Edi
               </CardContent>
             </Card>
           </TabsContent>
+
+          <TabsContent value="import" className="space-y-4">
+            {employee && (
+              <PersonalstammUpload
+                personalNumber={employee.id.substring(0, 8)}
+                employeeId={employee.id}
+                currentFields={{
+                  taxClass: typeof employee.personalData.taxClass === 'string'
+                    ? ['I','II','III','IV','V','VI'].indexOf(employee.personalData.taxClass) + 1 || null
+                    : Number(employee.personalData.taxClass) || null,
+                  taxId: employee.personalData.taxId || null,
+                  svNumber: employee.personalData.socialSecurityNumber || null,
+                  healthInsurance: employee.personalData.healthInsurance?.name || null,
+                  weeklyHours: employee.employmentData.weeklyHours || null,
+                  churchTax: employee.personalData.churchTax ?? null,
+                  churchTaxRate: null,
+                  iban: employee.salaryData.bankingData?.iban || null,
+                  bic: employee.salaryData.bankingData?.bic || null,
+                  dateOfBirth: employee.personalData.dateOfBirth
+                    ? (employee.personalData.dateOfBirth instanceof Date
+                      ? employee.personalData.dateOfBirth.toISOString()
+                      : String(employee.personalData.dateOfBirth))
+                    : null,
+                }}
+                onUpdated={() => {
+                  onSave(formData);
+                }}
+              />
+            )}
+          </TabsContent>
         </Tabs>
 
         <DialogFooter>
