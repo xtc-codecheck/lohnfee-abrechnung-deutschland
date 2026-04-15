@@ -11,6 +11,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Mail, Phone, MapPin, Clock, Send, CheckCircle, MessageSquare, HelpCircle, FileText } from "lucide-react";
 
+const RATE_LIMIT_KEY = "kontakt_last_submit";
+const RATE_LIMIT_MS = 60_000; // 1 minute between submissions
+
 export default function Kontakt() {
   const navigate = useNavigate();
   const { toast } = useToast();
