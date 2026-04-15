@@ -12,6 +12,8 @@
  */
 
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { calculatePayrollEntry, PayrollCalculationInput } from '@/utils/payroll-calculator';
+import { WorkingTimeData } from '@/types/payroll';
 import {
   ArrowLeft, ArrowRight, Check, CheckCircle2, Clock, Gift,
   Calculator, FileText, Download, Play, AlertTriangle, Info,
@@ -60,7 +62,7 @@ const WIZARD_STEPS = [
 export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizardProps) {
   const { toast } = useToast();
   const { employees } = useEmployees();
-  const { payrollPeriods, payrollEntries, createPayrollPeriod } = useSupabasePayroll();
+  const { payrollPeriods, payrollEntries, createPayrollPeriod, addPayrollEntry } = useSupabasePayroll();
   const { timeEntries } = useTimeTracking();
 
   const now = new Date();
@@ -152,6 +154,32 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
     setStepStatuses(newStatuses);
   }, [currentStep, stepStatuses, checkStep]);
 
+  const calculateAndPersistEntries = useCallback(async (periodId: string) => {
+    const defaultWorkingData: WorkingTimeData = {
+      regularHours: 160, overtimeHours: 0, nightHours: 0, sundayHours: 0,
+      holidayHours: 0, vacationDays: 0, sickDays: 0,
+      actualWorkingDays: 21, expectedWorkingDays: 21,
+    };
+
+    let saved = 0;
+    for (const emp of activeEmployees) {
+      try {
+        const input: PayrollCalculationInput = {
+          employee: emp,
+          period: { year: selectedYear, month: selectedMonth },
+          workingData: defaultWorkingData,
+        };
+        const result = calculatePayrollEntry(input);
+        const entryToSave = { ...result.entry, payrollPeriodId: periodId };
+        await addPayrollEntry(entryToSave);
+        saved++;
+      } catch (err) {
+        console.error(`Fehler bei ${emp.personalData.firstName} ${emp.personalData.lastName}:`, err);
+      }
+    }
+    return saved;
+  }, [activeEmployees, selectedYear, selectedMonth, addPayrollEntry]);
+
   // ─── Auto-Run Engine ──────────────────────────────────────
   const startAutoRun = useCallback(async () => {
     setAutoRunActive(true);
@@ -189,11 +217,15 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
         return; // Stop here, user must approve
       }
 
-      // Step 2 special: create payroll if needed
       if (step === 2 && !checked.completed) {
         log('📊 Abrechnung wird erstellt...');
         try {
-          await createPayrollPeriod(selectedYear, selectedMonth);
+          const period = await createPayrollPeriod(selectedYear, selectedMonth);
+          if (period) {
+            log('📊 Abrechnungen werden berechnet und gespeichert...');
+            const saved = await calculateAndPersistEntries(period.id);
+            log(`✅ ${saved} Abrechnungen gespeichert`);
+          }
           checked.completed = true;
           log('✅ Abrechnung erfolgreich erstellt');
         } catch {
@@ -223,7 +255,7 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
       setAutoRunActive(false);
       autoRunRef.current = false;
     }
-  }, [checkStep, createPayrollPeriod, selectedYear, selectedMonth]);
+  }, [checkStep, createPayrollPeriod, calculateAndPersistEntries, selectedYear, selectedMonth]);
 
   const stopAutoRun = useCallback(() => {
     autoRunRef.current = false;
@@ -277,7 +309,11 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
       if (step === 2 && !checked.completed) {
         log('📊 Abrechnung wird erstellt...');
         try {
-          await createPayrollPeriod(selectedYear, selectedMonth);
+          const period = await createPayrollPeriod(selectedYear, selectedMonth);
+          if (period) {
+            const saved = await calculateAndPersistEntries(period.id);
+            log(`✅ ${saved} Abrechnungen gespeichert`);
+          }
           checked.completed = true;
           log('✅ Abrechnung erstellt');
         } catch {
@@ -304,7 +340,7 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
       setAutoRunActive(false);
       autoRunRef.current = false;
     }
-  }, [stepStatuses, checkStep, createPayrollPeriod, selectedYear, selectedMonth]);
+  }, [stepStatuses, checkStep, createPayrollPeriod, calculateAndPersistEntries, selectedYear, selectedMonth]);
 
   const approveStep = () => {
     const newStatuses = [...stepStatuses];
@@ -321,10 +357,15 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
     }
   };
 
+
+
   const handleCreatePayroll = async () => {
     setIsProcessing(true);
     try {
-      await createPayrollPeriod(selectedYear, selectedMonth);
+      const period = await createPayrollPeriod(selectedYear, selectedMonth);
+      if (!period) throw new Error('Periode konnte nicht erstellt werden');
+
+      const saved = await calculateAndPersistEntries(period.id);
 
       const newStatuses = [...stepStatuses];
       newStatuses[2] = { ...newStatuses[2], completed: true, approved: true };
@@ -332,7 +373,7 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
 
       toast({
         title: '✅ Abrechnung erstellt',
-        description: `${MONTHS[selectedMonth - 1]} ${selectedYear} wurde berechnet.`,
+        description: `${saved} von ${activeEmployees.length} Mitarbeitern berechnet und gespeichert.`,
       });
 
       setCurrentStep(3);
