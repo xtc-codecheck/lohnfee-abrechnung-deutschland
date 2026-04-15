@@ -952,6 +952,10 @@ function DataCompletionStep({ employees, onBack, onDone }: {
                     </>
                   );
                 })()}
+              </div>
+            );
+          })}
+        </div>
 
         <Alert>
           <Info className="h-4 w-4" />
