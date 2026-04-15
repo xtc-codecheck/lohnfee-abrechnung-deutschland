@@ -511,6 +511,21 @@ interface EditableInferred {
   healthInsurance?: { value: string; reason: string };
 }
 
+interface ManualFields {
+  taxId: string;
+  svNumber: string;
+  iban: string;
+  dateOfBirth: string;
+  entryDate: string;
+  state: string;
+}
+
+const GERMAN_STATES = [
+  'Baden-Württemberg', 'Bayern', 'Berlin', 'Brandenburg', 'Bremen', 'Hamburg',
+  'Hessen', 'Mecklenburg-Vorpommern', 'Niedersachsen', 'Nordrhein-Westfalen',
+  'Rheinland-Pfalz', 'Saarland', 'Sachsen', 'Sachsen-Anhalt', 'Schleswig-Holstein', 'Thüringen',
+];
+
 function DataCompletionStep({ employees, onBack, onDone }: { 
   employees: DatevEmployee[]; 
   onBack: () => void; 
@@ -520,10 +535,14 @@ function DataCompletionStep({ employees, onBack, onDone }: {
   const [applyingPnr, setApplyingPnr] = useState<string | null>(null);
   const [applyingAll, setApplyingAll] = useState(false);
 
+  // Show ALL employees, not just those with inferred suggestions
+  const allEmps = employees;
+
   const incompleteEmps = useMemo(() => 
     employees.filter(emp => {
       const inferred = inferMissingFields(emp, employees);
-      return Object.keys(inferred).length > 0;
+      const hasMissingManual = !emp.taxId || !emp.svNumber || !emp.iban || !emp.dateOfBirth || !emp.entryDate || !emp.state;
+      return Object.keys(inferred).length > 0 || hasMissingManual;
     }), [employees]);
 
   const initialInferredMap = useMemo(() => {
@@ -534,7 +553,23 @@ function DataCompletionStep({ employees, onBack, onDone }: {
     return map;
   }, [incompleteEmps, employees]);
 
+  const initialManualMap = useMemo(() => {
+    const map = new Map<string, ManualFields>();
+    for (const emp of incompleteEmps) {
+      map.set(emp.personalNumber, {
+        taxId: emp.taxId || '',
+        svNumber: emp.svNumber || '',
+        iban: emp.iban || '',
+        dateOfBirth: emp.dateOfBirth || '',
+        entryDate: emp.entryDate || '',
+        state: emp.state || '',
+      });
+    }
+    return map;
+  }, [incompleteEmps]);
+
   const [editedMap, setEditedMap] = useState<Map<string, EditableInferred>>(initialInferredMap);
+  const [manualMap, setManualMap] = useState<Map<string, ManualFields>>(initialManualMap);
 
   const updateField = (pnr: string, field: keyof EditableInferred, value: string | number) => {
     setEditedMap(prev => {
@@ -547,21 +582,42 @@ function DataCompletionStep({ employees, onBack, onDone }: {
     });
   };
 
-  const applyDefaults = async (pnr: string) => {
+  const updateManualField = (pnr: string, field: keyof ManualFields, value: string) => {
+    setManualMap(prev => {
+      const next = new Map(prev);
+      const current = next.get(pnr) || { taxId: '', svNumber: '', iban: '', dateOfBirth: '', entryDate: '', state: '' };
+      next.set(pnr, { ...current, [field]: value });
+      return next;
+    });
+  };
+
+  const buildUpdateData = (pnr: string) => {
     const inferred = editedMap.get(pnr);
-    if (!inferred) return;
+    const manual = manualMap.get(pnr);
+    const updateData: Record<string, unknown> = {};
+    
+    if (inferred?.taxClass) updateData.tax_class = inferred.taxClass.value;
+    if (inferred?.weeklyHours) updateData.weekly_hours = inferred.weeklyHours.value;
+    if (inferred?.churchTaxRate) updateData.church_tax_rate = inferred.churchTaxRate.value;
+    if (inferred?.healthInsurance) updateData.health_insurance = inferred.healthInsurance.value;
+    
+    if (manual?.taxId) updateData.tax_id = manual.taxId;
+    if (manual?.svNumber) updateData.sv_number = manual.svNumber;
+    if (manual?.iban) updateData.iban = manual.iban;
+    if (manual?.dateOfBirth) updateData.date_of_birth = manual.dateOfBirth;
+    if (manual?.entryDate) updateData.entry_date = manual.entryDate;
+    if (manual?.state) updateData.state = manual.state;
+    
+    return updateData;
+  };
+
+  const applyDefaults = async (pnr: string) => {
+    const updateData = buildUpdateData(pnr);
+    if (Object.keys(updateData).length === 0) return;
 
     setApplyingPnr(pnr);
     try {
       const { supabase } = await import('@/integrations/supabase/client');
-      
-      const updateData: Record<string, unknown> = {};
-      if (inferred.taxClass) updateData.tax_class = inferred.taxClass.value;
-      if (inferred.weeklyHours) updateData.weekly_hours = inferred.weeklyHours.value;
-      if (inferred.churchTaxRate) updateData.church_tax_rate = inferred.churchTaxRate.value;
-      if (inferred.healthInsurance) updateData.health_insurance = inferred.healthInsurance.value;
-
-      if (Object.keys(updateData).length === 0) return;
 
       const { error } = await supabase
         .from('employees')
@@ -586,18 +642,10 @@ function DataCompletionStep({ employees, onBack, onDone }: {
     let successCount = 0;
     for (const emp of incompleteEmps) {
       if (appliedPnrs.has(emp.personalNumber)) continue;
-      const inferred = editedMap.get(emp.personalNumber);
-      if (!inferred || Object.keys(inferred).length === 0) continue;
-
-      const { supabase } = await import('@/integrations/supabase/client');
-      const updateData: Record<string, unknown> = {};
-      if (inferred.taxClass) updateData.tax_class = inferred.taxClass.value;
-      if (inferred.weeklyHours) updateData.weekly_hours = inferred.weeklyHours.value;
-      if (inferred.churchTaxRate) updateData.church_tax_rate = inferred.churchTaxRate.value;
-      if (inferred.healthInsurance) updateData.health_insurance = inferred.healthInsurance.value;
-
+      const updateData = buildUpdateData(emp.personalNumber);
       if (Object.keys(updateData).length === 0) continue;
 
+      const { supabase } = await import('@/integrations/supabase/client');
       const { error } = await supabase
         .from('employees')
         .update(updateData as any)
@@ -754,12 +802,102 @@ function DataCompletionStep({ employees, onBack, onDone }: {
                     </div>
                   )}
                 </div>
-                {(!emp.taxId || !emp.svNumber) && (
-                  <p className="text-xs text-muted-foreground">
-                    ⚠️ {[!emp.taxId && 'Steuer-ID', !emp.svNumber && 'SV-Nr'].filter(Boolean).join(', ')} 
-                    {' '}– nicht ableitbar, Personalstamm-Datei erforderlich
-                  </p>
-                )}
+
+                {/* Manual fields section */}
+                {(() => {
+                  const manual = manualMap.get(emp.personalNumber);
+                  if (!manual) return null;
+                  const showManual = !emp.taxId || !emp.svNumber || !emp.iban || !emp.dateOfBirth || !emp.entryDate || !emp.state;
+                  if (!showManual) return null;
+                  return (
+                    <>
+                      <div className="border-t pt-3 mt-2">
+                        <p className="text-xs font-medium text-muted-foreground mb-2">Manuelle Eingabe (fehlende Felder)</p>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                        {!emp.taxId && (
+                          <div className="space-y-1">
+                            <Label className="text-xs text-muted-foreground">Steuer-ID</Label>
+                            <FormInput
+                              className="h-8 text-sm"
+                              placeholder="z.B. 12345678901"
+                              value={manual.taxId}
+                              onChange={(e) => updateManualField(emp.personalNumber, 'taxId', e.target.value)}
+                              disabled={isApplied}
+                            />
+                          </div>
+                        )}
+                        {!emp.svNumber && (
+                          <div className="space-y-1">
+                            <Label className="text-xs text-muted-foreground">SV-Nummer</Label>
+                            <FormInput
+                              className="h-8 text-sm"
+                              placeholder="z.B. 12 010190 M 012"
+                              value={manual.svNumber}
+                              onChange={(e) => updateManualField(emp.personalNumber, 'svNumber', e.target.value)}
+                              disabled={isApplied}
+                            />
+                          </div>
+                        )}
+                        {!emp.iban && (
+                          <div className="space-y-1">
+                            <Label className="text-xs text-muted-foreground">IBAN</Label>
+                            <FormInput
+                              className="h-8 text-sm"
+                              placeholder="DE..."
+                              value={manual.iban}
+                              onChange={(e) => updateManualField(emp.personalNumber, 'iban', e.target.value)}
+                              disabled={isApplied}
+                            />
+                          </div>
+                        )}
+                        {!emp.dateOfBirth && (
+                          <div className="space-y-1">
+                            <Label className="text-xs text-muted-foreground">Geburtsdatum</Label>
+                            <FormInput
+                              className="h-8 text-sm"
+                              type="date"
+                              value={manual.dateOfBirth}
+                              onChange={(e) => updateManualField(emp.personalNumber, 'dateOfBirth', e.target.value)}
+                              disabled={isApplied}
+                            />
+                          </div>
+                        )}
+                        {!emp.entryDate && (
+                          <div className="space-y-1">
+                            <Label className="text-xs text-muted-foreground">Eintrittsdatum</Label>
+                            <FormInput
+                              className="h-8 text-sm"
+                              type="date"
+                              value={manual.entryDate}
+                              onChange={(e) => updateManualField(emp.personalNumber, 'entryDate', e.target.value)}
+                              disabled={isApplied}
+                            />
+                          </div>
+                        )}
+                        {!emp.state && (
+                          <div className="space-y-1">
+                            <Label className="text-xs text-muted-foreground">Bundesland</Label>
+                            <Select
+                              value={manual.state}
+                              onValueChange={(v) => updateManualField(emp.personalNumber, 'state', v)}
+                              disabled={isApplied}
+                            >
+                              <SelectTrigger className="h-8 text-sm">
+                                <SelectValue placeholder="Auswählen..." />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {GERMAN_STATES.map(s => (
+                                  <SelectItem key={s} value={s}>{s}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        )}
+                      </div>
+                    </>
+                  );
+                })()}
               </div>
             );
           })}
