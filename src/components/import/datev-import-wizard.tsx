@@ -13,8 +13,10 @@ import { useDatevImport, ConflictStrategy } from '@/hooks/use-datev-import';
 import { toast } from 'sonner';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input as FormInput } from '@/components/ui/input';
+import { PdfReviewStep, PdfEmployeeData } from './pdf-review-step';
+import { supabase } from '@/integrations/supabase/client';
 
-type WizardStep = 'upload' | 'preview' | 'conflicts' | 'import' | 'complete';
+type WizardStep = 'upload' | 'preview' | 'conflicts' | 'import' | 'complete' | 'pdf-review';
 
 /**
  * Read a File as Windows-1252 (CP1252) text.
@@ -32,23 +34,65 @@ export function DatevImportWizard() {
   const [parseResults, setParseResults] = useState<DatevImportResult | null>(null);
   const [conflictStrategy, setConflictStrategy] = useState<ConflictStrategy>('skip');
   const [importDone, setImportDone] = useState(false);
+  const [pdfEmployees, setPdfEmployees] = useState<PdfEmployeeData[]>([]);
+  const [pdfDocType, setPdfDocType] = useState('');
+  const [isPdfParsing, setIsPdfParsing] = useState(false);
 
   const { importEmployees, isImporting, progress } = useDatevImport();
 
   const handleFiles = useCallback(async (newFiles: FileList | File[]) => {
-    const fileArr = Array.from(newFiles).filter(f =>
-      f.name.endsWith('.txt') || f.name.endsWith('.csv')
-    );
+    const allFiles = Array.from(newFiles);
+    const textFiles = allFiles.filter(f => f.name.endsWith('.txt') || f.name.endsWith('.csv'));
+    const pdfFiles = allFiles.filter(f => f.name.toLowerCase().endsWith('.pdf'));
 
-    if (fileArr.length === 0) {
-      toast.error('Keine unterstützten Dateien gefunden (.txt, .csv)');
+    if (textFiles.length === 0 && pdfFiles.length === 0) {
+      toast.error('Keine unterstützten Dateien gefunden (.txt, .csv, .pdf)');
       return;
     }
 
-    setFiles(prev => [...prev, ...fileArr]);
+    // Handle PDF files via AI extraction
+    if (pdfFiles.length > 0) {
+      setIsPdfParsing(true);
+      setFiles(prev => [...prev, ...pdfFiles]);
+      try {
+        const allPdfEmps: PdfEmployeeData[] = [];
+        let lastDocType = '';
+        for (const pdfFile of pdfFiles) {
+          const formData = new FormData();
+          formData.append('file', pdfFile);
+          const { data, error } = await supabase.functions.invoke('parse-pdf-employee', {
+            body: formData,
+          });
+          if (error) {
+            toast.error(`PDF-Fehler (${pdfFile.name}): ${error.message}`);
+            continue;
+          }
+          if (data?.employees?.length > 0) {
+            allPdfEmps.push(...data.employees);
+            lastDocType = data.documentType || 'PDF';
+          } else {
+            toast.warning(`Keine Daten in ${pdfFile.name} erkannt.`);
+          }
+        }
+        if (allPdfEmps.length > 0) {
+          setPdfEmployees(allPdfEmps);
+          setPdfDocType(lastDocType);
+          setStep('pdf-review');
+        }
+      } catch (e) {
+        toast.error('PDF-Verarbeitung fehlgeschlagen');
+        console.error(e);
+      } finally {
+        setIsPdfParsing(false);
+      }
+      if (textFiles.length === 0) return;
+    }
+
+    // Handle text/csv files (existing logic)
+    setFiles(prev => [...prev, ...textFiles]);
 
     const results: DatevImportResult[] = [];
-    for (const file of fileArr) {
+    for (const file of textFiles) {
       const content = await readFileAsCP1252(file);
       const result = parseDatevFile(content);
       results.push(result);
@@ -59,7 +103,7 @@ export function DatevImportWizard() {
 
     if (merged.employees.length > 0) {
       setStep('preview');
-    } else {
+    } else if (pdfFiles.length === 0) {
       toast.error('Keine Mitarbeiterdaten erkannt. Bitte prüfen Sie das Dateiformat.');
     }
   }, []);
@@ -89,12 +133,44 @@ export function DatevImportWizard() {
     }
   };
 
+  const handlePdfConfirm = async (confirmed: PdfEmployeeData[]) => {
+    const datevEmployees: DatevEmployee[] = confirmed.map(emp => ({
+      personalNumber: emp.personalNumber || '',
+      firstName: emp.firstName,
+      lastName: emp.lastName,
+      dateOfBirth: emp.dateOfBirth || undefined,
+      gender: undefined,
+      street: emp.street || undefined,
+      zipCode: emp.zipCode || undefined,
+      city: emp.city || undefined,
+      state: emp.state || undefined,
+      taxId: emp.taxId || undefined,
+      taxClass: emp.taxClass ? (['I','II','III','IV','V','VI'].indexOf(emp.taxClass) + 1) || undefined : undefined,
+      svNumber: emp.svNumber || undefined,
+      healthInsurance: emp.healthInsurance || undefined,
+      grossSalary: emp.grossSalary || undefined,
+      employmentType: emp.employmentType || 'fulltime',
+      entryDate: emp.entryDate || undefined,
+      weeklyHours: emp.weeklyHours || undefined,
+      iban: emp.iban || undefined,
+      bic: emp.bic || undefined,
+      churchTax: emp.religion && emp.religion !== 'none' ? true : undefined,
+      childrenAllowance: emp.childrenAllowance || undefined,
+      source: 'personalstamm' as const,
+    }));
+
+    setParseResults({ employees: datevEmployees, lohnarten: [], warnings: [], fileType: 'personalstamm' });
+    setStep('preview');
+  };
+
   const reset = () => {
     setStep('upload');
     setFiles([]);
     setParseResults(null);
     setImportDone(false);
     setConflictStrategy('skip');
+    setPdfEmployees([]);
+    setPdfDocType('');
   };
 
   // Quality summary
@@ -136,13 +212,13 @@ export function DatevImportWizard() {
               <FileText className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
               <p className="text-lg font-medium">Dateien hierher ziehen</p>
               <p className="text-sm text-muted-foreground mt-1">
-                oder klicken zum Auswählen • .txt, .csv
+                oder klicken zum Auswählen • .txt, .csv, .pdf
               </p>
               <input
                 id="datev-file-input"
                 type="file"
                 multiple
-                accept=".txt,.csv"
+                accept=".txt,.csv,.pdf"
                 className="hidden"
                 onChange={(e) => e.target.files && handleFiles(e.target.files)}
               />
@@ -172,6 +248,27 @@ export function DatevImportWizard() {
             )}
           </CardContent>
         </Card>
+      )}
+
+      {/* PDF Parsing Loading */}
+      {isPdfParsing && (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
+            <p className="text-lg font-medium">PDF wird analysiert...</p>
+            <p className="text-sm text-muted-foreground mt-1">KI-gestützte Erkennung der Mitarbeiterdaten</p>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* PDF Review Step */}
+      {step === 'pdf-review' && pdfEmployees.length > 0 && (
+        <PdfReviewStep
+          employees={pdfEmployees}
+          documentType={pdfDocType}
+          onConfirm={handlePdfConfirm}
+          onBack={() => { setStep('upload'); setPdfEmployees([]); }}
+        />
       )}
 
       {/* Step 2: Preview */}

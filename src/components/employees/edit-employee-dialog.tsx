@@ -9,7 +9,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Switch } from "@/components/ui/switch";
 import { Employee, EmploymentType, TaxClass, RelationshipStatus, Religion, CHURCH_TAX_RATES, GERMAN_STATES, GERMAN_STATE_NAMES } from "@/types/employee";
 import { Checkbox } from "@/components/ui/checkbox";
-import { PersonalstammUpload } from "./personalstamm-upload";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Upload, FileText, Loader2, Info } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { PdfUploadTab } from "./pdf-upload-tab";
 
 interface EditEmployeeDialogProps {
   employee: Employee | null;
@@ -95,7 +100,7 @@ export function EditEmployeeDialog({ employee, open, onOpenChange, onSave }: Edi
             <TabsTrigger value="personal">Persönliche Daten</TabsTrigger>
             <TabsTrigger value="employment">Beschäftigung</TabsTrigger>
             <TabsTrigger value="salary">Gehalt</TabsTrigger>
-            <TabsTrigger value="import">Daten nachladen</TabsTrigger>
+            <TabsTrigger value="pdf-upload">PDF-Import</TabsTrigger>
           </TabsList>
 
           <TabsContent value="personal" className="space-y-4">
@@ -319,34 +324,44 @@ export function EditEmployeeDialog({ employee, open, onOpenChange, onSave }: Edi
             </Card>
           </TabsContent>
 
-          <TabsContent value="import" className="space-y-4">
-            {employee && (
-              <PersonalstammUpload
-                personalNumber=""
-                employeeId={employee.id}
-                currentFields={{
-                  taxClass: typeof employee.personalData.taxClass === 'string'
-                    ? ['I','II','III','IV','V','VI'].indexOf(employee.personalData.taxClass) + 1 || null
-                    : Number(employee.personalData.taxClass) || null,
-                  taxId: employee.personalData.taxId || null,
-                  svNumber: employee.personalData.socialSecurityNumber || null,
-                  healthInsurance: employee.personalData.healthInsurance?.name || null,
-                  weeklyHours: employee.employmentData.weeklyHours || null,
-                  churchTax: employee.personalData.churchTax ?? null,
-                  churchTaxRate: null,
-                  iban: employee.salaryData.bankingData?.iban || null,
-                  bic: employee.salaryData.bankingData?.bic || null,
-                  dateOfBirth: employee.personalData.dateOfBirth
-                    ? (employee.personalData.dateOfBirth instanceof Date
-                      ? employee.personalData.dateOfBirth.toISOString()
-                      : String(employee.personalData.dateOfBirth))
-                    : null,
-                }}
-                onUpdated={() => {
-                  onSave(formData);
-                }}
-              />
-            )}
+          <TabsContent value="pdf-upload" className="space-y-4">
+            <PdfUploadTab employee={employee} onFieldsExtracted={(fields) => {
+              setFormData(prev => {
+                const updated = { ...prev };
+                if (fields.taxId && !prev.personalData?.taxId) {
+                  updated.personalData = { ...updated.personalData!, taxId: fields.taxId };
+                }
+                if (fields.taxClass && !prev.personalData?.taxClass) {
+                  updated.personalData = { ...updated.personalData!, taxClass: fields.taxClass as TaxClass };
+                }
+                if (fields.socialSecurityNumber && !prev.personalData?.socialSecurityNumber) {
+                  updated.personalData = { ...updated.personalData!, socialSecurityNumber: fields.socialSecurityNumber };
+                }
+                if (fields.healthInsurance) {
+                  updated.personalData = { 
+                    ...updated.personalData!, 
+                    healthInsurance: { 
+                      ...updated.personalData!.healthInsurance, 
+                      name: fields.healthInsurance 
+                    } 
+                  };
+                }
+                if (fields.grossSalary && !prev.salaryData?.grossSalary) {
+                  updated.salaryData = { ...updated.salaryData!, grossSalary: fields.grossSalary };
+                }
+                if (fields.iban) {
+                  updated.salaryData = { 
+                    ...updated.salaryData!, 
+                    bankingData: { 
+                      ...updated.salaryData!.bankingData, 
+                      iban: fields.iban 
+                    } 
+                  };
+                }
+                return updated;
+              });
+              toast.success('Fehlende Felder aus PDF übernommen');
+            }} />
           </TabsContent>
         </Tabs>
 
