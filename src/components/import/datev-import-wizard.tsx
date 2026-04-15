@@ -511,6 +511,21 @@ interface EditableInferred {
   healthInsurance?: { value: string; reason: string };
 }
 
+interface ManualFields {
+  taxId: string;
+  svNumber: string;
+  iban: string;
+  dateOfBirth: string;
+  entryDate: string;
+  state: string;
+}
+
+const GERMAN_STATES = [
+  'Baden-Württemberg', 'Bayern', 'Berlin', 'Brandenburg', 'Bremen', 'Hamburg',
+  'Hessen', 'Mecklenburg-Vorpommern', 'Niedersachsen', 'Nordrhein-Westfalen',
+  'Rheinland-Pfalz', 'Saarland', 'Sachsen', 'Sachsen-Anhalt', 'Schleswig-Holstein', 'Thüringen',
+];
+
 function DataCompletionStep({ employees, onBack, onDone }: { 
   employees: DatevEmployee[]; 
   onBack: () => void; 
