@@ -861,6 +861,17 @@ const faqs = [
   },
 ];
 
+const popularSearches = ["Mitarbeiter anlegen", "Abrechnung", "PDF", "DATEV", "Steuerklasse", "Zeiterfassung", "Minijob", "Krankenkasse"];
+
+function highlightMatch(text: string, query: string) {
+  if (!query || query.length < 2) return text;
+  const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+  const parts = text.split(regex);
+  return parts.map((part, i) =>
+    regex.test(part) ? <mark key={i} className="bg-primary/20 text-foreground rounded px-0.5">{part}</mark> : part
+  );
+}
+
 export default function HilfeCenter() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
