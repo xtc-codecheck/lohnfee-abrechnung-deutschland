@@ -3,7 +3,7 @@
  * Extrahiert für bessere Testbarkeit
  */
 
-import { Employee, TaxClass, EmploymentType } from '@/types/employee';
+import { Employee, TaxClass, EmploymentType, GERMAN_HEALTH_INSURANCES } from '@/types/employee';
 import { Tables, TablesInsert, TablesUpdate } from '@/integrations/supabase/types';
 
 type DbEmployee = Tables<'employees'>;
@@ -11,6 +11,21 @@ type DbEmployee = Tables<'employees'>;
 export function taxClassFromNumber(tc: number | null): TaxClass {
   const map: Record<number, TaxClass> = { 1: 'I', 2: 'II', 3: 'III', 4: 'IV', 5: 'V', 6: 'VI' };
   return map[tc ?? 1] ?? 'I';
+}
+
+/**
+ * Looks up the KV-Zusatzbeitrag for a health insurance name using fuzzy matching.
+ * Falls back to average rate (2.5%) if not found.
+ */
+function lookupHealthInsuranceRate(name: string | null): number {
+  if (!name) return 2.5;
+  const lower = name.toLowerCase().replace(/[\u2011\u2010-]/g, '-');
+  const match = GERMAN_HEALTH_INSURANCES.find(ins => {
+    const insLower = ins.name.toLowerCase().replace(/[\u2011\u2010-]/g, '-');
+    return insLower.includes(lower) || lower.includes(insLower) ||
+      insLower.split(/[\s(]+/)[0] === lower.split(/[\s(]+/)[0];
+  });
+  return match?.additionalRate ?? 2.5;
 }
 
 export function taxClassToNumber(tc: TaxClass): number {
@@ -36,10 +51,11 @@ export function dbToEmployee(row: DbEmployee): Employee {
       taxId: row.tax_id ?? '',
       taxClass: taxClassFromNumber(row.tax_class),
       churchTax: row.church_tax ?? false,
-      healthInsurance: {
+    healthInsurance: {
         name: row.health_insurance ?? '',
-        additionalRate: 0,
+        additionalRate: lookupHealthInsuranceRate(row.health_insurance),
       },
+      churchTaxRate: Number(row.church_tax_rate ?? 0),
       socialSecurityNumber: row.sv_number ?? '',
       childAllowances: Number(row.children_allowance ?? 0),
       numberOfChildren: Number((row as any).number_of_children ?? 0),
