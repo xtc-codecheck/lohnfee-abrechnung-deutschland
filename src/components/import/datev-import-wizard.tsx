@@ -133,12 +133,45 @@ export function DatevImportWizard() {
     }
   };
 
+  const handlePdfConfirm = async (confirmed: PdfEmployeeData[]) => {
+    // Convert PdfEmployeeData to DatevEmployee format for import
+    const datevEmployees: DatevEmployee[] = confirmed.map(emp => ({
+      personalNumber: emp.personalNumber || '',
+      firstName: emp.firstName,
+      lastName: emp.lastName,
+      dateOfBirth: emp.dateOfBirth || '',
+      gender: '',
+      street: emp.street || '',
+      zipCode: emp.zipCode || '',
+      city: emp.city || '',
+      state: emp.state || '',
+      taxId: emp.taxId || '',
+      taxClass: emp.taxClass || '',
+      svNumber: emp.svNumber || '',
+      healthInsurance: emp.healthInsurance || '',
+      grossSalary: emp.grossSalary || 0,
+      employmentType: emp.employmentType || 'fulltime',
+      entryDate: emp.entryDate || '',
+      weeklyHours: emp.weeklyHours || 40,
+      iban: emp.iban || '',
+      bic: emp.bic || '',
+      churchTax: emp.religion && emp.religion !== 'none' ? true : false,
+      childrenAllowance: emp.childrenAllowance || 0,
+      source: 'PDF' as any,
+    }));
+
+    setParseResults({ employees: datevEmployees, lohnarten: [], errors: [], fileType: 'personalstamm' });
+    setStep('preview');
+  };
+
   const reset = () => {
     setStep('upload');
     setFiles([]);
     setParseResults(null);
     setImportDone(false);
     setConflictStrategy('skip');
+    setPdfEmployees([]);
+    setPdfDocType('');
   };
 
   // Quality summary
