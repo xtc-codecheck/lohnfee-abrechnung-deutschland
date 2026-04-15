@@ -14,18 +14,62 @@ export function taxClassFromNumber(tc: number | null): TaxClass {
 }
 
 /**
- * Looks up the KV-Zusatzbeitrag for a health insurance name using fuzzy matching.
- * Falls back to average rate (2.5%) if not found.
+ * Normalizes a health insurance name for comparison.
+ */
+function normalizeInsName(name: string): string {
+  return name.toLowerCase()
+    .replace(/[\u2011\u2010\u2012\u2013\u2014-]/g, '-')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/**
+ * Looks up the KV-Zusatzbeitrag for a health insurance name using scored matching.
+ * Falls back to average rate (2.5%) if no confident match is found.
  */
 function lookupHealthInsuranceRate(name: string | null): number {
   if (!name) return 2.5;
-  const lower = name.toLowerCase().replace(/[\u2011\u2010-]/g, '-');
-  const match = GERMAN_HEALTH_INSURANCES.find(ins => {
-    const insLower = ins.name.toLowerCase().replace(/[\u2011\u2010-]/g, '-');
-    return insLower.includes(lower) || lower.includes(insLower) ||
-      insLower.split(/[\s(]+/)[0] === lower.split(/[\s(]+/)[0];
-  });
-  return match?.additionalRate ?? 2.5;
+  const input = normalizeInsName(name);
+
+  // 1. Exact match
+  const exact = GERMAN_HEALTH_INSURANCES.find(
+    ins => normalizeInsName(ins.name) === input
+  );
+  if (exact) return exact.additionalRate;
+
+  // 2. Score-based: pick the candidate whose normalized name shares the most
+  //    words with the input. Require at least 2 matching words to avoid false positives.
+  const inputWords = input.split(/[\s()+,./]+/).filter(w => w.length > 1);
+
+  let bestMatch: typeof GERMAN_HEALTH_INSURANCES[number] | null = null;
+  let bestScore = 0;
+
+  for (const ins of GERMAN_HEALTH_INSURANCES) {
+    const candidate = normalizeInsName(ins.name);
+
+    // Full substring match (either direction)
+    if (candidate.includes(input) || input.includes(candidate)) {
+      return ins.additionalRate;
+    }
+
+    // Word overlap scoring
+    const candidateWords = candidate.split(/[\s()+,./]+/).filter(w => w.length > 1);
+    let score = 0;
+    for (const w of inputWords) {
+      if (candidateWords.some(cw => cw === w || cw.includes(w) || w.includes(cw))) {
+        score++;
+      }
+    }
+    if (score > bestScore) {
+      bestScore = score;
+      bestMatch = ins;
+    }
+  }
+
+  // Require at least 2 matching words for confidence
+  if (bestMatch && bestScore >= 2) return bestMatch.additionalRate;
+
+  return 2.5;
 }
 
 export function taxClassToNumber(tc: TaxClass): number {
