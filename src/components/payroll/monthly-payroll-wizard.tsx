@@ -229,7 +229,7 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
       setAutoRunActive(false);
       autoRunRef.current = false;
     }
-  }, [checkStep, createPayrollPeriod, selectedYear, selectedMonth]);
+  }, [checkStep, createPayrollPeriod, calculateAndPersistEntries, selectedYear, selectedMonth]);
 
   const stopAutoRun = useCallback(() => {
     autoRunRef.current = false;
@@ -314,7 +314,7 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
       setAutoRunActive(false);
       autoRunRef.current = false;
     }
-  }, [stepStatuses, checkStep, createPayrollPeriod, selectedYear, selectedMonth]);
+  }, [stepStatuses, checkStep, createPayrollPeriod, calculateAndPersistEntries, selectedYear, selectedMonth]);
 
   const approveStep = () => {
     const newStatuses = [...stepStatuses];
