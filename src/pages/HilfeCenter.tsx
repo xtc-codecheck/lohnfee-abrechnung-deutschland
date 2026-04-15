@@ -1144,12 +1144,6 @@ export default function HilfeCenter() {
                 </Accordion>
               </div>
             )
-                      </AccordionContent>
-                    </AccordionItem>
-                  ))}
-                </Accordion>
-              </div>
-            )}
 
             {/* Quick Links */}
             {!searchQuery && (
