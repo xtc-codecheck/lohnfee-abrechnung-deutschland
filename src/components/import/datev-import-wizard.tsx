@@ -591,6 +591,53 @@ function DataCompletionStep({ employees, onBack, onDone }: {
     });
   };
 
+  /** Validates manual fields and returns error messages per field */
+  const validateManualFields = (manual: ManualFields): Partial<Record<keyof ManualFields, string>> => {
+    const errors: Partial<Record<keyof ManualFields, string>> = {};
+    // Steuer-ID: exactly 11 digits
+    if (manual.taxId && !/^\d{11}$/.test(manual.taxId.replace(/\s/g, ''))) {
+      errors.taxId = 'Steuer-ID muss genau 11 Ziffern haben';
+    }
+    // IBAN: starts with DE, 22 chars total (alphanumeric)
+    if (manual.iban) {
+      const cleaned = manual.iban.replace(/\s/g, '').toUpperCase();
+      if (!cleaned.startsWith('DE')) {
+        errors.iban = 'IBAN muss mit DE beginnen';
+      } else if (cleaned.length !== 22) {
+        errors.iban = `IBAN muss 22 Zeichen haben (aktuell: ${cleaned.length})`;
+      } else if (!/^DE\d{20}$/.test(cleaned)) {
+        errors.iban = 'IBAN darf nach DE nur Ziffern enthalten';
+      }
+    }
+    // SV-Nummer: Format XX DDMMYY L NNN (12 chars without spaces)
+    if (manual.svNumber) {
+      const cleaned = manual.svNumber.replace(/\s/g, '');
+      if (cleaned.length !== 12) {
+        errors.svNumber = `SV-Nummer muss 12 Zeichen haben (aktuell: ${cleaned.length})`;
+      } else if (!/^\d{2}\d{6}[A-Za-z]\d{3}$/.test(cleaned)) {
+        errors.svNumber = 'Format: 2 Ziffern + 6 Ziffern (Geburtsdatum) + 1 Buchstabe + 3 Ziffern';
+      }
+    }
+    return errors;
+  };
+
+  /** Check if a specific employee has validation errors */
+  const getValidationErrors = (pnr: string) => {
+    const manual = manualMap.get(pnr);
+    if (!manual) return {};
+    return validateManualFields(manual);
+  };
+
+  /** Check if any employee has validation errors (blocks "Alle übernehmen") */
+  const hasAnyValidationErrors = useMemo(() => {
+    for (const [pnr] of manualMap) {
+      if (appliedPnrs.has(pnr)) continue;
+      const errors = validateManualFields(manualMap.get(pnr)!);
+      if (Object.keys(errors).length > 0) return true;
+    }
+    return false;
+  }, [manualMap, appliedPnrs]);
+
   const buildUpdateData = (pnr: string) => {
     const inferred = editedMap.get(pnr);
     const manual = manualMap.get(pnr);
@@ -694,7 +741,7 @@ function DataCompletionStep({ employees, onBack, onDone }: {
         {pendingCount > 1 && (
           <Button 
             onClick={applyAllDefaults} 
-            disabled={applyingAll}
+            disabled={applyingAll || hasAnyValidationErrors}
             className="w-full"
           >
             {applyingAll ? (
@@ -711,6 +758,8 @@ function DataCompletionStep({ employees, onBack, onDone }: {
             if (!inferred) return null;
             const isApplied = appliedPnrs.has(emp.personalNumber);
             const isApplying = applyingPnr === emp.personalNumber;
+            const empErrors = getValidationErrors(emp.personalNumber);
+            const hasErrors = Object.keys(empErrors).length > 0;
             return (
               <div key={emp.personalNumber} className={`border rounded-lg p-4 space-y-3 ${isApplied ? 'opacity-60 border-primary/30' : ''}`}>
                 <div className="flex items-center justify-between">
@@ -723,7 +772,8 @@ function DataCompletionStep({ employees, onBack, onDone }: {
                     <Button 
                       size="sm" 
                       onClick={() => applyDefaults(emp.personalNumber)}
-                      disabled={isApplying || applyingAll}
+                      disabled={isApplying || applyingAll || hasErrors}
+                      title={hasErrors ? 'Bitte Validierungsfehler beheben' : undefined}
                     >
                       {isApplying ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : null}
                       Übernehmen
@@ -809,6 +859,7 @@ function DataCompletionStep({ employees, onBack, onDone }: {
                   if (!manual) return null;
                   const showManual = !emp.taxId || !emp.svNumber || !emp.iban || !emp.dateOfBirth || !emp.entryDate || !emp.state;
                   if (!showManual) return null;
+                  const errors = getValidationErrors(emp.personalNumber);
                   return (
                     <>
                       <div className="border-t pt-3 mt-2">
@@ -819,36 +870,42 @@ function DataCompletionStep({ employees, onBack, onDone }: {
                           <div className="space-y-1">
                             <Label className="text-xs text-muted-foreground">Steuer-ID</Label>
                             <FormInput
-                              className="h-8 text-sm"
+                              className={`h-8 text-sm ${errors.taxId ? 'border-destructive' : ''}`}
                               placeholder="z.B. 12345678901"
+                              maxLength={11}
                               value={manual.taxId}
-                              onChange={(e) => updateManualField(emp.personalNumber, 'taxId', e.target.value)}
+                              onChange={(e) => updateManualField(emp.personalNumber, 'taxId', e.target.value.replace(/\D/g, '').slice(0, 11))}
                               disabled={isApplied}
                             />
+                            {errors.taxId && <p className="text-xs text-destructive">{errors.taxId}</p>}
                           </div>
                         )}
                         {!emp.svNumber && (
                           <div className="space-y-1">
                             <Label className="text-xs text-muted-foreground">SV-Nummer</Label>
                             <FormInput
-                              className="h-8 text-sm"
-                              placeholder="z.B. 12 010190 M 012"
+                              className={`h-8 text-sm ${errors.svNumber ? 'border-destructive' : ''}`}
+                              placeholder="z.B. 12010190M012"
+                              maxLength={15}
                               value={manual.svNumber}
                               onChange={(e) => updateManualField(emp.personalNumber, 'svNumber', e.target.value)}
                               disabled={isApplied}
                             />
+                            {errors.svNumber && <p className="text-xs text-destructive">{errors.svNumber}</p>}
                           </div>
                         )}
                         {!emp.iban && (
                           <div className="space-y-1">
                             <Label className="text-xs text-muted-foreground">IBAN</Label>
                             <FormInput
-                              className="h-8 text-sm"
+                              className={`h-8 text-sm ${errors.iban ? 'border-destructive' : ''}`}
                               placeholder="DE..."
+                              maxLength={27}
                               value={manual.iban}
-                              onChange={(e) => updateManualField(emp.personalNumber, 'iban', e.target.value)}
+                              onChange={(e) => updateManualField(emp.personalNumber, 'iban', e.target.value.toUpperCase())}
                               disabled={isApplied}
                             />
+                            {errors.iban && <p className="text-xs text-destructive">{errors.iban}</p>}
                           </div>
                         )}
                         {!emp.dateOfBirth && (
