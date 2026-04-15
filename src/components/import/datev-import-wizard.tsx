@@ -13,8 +13,10 @@ import { useDatevImport, ConflictStrategy } from '@/hooks/use-datev-import';
 import { toast } from 'sonner';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input as FormInput } from '@/components/ui/input';
+import { PdfReviewStep, PdfEmployeeData } from './pdf-review-step';
+import { supabase } from '@/integrations/supabase/client';
 
-type WizardStep = 'upload' | 'preview' | 'conflicts' | 'import' | 'complete';
+type WizardStep = 'upload' | 'preview' | 'conflicts' | 'import' | 'complete' | 'pdf-review';
 
 /**
  * Read a File as Windows-1252 (CP1252) text.
