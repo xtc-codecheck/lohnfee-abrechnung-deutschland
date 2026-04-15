@@ -344,9 +344,36 @@ export function EmployeeDashboard({ onAddEmployee, onCalculateSalary, onShowComp
                       </span>
                     </div>
                     <div>
-                      <h4 className="font-medium text-foreground">
-                        {employee.personalData.firstName} {employee.personalData.lastName}
-                      </h4>
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-medium text-foreground">
+                          {employee.personalData.firstName} {employee.personalData.lastName}
+                        </h4>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger>
+                              {(() => {
+                                const comp = employeeCompleteness.get(employee.id);
+                                if (!comp) return null;
+                                if (comp.status === 'complete') return <CheckCircle2 className="h-4 w-4 text-primary" />;
+                                if (comp.status === 'warning') return <AlertCircle className="h-4 w-4 text-yellow-500" />;
+                                return <AlertCircle className="h-4 w-4 text-destructive" />;
+                              })()}
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              {(() => {
+                                const comp = employeeCompleteness.get(employee.id);
+                                if (!comp || comp.status === 'complete') return <p>Alle Pflichtfelder vorhanden</p>;
+                                return (
+                                  <div className="text-xs">
+                                    <p className="font-medium mb-1">Fehlende Felder:</p>
+                                    {comp.missing.map(f => <p key={f}>• {f}</p>)}
+                                  </div>
+                                );
+                              })()}
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </div>
                       <p className="text-sm text-muted-foreground">
                         {employee.employmentData.employmentType === 'fulltime' ? 'Vollzeit' : 
                          employee.employmentData.employmentType === 'parttime' ? 'Teilzeit' : 
