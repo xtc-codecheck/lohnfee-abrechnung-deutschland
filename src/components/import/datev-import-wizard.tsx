@@ -642,18 +642,10 @@ function DataCompletionStep({ employees, onBack, onDone }: {
     let successCount = 0;
     for (const emp of incompleteEmps) {
       if (appliedPnrs.has(emp.personalNumber)) continue;
-      const inferred = editedMap.get(emp.personalNumber);
-      if (!inferred || Object.keys(inferred).length === 0) continue;
-
-      const { supabase } = await import('@/integrations/supabase/client');
-      const updateData: Record<string, unknown> = {};
-      if (inferred.taxClass) updateData.tax_class = inferred.taxClass.value;
-      if (inferred.weeklyHours) updateData.weekly_hours = inferred.weeklyHours.value;
-      if (inferred.churchTaxRate) updateData.church_tax_rate = inferred.churchTaxRate.value;
-      if (inferred.healthInsurance) updateData.health_insurance = inferred.healthInsurance.value;
-
+      const updateData = buildUpdateData(emp.personalNumber);
       if (Object.keys(updateData).length === 0) continue;
 
+      const { supabase } = await import('@/integrations/supabase/client');
       const { error } = await supabase
         .from('employees')
         .update(updateData as any)
