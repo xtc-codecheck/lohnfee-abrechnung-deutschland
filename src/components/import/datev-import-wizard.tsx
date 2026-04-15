@@ -103,12 +103,12 @@ export function DatevImportWizard() {
   return (
     <div className="space-y-6">
       {/* Step Indicator */}
-      <div className="flex items-center gap-2 text-sm">
-        {(['upload', 'preview', 'conflicts', 'import'] as WizardStep[]).map((s, i) => (
+      <div className="flex items-center gap-2 text-sm flex-wrap">
+        {(['upload', 'preview', 'conflicts', 'import', 'complete'] as WizardStep[]).map((s, i) => (
           <div key={s} className="flex items-center gap-2">
             {i > 0 && <div className="w-8 h-px bg-border" />}
-            <Badge variant={step === s ? 'default' : s === 'import' && importDone ? 'default' : 'outline'}>
-              {i + 1}. {s === 'upload' ? 'Dateien' : s === 'preview' ? 'Vorschau' : s === 'conflicts' ? 'Konflikte' : 'Import'}
+            <Badge variant={step === s ? 'default' : 'outline'}>
+              {i + 1}. {s === 'upload' ? 'Dateien' : s === 'preview' ? 'Vorschau' : s === 'conflicts' ? 'Konflikte' : s === 'import' ? 'Import' : 'Vervollständigen'}
             </Badge>
           </div>
         ))}
