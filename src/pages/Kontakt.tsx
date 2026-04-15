@@ -24,6 +24,15 @@ export default function Kontakt() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Rate limiting check
+    const lastSubmit = parseInt(localStorage.getItem(RATE_LIMIT_KEY) || "0", 10);
+    const now = Date.now();
+    if (now - lastSubmit < RATE_LIMIT_MS) {
+      const waitSec = Math.ceil((RATE_LIMIT_MS - (now - lastSubmit)) / 1000);
+      toast({ title: `Bitte warten Sie ${waitSec} Sekunden vor dem nächsten Senden.`, variant: "destructive" });
+      return;
+    }
+
     if (!form.name.trim() || !form.email.trim() || !form.subject.trim() || !form.message.trim()) {
       toast({ title: "Bitte füllen Sie alle Felder aus.", variant: "destructive" });
       return;
