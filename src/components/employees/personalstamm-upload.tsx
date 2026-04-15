@@ -67,8 +67,8 @@ export function PersonalstammUpload({ personalNumber, employeeId, currentFields,
 
       const emp = result.employees[0];
 
-      // Check if personal number matches
-      if (emp.personalNumber !== personalNumber && emp.personalNumber !== personalNumber.replace(/^0+/, '')) {
+      // Check if personal number matches (skip if no personalNumber provided — direct upload)
+      if (personalNumber && emp.personalNumber !== personalNumber && emp.personalNumber !== personalNumber.replace(/^0+/, '')) {
         setError(
           `Personalnummer in Datei (${emp.personalNumber}) stimmt nicht mit diesem Mitarbeiter (${personalNumber}) überein. ` +
           `Bitte laden Sie die richtige Personalstamm-Datei hoch.`
