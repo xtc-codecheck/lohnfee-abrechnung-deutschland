@@ -106,7 +106,7 @@ export function useDatevImport() {
               if (Object.keys(updateData).length > 0) {
                 const { error } = await supabase
                   .from('employees')
-                  .update(updateData as Record<string, string | number | boolean | null>)
+                  .update(updateData as any)
                   .eq('id', conflict.id);
                 if (error) {
                   result.errors.push(`${emp.firstName} ${emp.lastName}: ${error.message}`);
