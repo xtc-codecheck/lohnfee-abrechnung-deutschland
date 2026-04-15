@@ -802,12 +802,102 @@ function DataCompletionStep({ employees, onBack, onDone }: {
                     </div>
                   )}
                 </div>
-                {(!emp.taxId || !emp.svNumber) && (
-                  <p className="text-xs text-muted-foreground">
-                    ⚠️ {[!emp.taxId && 'Steuer-ID', !emp.svNumber && 'SV-Nr'].filter(Boolean).join(', ')} 
-                    {' '}– nicht ableitbar, Personalstamm-Datei erforderlich
-                  </p>
-                )}
+
+                {/* Manual fields section */}
+                {(() => {
+                  const manual = manualMap.get(emp.personalNumber);
+                  if (!manual) return null;
+                  const showManual = !emp.taxId || !emp.svNumber || !emp.iban || !emp.dateOfBirth || !emp.entryDate || !emp.state;
+                  if (!showManual) return null;
+                  return (
+                    <>
+                      <div className="border-t pt-3 mt-2">
+                        <p className="text-xs font-medium text-muted-foreground mb-2">Manuelle Eingabe (fehlende Felder)</p>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                        {!emp.taxId && (
+                          <div className="space-y-1">
+                            <Label className="text-xs text-muted-foreground">Steuer-ID</Label>
+                            <FormInput
+                              className="h-8 text-sm"
+                              placeholder="z.B. 12345678901"
+                              value={manual.taxId}
+                              onChange={(e) => updateManualField(emp.personalNumber, 'taxId', e.target.value)}
+                              disabled={isApplied}
+                            />
+                          </div>
+                        )}
+                        {!emp.svNumber && (
+                          <div className="space-y-1">
+                            <Label className="text-xs text-muted-foreground">SV-Nummer</Label>
+                            <FormInput
+                              className="h-8 text-sm"
+                              placeholder="z.B. 12 010190 M 012"
+                              value={manual.svNumber}
+                              onChange={(e) => updateManualField(emp.personalNumber, 'svNumber', e.target.value)}
+                              disabled={isApplied}
+                            />
+                          </div>
+                        )}
+                        {!emp.iban && (
+                          <div className="space-y-1">
+                            <Label className="text-xs text-muted-foreground">IBAN</Label>
+                            <FormInput
+                              className="h-8 text-sm"
+                              placeholder="DE..."
+                              value={manual.iban}
+                              onChange={(e) => updateManualField(emp.personalNumber, 'iban', e.target.value)}
+                              disabled={isApplied}
+                            />
+                          </div>
+                        )}
+                        {!emp.dateOfBirth && (
+                          <div className="space-y-1">
+                            <Label className="text-xs text-muted-foreground">Geburtsdatum</Label>
+                            <FormInput
+                              className="h-8 text-sm"
+                              type="date"
+                              value={manual.dateOfBirth}
+                              onChange={(e) => updateManualField(emp.personalNumber, 'dateOfBirth', e.target.value)}
+                              disabled={isApplied}
+                            />
+                          </div>
+                        )}
+                        {!emp.entryDate && (
+                          <div className="space-y-1">
+                            <Label className="text-xs text-muted-foreground">Eintrittsdatum</Label>
+                            <FormInput
+                              className="h-8 text-sm"
+                              type="date"
+                              value={manual.entryDate}
+                              onChange={(e) => updateManualField(emp.personalNumber, 'entryDate', e.target.value)}
+                              disabled={isApplied}
+                            />
+                          </div>
+                        )}
+                        {!emp.state && (
+                          <div className="space-y-1">
+                            <Label className="text-xs text-muted-foreground">Bundesland</Label>
+                            <Select
+                              value={manual.state}
+                              onValueChange={(v) => updateManualField(emp.personalNumber, 'state', v)}
+                              disabled={isApplied}
+                            >
+                              <SelectTrigger className="h-8 text-sm">
+                                <SelectValue placeholder="Auswählen..." />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {GERMAN_STATES.map(s => (
+                                  <SelectItem key={s} value={s}>{s}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        )}
+                      </div>
+                    </>
+                  );
+                })()}
               </div>
             );
           })}
