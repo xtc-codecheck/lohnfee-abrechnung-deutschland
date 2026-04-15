@@ -569,6 +569,7 @@ function DataCompletionStep({ employees, onBack, onDone }: {
   }, [incompleteEmps]);
 
   const [editedMap, setEditedMap] = useState<Map<string, EditableInferred>>(initialInferredMap);
+  const [manualMap, setManualMap] = useState<Map<string, ManualFields>>(initialManualMap);
 
   const updateField = (pnr: string, field: keyof EditableInferred, value: string | number) => {
     setEditedMap(prev => {
@@ -577,6 +578,15 @@ function DataCompletionStep({ employees, onBack, onDone }: {
       const existing = current[field];
       (current as any)[field] = { value, reason: existing?.reason || 'Manuell angepasst' };
       next.set(pnr, { ...current });
+      return next;
+    });
+  };
+
+  const updateManualField = (pnr: string, field: keyof ManualFields, value: string) => {
+    setManualMap(prev => {
+      const next = new Map(prev);
+      const current = next.get(pnr) || { taxId: '', svNumber: '', iban: '', dateOfBirth: '', entryDate: '', state: '' };
+      next.set(pnr, { ...current, [field]: value });
       return next;
     });
   };
