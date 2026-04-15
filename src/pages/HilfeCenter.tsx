@@ -1143,7 +1143,7 @@ export default function HilfeCenter() {
                   ))}
                 </Accordion>
               </div>
-            )
+            )}
 
             {/* Quick Links */}
             {!searchQuery && (
