@@ -856,16 +856,13 @@ function DataCompletionStep({ employees, onBack, onDone }: {
                   if (!manual) return null;
                   const showManual = !emp.taxId || !emp.svNumber || !emp.iban || !emp.dateOfBirth || !emp.entryDate || !emp.state;
                   if (!showManual) return null;
+                  const errors = getValidationErrors(emp.personalNumber);
                   return (
                     <>
                       <div className="border-t pt-3 mt-2">
                         <p className="text-xs font-medium text-muted-foreground mb-2">Manuelle Eingabe (fehlende Felder)</p>
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                        {(() => {
-                          const errors = getValidationErrors(emp.personalNumber);
-                          return (
-                            <>
                         {!emp.taxId && (
                           <div className="space-y-1">
                             <Label className="text-xs text-muted-foreground">Steuer-ID</Label>
@@ -955,10 +952,6 @@ function DataCompletionStep({ employees, onBack, onDone }: {
                     </>
                   );
                 })()}
-              </div>
-            );
-          })}
-        </div>
 
         <Alert>
           <Info className="h-4 w-4" />
