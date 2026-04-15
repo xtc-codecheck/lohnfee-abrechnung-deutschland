@@ -8,11 +8,13 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { Upload, FileText, AlertTriangle, CheckCircle2, Users, ArrowLeft, ArrowRight, Loader2, Info } from 'lucide-react';
-import { parseDatevFile, mergeDatevResults, DatevEmployee, DatevImportResult } from '@/utils/datev-import';
+import { parseDatevFile, mergeDatevResults, DatevEmployee, DatevImportResult, inferMissingFields, InferredFields } from '@/utils/datev-import';
 import { useDatevImport, ConflictStrategy } from '@/hooks/use-datev-import';
 import { toast } from 'sonner';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input as FormInput } from '@/components/ui/input';
 
-type WizardStep = 'upload' | 'preview' | 'conflicts' | 'import';
+type WizardStep = 'upload' | 'preview' | 'conflicts' | 'import' | 'complete';
 
 /**
  * Read a File as Windows-1252 (CP1252) text.
@@ -76,6 +78,14 @@ export function DatevImportWizard() {
       toast.success(`${result.imported} Mitarbeiter erfolgreich importiert`);
     } else {
       toast.warning(`${result.imported} importiert, ${result.errors.length} Fehler`);
+    }
+
+    // Check if there are employees with gaps — offer completion step
+    if (parseResults.employees.some(emp => {
+      const inferred = inferMissingFields(emp, parseResults.employees);
+      return Object.keys(inferred).length > 0;
+    })) {
+      // Will show "Daten vervollständigen" button
     }
   };
 
