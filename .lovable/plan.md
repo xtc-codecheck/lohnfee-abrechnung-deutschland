@@ -1,69 +1,39 @@
 
 
-# Plan: Intelligente Datenrekonstruktion bei unvollständigen DATEV-Imports
+# Plan: PDF-Upload fur Mitarbeiterdaten
 
-## Ausgangslage
+## Analyse
 
-- 21/23 Mitarbeiter sind vollständig (91%)
-- 2 Mitarbeiter (Wittmann, Merl) fehlen: Steuerklasse, Steuer-ID, Krankenkasse
-- Problem in der Praxis: Mandanten liefern selten alle Dateien
+DATEV exportiert Stammdaten als `.txt`-Dateien. PDFs (z.B. Lohnabrechnungen, Personalbogen) enthalten die gleichen Daten, aber unstrukturiert -- sie mussen per OCR/Text-Extraktion geparst werden.
 
-## Was wir automatisch ableiten können
+## Zwei mogliche Ansatze
 
-| Fehlendes Feld | Rekonstruktionsmöglichkeit |
-|---|---|
-| **Steuerklasse** | Default-Vorschlag basierend auf Beschäftigungsart (Minijob → pauschal, Vollzeit → StKl 1 als Platzhalter) |
-| **Bundesland** | ✅ Bereits implementiert via PLZ-Mapping |
-| **Wochenstunden** | Aus Beschäftigungsart ableiten (Vollzeit → 40h, Teilzeit → aus Gehaltsverhältnis schätzen) |
-| **Kirchensteuer-Satz** | Aus Bundesland (Bayern = 8%, Rest = 9%) |
-| **Krankenkasse** | Häufigste KK im Betrieb als Vorschlag |
+### Option A: PDF-Parsing mit AI (empfohlen)
+- PDF hochladen -> Text extrahieren (server-side via Edge Function)
+- AI-Modell (Gemini) extrahiert strukturierte Felder (Name, Steuerklasse, SV-Nr, etc.)
+- Vorschau der erkannten Daten -> Nutzer bestatigt -> Import
 
-## Was NICHT rekonstruierbar ist (braucht immer Quelldaten)
+**Vorteil**: Funktioniert mit beliebigen PDF-Formaten (Lohnabrechnungen, DATEV-Auswertungen, Personalbogen)
+**Aufwand**: Edge Function + AI-Prompt + Vorschau-UI
 
-- Steuer-ID (11-stellig, einmalig vom BZSt)
-- SV-Nummer (vom Rentenversicherungsträger)
-- IBAN/BIC
-- Geburtsdatum
+### Option B: Einfache PDF-Text-Extraktion
+- PDF client-seitig parsen (pdf.js)
+- Regex-basierte Erkennung bekannter Felder
+- Funktioniert nur mit bekannten PDF-Layouts
 
-## Umsetzung
+**Vorteil**: Kein AI-Kosten, schneller
+**Nachteil**: Fragil, nur fur bekannte Formate
 
-### 1. Nachbearbeitungs-Assistent im Import-Wizard
-**Datei:** `src/components/import/datev-import-wizard.tsx`
+## Technische Umsetzung (Option A)
 
-Nach dem Import ein 5. Schritt "Daten vervollständigen":
-- Zeigt nur Mitarbeiter mit Lücken (rot/gelb markiert)
-- Für jedes fehlende Feld: Eingabefeld + intelligenter Vorschlag (z.B. "StKl 1 vorgeschlagen")
-- Batch-Edit: "Gleiche Krankenkasse für alle ohne KK setzen"
-- Hinweis: "Für Steuer-ID und SV-Nr benötigen Sie die DATEV-Personalstamm-Dateien oder ELStAM-Abruf"
-
-### 2. Smart-Defaults-Engine
-**Datei:** `src/utils/datev-import.ts`
-
-Neue Funktion `inferMissingFields(employee, allEmployees)`:
-- Steuerklasse: Minijob (≤556€) → Kennzeichen "pauschal", sonst StKl 1 als Default
-- Wochenstunden: Wenn `employment_type = 'vollzeit'` → 40h, `teilzeit` → Verhältnis aus Gehalt/höchstem Vollzeitgehalt
-- Kirchensteuer-Satz: Automatisch aus `state` (BY = 8%, alle anderen = 9%)
-- Krankenkasse: Modus (häufigste) aus dem Betrieb vorschlagen
-
-### 3. Nachladen einzelner Personalstamm-Dateien
-**Datei:** `src/components/import/datev-import-wizard.tsx`
-
-Button "Fehlende Daten nachladen" auf der Mitarbeiter-Detailseite:
-- Einzelne Personalstamm-Datei (00xxx_*.txt) hochladen
-- Automatisch dem richtigen Mitarbeiter zuordnen (via Personalnummer im Dateinamen)
-- Merge-Strategie: Nur leere Felder füllen
-
-### 4. Vollständigkeits-Badge in der Mitarbeiterliste
-**Datei:** `src/components/employees/employee-dashboard.tsx`
-
-- Ampel-Icon pro Mitarbeiter: 🟢 abrechnungsfähig / 🟡 Warnungen / 🔴 nicht abrechnungsfähig
-- Tooltip zeigt fehlende Felder
-- Filter: "Nur unvollständige anzeigen"
+1. **datev-import-wizard.tsx**: `accept` erweitern auf `.txt,.csv,.pdf`
+2. **Neue Edge Function** `parse-pdf-employee`: Nimmt PDF entgegen, extrahiert Text, sendet an Gemini mit strukturiertem Prompt
+3. **Antwort-Format**: JSON mit erkannten Feldern + Konfidenz-Score
+4. **Wizard**: Neuer Zwischenschritt "PDF-Erkennung prufen" mit editierbarer Vorschau
+5. **Personalstamm-Upload** (Edit-Dialog): Ebenfalls PDF akzeptieren
 
 ## Betroffene Dateien
-
-1. `src/utils/datev-import.ts` — `inferMissingFields()` Funktion
-2. `src/components/import/datev-import-wizard.tsx` — Schritt 5 "Vervollständigen", Nachladen-Button
-3. `src/components/employees/employee-dashboard.tsx` — Vollständigkeits-Badge
-4. `src/hooks/use-datev-import.ts` — Smart-Defaults bei Insert anwenden
+- `src/components/import/datev-import-wizard.tsx` -- accept + PDF-Pfad
+- `supabase/functions/parse-pdf-employee/index.ts` -- neue Edge Function
+- `src/components/employees/edit-employee-dialog.tsx` -- PDF im Nachladen-Tab
 
