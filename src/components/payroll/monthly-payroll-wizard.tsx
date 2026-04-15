@@ -154,20 +154,94 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
     setStepStatuses(newStatuses);
   }, [currentStep, stepStatuses, checkStep]);
 
-  const calculateAndPersistEntries = useCallback(async (periodId: string) => {
-    const defaultWorkingData: WorkingTimeData = {
-      regularHours: 160, overtimeHours: 0, nightHours: 0, sundayHours: 0,
-      holidayHours: 0, vacationDays: 0, sickDays: 0,
-      actualWorkingDays: 21, expectedWorkingDays: 21,
-    };
+  /**
+   * Builds WorkingTimeData from actual time entries for a given employee and month.
+   * Falls back to contract-based defaults only when no time entries exist.
+   */
+  const buildWorkingDataFromTimeEntries = useCallback((employeeId: string): WorkingTimeData => {
+    const monthEntries = timeEntries.filter(e => {
+      const d = new Date(e.date);
+      return e.employeeId === employeeId &&
+        d.getMonth() + 1 === selectedMonth &&
+        d.getFullYear() === selectedYear;
+    });
 
+    if (monthEntries.length === 0) {
+      // Fallback: contract-based estimate
+      const emp = activeEmployees.find(e => e.id === employeeId);
+      const weeklyHours = emp?.employmentData?.weeklyHours ?? 40;
+      const monthlyHours = Math.round(weeklyHours * 4.33);
+      const workingDays = Math.round(monthlyHours / (weeklyHours / 5));
+      return {
+        regularHours: monthlyHours, overtimeHours: 0, nightHours: 0,
+        sundayHours: 0, holidayHours: 0, vacationDays: 0, sickDays: 0,
+        actualWorkingDays: workingDays, expectedWorkingDays: workingDays,
+      };
+    }
+
+    const emp = activeEmployees.find(e => e.id === employeeId);
+    const dailyContractHours = (emp?.employmentData?.weeklyHours ?? 40) / 5;
+
+    let regularHours = 0;
+    let overtimeHours = 0;
+    let vacationDays = 0;
+    let sickDays = 0;
+    let actualWorkingDays = 0;
+
+    // Group entries by date
+    const byDate = new Map<string, typeof monthEntries>();
+    for (const entry of monthEntries) {
+      const key = new Date(entry.date).toISOString().split('T')[0];
+      if (!byDate.has(key)) byDate.set(key, []);
+      byDate.get(key)!.push(entry);
+    }
+
+    for (const [, dayEntries] of byDate) {
+      let dayWorkHours = 0;
+      for (const entry of dayEntries) {
+        if (entry.type === 'work') {
+          dayWorkHours += entry.hoursWorked ?? 0;
+        } else if (entry.type === 'vacation') {
+          vacationDays++;
+        } else if (entry.type === 'sick') {
+          sickDays++;
+        }
+      }
+      if (dayWorkHours > 0) {
+        actualWorkingDays++;
+        const regular = Math.min(dayWorkHours, dailyContractHours);
+        const overtime = Math.max(0, dayWorkHours - dailyContractHours);
+        regularHours += regular;
+        overtimeHours += overtime;
+      }
+    }
+
+    // Estimate expected working days (weekdays in the month)
+    const year = selectedYear;
+    const month = selectedMonth - 1;
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    let expectedWorkingDays = 0;
+    for (let d = 1; d <= daysInMonth; d++) {
+      const day = new Date(year, month, d).getDay();
+      if (day !== 0 && day !== 6) expectedWorkingDays++;
+    }
+
+    return {
+      regularHours, overtimeHours, nightHours: 0,
+      sundayHours: 0, holidayHours: 0, vacationDays, sickDays,
+      actualWorkingDays, expectedWorkingDays,
+    };
+  }, [timeEntries, selectedMonth, selectedYear, activeEmployees]);
+
+  const calculateAndPersistEntries = useCallback(async (periodId: string) => {
     let saved = 0;
     for (const emp of activeEmployees) {
       try {
+        const workingData = buildWorkingDataFromTimeEntries(emp.id);
         const input: PayrollCalculationInput = {
           employee: emp,
           period: { year: selectedYear, month: selectedMonth },
-          workingData: defaultWorkingData,
+          workingData,
         };
         const result = calculatePayrollEntry(input);
         const entryToSave = { ...result.entry, payrollPeriodId: periodId };
@@ -178,7 +252,7 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
       }
     }
     return saved;
-  }, [activeEmployees, selectedYear, selectedMonth, addPayrollEntry]);
+  }, [activeEmployees, selectedYear, selectedMonth, addPayrollEntry, buildWorkingDataFromTimeEntries]);
 
   // ─── Auto-Run Engine ──────────────────────────────────────
   const startAutoRun = useCallback(async () => {
