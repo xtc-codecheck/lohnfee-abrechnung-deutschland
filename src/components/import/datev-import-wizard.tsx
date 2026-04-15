@@ -41,19 +41,58 @@ export function DatevImportWizard() {
   const { importEmployees, isImporting, progress } = useDatevImport();
 
   const handleFiles = useCallback(async (newFiles: FileList | File[]) => {
-    const fileArr = Array.from(newFiles).filter(f =>
-      f.name.endsWith('.txt') || f.name.endsWith('.csv')
-    );
+    const allFiles = Array.from(newFiles);
+    const textFiles = allFiles.filter(f => f.name.endsWith('.txt') || f.name.endsWith('.csv'));
+    const pdfFiles = allFiles.filter(f => f.name.toLowerCase().endsWith('.pdf'));
 
-    if (fileArr.length === 0) {
-      toast.error('Keine unterstützten Dateien gefunden (.txt, .csv)');
+    if (textFiles.length === 0 && pdfFiles.length === 0) {
+      toast.error('Keine unterstützten Dateien gefunden (.txt, .csv, .pdf)');
       return;
     }
 
-    setFiles(prev => [...prev, ...fileArr]);
+    // Handle PDF files via AI extraction
+    if (pdfFiles.length > 0) {
+      setIsPdfParsing(true);
+      setFiles(prev => [...prev, ...pdfFiles]);
+      try {
+        const allPdfEmps: PdfEmployeeData[] = [];
+        let lastDocType = '';
+        for (const pdfFile of pdfFiles) {
+          const formData = new FormData();
+          formData.append('file', pdfFile);
+          const { data, error } = await supabase.functions.invoke('parse-pdf-employee', {
+            body: formData,
+          });
+          if (error) {
+            toast.error(`PDF-Fehler (${pdfFile.name}): ${error.message}`);
+            continue;
+          }
+          if (data?.employees?.length > 0) {
+            allPdfEmps.push(...data.employees);
+            lastDocType = data.documentType || 'PDF';
+          } else {
+            toast.warning(`Keine Daten in ${pdfFile.name} erkannt.`);
+          }
+        }
+        if (allPdfEmps.length > 0) {
+          setPdfEmployees(allPdfEmps);
+          setPdfDocType(lastDocType);
+          setStep('pdf-review');
+        }
+      } catch (e) {
+        toast.error('PDF-Verarbeitung fehlgeschlagen');
+        console.error(e);
+      } finally {
+        setIsPdfParsing(false);
+      }
+      if (textFiles.length === 0) return;
+    }
+
+    // Handle text/csv files (existing logic)
+    setFiles(prev => [...prev, ...textFiles]);
 
     const results: DatevImportResult[] = [];
-    for (const file of fileArr) {
+    for (const file of textFiles) {
       const content = await readFileAsCP1252(file);
       const result = parseDatevFile(content);
       results.push(result);
@@ -64,7 +103,7 @@ export function DatevImportWizard() {
 
     if (merged.employees.length > 0) {
       setStep('preview');
-    } else {
+    } else if (pdfFiles.length === 0) {
       toast.error('Keine Mitarbeiterdaten erkannt. Bitte prüfen Sie das Dateiformat.');
     }
   }, []);
