@@ -266,7 +266,7 @@ export function DatevImportWizard() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              {importDone ? <CheckCircle2 className="h-5 w-5 text-green-500" /> : <Loader2 className="h-5 w-5 animate-spin" />}
+              {importDone ? <CheckCircle2 className="h-5 w-5 text-primary" /> : <Loader2 className="h-5 w-5 animate-spin" />}
               {importDone ? 'Import abgeschlossen' : 'Import läuft...'}
             </CardTitle>
           </CardHeader>

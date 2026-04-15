@@ -4,8 +4,9 @@ import { CompanySettingsPage } from "@/components/settings/company-settings-page
 import { AdminUsersPage } from "@/components/settings/admin-users-page";
 import { GdprManagementPage } from "@/components/settings/gdpr-management-page";
 import { ContactMessagesPage } from "@/components/settings/contact-messages-page";
+import { DatevImportWizard } from "@/components/import/datev-import-wizard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Building2, Users, Shield, Mail } from "lucide-react";
+import { Building2, Users, Shield, Mail, Upload } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 
 export default function Settings() {
@@ -29,6 +30,12 @@ export default function Settings() {
             DSGVO
           </TabsTrigger>
           {isAdmin() && (
+            <TabsTrigger value="datev-import" className="flex items-center gap-2">
+              <Upload className="h-4 w-4" />
+              DATEV Import
+            </TabsTrigger>
+          )}
+          {isAdmin() && (
             <TabsTrigger value="messages" className="flex items-center gap-2">
               <Mail className="h-4 w-4" />
               Nachrichten
@@ -45,6 +52,11 @@ export default function Settings() {
         <TabsContent value="gdpr">
           <GdprManagementPage />
         </TabsContent>
+        {isAdmin() && (
+          <TabsContent value="datev-import">
+            <DatevImportWizard />
+          </TabsContent>
+        )}
         {isAdmin() && (
           <TabsContent value="messages">
             <ContactMessagesPage />
