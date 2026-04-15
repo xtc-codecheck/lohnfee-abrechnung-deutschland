@@ -40,9 +40,12 @@ function lookupHealthInsuranceRate(name: string | null): number {
   // 2. Score-based: pick the candidate whose normalized name shares the most
   //    words with the input. Require at least 2 matching words to avoid false positives.
   const inputWords = input.split(/[\s()+,./]+/).filter(w => w.length > 1);
+  // Common stopwords that shouldn't count as distinctive matches
+  const stopwords = new Set(['bkk', 'die', 'der', 'des', 'und', 'krankenkasse', 'betriebskrankenkasse', 'ersatzkasse', 'innungskrankenkasse', 'ag']);
 
   let bestMatch: typeof GERMAN_HEALTH_INSURANCES[number] | null = null;
   let bestScore = 0;
+  let bestDistinctive = false;
 
   for (const ins of GERMAN_HEALTH_INSURANCES) {
     const candidate = normalizeInsName(ins.name);
@@ -55,19 +58,24 @@ function lookupHealthInsuranceRate(name: string | null): number {
     // Word overlap scoring
     const candidateWords = candidate.split(/[\s()+,./]+/).filter(w => w.length > 1);
     let score = 0;
+    let hasDistinctive = false;
     for (const w of inputWords) {
       if (candidateWords.some(cw => cw === w || cw.includes(w) || w.includes(cw))) {
         score++;
+        if (!stopwords.has(w)) hasDistinctive = true;
       }
     }
-    if (score > bestScore) {
+    if (score > bestScore || (score === bestScore && hasDistinctive && !bestDistinctive)) {
       bestScore = score;
       bestMatch = ins;
+      bestDistinctive = hasDistinctive;
     }
   }
 
-  // Require at least 2 matching words for confidence
-  if (bestMatch && bestScore >= 2) return bestMatch.additionalRate;
+  // Accept if 2+ words match, or 1 distinctive (non-stopword) match
+  if (bestMatch && (bestScore >= 2 || (bestScore >= 1 && bestDistinctive))) {
+    return bestMatch.additionalRate;
+  }
 
   return 2.5;
 }
