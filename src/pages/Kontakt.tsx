@@ -11,6 +11,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Mail, Phone, MapPin, Clock, Send, CheckCircle, MessageSquare, HelpCircle, FileText } from "lucide-react";
 
+const RATE_LIMIT_KEY = "kontakt_last_submit";
+const RATE_LIMIT_MS = 60_000; // 1 minute between submissions
+
 export default function Kontakt() {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -20,6 +23,15 @@ export default function Kontakt() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Rate limiting check
+    const lastSubmit = parseInt(localStorage.getItem(RATE_LIMIT_KEY) || "0", 10);
+    const now = Date.now();
+    if (now - lastSubmit < RATE_LIMIT_MS) {
+      const waitSec = Math.ceil((RATE_LIMIT_MS - (now - lastSubmit)) / 1000);
+      toast({ title: `Bitte warten Sie ${waitSec} Sekunden vor dem nächsten Senden.`, variant: "destructive" });
+      return;
+    }
 
     if (!form.name.trim() || !form.email.trim() || !form.subject.trim() || !form.message.trim()) {
       toast({ title: "Bitte füllen Sie alle Felder aus.", variant: "destructive" });
@@ -49,6 +61,7 @@ export default function Kontakt() {
     if (error) {
       toast({ title: "Fehler beim Senden", description: "Bitte versuchen Sie es später erneut.", variant: "destructive" });
     } else {
+      localStorage.setItem(RATE_LIMIT_KEY, Date.now().toString());
       setSubmitted(true);
     }
   };
