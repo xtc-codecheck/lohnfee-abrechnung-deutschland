@@ -134,33 +134,32 @@ export function DatevImportWizard() {
   };
 
   const handlePdfConfirm = async (confirmed: PdfEmployeeData[]) => {
-    // Convert PdfEmployeeData to DatevEmployee format for import
     const datevEmployees: DatevEmployee[] = confirmed.map(emp => ({
       personalNumber: emp.personalNumber || '',
       firstName: emp.firstName,
       lastName: emp.lastName,
-      dateOfBirth: emp.dateOfBirth || '',
-      gender: '',
-      street: emp.street || '',
-      zipCode: emp.zipCode || '',
-      city: emp.city || '',
-      state: emp.state || '',
-      taxId: emp.taxId || '',
-      taxClass: emp.taxClass || '',
-      svNumber: emp.svNumber || '',
-      healthInsurance: emp.healthInsurance || '',
-      grossSalary: emp.grossSalary || 0,
+      dateOfBirth: emp.dateOfBirth || undefined,
+      gender: undefined,
+      street: emp.street || undefined,
+      zipCode: emp.zipCode || undefined,
+      city: emp.city || undefined,
+      state: emp.state || undefined,
+      taxId: emp.taxId || undefined,
+      taxClass: emp.taxClass ? (['I','II','III','IV','V','VI'].indexOf(emp.taxClass) + 1) || undefined : undefined,
+      svNumber: emp.svNumber || undefined,
+      healthInsurance: emp.healthInsurance || undefined,
+      grossSalary: emp.grossSalary || undefined,
       employmentType: emp.employmentType || 'fulltime',
-      entryDate: emp.entryDate || '',
-      weeklyHours: emp.weeklyHours || 40,
-      iban: emp.iban || '',
-      bic: emp.bic || '',
-      churchTax: emp.religion && emp.religion !== 'none' ? true : false,
-      childrenAllowance: emp.childrenAllowance || 0,
-      source: 'PDF' as any,
+      entryDate: emp.entryDate || undefined,
+      weeklyHours: emp.weeklyHours || undefined,
+      iban: emp.iban || undefined,
+      bic: emp.bic || undefined,
+      churchTax: emp.religion && emp.religion !== 'none' ? true : undefined,
+      childrenAllowance: emp.childrenAllowance || undefined,
+      source: 'personalstamm' as const,
     }));
 
-    setParseResults({ employees: datevEmployees, lohnarten: [], errors: [], fileType: 'personalstamm' });
+    setParseResults({ employees: datevEmployees, lohnarten: [], warnings: [], fileType: 'personalstamm' });
     setStep('preview');
   };
 
