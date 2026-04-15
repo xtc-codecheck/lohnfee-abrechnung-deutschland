@@ -862,40 +862,50 @@ function DataCompletionStep({ employees, onBack, onDone }: {
                         <p className="text-xs font-medium text-muted-foreground mb-2">Manuelle Eingabe (fehlende Felder)</p>
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                        {(() => {
+                          const errors = getValidationErrors(emp.personalNumber);
+                          return (
+                            <>
                         {!emp.taxId && (
                           <div className="space-y-1">
                             <Label className="text-xs text-muted-foreground">Steuer-ID</Label>
                             <FormInput
-                              className="h-8 text-sm"
+                              className={`h-8 text-sm ${errors.taxId ? 'border-destructive' : ''}`}
                               placeholder="z.B. 12345678901"
+                              maxLength={11}
                               value={manual.taxId}
-                              onChange={(e) => updateManualField(emp.personalNumber, 'taxId', e.target.value)}
+                              onChange={(e) => updateManualField(emp.personalNumber, 'taxId', e.target.value.replace(/\D/g, '').slice(0, 11))}
                               disabled={isApplied}
                             />
+                            {errors.taxId && <p className="text-xs text-destructive">{errors.taxId}</p>}
                           </div>
                         )}
                         {!emp.svNumber && (
                           <div className="space-y-1">
                             <Label className="text-xs text-muted-foreground">SV-Nummer</Label>
                             <FormInput
-                              className="h-8 text-sm"
-                              placeholder="z.B. 12 010190 M 012"
+                              className={`h-8 text-sm ${errors.svNumber ? 'border-destructive' : ''}`}
+                              placeholder="z.B. 12010190M012"
+                              maxLength={15}
                               value={manual.svNumber}
                               onChange={(e) => updateManualField(emp.personalNumber, 'svNumber', e.target.value)}
                               disabled={isApplied}
                             />
+                            {errors.svNumber && <p className="text-xs text-destructive">{errors.svNumber}</p>}
                           </div>
                         )}
                         {!emp.iban && (
                           <div className="space-y-1">
                             <Label className="text-xs text-muted-foreground">IBAN</Label>
                             <FormInput
-                              className="h-8 text-sm"
+                              className={`h-8 text-sm ${errors.iban ? 'border-destructive' : ''}`}
                               placeholder="DE..."
+                              maxLength={27}
                               value={manual.iban}
-                              onChange={(e) => updateManualField(emp.personalNumber, 'iban', e.target.value)}
+                              onChange={(e) => updateManualField(emp.personalNumber, 'iban', e.target.value.toUpperCase())}
                               disabled={isApplied}
                             />
+                            {errors.iban && <p className="text-xs text-destructive">{errors.iban}</p>}
                           </div>
                         )}
                         {!emp.dateOfBirth && (
