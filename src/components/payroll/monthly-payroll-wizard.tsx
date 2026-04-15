@@ -283,7 +283,11 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
       if (step === 2 && !checked.completed) {
         log('📊 Abrechnung wird erstellt...');
         try {
-          await createPayrollPeriod(selectedYear, selectedMonth);
+          const period = await createPayrollPeriod(selectedYear, selectedMonth);
+          if (period) {
+            const saved = await calculateAndPersistEntries(period.id);
+            log(`✅ ${saved} Abrechnungen gespeichert`);
+          }
           checked.completed = true;
           log('✅ Abrechnung erstellt');
         } catch {
