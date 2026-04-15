@@ -322,6 +322,34 @@ export function EditEmployeeDialog({ employee, open, onOpenChange, onSave }: Edi
               </CardContent>
             </Card>
           </TabsContent>
+
+          <TabsContent value="pdf-upload" className="space-y-4">
+            <PdfUploadTab employee={employee} onFieldsExtracted={(fields) => {
+              setFormData(prev => {
+                const updated = { ...prev };
+                if (fields.taxId && !prev.personalData?.taxId) {
+                  updated.personalData = { ...updated.personalData!, taxId: fields.taxId };
+                }
+                if (fields.taxClass && !prev.personalData?.taxClass) {
+                  updated.personalData = { ...updated.personalData!, taxClass: fields.taxClass as TaxClass };
+                }
+                if (fields.svNumber && !prev.employmentData?.svNumber) {
+                  updated.employmentData = { ...updated.employmentData!, svNumber: fields.svNumber };
+                }
+                if (fields.healthInsurance && !prev.employmentData?.healthInsurance) {
+                  updated.employmentData = { ...updated.employmentData!, healthInsurance: fields.healthInsurance };
+                }
+                if (fields.grossSalary && !prev.salaryData?.grossSalary) {
+                  updated.salaryData = { ...updated.salaryData!, grossSalary: fields.grossSalary };
+                }
+                if (fields.iban && !prev.personalData?.iban) {
+                  updated.personalData = { ...updated.personalData!, iban: fields.iban };
+                }
+                return updated;
+              });
+              toast.success('Fehlende Felder aus PDF übernommen');
+            }} />
+          </TabsContent>
         </Tabs>
 
         <DialogFooter>
