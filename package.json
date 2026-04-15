@@ -50,7 +50,7 @@
     "fast-check": "^4.5.3",
     "input-otp": "^1.4.2",
     "jsdom": "^29.0.2",
-    "jspdf": "^3.0.1",
+    "jspdf": "^4.2.1",
     "lucide-react": "^0.462.0",
     "next-themes": "^0.3.0",
     "react": "^18.3.1",
