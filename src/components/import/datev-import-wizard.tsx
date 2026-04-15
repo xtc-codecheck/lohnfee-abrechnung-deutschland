@@ -412,15 +412,88 @@ function DataCompletionStep({ employees, onBack, onDone }: {
   onBack: () => void; 
   onDone: () => void;
 }) {
-  const incompleteEmps = employees.filter(emp => {
-    const inferred = inferMissingFields(emp, employees);
-    return Object.keys(inferred).length > 0;
-  });
+  const [appliedPnrs, setAppliedPnrs] = useState<Set<string>>(new Set());
+  const [applyingPnr, setApplyingPnr] = useState<string | null>(null);
+  const [applyingAll, setApplyingAll] = useState(false);
 
-  const inferredMap = new Map<string, InferredFields>();
-  for (const emp of incompleteEmps) {
-    inferredMap.set(emp.personalNumber, inferMissingFields(emp, employees));
-  }
+  const incompleteEmps = useMemo(() => 
+    employees.filter(emp => {
+      const inferred = inferMissingFields(emp, employees);
+      return Object.keys(inferred).length > 0;
+    }), [employees]);
+
+  const inferredMap = useMemo(() => {
+    const map = new Map<string, InferredFields>();
+    for (const emp of incompleteEmps) {
+      map.set(emp.personalNumber, inferMissingFields(emp, employees));
+    }
+    return map;
+  }, [incompleteEmps, employees]);
+
+  const applyDefaults = async (pnr: string) => {
+    const inferred = inferredMap.get(pnr);
+    if (!inferred) return;
+
+    setApplyingPnr(pnr);
+    try {
+      const { supabase } = await import('@/integrations/supabase/client');
+      
+      const updateData: Record<string, unknown> = {};
+      if (inferred.taxClass) updateData.tax_class = inferred.taxClass.value;
+      if (inferred.weeklyHours) updateData.weekly_hours = inferred.weeklyHours.value;
+      if (inferred.churchTaxRate) updateData.church_tax_rate = inferred.churchTaxRate.value;
+      if (inferred.healthInsurance) updateData.health_insurance = inferred.healthInsurance.value;
+
+      if (Object.keys(updateData).length === 0) return;
+
+      const { error } = await supabase
+        .from('employees')
+        .update(updateData as any)
+        .eq('personal_number', pnr);
+
+      if (error) {
+        toast.error(`Fehler bei ${pnr}: ${error.message}`);
+      } else {
+        setAppliedPnrs(prev => new Set(prev).add(pnr));
+        toast.success(`Vorschläge für PNr ${pnr} übernommen`);
+      }
+    } catch (e) {
+      toast.error(`Fehler: ${e instanceof Error ? e.message : 'Unbekannt'}`);
+    } finally {
+      setApplyingPnr(null);
+    }
+  };
+
+  const applyAllDefaults = async () => {
+    setApplyingAll(true);
+    let successCount = 0;
+    for (const emp of incompleteEmps) {
+      if (appliedPnrs.has(emp.personalNumber)) continue;
+      const inferred = inferredMap.get(emp.personalNumber);
+      if (!inferred || Object.keys(inferred).length === 0) continue;
+
+      const { supabase } = await import('@/integrations/supabase/client');
+      const updateData: Record<string, unknown> = {};
+      if (inferred.taxClass) updateData.tax_class = inferred.taxClass.value;
+      if (inferred.weeklyHours) updateData.weekly_hours = inferred.weeklyHours.value;
+      if (inferred.churchTaxRate) updateData.church_tax_rate = inferred.churchTaxRate.value;
+      if (inferred.healthInsurance) updateData.health_insurance = inferred.healthInsurance.value;
+
+      if (Object.keys(updateData).length === 0) continue;
+
+      const { error } = await supabase
+        .from('employees')
+        .update(updateData as any)
+        .eq('personal_number', emp.personalNumber);
+
+      if (!error) {
+        setAppliedPnrs(prev => new Set(prev).add(emp.personalNumber));
+        successCount++;
+      }
+    }
+    setApplyingAll(false);
+    toast.success(`${successCount} Mitarbeiter aktualisiert`);
+  };
 
   if (incompleteEmps.length === 0) {
     return (
@@ -439,6 +512,8 @@ function DataCompletionStep({ employees, onBack, onDone }: {
     );
   }
 
+  const pendingCount = incompleteEmps.filter(e => !appliedPnrs.has(e.personalNumber)).length;
+
   return (
     <Card>
       <CardHeader>
@@ -448,24 +523,53 @@ function DataCompletionStep({ employees, onBack, onDone }: {
         </CardTitle>
         <CardDescription>
           Für die folgenden Mitarbeiter wurden intelligente Vorschläge erstellt. 
-          Nicht rekonstruierbare Felder (Steuer-ID, SV-Nr) benötigen die Original-Personalstamm-Dateien oder einen ELStAM-Abruf.
+          Klicken Sie "Übernehmen" um die Werte in die Datenbank zu schreiben.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
+        {/* Batch apply button */}
+        {pendingCount > 1 && (
+          <Button 
+            onClick={applyAllDefaults} 
+            disabled={applyingAll}
+            className="w-full"
+          >
+            {applyingAll ? (
+              <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Wird übernommen...</>
+            ) : (
+              <>Alle {pendingCount} Vorschläge übernehmen</>
+            )}
+          </Button>
+        )}
+
         <div className="max-h-[500px] overflow-y-auto space-y-3">
           {incompleteEmps.map(emp => {
             const inferred = inferredMap.get(emp.personalNumber);
             if (!inferred) return null;
+            const isApplied = appliedPnrs.has(emp.personalNumber);
+            const isApplying = applyingPnr === emp.personalNumber;
             return (
-              <div key={emp.personalNumber} className="border rounded-lg p-4 space-y-2">
+              <div key={emp.personalNumber} className={`border rounded-lg p-4 space-y-2 ${isApplied ? 'opacity-60 border-primary/30' : ''}`}>
                 <div className="flex items-center justify-between">
                   <h4 className="font-medium">
+                    {isApplied && <CheckCircle2 className="h-4 w-4 text-primary inline mr-1" />}
                     {emp.firstName} {emp.lastName}
                     <span className="text-muted-foreground ml-2 text-sm">PNr: {emp.personalNumber}</span>
                   </h4>
-                  <Badge variant="outline" className="text-xs">
-                    {Object.keys(inferred).length} Vorschläge
-                  </Badge>
+                  {!isApplied ? (
+                    <Button 
+                      size="sm" 
+                      onClick={() => applyDefaults(emp.personalNumber)}
+                      disabled={isApplying || applyingAll}
+                    >
+                      {isApplying ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : null}
+                      Übernehmen
+                    </Button>
+                  ) : (
+                    <Badge variant="default" className="text-xs">
+                      <CheckCircle2 className="h-3 w-3 mr-1" /> Übernommen
+                    </Badge>
+                  )}
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
                   {inferred.taxClass && (
@@ -497,7 +601,6 @@ function DataCompletionStep({ employees, onBack, onDone }: {
                     </div>
                   )}
                 </div>
-                {/* Non-inferable fields warning */}
                 {(!emp.taxId || !emp.svNumber) && (
                   <p className="text-xs text-muted-foreground mt-1">
                     ⚠️ {[!emp.taxId && 'Steuer-ID', !emp.svNumber && 'SV-Nr'].filter(Boolean).join(', ')} 
