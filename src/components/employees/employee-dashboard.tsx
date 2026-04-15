@@ -4,7 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageHeader } from "@/components/ui/page-header";
+import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import { Employee } from "@/types/employee";
+import { getEmployeeCompleteness } from "@/utils/datev-import";
 import { useEmployees } from "@/contexts/employee-context";
 import { EditEmployeeDialog } from "./edit-employee-dialog";
 import { ELStAMValidationCard } from "./elstam-validation-card";
@@ -29,8 +32,31 @@ export function EmployeeDashboard({ onAddEmployee, onCalculateSalary, onShowComp
   const [showReports, setShowReports] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [showOnlyIncomplete, setShowOnlyIncomplete] = useState(false);
   const { employees, updateEmployee, deleteEmployee, error: empError } = useEmployees();
   const { toast } = useToast();
+
+  // Compute completeness for each employee
+  const employeeCompleteness = useMemo(() => {
+    const map = new Map<string, { status: 'complete' | 'warning' | 'critical'; missing: string[] }>();
+    for (const emp of employees) {
+      map.set(emp.id, getEmployeeCompleteness({
+        tax_class: typeof emp.personalData.taxClass === 'string'
+          ? ['I','II','III','IV','V','VI'].indexOf(emp.personalData.taxClass) + 1 || null
+          : Number(emp.personalData.taxClass) || null,
+        tax_id: emp.personalData.taxId || null,
+        sv_number: emp.personalData.socialSecurityNumber || null,
+        gross_salary: emp.salaryData.grossSalary,
+        iban: emp.personalData.iban || null,
+        health_insurance: emp.personalData.healthInsurance?.name || null,
+        weekly_hours: emp.employmentData.weeklyHours || null,
+        entry_date: emp.employmentData.startDate ? String(emp.employmentData.startDate) : null,
+        date_of_birth: emp.personalData.dateOfBirth ? String(emp.personalData.dateOfBirth) : null,
+        state: emp.personalData.state || null,
+      }));
+    }
+    return map;
+  }, [employees]);
 
   const filteredEmployees = employees.filter(employee =>
     `${employee.personalData.firstName} ${employee.personalData.lastName}`
