@@ -22,16 +22,13 @@ serve(async (req) => {
       });
     }
 
-    // Convert to base64 in chunks to avoid stack overflow
+    // Convert to base64 using Deno's built-in encoder to avoid stack overflow
     const arrayBuffer = await file.arrayBuffer();
     const bytes = new Uint8Array(arrayBuffer);
-    let binary = "";
-    const CHUNK_SIZE = 8192;
-    for (let i = 0; i < bytes.length; i += CHUNK_SIZE) {
-      const chunk = bytes.subarray(i, Math.min(i + CHUNK_SIZE, bytes.length));
-      binary += String.fromCharCode.apply(null, Array.from(chunk));
-    }
-    const base64 = btoa(binary);
+    
+    // Use Deno's standard base64 encoding
+    const { encode } = await import("https://deno.land/std@0.168.0/encoding/base64.ts");
+    const base64 = encode(bytes);
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
