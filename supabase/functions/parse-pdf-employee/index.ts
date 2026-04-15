@@ -22,9 +22,16 @@ serve(async (req) => {
       });
     }
 
-    // Read the PDF as base64 for Gemini vision
+    // Convert to base64 in chunks to avoid stack overflow
     const arrayBuffer = await file.arrayBuffer();
-    const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+    const bytes = new Uint8Array(arrayBuffer);
+    let binary = "";
+    const CHUNK_SIZE = 8192;
+    for (let i = 0; i < bytes.length; i += CHUNK_SIZE) {
+      const chunk = bytes.subarray(i, Math.min(i + CHUNK_SIZE, bytes.length));
+      binary += String.fromCharCode.apply(null, Array.from(chunk));
+    }
+    const base64 = btoa(binary);
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
