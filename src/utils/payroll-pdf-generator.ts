@@ -112,7 +112,7 @@ export function generatePayrollPdf(
   leftCol('Steuerklasse', String(emp.personalData.taxClass), y);
   rightCol('SV-Nummer', emp.personalData.socialSecurityNumber || '–', y);
   y += 5;
-  leftCol('KV', emp.personalData.healthInsurance?.provider || '–', y);
+  leftCol('KV', emp.personalData.healthInsurance?.name || '–', y);
   rightCol('Kinder', String(emp.personalData.numberOfChildren ?? 0), y);
   y += 8;
 
