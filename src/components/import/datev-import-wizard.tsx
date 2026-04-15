@@ -591,21 +591,33 @@ function DataCompletionStep({ employees, onBack, onDone }: {
     });
   };
 
-  const applyDefaults = async (pnr: string) => {
+  const buildUpdateData = (pnr: string) => {
     const inferred = editedMap.get(pnr);
-    if (!inferred) return;
+    const manual = manualMap.get(pnr);
+    const updateData: Record<string, unknown> = {};
+    
+    if (inferred?.taxClass) updateData.tax_class = inferred.taxClass.value;
+    if (inferred?.weeklyHours) updateData.weekly_hours = inferred.weeklyHours.value;
+    if (inferred?.churchTaxRate) updateData.church_tax_rate = inferred.churchTaxRate.value;
+    if (inferred?.healthInsurance) updateData.health_insurance = inferred.healthInsurance.value;
+    
+    if (manual?.taxId) updateData.tax_id = manual.taxId;
+    if (manual?.svNumber) updateData.sv_number = manual.svNumber;
+    if (manual?.iban) updateData.iban = manual.iban;
+    if (manual?.dateOfBirth) updateData.date_of_birth = manual.dateOfBirth;
+    if (manual?.entryDate) updateData.entry_date = manual.entryDate;
+    if (manual?.state) updateData.state = manual.state;
+    
+    return updateData;
+  };
+
+  const applyDefaults = async (pnr: string) => {
+    const updateData = buildUpdateData(pnr);
+    if (Object.keys(updateData).length === 0) return;
 
     setApplyingPnr(pnr);
     try {
       const { supabase } = await import('@/integrations/supabase/client');
-      
-      const updateData: Record<string, unknown> = {};
-      if (inferred.taxClass) updateData.tax_class = inferred.taxClass.value;
-      if (inferred.weeklyHours) updateData.weekly_hours = inferred.weeklyHours.value;
-      if (inferred.churchTaxRate) updateData.church_tax_rate = inferred.churchTaxRate.value;
-      if (inferred.healthInsurance) updateData.health_insurance = inferred.healthInsurance.value;
-
-      if (Object.keys(updateData).length === 0) return;
 
       const { error } = await supabase
         .from('employees')
