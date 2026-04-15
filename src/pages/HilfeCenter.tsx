@@ -861,6 +861,17 @@ const faqs = [
   },
 ];
 
+const popularSearches = ["Mitarbeiter anlegen", "Abrechnung", "PDF", "DATEV", "Steuerklasse", "Zeiterfassung", "Minijob", "Krankenkasse"];
+
+function highlightMatch(text: string, query: string) {
+  if (!query || query.length < 2) return text;
+  const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+  const parts = text.split(regex);
+  return parts.map((part, i) =>
+    regex.test(part) ? <mark key={i} className="bg-primary/20 text-foreground rounded px-0.5">{part}</mark> : part
+  );
+}
+
 export default function HilfeCenter() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -926,6 +937,20 @@ export default function HilfeCenter() {
                   setSelectedCategory(null);
                 }}
               />
+              {!searchQuery && (
+                <div className="flex flex-wrap gap-2 mt-3 justify-center">
+                  {popularSearches.map((term) => (
+                    <Badge
+                      key={term}
+                      variant="outline"
+                      className="cursor-pointer hover:bg-primary/10 transition-colors text-xs"
+                      onClick={() => { setSearchQuery(term); setSelectedCategory(null); }}
+                    >
+                      {term}
+                    </Badge>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -1011,14 +1036,22 @@ export default function HilfeCenter() {
             {/* Search results */}
             {searchQuery && (
               <div className="max-w-3xl mx-auto mb-12">
-                <h2 className="text-lg font-semibold text-foreground mb-4">
-                  {filteredCategories.reduce((s, c) => s + c.articles.length, 0) + filteredFaqs.length} Ergebnisse für "{searchQuery}"
-                </h2>
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg font-semibold text-foreground">
+                    {filteredCategories.reduce((s, c) => s + c.articles.length, 0) + filteredFaqs.length} Ergebnisse für „{searchQuery}"
+                  </h2>
+                  <Button variant="ghost" size="sm" onClick={() => setSearchQuery("")}>
+                    Suche zurücksetzen
+                  </Button>
+                </div>
+
+                {/* Article results */}
                 {filteredCategories.map((cat) => (
                   <div key={cat.id} className="mb-6">
                     <div className="flex items-center gap-2 mb-3">
                       <cat.icon className={`h-4 w-4 ${cat.color}`} />
                       <h3 className="font-medium text-foreground">{cat.title}</h3>
+                      <Badge variant="secondary" className="text-xs">{cat.articles.length}</Badge>
                     </div>
                     <div className="space-y-3">
                       {cat.articles.map((article, i) => (
@@ -1028,27 +1061,69 @@ export default function HilfeCenter() {
                             setSearchQuery("");
                           }}>
                           <CardContent className="p-4">
-                            <h4 className="font-medium text-foreground mb-1">{article.title}</h4>
-                            <p className="text-sm text-muted-foreground line-clamp-2">{article.content}</p>
+                            <h4 className="font-medium text-foreground mb-1">{highlightMatch(article.title, searchQuery)}</h4>
+                            <p className="text-sm text-muted-foreground line-clamp-2">{highlightMatch(article.content.slice(0, 200), searchQuery)}</p>
+                            <div className="flex flex-wrap gap-1 mt-2">
+                              {article.tags.filter(t => t.toLowerCase().includes(searchQuery.toLowerCase())).map(tag => (
+                                <Badge key={tag} variant="outline" className="text-xs bg-primary/5">{tag}</Badge>
+                              ))}
+                            </div>
                           </CardContent>
                         </Card>
                       ))}
                     </div>
                   </div>
                 ))}
+
+                {/* FAQ results inline */}
+                {filteredFaqs.length > 0 && (
+                  <div className="mb-6">
+                    <div className="flex items-center gap-2 mb-3">
+                      <HelpCircle className="h-4 w-4 text-primary" />
+                      <h3 className="font-medium text-foreground">Häufige Fragen</h3>
+                      <Badge variant="secondary" className="text-xs">{filteredFaqs.length}</Badge>
+                    </div>
+                    <Accordion type="multiple" className="space-y-2">
+                      {filteredFaqs.map((faq, i) => (
+                        <AccordionItem key={i} value={`faq-search-${i}`} className="border rounded-lg px-4">
+                          <AccordionTrigger className="text-left font-medium">
+                            {highlightMatch(faq.question, searchQuery)}
+                          </AccordionTrigger>
+                          <AccordionContent className="text-muted-foreground leading-relaxed">
+                            {highlightMatch(faq.answer, searchQuery)}
+                          </AccordionContent>
+                        </AccordionItem>
+                      ))}
+                    </Accordion>
+                  </div>
+                )}
+
                 {filteredCategories.length === 0 && filteredFaqs.length === 0 && (
                   <Card>
                     <CardContent className="p-8 text-center">
                       <AlertTriangle className="h-8 w-8 text-muted-foreground mx-auto mb-3" />
-                      <p className="text-muted-foreground">Keine Ergebnisse gefunden. Versuchen Sie einen anderen Suchbegriff oder schauen Sie in den häufigen Fragen.</p>
+                      <p className="text-muted-foreground mb-3">Keine Ergebnisse für „{searchQuery}" gefunden.</p>
+                      <p className="text-sm text-muted-foreground mb-4">Versuchen Sie einen anderen Suchbegriff:</p>
+                      <div className="flex flex-wrap gap-2 justify-center">
+                        {popularSearches.slice(0, 4).map((term) => (
+                          <Badge
+                            key={term}
+                            variant="outline"
+                            className="cursor-pointer hover:bg-primary/10 transition-colors"
+                            onClick={() => setSearchQuery(term)}
+                          >
+                            {term}
+                          </Badge>
+                        ))}
+                      </div>
                     </CardContent>
                   </Card>
                 )}
               </div>
             )}
 
-            {/* FAQ Section */}
-            {filteredFaqs.length > 0 && (
+            {/* FAQ Section (non-search) */}
+            {!searchQuery && filteredFaqs.length > 0 && (
               <div className="max-w-3xl mx-auto">
                 <div className="flex items-center gap-3 mb-2">
                   <HelpCircle className="h-6 w-6 text-primary" />
