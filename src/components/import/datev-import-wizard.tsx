@@ -741,7 +741,7 @@ function DataCompletionStep({ employees, onBack, onDone }: {
         {pendingCount > 1 && (
           <Button 
             onClick={applyAllDefaults} 
-            disabled={applyingAll}
+            disabled={applyingAll || hasAnyValidationErrors}
             className="w-full"
           >
             {applyingAll ? (
@@ -758,6 +758,8 @@ function DataCompletionStep({ employees, onBack, onDone }: {
             if (!inferred) return null;
             const isApplied = appliedPnrs.has(emp.personalNumber);
             const isApplying = applyingPnr === emp.personalNumber;
+            const empErrors = getValidationErrors(emp.personalNumber);
+            const hasErrors = Object.keys(empErrors).length > 0;
             return (
               <div key={emp.personalNumber} className={`border rounded-lg p-4 space-y-3 ${isApplied ? 'opacity-60 border-primary/30' : ''}`}>
                 <div className="flex items-center justify-between">
@@ -770,7 +772,8 @@ function DataCompletionStep({ employees, onBack, onDone }: {
                     <Button 
                       size="sm" 
                       onClick={() => applyDefaults(emp.personalNumber)}
-                      disabled={isApplying || applyingAll}
+                      disabled={isApplying || applyingAll || hasErrors}
+                      title={hasErrors ? 'Bitte Validierungsfehler beheben' : undefined}
                     >
                       {isApplying ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : null}
                       Übernehmen
