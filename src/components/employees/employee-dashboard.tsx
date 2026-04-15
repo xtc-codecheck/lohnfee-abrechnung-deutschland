@@ -58,11 +58,19 @@ export function EmployeeDashboard({ onAddEmployee, onCalculateSalary, onShowComp
     return map;
   }, [employees]);
 
-  const filteredEmployees = employees.filter(employee =>
-    `${employee.personalData.firstName} ${employee.personalData.lastName}`
+  const filteredEmployees = employees.filter(employee => {
+    const matchesSearch = `${employee.personalData.firstName} ${employee.personalData.lastName}`
       .toLowerCase()
-      .includes(searchTerm.toLowerCase())
-  );
+      .includes(searchTerm.toLowerCase());
+    if (!matchesSearch) return false;
+    if (showOnlyIncomplete) {
+      const comp = employeeCompleteness.get(employee.id);
+      return comp?.status !== 'complete';
+    }
+    return true;
+  });
+
+  const incompleteCount = Array.from(employeeCompleteness.values()).filter(c => c.status !== 'complete').length;
 
   const handleEditEmployee = (employee: Employee) => {
     setEditingEmployee(employee);
@@ -281,14 +289,27 @@ export function EmployeeDashboard({ onAddEmployee, onCalculateSalary, onShowComp
         <CardHeader>
           <CardTitle>Mitarbeiterübersicht</CardTitle>
           <CardDescription>Verwaltung aller Mitarbeiter und deren Stammdaten</CardDescription>
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-            <Input
-              placeholder="Mitarbeiter suchen..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
+          <div className="flex gap-2 items-center">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+              <Input
+                placeholder="Mitarbeiter suchen..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            {incompleteCount > 0 && (
+              <Button
+                variant={showOnlyIncomplete ? "default" : "outline"}
+                size="sm"
+                onClick={() => setShowOnlyIncomplete(!showOnlyIncomplete)}
+                className="whitespace-nowrap"
+              >
+                <AlertCircle className="h-4 w-4 mr-1" />
+                {incompleteCount} unvollständig
+              </Button>
+            )}
           </div>
         </CardHeader>
         <CardContent>
