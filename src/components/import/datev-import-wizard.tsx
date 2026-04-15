@@ -535,10 +535,14 @@ function DataCompletionStep({ employees, onBack, onDone }: {
   const [applyingPnr, setApplyingPnr] = useState<string | null>(null);
   const [applyingAll, setApplyingAll] = useState(false);
 
+  // Show ALL employees, not just those with inferred suggestions
+  const allEmps = employees;
+
   const incompleteEmps = useMemo(() => 
     employees.filter(emp => {
       const inferred = inferMissingFields(emp, employees);
-      return Object.keys(inferred).length > 0;
+      const hasMissingManual = !emp.taxId || !emp.svNumber || !emp.iban || !emp.dateOfBirth || !emp.entryDate || !emp.state;
+      return Object.keys(inferred).length > 0 || hasMissingManual;
     }), [employees]);
 
   const initialInferredMap = useMemo(() => {
@@ -548,6 +552,21 @@ function DataCompletionStep({ employees, onBack, onDone }: {
     }
     return map;
   }, [incompleteEmps, employees]);
+
+  const initialManualMap = useMemo(() => {
+    const map = new Map<string, ManualFields>();
+    for (const emp of incompleteEmps) {
+      map.set(emp.personalNumber, {
+        taxId: emp.taxId || '',
+        svNumber: emp.svNumber || '',
+        iban: emp.iban || '',
+        dateOfBirth: emp.dateOfBirth || '',
+        entryDate: emp.entryDate || '',
+        state: emp.state || '',
+      });
+    }
+    return map;
+  }, [incompleteEmps]);
 
   const [editedMap, setEditedMap] = useState<Map<string, EditableInferred>>(initialInferredMap);
 
