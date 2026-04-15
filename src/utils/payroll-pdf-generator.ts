@@ -223,9 +223,6 @@ export function downloadPayrollPdf(
   doc.save(fileName);
 }
 
-/**
- * Generates a combined PDF with all entries for a period.
- */
 export function downloadPeriodPayrollPdf(
   entries: PayrollEntry[],
   period: PayrollPeriod,
