@@ -12,6 +12,8 @@
  */
 
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { calculatePayrollEntry, PayrollCalculationInput } from '@/utils/payroll-calculator';
+import { WorkingTimeData } from '@/types/payroll';
 import {
   ArrowLeft, ArrowRight, Check, CheckCircle2, Clock, Gift,
   Calculator, FileText, Download, Play, AlertTriangle, Info,
@@ -60,7 +62,7 @@ const WIZARD_STEPS = [
 export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizardProps) {
   const { toast } = useToast();
   const { employees } = useEmployees();
-  const { payrollPeriods, payrollEntries, createPayrollPeriod } = useSupabasePayroll();
+  const { payrollPeriods, payrollEntries, createPayrollPeriod, addPayrollEntry } = useSupabasePayroll();
   const { timeEntries } = useTimeTracking();
 
   const now = new Date();
