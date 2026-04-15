@@ -14,6 +14,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Upload, FileText, Loader2, Info } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { PdfUploadTab } from "./pdf-upload-tab";
 
 interface EditEmployeeDialogProps {
   employee: Employee | null;
