@@ -291,15 +291,25 @@ export function PayrollJournal({ onBack, onViewAccount }: PayrollJournalProps) {
                         })}
                       </TableCell>
                       <TableCell className="text-center">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => onViewAccount(entry.employeeId)}
-                          className="flex items-center gap-1"
-                        >
-                          <User className="h-4 w-4" />
-                          Konto
-                        </Button>
+                        <div className="flex items-center justify-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDownloadPdf(entry)}
+                            title="PDF herunterladen"
+                          >
+                            <FileDown className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => onViewAccount(entry.employeeId)}
+                            className="flex items-center gap-1"
+                          >
+                            <User className="h-4 w-4" />
+                            Konto
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
