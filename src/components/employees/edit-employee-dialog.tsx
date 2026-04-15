@@ -334,17 +334,29 @@ export function EditEmployeeDialog({ employee, open, onOpenChange, onSave }: Edi
                 if (fields.taxClass && !prev.personalData?.taxClass) {
                   updated.personalData = { ...updated.personalData!, taxClass: fields.taxClass as TaxClass };
                 }
-                if (fields.svNumber && !prev.employmentData?.svNumber) {
-                  updated.employmentData = { ...updated.employmentData!, svNumber: fields.svNumber };
+                if (fields.socialSecurityNumber && !prev.personalData?.socialSecurityNumber) {
+                  updated.personalData = { ...updated.personalData!, socialSecurityNumber: fields.socialSecurityNumber };
                 }
-                if (fields.healthInsurance && !prev.employmentData?.healthInsurance) {
-                  updated.employmentData = { ...updated.employmentData!, healthInsurance: fields.healthInsurance };
+                if (fields.healthInsurance) {
+                  updated.personalData = { 
+                    ...updated.personalData!, 
+                    healthInsurance: { 
+                      ...updated.personalData!.healthInsurance, 
+                      name: fields.healthInsurance 
+                    } 
+                  };
                 }
                 if (fields.grossSalary && !prev.salaryData?.grossSalary) {
                   updated.salaryData = { ...updated.salaryData!, grossSalary: fields.grossSalary };
                 }
-                if (fields.iban && !prev.personalData?.iban) {
-                  updated.personalData = { ...updated.personalData!, iban: fields.iban };
+                if (fields.iban) {
+                  updated.salaryData = { 
+                    ...updated.salaryData!, 
+                    bankingData: { 
+                      ...updated.salaryData!.bankingData, 
+                      iban: fields.iban 
+                    } 
+                  };
                 }
                 return updated;
               });
