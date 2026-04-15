@@ -639,6 +639,145 @@ So erstellen Sie den Export:
 💡 Speichern Sie den GoBD-Export regelmäßig (z.B. am Jahresende) auf einem sicheren Speichermedium. Aufbewahrungspflicht: 10 Jahre!`,
         tags: ["GoBD", "Betriebsprüfung", "Finanzamt", "Aufbewahrung"],
       },
+      {
+        title: "Wie lade ich eine Entgeltabrechnung als PDF herunter?",
+        content: `Für jeden Mitarbeiter kann eine druckfertige PDF-Entgeltabrechnung erstellt werden:
+
+1. Gehen Sie zu "Abrechnung → Lohnjournal"
+2. Suchen Sie den gewünschten Mitarbeiter und Monat
+3. Klicken Sie auf das PDF-Symbol (📄) in der Zeile des Mitarbeiters
+4. Die PDF wird automatisch heruntergeladen
+
+Die PDF enthält:
+✅ Mitarbeiterdaten (Name, Steuerklasse, SV-Nummer)
+✅ Arbeitszeiten (Ist- und Soll-Stunden, Überstunden, Krankheit)
+✅ Bruttobezüge und Zuschläge
+✅ Steuerliche Abzüge (Lohnsteuer, Soli, Kirchensteuer)
+✅ Sozialversicherungsbeiträge
+✅ Den Netto-Auszahlungsbetrag
+
+💡 Tipp: Mit "Alle als PDF" können Sie die Abrechnungen aller Mitarbeiter auf einmal herunterladen.`,
+        tags: ["PDF", "Entgeltabrechnung", "Download", "Lohnzettel"],
+      },
+    ],
+  },
+  {
+    id: "troubleshooting",
+    title: "Problemlösung",
+    icon: AlertTriangle,
+    color: "text-red-500",
+    description: "Häufige Probleme lösen – Schritt für Schritt",
+    articles: [
+      {
+        title: "Abrechnung zeigt 0 € – was ist los?",
+        content: `Wenn die Abrechnung nur Nullwerte anzeigt, prüfen Sie folgendes:
+
+🔍 Schritt 1: Hat der Mitarbeiter ein Bruttogehalt?
+→ Öffnen Sie das Mitarbeiterprofil und prüfen Sie unter "Gehaltsdaten", ob ein Bruttogehalt eingetragen ist.
+
+🔍 Schritt 2: Ist der Mitarbeiter aktiv?
+→ Prüfen Sie, ob kein Austrittsdatum in der Vergangenheit eingetragen ist.
+
+🔍 Schritt 3: Ist die Steuerklasse gesetzt?
+→ Ohne Steuerklasse kann keine Steuer berechnet werden.
+
+🔍 Schritt 4: Wurde die Periode korrekt erstellt?
+→ Löschen Sie die Periode und erstellen Sie sie über den Wizard neu.
+
+💡 Die häufigste Ursache: Es fehlt das Bruttogehalt im Mitarbeiterprofil.`,
+        tags: ["Fehler", "Nullwerte", "Abrechnung", "Problem"],
+      },
+      {
+        title: "Zeiterfassung wird nicht in die Abrechnung übernommen",
+        content: `Der Monats-Wizard nutzt automatisch die Zeiterfassungsdaten. Wenn das nicht klappt:
+
+🔍 Prüfen Sie:
+1. Sind Zeiteinträge für den richtigen Monat vorhanden?
+2. Sind die Einträge dem richtigen Mitarbeiter zugeordnet?
+3. Wurde der Typ korrekt erfasst (Arbeit / Urlaub / Krankheit)?
+
+So testen Sie es:
+1. Gehen Sie zu "Zeiterfassung"
+2. Wählen Sie den Mitarbeiter
+3. Prüfen Sie, ob im gewünschten Monat Einträge erscheinen
+4. Erstellen Sie die Abrechnung über "Abrechnung → Monatsabrechnung"
+
+💡 Wenn keine Zeiteinträge vorhanden sind, rechnet das System mit den vertraglichen Standardwerten (Wochenstunden × 4,33).`,
+        tags: ["Zeiterfassung", "Synchronisation", "Wizard"],
+      },
+      {
+        title: "DATEV-Export ist leer oder hat keine Daten",
+        content: `Der DATEV-Export funktioniert nur, wenn Abrechnungsdaten vorhanden sind.
+
+Checkliste:
+1. ✅ Wurde eine Abrechnungsperiode für den Monat erstellt?
+2. ✅ Wurden die Abrechnungen berechnet (nicht nur die Periode angelegt)?
+3. ✅ Gibt es Einträge im Lohnjournal für diesen Monat?
+
+Lösung:
+1. Gehen Sie zu "Abrechnung → Monatsabrechnung"
+2. Führen Sie den Wizard komplett durch (alle 5 Schritte)
+3. Danach sollten Daten im Lohnjournal erscheinen
+4. Jetzt den DATEV-Export erneut versuchen
+
+⚠️ Wenn die Periode schon existiert aber leer ist, muss sie erst gelöscht und neu erstellt werden.`,
+        tags: ["DATEV", "Export", "Leer", "Problem"],
+      },
+      {
+        title: "Fibu-Journal zeigt keine Buchungssätze",
+        content: `Das Fibu-Journal generiert Buchungssätze aus den gespeicherten Abrechnungsdaten.
+
+Wenn es leer ist:
+1. Prüfen Sie, ob Abrechnungen existieren: Gehen Sie zu "Abrechnung → Lohnjournal"
+2. Wenn dort keine Einträge stehen → Erstellen Sie erst eine Abrechnung über den Wizard
+3. Wenn Einträge vorhanden sind → Wählen Sie im Fibu-Journal die richtige Periode
+
+💡 Der Wizard speichert seit dem letzten Update die Abrechnungen automatisch. Ältere, leere Perioden müssen neu erstellt werden.`,
+        tags: ["Fibu", "Buchungssätze", "Journal", "Leer"],
+      },
+      {
+        title: "Meldung: 'Keine aktiven Mitarbeiter vorhanden'",
+        content: `Diese Meldung erscheint, wenn LohnPro keine aktiven Mitarbeiter findet.
+
+Mögliche Ursachen:
+1. 🔍 Noch keine Mitarbeiter angelegt → Gehen Sie zu "Mitarbeiter → Neuen Mitarbeiter anlegen"
+2. 🔍 Alle Mitarbeiter haben ein Austrittsdatum → Prüfen Sie die Mitarbeiterliste
+3. 🔍 Falscher Mandant ausgewählt → Prüfen Sie oben in der Kopfzeile, ob die richtige Firma ausgewählt ist
+
+💡 Tipp: Ein neuer Mitarbeiter braucht mindestens Vorname, Nachname und Bruttogehalt.`,
+        tags: ["Mitarbeiter", "Aktiv", "Fehlermeldung"],
+      },
+      {
+        title: "Seite lädt nicht oder zeigt Fehler",
+        content: `Wenn eine Seite nicht lädt oder eine Fehlermeldung zeigt:
+
+Schnelle Lösungen:
+1. 🔄 Laden Sie die Seite neu (F5 oder Strg+R)
+2. 🗑️ Löschen Sie den Browser-Cache (Strg+Shift+Entf)
+3. 🌐 Versuchen Sie einen anderen Browser (Chrome, Firefox, Edge)
+4. 📱 Versuchen Sie es auf einem anderen Gerät
+
+Wenn das Problem bestehen bleibt:
+• Notieren Sie die genaue Fehlermeldung
+• Machen Sie einen Screenshot
+• Kontaktieren Sie uns über die Kontakt-Seite
+
+⚠️ Verwenden Sie immer die neueste Version Ihres Browsers. Internet Explorer wird nicht unterstützt.`,
+        tags: ["Fehler", "Laden", "Browser", "Cache"],
+      },
+      {
+        title: "Sozialversicherungsbeiträge erscheinen falsch",
+        content: `Wenn SV-Beiträge ungewöhnlich hoch oder niedrig erscheinen, prüfen Sie:
+
+1. 🔍 Ist die Krankenkasse korrekt eingetragen? Verschiedene Kassen haben unterschiedliche Zusatzbeiträge.
+2. 🔍 Stimmt das Geburtsdatum? Kinderlose über 23 zahlen einen PV-Zuschlag.
+3. 🔍 Ist die Kinderzahl korrekt? Mehr Kinder = niedrigerer PV-Beitrag.
+4. 🔍 Liegt das Gehalt über der Beitragsbemessungsgrenze? Dann werden SV-Beiträge nur bis zur Grenze berechnet.
+5. 🔍 Ist es ein Minijob (bis 556 €)? Dann gelten pauschale Sätze.
+
+💡 LohnPro berechnet nach den aktuellen gesetzlichen Sätzen 2025/2026. Die Berechnung folgt dem offiziellen PAP (Programmablaufplan des BMF).`,
+        tags: ["SV-Beiträge", "Falsch", "Berechnung", "Prüfen"],
+      },
     ],
   },
 ];
@@ -691,6 +830,34 @@ const faqs = [
   {
     question: "Ich habe mein Passwort vergessen – was tun?",
     answer: 'Klicken Sie auf der Anmeldeseite auf "Passwort vergessen?", geben Sie Ihre E-Mail-Adresse ein und folgen Sie dem Link in der E-Mail. Dort können Sie ein neues Passwort festlegen.',
+  },
+  {
+    question: "Was ist der Unterschied zwischen Brutto und Netto?",
+    answer: "Brutto ist das Gehalt vor allen Abzügen – also der Betrag, der im Arbeitsvertrag steht. Davon werden Steuern (Lohnsteuer, Soli, ggf. Kirchensteuer) und Sozialversicherungsbeiträge (KV, RV, AV, PV) abgezogen. Was übrig bleibt, ist das Netto – der Betrag, der auf dem Konto landet.",
+  },
+  {
+    question: "Wie funktioniert der Monats-Wizard?",
+    answer: "Der Wizard führt Sie in 5 Schritten durch die monatliche Abrechnung: 1) Zeiterfassung prüfen, 2) Sonderzahlungen prüfen, 3) Abrechnung berechnen und speichern, 4) Meldungen vorbereiten, 5) Export und Freigabe. Sie können den Wizard auch per Auto-Run automatisch durchlaufen lassen – er stoppt nur, wenn eine manuelle Prüfung nötig ist.",
+  },
+  {
+    question: "Was bedeutet 'Beitragsbemessungsgrenze'?",
+    answer: "Die Beitragsbemessungsgrenze (BBG) ist ein Höchstbetrag, bis zu dem Sozialversicherungsbeiträge berechnet werden. Verdient ein Mitarbeiter mehr als die BBG, werden die SV-Beiträge nur bis zur Grenze berechnet. 2025 liegt die BBG für die Renten-/Arbeitslosenversicherung bei 8.050 € (West) bzw. 7.450 € (Ost) monatlich.",
+  },
+  {
+    question: "Was ist ein Minijob und was muss ich beachten?",
+    answer: "Ein Minijob ist eine geringfügige Beschäftigung mit maximal 556 € Gehalt pro Monat (Stand 2025). Der Arbeitgeber zahlt pauschale Abgaben (2% Steuer + SV-Pauschalen). Der Arbeitnehmer muss keine Steuern zahlen. LohnPro erkennt Minijobs automatisch anhand des Gehalts und wendet die richtigen Pauschalen an.",
+  },
+  {
+    question: "Wie lade ich eine Entgeltabrechnung als PDF herunter?",
+    answer: 'Gehen Sie zum Lohnjournal (Abrechnung → Lohnjournal) und klicken Sie auf das PDF-Symbol neben dem gewünschten Eintrag. Die Abrechnung wird als druckfertiges PDF mit allen Details (Brutto, Steuern, SV-Beiträge, Netto) heruntergeladen.',
+  },
+  {
+    question: "Was bedeutet die Märzklausel?",
+    answer: "Die Märzklausel regelt, dass Einmalzahlungen (z.B. Weihnachtsgeld, Jahresbonus) in den Monaten Januar bis März dem Vorjahr zugeordnet werden können, wenn das Arbeitsverhältnis schon im Vorjahr bestand. LohnPro prüft dies automatisch und wendet die Regelung korrekt an.",
+  },
+  {
+    question: "Gibt es eine Schnittstelle zu SYSTAX?",
+    answer: "Ja! LohnPro ist als Sub-App für die spätere Integration in das SYSTAX-Hauptsystem konzipiert. Die technischen Schnittstellen (Service-Layer für ELSTER und Bankanbindung) sind vorbereitet. Bei einem Upgrade auf SYSTAX werden Ihre Daten nahtlos übernommen.",
   },
 ];
 
