@@ -19,6 +19,7 @@ interface ImportProgress {
 export function useDatevImport() {
   const { tenantId } = useTenant();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [isImporting, setIsImporting] = useState(false);
   const [progress, setProgress] = useState<ImportProgress | null>(null);
 
@@ -148,6 +149,8 @@ export function useDatevImport() {
     } finally {
       setIsImporting(false);
       setProgress(result);
+      // Invalidate employee cache so the list refreshes
+      await queryClient.invalidateQueries({ queryKey: queryKeys.employees.all(tenantId) });
     }
 
     return result;
