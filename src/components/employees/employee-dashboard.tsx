@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Plus, Users, Calculator, FileText, Search, Edit, Trash2, BarChart3, Shield, Clock } from "lucide-react";
+import { useState, useMemo } from "react";
+import { Plus, Users, Calculator, FileText, Search, Edit, Trash2, BarChart3, Shield, Clock, AlertCircle, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
