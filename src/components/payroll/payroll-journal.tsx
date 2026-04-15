@@ -125,9 +125,9 @@ export function PayrollJournal({ onBack, onViewAccount }: PayrollJournalProps) {
             <ArrowLeft className="h-4 w-4" />
             Zurück
           </Button>
-          <Button variant="outline" className="flex items-center gap-2">
+          <Button variant="outline" onClick={handleDownloadAll} className="flex items-center gap-2" disabled={filteredEntries.length === 0}>
             <Download className="h-4 w-4" />
-            Export
+            Alle als PDF
           </Button>
         </div>
       </PageHeader>
