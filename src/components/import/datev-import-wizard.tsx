@@ -212,13 +212,13 @@ export function DatevImportWizard() {
               <FileText className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
               <p className="text-lg font-medium">Dateien hierher ziehen</p>
               <p className="text-sm text-muted-foreground mt-1">
-                oder klicken zum Auswählen • .txt, .csv
+                oder klicken zum Auswählen • .txt, .csv, .pdf
               </p>
               <input
                 id="datev-file-input"
                 type="file"
                 multiple
-                accept=".txt,.csv"
+                accept=".txt,.csv,.pdf"
                 className="hidden"
                 onChange={(e) => e.target.files && handleFiles(e.target.files)}
               />
