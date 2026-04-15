@@ -375,8 +375,16 @@ export function DatevImportWizard() {
                 )}
 
                 {importDone && (
-                  <div className="flex justify-center pt-4">
-                    <Button onClick={reset}>Weiteren Import starten</Button>
+                  <div className="flex justify-center gap-3 pt-4">
+                    <Button variant="outline" onClick={reset}>Weiteren Import starten</Button>
+                    {parseResults && parseResults.employees.some(emp => {
+                      const inferred = inferMissingFields(emp, parseResults.employees);
+                      return Object.keys(inferred).length > 0;
+                    }) && (
+                      <Button onClick={() => setStep('complete')}>
+                        Daten vervollständigen <ArrowRight className="h-4 w-4 ml-2" />
+                      </Button>
+                    )}
                   </div>
                 )}
               </>
