@@ -591,6 +591,53 @@ function DataCompletionStep({ employees, onBack, onDone }: {
     });
   };
 
+  /** Validates manual fields and returns error messages per field */
+  const validateManualFields = (manual: ManualFields): Partial<Record<keyof ManualFields, string>> => {
+    const errors: Partial<Record<keyof ManualFields, string>> = {};
+    // Steuer-ID: exactly 11 digits
+    if (manual.taxId && !/^\d{11}$/.test(manual.taxId.replace(/\s/g, ''))) {
+      errors.taxId = 'Steuer-ID muss genau 11 Ziffern haben';
+    }
+    // IBAN: starts with DE, 22 chars total (alphanumeric)
+    if (manual.iban) {
+      const cleaned = manual.iban.replace(/\s/g, '').toUpperCase();
+      if (!cleaned.startsWith('DE')) {
+        errors.iban = 'IBAN muss mit DE beginnen';
+      } else if (cleaned.length !== 22) {
+        errors.iban = `IBAN muss 22 Zeichen haben (aktuell: ${cleaned.length})`;
+      } else if (!/^DE\d{20}$/.test(cleaned)) {
+        errors.iban = 'IBAN darf nach DE nur Ziffern enthalten';
+      }
+    }
+    // SV-Nummer: Format XX DDMMYY L NNN (12 chars without spaces)
+    if (manual.svNumber) {
+      const cleaned = manual.svNumber.replace(/\s/g, '');
+      if (cleaned.length !== 12) {
+        errors.svNumber = `SV-Nummer muss 12 Zeichen haben (aktuell: ${cleaned.length})`;
+      } else if (!/^\d{2}\d{6}[A-Za-z]\d{3}$/.test(cleaned)) {
+        errors.svNumber = 'Format: 2 Ziffern + 6 Ziffern (Geburtsdatum) + 1 Buchstabe + 3 Ziffern';
+      }
+    }
+    return errors;
+  };
+
+  /** Check if a specific employee has validation errors */
+  const getValidationErrors = (pnr: string) => {
+    const manual = manualMap.get(pnr);
+    if (!manual) return {};
+    return validateManualFields(manual);
+  };
+
+  /** Check if any employee has validation errors (blocks "Alle übernehmen") */
+  const hasAnyValidationErrors = useMemo(() => {
+    for (const [pnr] of manualMap) {
+      if (appliedPnrs.has(pnr)) continue;
+      const errors = validateManualFields(manualMap.get(pnr)!);
+      if (Object.keys(errors).length > 0) return true;
+    }
+    return false;
+  }, [manualMap, appliedPnrs]);
+
   const buildUpdateData = (pnr: string) => {
     const inferred = editedMap.get(pnr);
     const manual = manualMap.get(pnr);
