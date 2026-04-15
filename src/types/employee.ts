@@ -19,6 +19,7 @@ export interface PersonalData {
   churchTax: boolean;
   churchTaxRate?: number; // Kirchensteuersatz in Prozent (z.B. 8 oder 9)
   churchTaxState?: string;
+  religion?: Religion;
   relationshipStatus: RelationshipStatus;
   relationshipDate?: Date; // Datum der Heirat, Scheidung oder Verwitwung
   healthInsurance: HealthInsurance;
