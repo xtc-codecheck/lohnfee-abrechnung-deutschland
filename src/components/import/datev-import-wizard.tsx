@@ -250,6 +250,27 @@ export function DatevImportWizard() {
         </Card>
       )}
 
+      {/* PDF Parsing Loading */}
+      {isPdfParsing && (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
+            <p className="text-lg font-medium">PDF wird analysiert...</p>
+            <p className="text-sm text-muted-foreground mt-1">KI-gestützte Erkennung der Mitarbeiterdaten</p>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* PDF Review Step */}
+      {step === 'pdf-review' && pdfEmployees.length > 0 && (
+        <PdfReviewStep
+          employees={pdfEmployees}
+          documentType={pdfDocType}
+          onConfirm={handlePdfConfirm}
+          onBack={() => { setStep('upload'); setPdfEmployees([]); }}
+        />
+      )}
+
       {/* Step 2: Preview */}
       {step === 'preview' && parseResults && (
         <Card>
