@@ -34,6 +34,9 @@ export function DatevImportWizard() {
   const [parseResults, setParseResults] = useState<DatevImportResult | null>(null);
   const [conflictStrategy, setConflictStrategy] = useState<ConflictStrategy>('skip');
   const [importDone, setImportDone] = useState(false);
+  const [pdfEmployees, setPdfEmployees] = useState<PdfEmployeeData[]>([]);
+  const [pdfDocType, setPdfDocType] = useState('');
+  const [isPdfParsing, setIsPdfParsing] = useState(false);
 
   const { importEmployees, isImporting, progress } = useDatevImport();
 
