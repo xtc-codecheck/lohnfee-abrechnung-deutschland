@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { ArrowLeft, Calendar, Download, Filter, Search, User } from "lucide-react";
+import { ArrowLeft, Calendar, Download, FileDown, Filter, Search, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -9,7 +9,9 @@ import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/ui/page-header";
 import { useSupabasePayroll } from "@/hooks/use-supabase-payroll";
 import { useEmployees } from "@/contexts/employee-context";
+import { useCompanySettings } from "@/hooks/use-company-settings";
 import { PayrollEntry } from "@/types/payroll";
+import { downloadPayrollPdf } from "@/utils/payroll-pdf-generator";
 
 interface PayrollJournalProps {
   onBack: () => void;
