@@ -25,6 +25,28 @@ export function PayrollJournal({ onBack, onViewAccount }: PayrollJournalProps) {
   
   const { payrollPeriods, payrollEntries } = useSupabasePayroll();
   const { employees } = useEmployees();
+  const { settings: companySettings } = useCompanySettings();
+
+  const companyInfo = useMemo(() => ({
+    companyName: companySettings?.company_name || 'Unternehmen',
+    street: companySettings?.street ?? undefined,
+    zipCode: companySettings?.zip_code ?? undefined,
+    city: companySettings?.city ?? undefined,
+    taxNumber: companySettings?.tax_number ?? undefined,
+    betriebsnummer: companySettings?.betriebsnummer ?? undefined,
+  }), [companySettings]);
+
+  const handleDownloadPdf = (entry: PayrollEntry) => {
+    const period = payrollPeriods.find(p => p.id === entry.payrollPeriodId);
+    if (!period) return;
+    downloadPayrollPdf(entry, period, companyInfo);
+  };
+
+  const handleDownloadAll = () => {
+    for (const entry of filteredEntries) {
+      handleDownloadPdf(entry);
+    }
+  };
 
   // Filter and sort entries
   const filteredEntries = useMemo(() => {
