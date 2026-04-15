@@ -96,12 +96,14 @@ export function buildTaxParamsFromEmployee(
   // Ost-/West-Status
   const isEastGermany = isEastGermanState(personalData.address?.state ?? '');
   
-  // Kirchensteuersatz ermitteln
-  const churchTaxRate = getChurchTaxRate(
-    personalData.address?.state,
-    personalData.religion,
-    personalData.churchTax
-  );
+  // Kirchensteuersatz: Direkt aus Mitarbeiterdaten oder Ermittlung über Bundesland/Religion
+  const churchTaxRate = personalData.churchTaxRate != null && personalData.churchTaxRate > 0
+    ? personalData.churchTaxRate
+    : getChurchTaxRate(
+        personalData.address?.state,
+        personalData.religion,
+        personalData.churchTax
+      );
   
   // Krankenversicherungs-Zusatzbeitrag
   const healthInsuranceRate = personalData.healthInsurance?.additionalRate 
