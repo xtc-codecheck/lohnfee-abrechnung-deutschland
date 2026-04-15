@@ -504,6 +504,13 @@ export function DatevImportWizard() {
 
 // ─── Data Completion Step ─────────────────────────────
 
+interface EditableInferred {
+  taxClass?: { value: number; reason: string };
+  weeklyHours?: { value: number; reason: string };
+  churchTaxRate?: { value: number; reason: string };
+  healthInsurance?: { value: string; reason: string };
+}
+
 function DataCompletionStep({ employees, onBack, onDone }: { 
   employees: DatevEmployee[]; 
   onBack: () => void; 
@@ -519,16 +526,29 @@ function DataCompletionStep({ employees, onBack, onDone }: {
       return Object.keys(inferred).length > 0;
     }), [employees]);
 
-  const inferredMap = useMemo(() => {
-    const map = new Map<string, InferredFields>();
+  const initialInferredMap = useMemo(() => {
+    const map = new Map<string, EditableInferred>();
     for (const emp of incompleteEmps) {
       map.set(emp.personalNumber, inferMissingFields(emp, employees));
     }
     return map;
   }, [incompleteEmps, employees]);
 
+  const [editedMap, setEditedMap] = useState<Map<string, EditableInferred>>(initialInferredMap);
+
+  const updateField = (pnr: string, field: keyof EditableInferred, value: string | number) => {
+    setEditedMap(prev => {
+      const next = new Map(prev);
+      const current = next.get(pnr) || {};
+      const existing = current[field];
+      (current as any)[field] = { value, reason: existing?.reason || 'Manuell angepasst' };
+      next.set(pnr, { ...current });
+      return next;
+    });
+  };
+
   const applyDefaults = async (pnr: string) => {
-    const inferred = inferredMap.get(pnr);
+    const inferred = editedMap.get(pnr);
     if (!inferred) return;
 
     setApplyingPnr(pnr);
@@ -552,7 +572,7 @@ function DataCompletionStep({ employees, onBack, onDone }: {
         toast.error(`Fehler bei ${pnr}: ${error.message}`);
       } else {
         setAppliedPnrs(prev => new Set(prev).add(pnr));
-        toast.success(`Vorschläge für PNr ${pnr} übernommen`);
+        toast.success(`Daten für PNr ${pnr} gespeichert`);
       }
     } catch (e) {
       toast.error(`Fehler: ${e instanceof Error ? e.message : 'Unbekannt'}`);
@@ -566,7 +586,7 @@ function DataCompletionStep({ employees, onBack, onDone }: {
     let successCount = 0;
     for (const emp of incompleteEmps) {
       if (appliedPnrs.has(emp.personalNumber)) continue;
-      const inferred = inferredMap.get(emp.personalNumber);
+      const inferred = editedMap.get(emp.personalNumber);
       if (!inferred || Object.keys(inferred).length === 0) continue;
 
       const { supabase } = await import('@/integrations/supabase/client');
@@ -619,12 +639,10 @@ function DataCompletionStep({ employees, onBack, onDone }: {
           Daten vervollständigen – {incompleteEmps.length} Mitarbeiter
         </CardTitle>
         <CardDescription>
-          Für die folgenden Mitarbeiter wurden intelligente Vorschläge erstellt. 
-          Klicken Sie "Übernehmen" um die Werte in die Datenbank zu schreiben.
+          Passen Sie die vorgeschlagenen Werte an und klicken Sie "Übernehmen" um sie zu speichern.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Batch apply button */}
         {pendingCount > 1 && (
           <Button 
             onClick={applyAllDefaults} 
@@ -641,12 +659,12 @@ function DataCompletionStep({ employees, onBack, onDone }: {
 
         <div className="max-h-[500px] overflow-y-auto space-y-3">
           {incompleteEmps.map(emp => {
-            const inferred = inferredMap.get(emp.personalNumber);
+            const inferred = editedMap.get(emp.personalNumber);
             if (!inferred) return null;
             const isApplied = appliedPnrs.has(emp.personalNumber);
             const isApplying = applyingPnr === emp.personalNumber;
             return (
-              <div key={emp.personalNumber} className={`border rounded-lg p-4 space-y-2 ${isApplied ? 'opacity-60 border-primary/30' : ''}`}>
+              <div key={emp.personalNumber} className={`border rounded-lg p-4 space-y-3 ${isApplied ? 'opacity-60 border-primary/30' : ''}`}>
                 <div className="flex items-center justify-between">
                   <h4 className="font-medium">
                     {isApplied && <CheckCircle2 className="h-4 w-4 text-primary inline mr-1" />}
@@ -668,38 +686,76 @@ function DataCompletionStep({ employees, onBack, onDone }: {
                     </Badge>
                   )}
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {inferred.taxClass && (
-                    <div className="flex items-center gap-2 p-2 bg-accent/50 rounded">
-                      <span className="font-medium min-w-24">Steuerklasse:</span>
-                      <Badge variant="secondary">{inferred.taxClass.value}</Badge>
-                      <span className="text-xs text-muted-foreground">{inferred.taxClass.reason}</span>
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">Steuerklasse</Label>
+                      <Select
+                        value={String(inferred.taxClass.value)}
+                        onValueChange={(v) => updateField(emp.personalNumber, 'taxClass', parseInt(v))}
+                        disabled={isApplied}
+                      >
+                        <SelectTrigger className="h-8 text-sm">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {[1, 2, 3, 4, 5, 6].map(tc => (
+                            <SelectItem key={tc} value={String(tc)}>Klasse {tc}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <p className="text-xs text-muted-foreground">{inferred.taxClass.reason}</p>
                     </div>
                   )}
                   {inferred.weeklyHours && (
-                    <div className="flex items-center gap-2 p-2 bg-accent/50 rounded">
-                      <span className="font-medium min-w-24">Wochenstunden:</span>
-                      <Badge variant="secondary">{inferred.weeklyHours.value}h</Badge>
-                      <span className="text-xs text-muted-foreground">{inferred.weeklyHours.reason}</span>
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">Wochenstunden</Label>
+                      <FormInput
+                        className="h-8 text-sm"
+                        type="number"
+                        step="0.5"
+                        value={inferred.weeklyHours.value}
+                        onChange={(e) => updateField(emp.personalNumber, 'weeklyHours', parseFloat(e.target.value) || 0)}
+                        disabled={isApplied}
+                      />
+                      <p className="text-xs text-muted-foreground">{inferred.weeklyHours.reason}</p>
                     </div>
                   )}
                   {inferred.churchTaxRate && (
-                    <div className="flex items-center gap-2 p-2 bg-accent/50 rounded">
-                      <span className="font-medium min-w-24">KiSt-Satz:</span>
-                      <Badge variant="secondary">{inferred.churchTaxRate.value}%</Badge>
-                      <span className="text-xs text-muted-foreground">{inferred.churchTaxRate.reason}</span>
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">Kirchensteuersatz (%)</Label>
+                      <Select
+                        value={String(inferred.churchTaxRate.value)}
+                        onValueChange={(v) => updateField(emp.personalNumber, 'churchTaxRate', parseFloat(v))}
+                        disabled={isApplied}
+                      >
+                        <SelectTrigger className="h-8 text-sm">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="0">Keine (0%)</SelectItem>
+                          <SelectItem value="8">8%</SelectItem>
+                          <SelectItem value="9">9%</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <p className="text-xs text-muted-foreground">{inferred.churchTaxRate.reason}</p>
                     </div>
                   )}
                   {inferred.healthInsurance && (
-                    <div className="flex items-center gap-2 p-2 bg-accent/50 rounded">
-                      <span className="font-medium min-w-24">Krankenkasse:</span>
-                      <Badge variant="secondary">{inferred.healthInsurance.value}</Badge>
-                      <span className="text-xs text-muted-foreground">{inferred.healthInsurance.reason}</span>
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">Krankenkasse</Label>
+                      <FormInput
+                        className="h-8 text-sm"
+                        value={inferred.healthInsurance.value}
+                        onChange={(e) => updateField(emp.personalNumber, 'healthInsurance', e.target.value)}
+                        disabled={isApplied}
+                      />
+                      <p className="text-xs text-muted-foreground">{inferred.healthInsurance.reason}</p>
                     </div>
                   )}
                 </div>
                 {(!emp.taxId || !emp.svNumber) && (
-                  <p className="text-xs text-muted-foreground mt-1">
+                  <p className="text-xs text-muted-foreground">
                     ⚠️ {[!emp.taxId && 'Steuer-ID', !emp.svNumber && 'SV-Nr'].filter(Boolean).join(', ')} 
                     {' '}– nicht ableitbar, Personalstamm-Datei erforderlich
                   </p>
@@ -713,7 +769,7 @@ function DataCompletionStep({ employees, onBack, onDone }: {
           <Info className="h-4 w-4" />
           <AlertTitle>Hinweis</AlertTitle>
           <AlertDescription>
-            Die Vorschläge dienen als Orientierung. Für eine korrekte Lohnabrechnung sind die echten Werte 
+            Sie können die Werte vor dem Übernehmen frei anpassen. Für eine korrekte Lohnabrechnung sind die echten Werte 
             aus dem ELStAM-Abruf oder den DATEV-Personalstamm-Dateien erforderlich.
           </AlertDescription>
         </Alert>
