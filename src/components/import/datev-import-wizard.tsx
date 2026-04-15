@@ -405,6 +405,132 @@ export function DatevImportWizard() {
   );
 }
 
+// ─── Data Completion Step ─────────────────────────────
+
+function DataCompletionStep({ employees, onBack, onDone }: { 
+  employees: DatevEmployee[]; 
+  onBack: () => void; 
+  onDone: () => void;
+}) {
+  const incompleteEmps = employees.filter(emp => {
+    const inferred = inferMissingFields(emp, employees);
+    return Object.keys(inferred).length > 0;
+  });
+
+  const inferredMap = new Map<string, InferredFields>();
+  for (const emp of incompleteEmps) {
+    inferredMap.set(emp.personalNumber, inferMissingFields(emp, employees));
+  }
+
+  if (incompleteEmps.length === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <CheckCircle2 className="h-5 w-5 text-primary" />
+            Alle Daten vollständig
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground">Alle importierten Mitarbeiter haben vollständige Stammdaten.</p>
+          <Button className="mt-4" onClick={onDone}>Fertig</Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <AlertTriangle className="h-5 w-5 text-yellow-500" />
+          Daten vervollständigen – {incompleteEmps.length} Mitarbeiter
+        </CardTitle>
+        <CardDescription>
+          Für die folgenden Mitarbeiter wurden intelligente Vorschläge erstellt. 
+          Nicht rekonstruierbare Felder (Steuer-ID, SV-Nr) benötigen die Original-Personalstamm-Dateien oder einen ELStAM-Abruf.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="max-h-[500px] overflow-y-auto space-y-3">
+          {incompleteEmps.map(emp => {
+            const inferred = inferredMap.get(emp.personalNumber);
+            if (!inferred) return null;
+            return (
+              <div key={emp.personalNumber} className="border rounded-lg p-4 space-y-2">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-medium">
+                    {emp.firstName} {emp.lastName}
+                    <span className="text-muted-foreground ml-2 text-sm">PNr: {emp.personalNumber}</span>
+                  </h4>
+                  <Badge variant="outline" className="text-xs">
+                    {Object.keys(inferred).length} Vorschläge
+                  </Badge>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+                  {inferred.taxClass && (
+                    <div className="flex items-center gap-2 p-2 bg-accent/50 rounded">
+                      <span className="font-medium min-w-24">Steuerklasse:</span>
+                      <Badge variant="secondary">{inferred.taxClass.value}</Badge>
+                      <span className="text-xs text-muted-foreground">{inferred.taxClass.reason}</span>
+                    </div>
+                  )}
+                  {inferred.weeklyHours && (
+                    <div className="flex items-center gap-2 p-2 bg-accent/50 rounded">
+                      <span className="font-medium min-w-24">Wochenstunden:</span>
+                      <Badge variant="secondary">{inferred.weeklyHours.value}h</Badge>
+                      <span className="text-xs text-muted-foreground">{inferred.weeklyHours.reason}</span>
+                    </div>
+                  )}
+                  {inferred.churchTaxRate && (
+                    <div className="flex items-center gap-2 p-2 bg-accent/50 rounded">
+                      <span className="font-medium min-w-24">KiSt-Satz:</span>
+                      <Badge variant="secondary">{inferred.churchTaxRate.value}%</Badge>
+                      <span className="text-xs text-muted-foreground">{inferred.churchTaxRate.reason}</span>
+                    </div>
+                  )}
+                  {inferred.healthInsurance && (
+                    <div className="flex items-center gap-2 p-2 bg-accent/50 rounded">
+                      <span className="font-medium min-w-24">Krankenkasse:</span>
+                      <Badge variant="secondary">{inferred.healthInsurance.value}</Badge>
+                      <span className="text-xs text-muted-foreground">{inferred.healthInsurance.reason}</span>
+                    </div>
+                  )}
+                </div>
+                {/* Non-inferable fields warning */}
+                {(!emp.taxId || !emp.svNumber) && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    ⚠️ {[!emp.taxId && 'Steuer-ID', !emp.svNumber && 'SV-Nr'].filter(Boolean).join(', ')} 
+                    {' '}– nicht ableitbar, Personalstamm-Datei erforderlich
+                  </p>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        <Alert>
+          <Info className="h-4 w-4" />
+          <AlertTitle>Hinweis</AlertTitle>
+          <AlertDescription>
+            Die Vorschläge dienen als Orientierung. Für eine korrekte Lohnabrechnung sind die echten Werte 
+            aus dem ELStAM-Abruf oder den DATEV-Personalstamm-Dateien erforderlich.
+          </AlertDescription>
+        </Alert>
+
+        <div className="flex justify-between pt-4">
+          <Button variant="outline" onClick={onBack}>
+            <ArrowLeft className="h-4 w-4 mr-2" /> Zurück
+          </Button>
+          <Button onClick={onDone}>
+            Abschließen
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 // ─── Quality helpers ──────────────────────────────────
 
 const CRITICAL_FIELDS: { key: keyof DatevEmployee; label: string }[] = [
