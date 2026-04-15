@@ -91,10 +91,11 @@ export function EditEmployeeDialog({ employee, open, onOpenChange, onSave }: Edi
         </DialogHeader>
 
         <Tabs defaultValue="personal" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="personal">Persönliche Daten</TabsTrigger>
             <TabsTrigger value="employment">Beschäftigung</TabsTrigger>
             <TabsTrigger value="salary">Gehalt</TabsTrigger>
+            <TabsTrigger value="import">Daten nachladen</TabsTrigger>
           </TabsList>
 
           <TabsContent value="personal" className="space-y-4">
