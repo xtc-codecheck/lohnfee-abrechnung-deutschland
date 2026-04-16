@@ -1,5 +1,9 @@
 # LohnPro – Deutsche Lohnbuchhaltung in Steuerberaterqualität
 
+> 🔄 **Diese App ersetzt das bestehende Lohnmodul im SYSTAX-Hauptsystem.**
+> Übergabe-Anleitung: [`docs/SYSTAX-INTEGRATION-GUIDE.md`](docs/SYSTAX-INTEGRATION-GUIDE.md)
+> Standalone-Berechnungs-Bibliothek: [`src/payroll-core/`](src/payroll-core/README.md)
+
 > **Status: ✅ ÜBERGABEFERTIG an SYSTAX-Hauptsystem**  
 > Multi-Tenant SaaS-Anwendung für Lohn- und Gehaltsabrechnung nach deutschem Recht (2025/2026).  
 > ELSTER und finAPI sind Bestandteil des SYSTAX-Hauptsystems.
