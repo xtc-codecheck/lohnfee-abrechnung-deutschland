@@ -189,4 +189,106 @@ export const HELP = {
   sachbezugMahlzeiten: {
     help: "Wenn der Arbeitgeber Mahlzeiten stellt, wird ein steuerlicher Sachbezugswert angesetzt: Frühstück 2,17€, Mittag-/Abendessen je 4,13€ (Werte 2025).",
   },
+
+  // ─── Lohnsteuer (vertieft) ─────────────────────────────
+  lohnsteuer: {
+    help: "Die Lohnsteuer ist die Einkommensteuer auf das Arbeitsentgelt. Sie wird vom Arbeitgeber direkt vom Bruttolohn einbehalten und ans Finanzamt abgeführt.",
+    example: "Brutto 3.500€, Steuerklasse I → ca. 430€ Lohnsteuer/Monat",
+    hint: "Höhe abhängig von Steuerklasse, Kinderfreibeträgen und Kirchensteuerpflicht.",
+  },
+  solidaritaetszuschlag: {
+    help: "Der Solidaritätszuschlag (Soli) beträgt 5,5% der Lohnsteuer. Seit 2021 zahlen ihn nur noch Spitzenverdiener (Freigrenze 2025: ~18.130€ Lohnsteuer/Jahr in Klasse I).",
+    example: "Bei 50.000€ Brutto/Jahr (Klasse I): 0€ Soli",
+  },
+  kirchensteuer: {
+    help: "Die Kirchensteuer wird zusätzlich zur Lohnsteuer erhoben, wenn der Mitarbeiter Mitglied einer steuererhebenden Religionsgemeinschaft ist. Satz: 8% (Bayern, BW) oder 9% (übrige Bundesländer).",
+    example: "Lohnsteuer 430€ × 9% = 38,70€ Kirchensteuer (NRW, ev./kath.)",
+  },
+  pauschaleLohnsteuer: {
+    help: "Bei Minijobs, kurzfristigen Beschäftigungen oder Sachbezügen kann der Arbeitgeber pauschal versteuern (z.B. 2% bei Minijob). Der Mitarbeiter zahlt dann selbst keine Lohnsteuer mehr.",
+    example: "Minijob 538€ → AG zahlt 2% Pauschalsteuer = 10,76€",
+  },
+  lohnsteuertabelle: {
+    help: "Die Lohnsteuertabelle wird vom BMF jährlich veröffentlicht und ist Grundlage der Berechnung. Es gibt eine 'allgemeine' (für SV-Pflichtige) und eine 'besondere' Tabelle (für Versorgungsbezüge).",
+    hint: "LohnPro nutzt das offizielle PAP (Programmablaufplan) 2025/2026 — cent-genau wie das BMF.",
+  },
+  freibetrag: {
+    help: "Ein Freibetrag mindert die Steuerlast. Beispiele: Grundfreibetrag 2025 = 12.084€/Jahr (steuerfrei), Arbeitnehmer-Pauschbetrag 1.230€, Sonderausgaben-Pauschbetrag 36€.",
+  },
+  faktorverfahren: {
+    help: "Statt Klasse III/V können Verheiratete das Faktorverfahren wählen (Klasse IV mit Faktor). Der Faktor sorgt dafür, dass beide Partner monatlich annähernd ihre tatsächliche Steuerlast zahlen.",
+    example: "Faktor 0,852 → Klasse IV/IV mit gerechterer Verteilung",
+  },
+  jahresausgleich: {
+    help: "Beim Lohnsteuer-Jahresausgleich (durch den Arbeitgeber im Dezember) wird die Steuer aufs Gesamtjahr neu berechnet. Zu viel gezahlte Lohnsteuer wird erstattet.",
+    hint: "Pflicht ab 10 Mitarbeitern oder auf Antrag. LohnPro erledigt dies automatisch.",
+  },
+  maerzklausel: {
+    help: "Die Märzklausel betrifft Einmalzahlungen (Boni, Weihnachtsgeld), die im 1. Quartal gezahlt werden. Sie werden steuerlich dem Vorjahr zugerechnet, wenn dort die BBG noch nicht ausgeschöpft war.",
+    example: "Bonus im März 2026 → ggf. SV-pflichtig in 2025",
+  },
+
+  // ─── Sozialversicherung (vertieft) ─────────────────────
+  beitragsbemessungsgrenze: {
+    help: "Die BBG ist die Einkommensobergrenze, bis zu der Sozialversicherungsbeiträge erhoben werden. Was darüber verdient wird, ist beitragsfrei. KV/PV: 66.150€/Jahr (2025), RV/AV: 96.600€ West / 89.400€ Ost.",
+    example: "Brutto 8.000€/Monat → KV-Beitrag wird nur auf 5.512,50€ berechnet",
+  },
+  zusatzbeitrag: {
+    help: "Jede Krankenkasse erhebt zusätzlich zum Allgemeinen Beitragssatz (14,6%) einen kassenindividuellen Zusatzbeitrag. Er wird seit 2019 paritätisch zwischen AG und AN geteilt.",
+    example: "TK 1,20% → 0,60% AN + 0,60% AG",
+  },
+  kvBeitrag: {
+    help: "Krankenversicherungsbeitrag: 14,6% Allgemeiner Satz + Zusatzbeitrag. Wird bis zur BBG (5.512,50€/Monat in 2025) erhoben und je zur Hälfte von AN und AG gezahlt.",
+  },
+  rvBeitrag: {
+    help: "Rentenversicherungsbeitrag: 18,6% (2025), je zur Hälfte AN/AG. Bis zur BBG (8.050€/Monat West, 7.450€ Ost in 2025).",
+  },
+  avBeitrag: {
+    help: "Arbeitslosenversicherungsbeitrag: 2,6% (2025), je zur Hälfte AN/AG. Wird bis zur BBG der Rentenversicherung erhoben.",
+  },
+  pvBeitrag: {
+    help: "Pflegeversicherungsbeitrag: 3,6% (2025), je zur Hälfte. Kinderlose ab 23 zahlen 0,6% Zuschlag (=4,2%). Eltern mit ≥2 Kindern unter 25: Abschlag 0,25% pro Kind (max. 1,0%).",
+    example: "1 Kind: 3,6% | 2 Kinder: 3,35% | 3 Kinder: 3,1% | 4+ Kinder: 2,6%",
+  },
+  insolvenzgeldumlage: {
+    help: "Die U3-Umlage (Insolvenzgeldumlage) finanziert das Insolvenzgeld der Bundesagentur für Arbeit. Sie beträgt 0,06% (2025) und wird ausschließlich vom Arbeitgeber gezahlt.",
+  },
+  umlageU1: {
+    help: "U1-Umlage finanziert die Erstattung der Lohnfortzahlung im Krankheitsfall. Pflicht für Betriebe mit ≤30 Mitarbeitern. Satz variiert je Krankenkasse (1,0%–4,0%).",
+  },
+  umlageU2: {
+    help: "U2-Umlage finanziert die Erstattung von Mutterschutz-Leistungen. Pflicht für ALLE Arbeitgeber, unabhängig von der Größe. Satz ca. 0,3%–0,9%.",
+  },
+  beitragsgruppen: {
+    help: "Beitragsgruppenschlüssel (BGS) sind 4-stellige Codes für SV-Meldungen, die KV/RV/AV/PV-Pflicht eines Mitarbeiters codieren. Beispiel: '1111' = voller AN.",
+    example: "1111 = Vollzeit AN, 6500 = Minijob (nur RV-pauschal)",
+  },
+  kuerzelKVPVAV: {
+    help: "Versicherungsformen: KV = Krankenversicherung, RV = Rentenversicherung, AV = Arbeitslosenversicherung, PV = Pflegeversicherung. Zusammen die 'Sozialversicherung'.",
+  },
+
+  // ─── Spezielle Sachverhalte ────────────────────────────
+  geringverdiener: {
+    help: "Auszubildende mit Vergütung ≤ 325€/Monat gelten als Geringverdiener. Der Arbeitgeber trägt dann allein die kompletten SV-Beiträge.",
+  },
+  uebergangsbereich: {
+    help: "Der Übergangsbereich (Midijob, 556,01€ – 2.000€) reduziert den SV-Beitrag des Arbeitnehmers gleitend. Der Arbeitgeber zahlt seinen vollen Anteil.",
+  },
+  pfandung: {
+    help: "Eine Lohnpfändung verpflichtet den Arbeitgeber, einen Teil des Nettos direkt an den Gläubiger zu überweisen. Die Pfändungsfreigrenzen werden alle 2 Jahre angepasst (aktuell: 1.499,99€ ab 1.7.2024).",
+    hint: "LohnPro berechnet den pfändbaren Anteil automatisch nach der amtlichen Pfändungstabelle.",
+  },
+  entgeltfortzahlung: {
+    help: "Bei Krankheit hat der AN Anspruch auf 6 Wochen volles Gehalt vom AG (§ 3 EntgFG). Danach übernimmt die Krankenkasse das Krankengeld (~70% des Brutto, max. 90% Netto).",
+  },
+  mutterschaftsgeld: {
+    help: "Schwangere erhalten 6 Wochen vor + 8 Wochen nach der Geburt (=14 Wochen) Mutterschaftsgeld. Krankenkasse zahlt bis 13€/Tag, AG stockt auf das letzte Netto auf.",
+  },
+  bav15Prozent: {
+    help: "Seit 2022 muss der Arbeitgeber 15% Zuschuss zur Entgeltumwandlung (bAV) zahlen, sofern er SV-Beiträge spart. Bei Direktversicherungen meist nicht erforderlich.",
+  },
+  geldwerterVorteil: {
+    help: "Geldwerte Vorteile sind Sachleistungen, die wie Gehalt versteuert werden müssen — z.B. Firmenwagen, kostenlose Mahlzeiten, Wohnung. Sie erhöhen das Brutto, fließen aber nicht real aufs Konto.",
+    example: "Firmenwagen 1%-Regel: 40.000€ × 1% = 400€/Monat zusätzliches Brutto",
+  },
 } as const satisfies Record<string, GlossaryEntry>;
