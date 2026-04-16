@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { DarkModeToggle } from "@/components/ui/dark-mode-toggle";
 import { PageSeo } from "@/components/seo/page-seo";
 import { LandingJsonLd } from "@/components/seo/landing-json-ld";
+import { CookieConsent } from "@/components/system/cookie-consent";
 import {
   Users,
   Calculator,
@@ -533,6 +534,8 @@ export default function Landing() {
           </div>
         </div>
       </footer>
+
+      <CookieConsent />
     </div>
   );
 }
