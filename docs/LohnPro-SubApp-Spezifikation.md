@@ -791,6 +791,46 @@ Jährlich zu aktualisieren:
 
 ---
 
+## 14. Ablösung des SYSTAX-Lohnmoduls (Cutover-Plan)
+
+> **Kernsatz:** LohnPro **ersetzt** das bestehende SYSTAX-Lohnmodul vollständig — es koexistiert nicht.
+
+Der detaillierte Cutover-/Migrations-Plan ist in einem eigenen Dokument
+beschrieben: [`SYSTAX-INTEGRATION-GUIDE.md`](./SYSTAX-INTEGRATION-GUIDE.md)
+
+Kurzfassung der Übernahme-Schritte:
+
+1. **Code-Übernahme**
+   - `src/payroll-core/` → reine Berechnungs-Bibliothek (`PAYROLL_CORE_VERSION = "2026.1.0"`)
+   - `src/standalone/lohnpro/` → mountbare Sub-App (`<StandaloneLohnProApp basePath="/lohn" useHostProviders />`)
+2. **Datenmigration** alter Lohn-Daten via `src/utils/systax-legacy-migration.ts` (Stub mit definierter Schnittstelle)
+3. **Routen-Cutover** `/payroll` → `/lohn/payroll` (mit 301-Redirects)
+4. **Abschaltung** des alten SYSTAX-Lohnmoduls nach 7-Tage-Pilotbeobachtung
+5. **Code-Cleanup** im SYSTAX-Repo (siehe „Konflikt-Liste" im Integration Guide)
+
+### 14.1 Compatibility Matrix
+
+| LohnPro Version | Ersetzt SYSTAX-Lohnmodul | Berechnungsstand     | Tests |
+|-----------------|--------------------------|----------------------|-------|
+| **2026.1.0**    | ja (alle Versionen)      | PAP 2025 + 2026      | 571   |
+
+### 14.2 Provider-Übernahme
+
+Im Standalone-Modus mountet LohnPro eigene Provider (Auth/Tenant/Theme/Query).
+Im SYSTAX-Modus (`useHostProviders={true}`) übernimmt das Hauptsystem diese
+Verantwortung — siehe Provider-Diff in §7 des Integration Guides.
+
+### 14.3 Datenbank
+
+LohnPro liefert das **führende** Schema (18 Tabellen). SYSTAX-Tabellen, die
+mandanten-/auth-bezogen sind (`tenants`, `tenant_members`, `user_roles`,
+`profiles`), werden vom Hauptsystem übernommen — die LohnPro-Variante wird
+nicht migriert. Lohn-spezifische Tabellen (`payroll_*`, `lohnsteuer*`,
+`sv_meldungen`, `compliance_alerts`, etc.) werden neu angelegt bzw. via
+Migrations-Skript aus dem Altsystem überführt.
+
+---
+
 *Aktualisiert am: 14. April 2026*  
 *LohnPro Version: Phase G – ✅ ÜBERGABEFERTIG AN SYSTAX (inkl. Fibu + Monats-Wizard)*  
 *Berechnungsstand: Steuer- und SV-Sätze 2025 + 2026*  
