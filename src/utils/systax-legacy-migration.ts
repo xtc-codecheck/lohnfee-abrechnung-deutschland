@@ -77,9 +77,9 @@ export async function migrateLegacyPayrollData(
  */
 export function validateMappedEmployee(emp: Partial<Employee>): string[] {
   const errors: string[] = [];
-  if (!emp.firstName) errors.push("firstName fehlt");
-  if (!emp.lastName) errors.push("lastName fehlt");
-  if (typeof emp.grossSalary !== "number" || emp.grossSalary < 0)
-    errors.push("grossSalary ungültig");
+  if (!emp.personalData?.firstName) errors.push("personalData.firstName fehlt");
+  if (!emp.personalData?.lastName) errors.push("personalData.lastName fehlt");
+  const gross = emp.salaryData?.grossSalary;
+  if (typeof gross !== "number" || gross < 0) errors.push("salaryData.grossSalary ungültig");
   return errors;
 }

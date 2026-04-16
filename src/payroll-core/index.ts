@@ -34,7 +34,12 @@ export const PAYROLL_CORE_SUPPORTED_YEARS = [2025, 2026] as const;
 
 // ── Tax-Engine ──────────────────────────────────────────────────────
 export * from '@/utils/tax-calculation';
-export * from '@/utils/tax-params-factory';
+// tax-params-factory: re-export ohne `getChurchTaxRate` (Konflikt mit tax-calculation)
+export {
+  createTaxParams,
+  createSocialSecurityParams,
+  buildPayrollContext,
+} from '@/utils/tax-params-factory';
 export * from '@/utils/besondere-lohnsteuertabelle';
 export * from '@/utils/annual-tax-reconciliation';
 
@@ -47,9 +52,11 @@ export * from '@/utils/net-to-gross-calculation';
 export * from '@/utils/payroll-correction';
 
 // ── Industry Modules ────────────────────────────────────────────────
-export * from '@/utils/construction-payroll';
-export * from '@/utils/gastronomy-payroll';
-export * from '@/utils/nursing-payroll';
+// Hinweis: Beide Branchen-Module exportieren `calculateSfnBonuses` —
+// daher als Namespace-Re-Exports, um Konflikte zu vermeiden.
+export * as constructionPayroll from '@/utils/construction-payroll';
+export * as gastronomyPayroll from '@/utils/gastronomy-payroll';
+export * as nursingPayroll from '@/utils/nursing-payroll';
 
 // ── Special Calculations ────────────────────────────────────────────
 export * from '@/utils/bav-calculation';
