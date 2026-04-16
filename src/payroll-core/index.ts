@@ -36,9 +36,11 @@ export const PAYROLL_CORE_SUPPORTED_YEARS = [2025, 2026] as const;
 export * from '@/utils/tax-calculation';
 // tax-params-factory: re-export ohne `getChurchTaxRate` (Konflikt mit tax-calculation)
 export {
-  createTaxParams,
-  createSocialSecurityParams,
-  buildPayrollContext,
+  calculateAge,
+  isEastGermanState,
+  buildTaxParamsFromEmployee,
+  buildTaxParamsFromEmployeeMonthly,
+  buildQuickTaxParams,
 } from '@/utils/tax-params-factory';
 export * from '@/utils/besondere-lohnsteuertabelle';
 export * from '@/utils/annual-tax-reconciliation';
