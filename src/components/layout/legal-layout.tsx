@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { DarkModeToggle } from "@/components/ui/dark-mode-toggle";
 import { ArrowLeft } from "lucide-react";
+import { CookieConsent, openCookieConsent } from "@/components/system/cookie-consent";
 
 interface LegalLayoutProps {
   children: ReactNode;
