@@ -13,7 +13,9 @@
 
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { calculatePayrollEntry, PayrollCalculationInput } from '@/utils/payroll-calculator';
-import { WorkingTimeData } from '@/types/payroll';
+import { WorkingTimeData, PayrollEntry } from '@/types/payroll';
+import { PreFlightCheckDialog } from './preflight-check-dialog';
+import { usePayrollGuardian } from '@/hooks/use-payroll-guardian';
 import {
   ArrowLeft, ArrowRight, Check, CheckCircle2, Clock, Gift,
   Calculator, FileText, Download, Play, AlertTriangle, Info,
