@@ -64,8 +64,9 @@ const WIZARD_STEPS = [
 export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizardProps) {
   const { toast } = useToast();
   const { employees } = useEmployees();
-  const { payrollPeriods, payrollEntries, createPayrollPeriod, addPayrollEntry } = useSupabasePayroll();
+  const { payrollPeriods, payrollEntries, createPayrollPeriod, addPayrollEntry, updatePayrollPeriodStatus } = useSupabasePayroll();
   const { timeEntries } = useTimeTracking();
+  const { historicalData, addToHistory } = usePayrollGuardian();
 
   const now = new Date();
   const [selectedMonth, setSelectedMonth] = useState(now.getMonth() + 1);
@@ -76,6 +77,9 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
   const [autoRunPaused, setAutoRunPaused] = useState(false);
   const [autoRunLog, setAutoRunLog] = useState<string[]>([]);
   const autoRunRef = useRef(false);
+  const [preflightOpen, setPreflightOpen] = useState(false);
+  const [pendingEntries, setPendingEntries] = useState<PayrollEntry[]>([]);
+  const [pendingPeriodId, setPendingPeriodId] = useState<string | null>(null);
   const [stepStatuses, setStepStatuses] = useState<StepStatus[]>(
     WIZARD_STEPS.map(() => ({ completed: false, approved: false, warnings: [], criticalWarnings: [], autoChecked: false }))
   );
