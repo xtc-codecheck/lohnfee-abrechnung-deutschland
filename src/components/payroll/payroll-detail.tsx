@@ -36,21 +36,6 @@ export function PayrollDetail({ payrollId, onBack }: PayrollDetailProps) {
   const { historicalData, addToHistory } = usePayrollGuardian();
   const { toast } = useToast();
 
-interface PayrollDetailProps {
-  payrollId: string;
-  onBack: () => void;
-}
-
-export function PayrollDetail({ payrollId, onBack }: PayrollDetailProps) {
-  const [isCalculating, setIsCalculating] = useState(false);
-  const { 
-    getPayrollReport, 
-    addPayrollEntry, 
-    updatePayrollPeriodStatus,
-    getPayrollEntriesForPeriod 
-  } = useSupabasePayroll();
-  const { employees } = useEmployees();
-  const { toast } = useToast();
 
   const report = getPayrollReport(payrollId);
   
