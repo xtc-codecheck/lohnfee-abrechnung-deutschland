@@ -13,7 +13,9 @@
 
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { calculatePayrollEntry, PayrollCalculationInput } from '@/utils/payroll-calculator';
-import { WorkingTimeData } from '@/types/payroll';
+import { WorkingTimeData, PayrollEntry } from '@/types/payroll';
+import { PreFlightCheckDialog } from './preflight-check-dialog';
+import { usePayrollGuardian } from '@/hooks/use-payroll-guardian';
 import {
   ArrowLeft, ArrowRight, Check, CheckCircle2, Clock, Gift,
   Calculator, FileText, Download, Play, AlertTriangle, Info,
@@ -62,8 +64,9 @@ const WIZARD_STEPS = [
 export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizardProps) {
   const { toast } = useToast();
   const { employees } = useEmployees();
-  const { payrollPeriods, payrollEntries, createPayrollPeriod, addPayrollEntry } = useSupabasePayroll();
+  const { payrollPeriods, payrollEntries, createPayrollPeriod, addPayrollEntry, updatePayrollPeriodStatus } = useSupabasePayroll();
   const { timeEntries } = useTimeTracking();
+  const { historicalData, addToHistory } = usePayrollGuardian();
 
   const now = new Date();
   const [selectedMonth, setSelectedMonth] = useState(now.getMonth() + 1);
@@ -74,6 +77,9 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
   const [autoRunPaused, setAutoRunPaused] = useState(false);
   const [autoRunLog, setAutoRunLog] = useState<string[]>([]);
   const autoRunRef = useRef(false);
+  const [preflightOpen, setPreflightOpen] = useState(false);
+  const [pendingEntries, setPendingEntries] = useState<PayrollEntry[]>([]);
+  const [pendingPeriodId, setPendingPeriodId] = useState<string | null>(null);
   const [stepStatuses, setStepStatuses] = useState<StepStatus[]>(
     WIZARD_STEPS.map(() => ({ completed: false, approved: false, warnings: [], criticalWarnings: [], autoChecked: false }))
   );
@@ -433,32 +439,93 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
 
 
 
+  /**
+   * Schritt 1 (Manueller Modus): Berechnet alle Abrechnungen IM SPEICHER
+   * (ohne zu persistieren) und öffnet den Pre-Flight-Check-Dialog.
+   */
   const handleCreatePayroll = async () => {
     setIsProcessing(true);
     try {
       const period = await createPayrollPeriod(selectedYear, selectedMonth);
       if (!period) throw new Error('Periode konnte nicht erstellt werden');
 
-      const saved = await calculateAndPersistEntries(period.id);
+      const calculated: PayrollEntry[] = [];
+      for (const emp of activeEmployees) {
+        try {
+          const workingData = buildWorkingDataFromTimeEntries(emp.id);
+          const input: PayrollCalculationInput = {
+            employee: emp,
+            period: { year: selectedYear, month: selectedMonth },
+            workingData,
+          };
+          const result = calculatePayrollEntry(input);
+          calculated.push({
+            ...result.entry,
+            id: '',
+            payrollPeriodId: period.id,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          } as PayrollEntry);
+        } catch (err) {
+          console.error(`Fehler bei ${emp.personalData.firstName} ${emp.personalData.lastName}:`, err);
+        }
+      }
+
+      if (calculated.length === 0) {
+        toast({
+          title: 'Keine Abrechnungen erzeugt',
+          description: 'Es konnten keine Abrechnungen berechnet werden. Prüfen Sie die Mitarbeiter-Stammdaten.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      setPendingEntries(calculated);
+      setPendingPeriodId(period.id);
+      setPreflightOpen(true);
+    } catch (error) {
+      toast({
+        title: 'Fehler',
+        description: 'Abrechnung konnte nicht vorbereitet werden.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  /**
+   * Schritt 2: Nach Pre-Flight-Bestätigung → Persistieren + Guardian-Historie + Status.
+   */
+  const handleConfirmSave = async () => {
+    if (!pendingPeriodId || pendingEntries.length === 0) return;
+    try {
+      let saved = 0;
+      for (const entry of pendingEntries) {
+        await addPayrollEntry(entry);
+        await addToHistory(entry);
+        saved++;
+      }
+      await updatePayrollPeriodStatus(pendingPeriodId, 'calculated');
 
       const newStatuses = [...stepStatuses];
       newStatuses[2] = { ...newStatuses[2], completed: true, approved: true };
       setStepStatuses(newStatuses);
 
       toast({
-        title: '✅ Abrechnung erstellt',
+        title: '✅ Abrechnung gespeichert',
         description: `${saved} von ${activeEmployees.length} Mitarbeitern berechnet und gespeichert.`,
       });
 
+      setPendingEntries([]);
+      setPendingPeriodId(null);
       setCurrentStep(3);
     } catch (error) {
       toast({
-        title: 'Fehler',
-        description: 'Abrechnung konnte nicht erstellt werden.',
+        title: 'Fehler beim Speichern',
+        description: 'Die Lohnabrechnungen konnten nicht gespeichert werden.',
         variant: 'destructive',
       });
-    } finally {
-      setIsProcessing(false);
     }
   };
 
@@ -650,7 +717,7 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
                   {isProcessing ? (
                     <><Loader2 className="h-5 w-5 mr-2 animate-spin" /> Wird berechnet...</>
                   ) : (
-                    <><Play className="h-5 w-5 mr-2" /> Abrechnung jetzt erstellen</>
+                    <><Play className="h-5 w-5 mr-2" /> Berechnen & prüfen</>
                   )}
                 </Button>
               </>
@@ -1070,6 +1137,16 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
           <div /> // Final step has its own CTA
         )}
       </div>
+
+      <PreFlightCheckDialog
+        open={preflightOpen}
+        onOpenChange={setPreflightOpen}
+        employees={activeEmployees}
+        entries={pendingEntries}
+        history={historicalData}
+        confirmLabel="Trotzdem speichern"
+        onConfirm={handleConfirmSave}
+      />
     </div>
   );
 }
