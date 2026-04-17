@@ -322,6 +322,16 @@ export function PayrollDetail({ payrollId, onBack }: PayrollDetailProps) {
           )}
         </CardContent>
       </Card>
+
+      <PreFlightCheckDialog
+        open={preflightOpen}
+        onOpenChange={setPreflightOpen}
+        employees={employees}
+        entries={pendingEntries}
+        history={historicalData}
+        confirmLabel="Trotzdem speichern"
+        onConfirm={handleConfirmSave}
+      />
     </div>
   );
 }
