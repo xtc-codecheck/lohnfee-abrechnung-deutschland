@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowLeft, Calculator, FileText, Download, Check, RefreshCw, Scale } from "lucide-react";
+import { ArrowLeft, Calculator, FileText, Download, Check, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageHeader } from "@/components/ui/page-header";
@@ -7,6 +7,7 @@ import { HelpTooltip } from "@/components/ui/help-tooltip";
 import { HELP } from "@/constants/help-glossary";
 import { useSupabasePayroll } from "@/hooks/use-supabase-payroll";
 import { useEmployees } from "@/contexts/employee-context";
+import { usePayrollGuardian } from "@/hooks/use-payroll-guardian";
 import { PayrollEntry } from "@/types/payroll";
 import { useToast } from "@/hooks/use-toast";
 import { calculatePayrollEntry, createDefaultWorkingData } from "@/utils/payroll-calculator";
@@ -14,6 +15,7 @@ import { formatCurrency } from "@/lib/formatters";
 import { buildTaxParamsFromEmployee } from "@/utils/tax-params-factory";
 import { AnnualReconciliationDialog } from "./annual-reconciliation-dialog";
 import { PayrollCorrectionDialog } from "./payroll-correction-dialog";
+import { PreFlightCheckDialog } from "./preflight-check-dialog";
 
 interface PayrollDetailProps {
   payrollId: string;
@@ -22,14 +24,18 @@ interface PayrollDetailProps {
 
 export function PayrollDetail({ payrollId, onBack }: PayrollDetailProps) {
   const [isCalculating, setIsCalculating] = useState(false);
-  const { 
-    getPayrollReport, 
-    addPayrollEntry, 
+  const [preflightOpen, setPreflightOpen] = useState(false);
+  const [pendingEntries, setPendingEntries] = useState<PayrollEntry[]>([]);
+  const {
+    getPayrollReport,
+    addPayrollEntry,
     updatePayrollPeriodStatus,
-    getPayrollEntriesForPeriod 
+    getPayrollEntriesForPeriod
   } = useSupabasePayroll();
   const { employees } = useEmployees();
+  const { historicalData, addToHistory } = usePayrollGuardian();
   const { toast } = useToast();
+
 
   const report = getPayrollReport(payrollId);
   
@@ -69,25 +75,25 @@ export function PayrollDetail({ payrollId, onBack }: PayrollDetailProps) {
     }
   };
 
-  const handleCalculatePayroll = async () => {
+  // Schritt 1: Berechnen + Pre-Flight-Check öffnen (noch NICHT speichern)
+  const handleCalculatePayroll = () => {
     setIsCalculating(true);
-    
     try {
-      // Für jeden Mitarbeiter eine Abrechnung erstellen
+      const calculated: PayrollEntry[] = [];
       for (const employee of employees) {
         const payrollEntry = calculatePayrollForEmployee(employee.id);
-        if (payrollEntry) {
-          addPayrollEntry(payrollEntry);
-        }
+        if (payrollEntry) calculated.push(payrollEntry);
       }
-
-      // Status auf "calculated" setzen
-      updatePayrollPeriodStatus(payrollId, 'calculated');
-      
-      toast({
-        title: "Abrechnung berechnet",
-        description: `Lohnabrechnung für ${employees.length} Mitarbeiter wurde erfolgreich berechnet.`,
-      });
+      if (calculated.length === 0) {
+        toast({
+          title: "Keine Abrechnungen erzeugt",
+          description: "Es konnten keine Abrechnungen berechnet werden. Prüfen Sie die Mitarbeiter-Stammdaten.",
+          variant: "destructive",
+        });
+        return;
+      }
+      setPendingEntries(calculated);
+      setPreflightOpen(true);
     } catch (error) {
       toast({
         title: "Fehler bei der Berechnung",
@@ -96,6 +102,29 @@ export function PayrollDetail({ payrollId, onBack }: PayrollDetailProps) {
       });
     } finally {
       setIsCalculating(false);
+    }
+  };
+
+  // Schritt 2: Nach Pre-Flight-Bestätigung → tatsächlich speichern
+  const handleConfirmSave = async () => {
+    try {
+      for (const entry of pendingEntries) {
+        addPayrollEntry(entry);
+        // Nach Speichern in Guardian-Historie aufnehmen
+        await addToHistory(entry);
+      }
+      updatePayrollPeriodStatus(payrollId, 'calculated');
+      toast({
+        title: "Abrechnung gespeichert",
+        description: `Lohnabrechnung für ${pendingEntries.length} Mitarbeiter wurde gespeichert.`,
+      });
+      setPendingEntries([]);
+    } catch (error) {
+      toast({
+        title: "Fehler beim Speichern",
+        description: "Die Lohnabrechnungen konnten nicht gespeichert werden.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -129,8 +158,8 @@ export function PayrollDetail({ payrollId, onBack }: PayrollDetailProps) {
               disabled={isCalculating}
               className="flex items-center gap-2 bg-gradient-primary hover:opacity-90"
             >
-              <Calculator className="h-4 w-4" />
-              {isCalculating ? 'Berechne...' : 'Abrechnung berechnen'}
+              <ShieldCheck className="h-4 w-4" />
+              {isCalculating ? 'Prüfe...' : 'Berechnen & prüfen'}
             </Button>
           )}
           {hasEntries && report.period.status === 'calculated' && (
@@ -278,6 +307,16 @@ export function PayrollDetail({ payrollId, onBack }: PayrollDetailProps) {
           )}
         </CardContent>
       </Card>
+
+      <PreFlightCheckDialog
+        open={preflightOpen}
+        onOpenChange={setPreflightOpen}
+        employees={employees}
+        entries={pendingEntries}
+        history={historicalData}
+        confirmLabel="Trotzdem speichern"
+        onConfirm={handleConfirmSave}
+      />
     </div>
   );
 }
