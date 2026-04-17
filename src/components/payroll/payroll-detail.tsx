@@ -3,6 +3,8 @@ import { ArrowLeft, Calculator, FileText, Download, Check, RefreshCw, Scale } fr
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageHeader } from "@/components/ui/page-header";
+import { HelpTooltip } from "@/components/ui/help-tooltip";
+import { HELP } from "@/constants/help-glossary";
 import { useSupabasePayroll } from "@/hooks/use-supabase-payroll";
 import { useEmployees } from "@/contexts/employee-context";
 import { PayrollEntry } from "@/types/payroll";
@@ -161,7 +163,10 @@ export function PayrollDetail({ payrollId, onBack }: PayrollDetailProps) {
 
           <Card className="shadow-card">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Bruttolohnsumme</CardTitle>
+              <CardTitle className="text-sm font-medium flex items-center gap-1.5">
+                Bruttolohnsumme
+                <HelpTooltip content={HELP.grossSalary.help} example={HELP.grossSalary.example} hint={HELP.grossSalary.hint} />
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-secondary">
@@ -172,7 +177,10 @@ export function PayrollDetail({ payrollId, onBack }: PayrollDetailProps) {
 
           <Card className="shadow-card">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Nettolohnsumme</CardTitle>
+              <CardTitle className="text-sm font-medium flex items-center gap-1.5">
+                Nettolohnsumme
+                <HelpTooltip content="Summe aller Auszahlungsbeträge nach Abzug von Lohnsteuer, Soli, Kirchensteuer und SV-Beiträgen." />
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-accent">
@@ -183,7 +191,13 @@ export function PayrollDetail({ payrollId, onBack }: PayrollDetailProps) {
 
           <Card className="shadow-card">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Arbeitgeberkosten</CardTitle>
+              <CardTitle className="text-sm font-medium flex items-center gap-1.5">
+                Arbeitgeberkosten
+                <HelpTooltip
+                  content="Bruttolohn + AG-Anteile zur Sozialversicherung + Umlagen U1/U2/U3. Die tatsächlichen Gesamtkosten pro Lohnlauf."
+                  example="Brutto 3.500€ → AG-Kosten ca. 4.200€"
+                />
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-warning">

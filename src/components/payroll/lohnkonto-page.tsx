@@ -23,6 +23,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { PageHeader } from '@/components/ui/page-header';
+import { HelpTooltip } from '@/components/ui/help-tooltip';
+import { HELP } from '@/constants/help-glossary';
 import { supabase } from '@/integrations/supabase/client';
 import { useEmployees } from '@/contexts/employee-context';
 import { Tables } from '@/integrations/supabase/types';
@@ -252,16 +254,61 @@ export function LohnkontoPage({ onBack }: LohnkontoPageProps) {
                   <TableHeader>
                     <TableRow>
                       <TableHead className="sticky left-0 bg-card z-10">Monat</TableHead>
-                      <TableHead className="text-right">Brutto</TableHead>
-                      <TableHead className="text-right">LSt</TableHead>
-                      <TableHead className="text-right">Soli</TableHead>
-                      <TableHead className="text-right">KiSt</TableHead>
+                      <TableHead className="text-right">
+                        <span className="inline-flex items-center gap-1 justify-end">
+                          Brutto
+                          <HelpTooltip content={HELP.grossSalary.help} example={HELP.grossSalary.example} />
+                        </span>
+                      </TableHead>
+                      <TableHead className="text-right">
+                        <span className="inline-flex items-center gap-1 justify-end">
+                          LSt
+                          <HelpTooltip content={HELP.lohnsteuer.help} example={HELP.lohnsteuer.example} hint={HELP.lohnsteuer.hint} />
+                        </span>
+                      </TableHead>
+                      <TableHead className="text-right">
+                        <span className="inline-flex items-center gap-1 justify-end">
+                          Soli
+                          <HelpTooltip content={HELP.solidaritaetszuschlag.help} example={HELP.solidaritaetszuschlag.example} />
+                        </span>
+                      </TableHead>
+                      <TableHead className="text-right">
+                        <span className="inline-flex items-center gap-1 justify-end">
+                          KiSt
+                          <HelpTooltip content={HELP.kirchensteuer.help} example={HELP.kirchensteuer.example} />
+                        </span>
+                      </TableHead>
                       <TableHead className="text-right">∑ Steuer</TableHead>
-                      <TableHead className="text-right">KV-AN</TableHead>
-                      <TableHead className="text-right">RV-AN</TableHead>
-                      <TableHead className="text-right">AV-AN</TableHead>
-                      <TableHead className="text-right">PV-AN</TableHead>
-                      <TableHead className="text-right">∑ SV-AN</TableHead>
+                      <TableHead className="text-right">
+                        <span className="inline-flex items-center gap-1 justify-end">
+                          KV-AN
+                          <HelpTooltip content={HELP.kvBeitrag.help} />
+                        </span>
+                      </TableHead>
+                      <TableHead className="text-right">
+                        <span className="inline-flex items-center gap-1 justify-end">
+                          RV-AN
+                          <HelpTooltip content={HELP.rvBeitrag.help} />
+                        </span>
+                      </TableHead>
+                      <TableHead className="text-right">
+                        <span className="inline-flex items-center gap-1 justify-end">
+                          AV-AN
+                          <HelpTooltip content={HELP.avBeitrag.help} />
+                        </span>
+                      </TableHead>
+                      <TableHead className="text-right">
+                        <span className="inline-flex items-center gap-1 justify-end">
+                          PV-AN
+                          <HelpTooltip content={HELP.pvBeitrag.help} example={HELP.pvBeitrag.example} />
+                        </span>
+                      </TableHead>
+                      <TableHead className="text-right">
+                        <span className="inline-flex items-center gap-1 justify-end">
+                          ∑ SV-AN
+                          <HelpTooltip content={HELP.beitragsbemessungsgrenze.help} example={HELP.beitragsbemessungsgrenze.example} />
+                        </span>
+                      </TableHead>
                       <TableHead className="text-right">Netto</TableHead>
                     </TableRow>
                   </TableHeader>
