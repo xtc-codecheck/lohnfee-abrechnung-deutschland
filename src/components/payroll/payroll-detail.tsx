@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowLeft, Calculator, FileText, Download, Check, RefreshCw, Scale } from "lucide-react";
+import { ArrowLeft, Calculator, FileText, Download, Check, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageHeader } from "@/components/ui/page-header";
@@ -7,6 +7,7 @@ import { HelpTooltip } from "@/components/ui/help-tooltip";
 import { HELP } from "@/constants/help-glossary";
 import { useSupabasePayroll } from "@/hooks/use-supabase-payroll";
 import { useEmployees } from "@/contexts/employee-context";
+import { usePayrollGuardian } from "@/hooks/use-payroll-guardian";
 import { PayrollEntry } from "@/types/payroll";
 import { useToast } from "@/hooks/use-toast";
 import { calculatePayrollEntry, createDefaultWorkingData } from "@/utils/payroll-calculator";
@@ -14,6 +15,26 @@ import { formatCurrency } from "@/lib/formatters";
 import { buildTaxParamsFromEmployee } from "@/utils/tax-params-factory";
 import { AnnualReconciliationDialog } from "./annual-reconciliation-dialog";
 import { PayrollCorrectionDialog } from "./payroll-correction-dialog";
+import { PreFlightCheckDialog } from "./preflight-check-dialog";
+
+interface PayrollDetailProps {
+  payrollId: string;
+  onBack: () => void;
+}
+
+export function PayrollDetail({ payrollId, onBack }: PayrollDetailProps) {
+  const [isCalculating, setIsCalculating] = useState(false);
+  const [preflightOpen, setPreflightOpen] = useState(false);
+  const [pendingEntries, setPendingEntries] = useState<PayrollEntry[]>([]);
+  const {
+    getPayrollReport,
+    addPayrollEntry,
+    updatePayrollPeriodStatus,
+    getPayrollEntriesForPeriod
+  } = useSupabasePayroll();
+  const { employees } = useEmployees();
+  const { historicalData, addToHistory } = usePayrollGuardian();
+  const { toast } = useToast();
 
 interface PayrollDetailProps {
   payrollId: string;
