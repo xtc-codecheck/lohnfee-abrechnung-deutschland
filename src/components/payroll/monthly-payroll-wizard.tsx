@@ -1137,6 +1137,16 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
           <div /> // Final step has its own CTA
         )}
       </div>
+
+      <PreFlightCheckDialog
+        open={preflightOpen}
+        onOpenChange={setPreflightOpen}
+        employees={activeEmployees}
+        entries={pendingEntries}
+        history={historicalData}
+        confirmLabel="Trotzdem speichern"
+        onConfirm={handleConfirmSave}
+      />
     </div>
   );
 }
