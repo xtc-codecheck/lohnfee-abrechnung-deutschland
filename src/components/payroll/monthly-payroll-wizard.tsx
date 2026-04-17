@@ -717,7 +717,7 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
                   {isProcessing ? (
                     <><Loader2 className="h-5 w-5 mr-2 animate-spin" /> Wird berechnet...</>
                   ) : (
-                    <><Play className="h-5 w-5 mr-2" /> Abrechnung jetzt erstellen</>
+                    <><Play className="h-5 w-5 mr-2" /> Berechnen & prüfen</>
                   )}
                 </Button>
               </>
