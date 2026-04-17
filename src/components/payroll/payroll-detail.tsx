@@ -90,25 +90,25 @@ export function PayrollDetail({ payrollId, onBack }: PayrollDetailProps) {
     }
   };
 
-  const handleCalculatePayroll = async () => {
+  // Schritt 1: Berechnen + Pre-Flight-Check öffnen (noch NICHT speichern)
+  const handleCalculatePayroll = () => {
     setIsCalculating(true);
-    
     try {
-      // Für jeden Mitarbeiter eine Abrechnung erstellen
+      const calculated: PayrollEntry[] = [];
       for (const employee of employees) {
         const payrollEntry = calculatePayrollForEmployee(employee.id);
-        if (payrollEntry) {
-          addPayrollEntry(payrollEntry);
-        }
+        if (payrollEntry) calculated.push(payrollEntry);
       }
-
-      // Status auf "calculated" setzen
-      updatePayrollPeriodStatus(payrollId, 'calculated');
-      
-      toast({
-        title: "Abrechnung berechnet",
-        description: `Lohnabrechnung für ${employees.length} Mitarbeiter wurde erfolgreich berechnet.`,
-      });
+      if (calculated.length === 0) {
+        toast({
+          title: "Keine Abrechnungen erzeugt",
+          description: "Es konnten keine Abrechnungen berechnet werden. Prüfen Sie die Mitarbeiter-Stammdaten.",
+          variant: "destructive",
+        });
+        return;
+      }
+      setPendingEntries(calculated);
+      setPreflightOpen(true);
     } catch (error) {
       toast({
         title: "Fehler bei der Berechnung",
@@ -117,6 +117,29 @@ export function PayrollDetail({ payrollId, onBack }: PayrollDetailProps) {
       });
     } finally {
       setIsCalculating(false);
+    }
+  };
+
+  // Schritt 2: Nach Pre-Flight-Bestätigung → tatsächlich speichern
+  const handleConfirmSave = async () => {
+    try {
+      for (const entry of pendingEntries) {
+        addPayrollEntry(entry);
+        // Nach Speichern in Guardian-Historie aufnehmen
+        await addToHistory(entry);
+      }
+      updatePayrollPeriodStatus(payrollId, 'calculated');
+      toast({
+        title: "Abrechnung gespeichert",
+        description: `Lohnabrechnung für ${pendingEntries.length} Mitarbeiter wurde gespeichert.`,
+      });
+      setPendingEntries([]);
+    } catch (error) {
+      toast({
+        title: "Fehler beim Speichern",
+        description: "Die Lohnabrechnungen konnten nicht gespeichert werden.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -150,8 +173,8 @@ export function PayrollDetail({ payrollId, onBack }: PayrollDetailProps) {
               disabled={isCalculating}
               className="flex items-center gap-2 bg-gradient-primary hover:opacity-90"
             >
-              <Calculator className="h-4 w-4" />
-              {isCalculating ? 'Berechne...' : 'Abrechnung berechnen'}
+              <ShieldCheck className="h-4 w-4" />
+              {isCalculating ? 'Prüfe...' : 'Berechnen & prüfen'}
             </Button>
           )}
           {hasEntries && report.period.status === 'calculated' && (
