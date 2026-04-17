@@ -212,11 +212,81 @@ export default function Datenschutz() {
 
           {/* 9 */}
           <section>
-            <h2 className="text-xl font-semibold mb-3">9. Cookies und Tracking</h2>
+            <h2 className="text-xl font-semibold mb-3">9. Cookies und lokale Speicherung</h2>
             <p className="text-muted-foreground leading-relaxed">
-              LohnPro verwendet ausschließlich technisch notwendige Cookies für die Authentifizierung
-              und Sitzungsverwaltung. Es werden keine Marketing- oder Tracking-Cookies eingesetzt.
-              Eine gesonderte Cookie-Einwilligung ist daher nicht erforderlich.
+              LohnPro verwendet ausschließlich <strong>technisch notwendige Cookies</strong> bzw.
+              vergleichbare Speichertechnologien (localStorage), die für den Betrieb der Anwendung
+              zwingend erforderlich sind. Es findet <strong>kein Tracking, keine Profilbildung
+              und keine Datenweitergabe an Dritte zu Werbezwecken</strong> statt.
+            </p>
+            <p className="text-muted-foreground leading-relaxed mt-2">
+              Rechtsgrundlage: § 25 Abs. 2 Nr. 2 TTDSG (unbedingt erforderlich für die vom Nutzer
+              ausdrücklich gewünschte Funktion) i. V. m. Art. 6 Abs. 1 lit. b und f DSGVO.
+              Eine gesonderte Einwilligung ist für diese Cookies <strong>nicht erforderlich</strong>.
+            </p>
+
+            <h3 className="text-lg font-medium mb-2 mt-6">Übersicht der eingesetzten Cookies</h3>
+            <div className="overflow-x-auto mt-2">
+              <table className="w-full text-sm border border-border rounded-lg">
+                <thead className="bg-muted/50">
+                  <tr className="text-left">
+                    <th className="px-3 py-2 font-medium">Name</th>
+                    <th className="px-3 py-2 font-medium">Anbieter</th>
+                    <th className="px-3 py-2 font-medium">Zweck</th>
+                    <th className="px-3 py-2 font-medium">Speicherort</th>
+                    <th className="px-3 py-2 font-medium">Speicherdauer</th>
+                  </tr>
+                </thead>
+                <tbody className="text-muted-foreground">
+                  <tr className="border-t border-border">
+                    <td className="px-3 py-2 font-mono text-xs">sb-access-token</td>
+                    <td className="px-3 py-2">LohnPro (Lovable Cloud)</td>
+                    <td className="px-3 py-2">Authentifizierung des angemeldeten Nutzers (Session-Token).</td>
+                    <td className="px-3 py-2">localStorage</td>
+                    <td className="px-3 py-2">1 Stunde (auto. Erneuerung)</td>
+                  </tr>
+                  <tr className="border-t border-border">
+                    <td className="px-3 py-2 font-mono text-xs">sb-refresh-token</td>
+                    <td className="px-3 py-2">LohnPro (Lovable Cloud)</td>
+                    <td className="px-3 py-2">Erneuerung der Sitzung ohne erneute Passworteingabe.</td>
+                    <td className="px-3 py-2">localStorage</td>
+                    <td className="px-3 py-2">Bis zur Abmeldung</td>
+                  </tr>
+                  <tr className="border-t border-border">
+                    <td className="px-3 py-2 font-mono text-xs">lohnpro.cookie-consent.v1</td>
+                    <td className="px-3 py-2">LohnPro</td>
+                    <td className="px-3 py-2">Speichert Ihre Entscheidung zum Cookie-Hinweis (verhindert wiederholte Anzeige).</td>
+                    <td className="px-3 py-2">localStorage</td>
+                    <td className="px-3 py-2">Persistent</td>
+                  </tr>
+                  <tr className="border-t border-border">
+                    <td className="px-3 py-2 font-mono text-xs">lohnpro.tenant.active</td>
+                    <td className="px-3 py-2">LohnPro</td>
+                    <td className="px-3 py-2">Speichert den aktiven Mandanten bei Mehrfach-Mitgliedschaften.</td>
+                    <td className="px-3 py-2">localStorage</td>
+                    <td className="px-3 py-2">Bis zur Abmeldung</td>
+                  </tr>
+                  <tr className="border-t border-border">
+                    <td className="px-3 py-2 font-mono text-xs">theme</td>
+                    <td className="px-3 py-2">LohnPro</td>
+                    <td className="px-3 py-2">Speichert die UI-Voreinstellung (Hell-/Dunkelmodus).</td>
+                    <td className="px-3 py-2">localStorage</td>
+                    <td className="px-3 py-2">Persistent</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <h3 className="text-lg font-medium mb-2 mt-6">Cookies löschen / widerrufen</h3>
+            <p className="text-muted-foreground leading-relaxed">
+              Sie können die in Ihrem Browser gespeicherten Cookies und localStorage-Einträge jederzeit
+              über die Einstellungen Ihres Browsers löschen. Da unsere Cookies technisch notwendig sind,
+              kann die Anwendung nach dem Löschen eine erneute Anmeldung erforderlich machen.
+            </p>
+            <p className="text-muted-foreground leading-relaxed mt-2">
+              <strong>Drittanbieter-Cookies:</strong> Es werden <strong>keine</strong> Cookies oder
+              Tracking-Pixel von Drittanbietern (Google Analytics, Facebook Pixel, Werbenetzwerke o. ä.)
+              eingesetzt.
             </p>
           </section>
 
