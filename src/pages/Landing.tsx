@@ -527,6 +527,9 @@ export default function Landing() {
               <button onClick={() => navigate("/hilfe")} className="text-muted-foreground hover:text-primary transition-colors">
                 Hilfe
               </button>
+              <button onClick={openCookieConsent} className="text-muted-foreground hover:text-primary transition-colors">
+                Cookie-Einstellungen
+              </button>
             </nav>
             <p className="text-sm text-muted-foreground">
               © {new Date().getFullYear()} LohnPro. Alle Rechte vorbehalten.
