@@ -17,8 +17,25 @@ import { Button } from "@/components/ui/button";
 import { Cookie, X } from "lucide-react";
 
 const STORAGE_KEY = "lohnpro.cookie-consent.v1";
+const REOPEN_EVENT = "lohnpro:open-cookie-consent";
 
 type ConsentValue = "accepted" | "essential-only";
+
+/**
+ * Öffnet den CookieConsent-Banner manuell wieder
+ * (z. B. aus dem Footer-Link "Cookie-Einstellungen").
+ * Löscht zusätzlich die gespeicherte Wahl, damit der Banner
+ * auch nach Reload erneut sichtbar bleibt, bis der Nutzer
+ * eine neue Entscheidung trifft.
+ */
+export function openCookieConsent() {
+  try {
+    window.localStorage.removeItem(STORAGE_KEY);
+  } catch {
+    // ignore
+  }
+  window.dispatchEvent(new CustomEvent(REOPEN_EVENT));
+}
 
 export function CookieConsent() {
   const [visible, setVisible] = useState(false);
@@ -31,6 +48,10 @@ export function CookieConsent() {
       // localStorage nicht verfügbar (Privacy-Modus) → Banner anzeigen
       setVisible(true);
     }
+
+    const handleReopen = () => setVisible(true);
+    window.addEventListener(REOPEN_EVENT, handleReopen);
+    return () => window.removeEventListener(REOPEN_EVENT, handleReopen);
   }, []);
 
   const persist = (value: ConsentValue) => {

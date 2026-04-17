@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { DarkModeToggle } from "@/components/ui/dark-mode-toggle";
 import { ArrowLeft } from "lucide-react";
+import { CookieConsent, openCookieConsent } from "@/components/system/cookie-consent";
 
 interface LegalLayoutProps {
   children: ReactNode;
@@ -55,6 +56,7 @@ export function LegalLayout({ children }: LegalLayoutProps) {
               <button onClick={() => navigate("/agb")} className="text-muted-foreground hover:text-primary transition-colors">AGB</button>
               <button onClick={() => navigate("/kontakt")} className="text-muted-foreground hover:text-primary transition-colors">Kontakt</button>
               <button onClick={() => navigate("/hilfe")} className="text-muted-foreground hover:text-primary transition-colors">Hilfe</button>
+              <button onClick={openCookieConsent} className="text-muted-foreground hover:text-primary transition-colors">Cookie-Einstellungen</button>
             </nav>
             <p className="text-sm text-muted-foreground">
               © {new Date().getFullYear()} LohnPro. Alle Rechte vorbehalten.
@@ -62,6 +64,7 @@ export function LegalLayout({ children }: LegalLayoutProps) {
           </div>
         </div>
       </footer>
+      <CookieConsent />
     </div>
   );
 }

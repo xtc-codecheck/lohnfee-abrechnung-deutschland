@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { DarkModeToggle } from "@/components/ui/dark-mode-toggle";
 import { PageSeo } from "@/components/seo/page-seo";
 import { LandingJsonLd } from "@/components/seo/landing-json-ld";
-import { CookieConsent } from "@/components/system/cookie-consent";
+import { CookieConsent, openCookieConsent } from "@/components/system/cookie-consent";
 import {
   Users,
   Calculator,
@@ -526,6 +526,9 @@ export default function Landing() {
               </button>
               <button onClick={() => navigate("/hilfe")} className="text-muted-foreground hover:text-primary transition-colors">
                 Hilfe
+              </button>
+              <button onClick={openCookieConsent} className="text-muted-foreground hover:text-primary transition-colors">
+                Cookie-Einstellungen
               </button>
             </nav>
             <p className="text-sm text-muted-foreground">
