@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/auth-context";
 import { TenantSwitcher } from "@/components/settings/tenant-switcher";
 import { DarkModeToggle } from "@/components/ui/dark-mode-toggle";
+import { CookieConsent, openCookieConsent } from "@/components/system/cookie-consent";
 
 interface MainLayoutProps {
   children: ReactNode;
