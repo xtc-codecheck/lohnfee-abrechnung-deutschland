@@ -171,6 +171,7 @@ export function MainLayout({ children }: MainLayoutProps) {
               <button onClick={() => handleNavigation("/agb")} className="text-muted-foreground hover:text-primary transition-colors">AGB</button>
               <button onClick={() => handleNavigation("/kontakt")} className="text-muted-foreground hover:text-primary transition-colors">Kontakt</button>
               <button onClick={() => handleNavigation("/hilfe")} className="text-muted-foreground hover:text-primary transition-colors">Hilfe</button>
+              <button onClick={openCookieConsent} className="text-muted-foreground hover:text-primary transition-colors">Cookie-Einstellungen</button>
             </nav>
 
             <p className="text-sm text-muted-foreground">
@@ -179,6 +180,7 @@ export function MainLayout({ children }: MainLayoutProps) {
           </div>
         </div>
       </footer>
+      <CookieConsent />
     </div>
   );
 }
