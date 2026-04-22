@@ -16,6 +16,7 @@ import { PayrollQuickActions } from "./payroll-quick-actions";
 import { PayrollStatsCards } from "./payroll-stats-cards";
 import { PayrollPeriodsList } from "./payroll-periods-list";
 import { PayrollSubViewWrapper } from "./payroll-sub-view-wrapper";
+import { MonthlyCloseChecklist } from "./monthly-close-checklist";
 
 interface PayrollDashboardProps {
   onBack: () => void;
@@ -148,6 +149,8 @@ export function PayrollDashboard({ onBack, onShowSpecialPayments, onShowAutomati
         onDeletePeriod={deletePayrollPeriod}
         onCreatePayroll={() => setShowCreateDialog(true)}
       />
+
+      <MonthlyCloseChecklist />
 
       <CreatePayrollDialog open={showCreateDialog} onOpenChange={setShowCreateDialog} />
     </div>

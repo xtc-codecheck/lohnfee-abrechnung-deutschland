@@ -21,7 +21,8 @@ import {
   Clock,
   Heart,
   FileSpreadsheet,
-  FileBarChart
+  FileBarChart,
+  ShieldCheck
 } from "lucide-react";
 import { useEmployees } from "@/contexts/employee-context";
 import { useSupabasePayroll } from "@/hooks/use-supabase-payroll";
@@ -32,12 +33,13 @@ import { AuditReport } from "./audit-report";
 import { EmployeeStatisticsReport } from "./employee-statistics-report";
 import { ExportManager } from "./export-manager";
 import { GoBDExportDialog } from "./gobd-export-dialog";
+import { MinimumWageAuditReport } from "./minimum-wage-audit-report";
 
 interface AdvancedReportsProps {
   onBack: () => void;
 }
 
-type ReportType = 'cost-overview' | 'sick-vacation' | 'tax-sv' | 'audit' | 'employee-stats';
+type ReportType = 'cost-overview' | 'sick-vacation' | 'tax-sv' | 'audit' | 'employee-stats' | 'min-wage';
 
 export function AdvancedReports({ onBack }: AdvancedReportsProps) {
   const [selectedReport, setSelectedReport] = useState<ReportType>('cost-overview');
@@ -85,6 +87,13 @@ export function AdvancedReports({ onBack }: AdvancedReportsProps) {
       description: 'Fluktuation, Lohnentwicklung',
       icon: Users,
       color: 'text-orange-600'
+    },
+    {
+      id: 'min-wage' as ReportType,
+      title: 'Mindestlohn-Prüfung',
+      description: 'Konformitätscheck gegen MiLoG',
+      icon: ShieldCheck,
+      color: 'text-emerald-600'
     }
   ];
 
@@ -108,6 +117,8 @@ export function AdvancedReports({ onBack }: AdvancedReportsProps) {
         return <AuditReport {...commonProps} />;
       case 'employee-stats':
         return <EmployeeStatisticsReport {...commonProps} />;
+      case 'min-wage':
+        return <MinimumWageAuditReport year={dateRange.to.getFullYear()} />;
       default:
         return null;
     }
