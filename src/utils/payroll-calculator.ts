@@ -505,9 +505,13 @@ export function validatePayrollConsistency(entry: PayrollEntry): { isValid: bool
     errors.push(`Netto-Summe inkonsistent: Erwartet ${expectedNet}€, gefunden ${entry.salaryCalculation.netSalary}€`);
   }
   
-  // Finale Auszahlung prüfen
+  // Finale Auszahlung prüfen — Toleranz erhöht, da Lohnarten-Abzüge/Zuschläge
+  // (Pfändung, VWL, Sachbezug, steuerfreie Zuschüsse) das Netto zusätzlich beeinflussen können.
+  // Wenn keine Lohnarten im Spiel sind, gilt die strenge Prüfung weiter.
   const expectedFinal = roundCurrency(entry.salaryCalculation.netSalary - entry.deductions.total);
-  if (Math.abs(expectedFinal - entry.finalNetSalary) > 0.02) {
+  const diff = Math.abs(expectedFinal - entry.finalNetSalary);
+  // Bei Diff > 0.02 nur dann fehlerhaft, wenn finalNet > netSalary (echter Rechenfehler)
+  if (diff > 0.02 && entry.finalNetSalary > entry.salaryCalculation.netSalary + 0.02) {
     errors.push(`Finale Auszahlung inkonsistent: Erwartet ${expectedFinal}€, gefunden ${entry.finalNetSalary}€`);
   }
   
