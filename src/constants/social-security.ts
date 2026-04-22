@@ -256,27 +256,27 @@ export const TAX_ALLOWANCES_2026 = {
 export const TAX_RATES_2026 = {
   progressionZone1: {
     from: 12349,
-    to: 17443, // Wird sobald BMF-PAP 2026 erschienen ist final überprüft
+    to: 17799, // § 32a EStG ab VZ 2026
     formula: 'y',
-    coefficients: [932.30, 1400], // Annahme: gleiche Progressionsstruktur wie 2025
+    coefficients: [914.51, 1400], // § 32a EStG ab VZ 2026
   },
   progressionZone2: {
-    from: 17444,
-    to: 68480,
+    from: 17800,
+    to: 69878,
     formula: 'z',
-    coefficients: [176.64, 2397],
-    constant: 1015.13,
+    coefficients: [173.10, 2397],
+    constant: 1034.87,
   },
   proportionalZone1: {
-    from: 68481,
+    from: 69879,
     to: 277825,
     rate: 0.42,
-    constant: 10911.92,
+    constant: 11135.63,
   },
   proportionalZone2: {
     from: 277826,
     rate: 0.45,
-    constant: 19256.67,
+    constant: 19470.38,
   },
   solidarityTax: 0.055,
 } as const;
