@@ -261,48 +261,69 @@ export function PayrollDetail({ payrollId, onBack }: PayrollDetailProps) {
           ) : (
             <div className="space-y-4">
               {entries.map((entry) => (
-                <div
-                  key={entry.id}
-                  className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-accent/5 transition-colors"
-                >
-                  <div className="flex items-center space-x-4">
-                    <div className="h-10 w-10 bg-gradient-primary rounded-full flex items-center justify-center">
-                      <span className="text-primary-foreground font-medium">
-                        {entry.employee.personalData.firstName[0]}{entry.employee.personalData.lastName[0]}
-                      </span>
+                <div key={entry.id} className="border border-border rounded-lg overflow-hidden">
+                  <div className="flex items-center justify-between p-4 hover:bg-accent/5 transition-colors">
+                    <div className="flex items-center space-x-4">
+                      <div className="h-10 w-10 bg-gradient-primary rounded-full flex items-center justify-center">
+                        <span className="text-primary-foreground font-medium">
+                          {entry.employee.personalData.firstName[0]}{entry.employee.personalData.lastName[0]}
+                        </span>
+                      </div>
+                      <div>
+                        <h4 className="font-medium text-foreground">
+                          {entry.employee.personalData.firstName} {entry.employee.personalData.lastName}
+                        </h4>
+                        <p className="text-sm text-muted-foreground">
+                          Brutto: {formatCurrency(entry.salaryCalculation.grossSalary)} • 
+                          Netto: {formatCurrency(entry.finalNetSalary)}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <h4 className="font-medium text-foreground">
-                        {entry.employee.personalData.firstName} {entry.employee.personalData.lastName}
-                      </h4>
-                      <p className="text-sm text-muted-foreground">
-                        Brutto: {formatCurrency(entry.salaryCalculation.grossSalary)} • 
-                        Netto: {formatCurrency(entry.finalNetSalary)}
-                      </p>
+                    <div className="flex items-center space-x-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() =>
+                          setExpandedId(expandedId === entry.id ? null : entry.id)
+                        }
+                        className="flex items-center gap-1"
+                        aria-expanded={expandedId === entry.id}
+                        aria-label="Steuerberechnung anzeigen"
+                      >
+                        {expandedId === entry.id ? (
+                          <ChevronUp className="h-3 w-3" />
+                        ) : (
+                          <ChevronDown className="h-3 w-3" />
+                        )}
+                        Steuer-Details
+                      </Button>
+                      <AnnualReconciliationDialog
+                        employeeId={entry.employeeId}
+                        employeeName={`${entry.employee.personalData.firstName} ${entry.employee.personalData.lastName}`}
+                        taxParams={buildTaxParamsFromEmployee(entry.employee)}
+                      />
+                      <PayrollCorrectionDialog
+                        periodLabel={`${report.period.month}/${report.period.year}`}
+                        originalGross={entry.salaryCalculation.grossSalary}
+                        originalNet={entry.finalNetSalary}
+                        originalTax={entry.salaryCalculation.taxes.total}
+                        originalSV={entry.salaryCalculation.socialSecurityContributions.total.employee}
+                      />
+                      <Button variant="outline" size="sm" className="flex items-center gap-1">
+                        <FileText className="h-3 w-3" />
+                        PDF
+                      </Button>
+                      <Button variant="outline" size="sm" className="flex items-center gap-1">
+                        <Download className="h-3 w-3" />
+                        Export
+                      </Button>
                     </div>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <AnnualReconciliationDialog
-                      employeeId={entry.employeeId}
-                      employeeName={`${entry.employee.personalData.firstName} ${entry.employee.personalData.lastName}`}
-                      taxParams={buildTaxParamsFromEmployee(entry.employee)}
-                    />
-                    <PayrollCorrectionDialog
-                      periodLabel={`${report.period.month}/${report.period.year}`}
-                      originalGross={entry.salaryCalculation.grossSalary}
-                      originalNet={entry.finalNetSalary}
-                      originalTax={entry.salaryCalculation.taxes.total}
-                      originalSV={entry.salaryCalculation.socialSecurityContributions.total.employee}
-                    />
-                    <Button variant="outline" size="sm" className="flex items-center gap-1">
-                      <FileText className="h-3 w-3" />
-                      PDF
-                    </Button>
-                    <Button variant="outline" size="sm" className="flex items-center gap-1">
-                      <Download className="h-3 w-3" />
-                      Export
-                    </Button>
-                  </div>
+                  {expandedId === entry.id && (
+                    <div className="p-4 bg-muted/20 border-t border-border animate-fade-in">
+                      <TaxBreakdownCard entry={entry} year={report.period.year} />
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
