@@ -93,3 +93,10 @@ Dieses Dokument bestätigt, dass alle steuer- und sozialversicherungsrelevanten 
 ---
 
 **Abnahme-Stand:** ✅ Tarif-Engine 2026 verifiziert · ⚠ Sachbezugswerte und KV-Zusatzbeitrag pro Live-Tenant prüfen
+## L6 — Erweiterte Verifikation
+- Reichensteuer Zone 5: Subtrahend 19.246,67 (2025) / 19.470,38 (2026) verifiziert
+- Soli-Milderungszone § 4 SolzG: min(5,5% × ESt; 11,9% × (ESt − 19.950)), Schnittpunkt ≈ 37.090 €
+- Kirchensteuer-Kappung: capRatePercent-Option in calculateChurchTax
+- RLS contact_messages: USING(true) entfernt, Admin-only Select/Update/Delete
+- Edge Function bmf-cross-check (static + bmf-soap-Stub für SYSTAX-Live)
+- Test-Suite: 632 grün (1 todo)
