@@ -17,6 +17,9 @@ import { PayrollStatsCards } from "./payroll-stats-cards";
 import { PayrollPeriodsList } from "./payroll-periods-list";
 import { PayrollSubViewWrapper } from "./payroll-sub-view-wrapper";
 import { MonthlyCloseChecklist } from "./monthly-close-checklist";
+import { PeriodCloseSummary } from "./period-close-summary";
+import { PauschalsteuerOverview } from "./pauschalsteuer-overview";
+import { U1U2Overview } from "./u1-u2-overview";
 
 interface PayrollDashboardProps {
   onBack: () => void;
@@ -149,6 +152,13 @@ export function PayrollDashboard({ onBack, onShowSpecialPayments, onShowAutomati
         onDeletePeriod={deletePayrollPeriod}
         onCreatePayroll={() => setShowCreateDialog(true)}
       />
+
+      <PeriodCloseSummary />
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <PauschalsteuerOverview />
+        <U1U2Overview />
+      </div>
 
       <MonthlyCloseChecklist />
 
