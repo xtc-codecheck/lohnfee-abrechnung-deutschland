@@ -60,7 +60,9 @@ export const SOLI_FIXTURES_2025: readonly SoliFixture[] = [
   { estJahr:  20_000, expectedSoli: Math.floor(0.119 * (20_000 - 19_950)),  desc: 'Milderung knapp über Freigrenze' },
   { estJahr:  25_000, expectedSoli: Math.floor(0.119 * (25_000 - 19_950)),  desc: 'Milderung mittel' },
   { estJahr:  30_000, expectedSoli: Math.floor(0.119 * (30_000 - 19_950)),  desc: 'Milderung hoch' },
-  { estJahr:  34_000, expectedSoli: Math.floor(0.055 * 34_000),             desc: 'Vollsatz oberhalb Milderungsende' },
+  // Schnittpunkt Milderung↔Vollsatz: 0,119(x−19.950) = 0,055x → x ≈ 37.090,31
+  { estJahr:  37_000, expectedSoli: Math.floor(0.119 * (37_000 - 19_950)),  desc: 'Milderung kurz vor Schnittpunkt' },
+  { estJahr:  38_000, expectedSoli: Math.floor(0.055 * 38_000),             desc: 'Vollsatz knapp oberhalb Schnittpunkt' },
   { estJahr: 100_000, expectedSoli: Math.floor(0.055 * 100_000),            desc: 'Vollsatz hohe Einkommen' },
 ] as const;
 

@@ -42,13 +42,13 @@ describe('BMF — Solidaritätszuschlag 2025 (Freigrenze + Milderungszone)', () 
     });
   }
 
-  it('Milderungs-Schnittpunkt liegt bei ESt ≈ 33.911,76 € (Übergang zu Vollsatz)', () => {
+  it('Milderungs-Schnittpunkt liegt bei ESt ≈ 37.090,31 € (Übergang zu Vollsatz)', () => {
     // Knapp unter Schnittpunkt: Milderung greift (11,9 % × Diff < 5,5 % × ESt)
-    const just_below = calculateSolidarityTax(33_900);
-    expect(just_below).toBe(Math.floor(0.119 * (33_900 - 19_950)));
+    const just_below = calculateSolidarityTax(37_000);
+    expect(just_below).toBe(Math.floor(0.119 * (37_000 - 19_950)));
     // Knapp über Schnittpunkt: Vollsatz greift
-    const just_above = calculateSolidarityTax(34_000);
-    expect(just_above).toBe(Math.floor(0.055 * 34_000));
+    const just_above = calculateSolidarityTax(38_000);
+    expect(just_above).toBe(Math.floor(0.055 * 38_000));
   });
 });
 
