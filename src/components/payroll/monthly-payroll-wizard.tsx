@@ -529,11 +529,30 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
     if (!pendingPeriodId || pendingEntries.length === 0) return;
     try {
       let saved = 0;
+      const failed: string[] = [];
       for (const entry of pendingEntries) {
-        await addPayrollEntry(entry);
-        await addToHistory(entry);
-        saved++;
+        try {
+          await addPayrollEntry(entry);
+          await addToHistory(entry);
+          saved++;
+        } catch (err) {
+          const emp = activeEmployees.find(e => e.id === entry.employeeId);
+          const name = emp ? `${emp.personalData.firstName} ${emp.personalData.lastName}` : entry.employeeId;
+          failed.push(name);
+          console.error(`[payroll-persist] Insert fehlgeschlagen für ${name}:`, err);
+        }
       }
+
+      // L1.1: bei Teilausfall ehrlich melden, Status NICHT auf 'calculated' setzen
+      if (failed.length > 0) {
+        toast({
+          title: `⚠️ Nur ${saved} von ${pendingEntries.length} gespeichert`,
+          description: `Fehlgeschlagen: ${failed.slice(0, 3).join(', ')}${failed.length > 3 ? '…' : ''}. Bitte erneut versuchen.`,
+          variant: 'destructive',
+        });
+        return;
+      }
+
       await updatePayrollPeriodStatus(pendingPeriodId, 'calculated');
 
       const newStatuses = [...stepStatuses];
