@@ -227,31 +227,55 @@ export function calculateIncomeTax(grossSalary: number, taxClass: number = 1): n
 
 /**
  * Berechnet den Solidaritätszuschlag
+ *
+ * § 3 + § 4 SolzG (Stand 2025/2026):
+ *   1. Freigrenze: ESt ≤ 19.950 € → kein Soli
+ *   2. Milderungszone (§ 4 SolzG): Soli = min(5,5 % × ESt; 11,9 % × (ESt − Freigrenze))
+ *   3. Vollsatz: 5,5 % × ESt (greift, sobald die Milderungs-Linie 5,5 % übersteigt,
+ *      Schnittpunkt bei ESt ≈ 33.911,76 €)
+ *
+ * Die Berechnung erfolgt cent-genau durch Auswahl des Minimums – damit ist
+ * die Kappung in der Milderungszone ohne Sonderfall-Code abgebildet.
  */
 export function calculateSolidarityTax(incomeTax: number): number {
   // Negative Steuern ablehnen
   if (incomeTax <= 0) return 0;
   
-  // Für 2025: Freigrenze von €19.950 Einkommensteuer jährlich
-  const freibetragYearly = TAX_ALLOWANCES_2025.solidarityTaxFreeAmount;
-  
-  // Wenn die Einkommensteuer unter der Freigrenze liegt, kein Soli
-  if (incomeTax <= freibetragYearly) {
-    return 0;
-  }
-  
-  // 5,5% der Einkommensteuer
-  const soli = incomeTax * TAX_RATES_2025.solidarityTax;
-  
-  return Math.floor(soli);
+  // Freigrenze (Jahres-ESt)
+  const freibetragYearly = TAX_ALLOWANCES_2025.solidarityTaxFreeAmount; // 19.950 €
+  if (incomeTax <= freibetragYearly) return 0;
+
+  // Vollsatz (5,5 %) und Milderungs-Obergrenze (11,9 % × Übersteigender Betrag)
+  const fullRate = incomeTax * TAX_RATES_2025.solidarityTax;        // 5,5 %
+  const reducedCap = (incomeTax - freibetragYearly) * 0.119;        // § 4 SolzG
+  return Math.floor(Math.min(fullRate, reducedCap));
 }
 
 /**
  * Berechnet die Kirchensteuer
+ *
+ * Standard: rate (8 % BY/BW, 9 % sonst) × Lohn-/Einkommensteuer.
+ * Optional: Kappung der Kirchensteuer auf einen Prozentsatz des zvE
+ *           (Bundesländer mit Kappung: typ. 2,75 %–4 % des zu versteuernden
+ *           Einkommens, je nach Land/Konfession – wird auf Antrag gewährt,
+ *           für die Lohnabrechnung relevant nur, wenn aktiv konfiguriert).
+ *
+ * @param incomeTax Lohn-/Einkommensteuer (Jahresbetrag)
+ * @param rate      Kirchensteuersatz in Prozent (8 oder 9)
+ * @param options   Optional: Kappung auf Prozent des zvE
  */
-export function calculateChurchTax(incomeTax: number, rate: number): number {
+export function calculateChurchTax(
+  incomeTax: number,
+  rate: number,
+  options?: { zvE?: number; capRatePercent?: number },
+): number {
   if (incomeTax <= 0) return 0;
-  return Math.floor(incomeTax * (rate / 100));
+  const standard = incomeTax * (rate / 100);
+  if (!options || options.zvE == null || options.capRatePercent == null) {
+    return Math.floor(standard);
+  }
+  const cap = options.zvE * (options.capRatePercent / 100);
+  return Math.floor(Math.min(standard, cap));
 }
 
 /**

@@ -5,8 +5,8 @@
  * übereinstimmt. Schlägt der Test fehl: STOP, kein Silent-Fix.
  */
 import { describe, it, expect } from 'vitest';
-import { calculateTariflicheEStPAP2025, calculateChurchTax } from '../tax-calculation';
-import { TARIFF_FIXTURES_2025, CHURCH_TAX_FIXTURES_2025 } from './fixtures/bmf-pap-2025';
+import { calculateTariflicheEStPAP2025, calculateChurchTax, calculateSolidarityTax } from '../tax-calculation';
+import { TARIFF_FIXTURES_2025, CHURCH_TAX_FIXTURES_2025, SOLI_FIXTURES_2025 } from './fixtures/bmf-pap-2025';
 import { TARIFF_FIXTURES_2026, TARIFF_FIXTURES_2026_DYNAMIC_ZVE } from './fixtures/bmf-pap-2026';
 
 describe('BMF-PAP 2025 — Lohnsteuer-Tarif (0 ¢ Diff)', () => {
@@ -25,6 +25,31 @@ describe('BMF — Kirchensteuer 2025 (0 ¢ Diff)', () => {
       expect(actual).toBeCloseTo(fx.expected, 2);
     });
   }
+
+  it('Kirchensteuer-Kappung: 2,75 % zvE wird angewandt, wenn niedriger als 9 % ESt', () => {
+    // ESt = 50.000 €, zvE = 200.000 €, Kappung 2,75 %
+    // Standard: 4500 €  vs Cap: 5500 €  → keine Kappung
+    expect(calculateChurchTax(50_000, 9, { zvE: 200_000, capRatePercent: 2.75 })).toBe(4500);
+    // ESt = 50.000 €, zvE = 100.000 €, Kappung 2,75 % → Cap: 2750 € < 4500 € → Kappung greift
+    expect(calculateChurchTax(50_000, 9, { zvE: 100_000, capRatePercent: 2.75 })).toBe(2750);
+  });
+});
+
+describe('BMF — Solidaritätszuschlag 2025 (Freigrenze + Milderungszone)', () => {
+  for (const fx of SOLI_FIXTURES_2025) {
+    it(`ESt ${fx.estJahr} € → Soli ${fx.expectedSoli} € (${fx.desc})`, () => {
+      expect(calculateSolidarityTax(fx.estJahr)).toBe(fx.expectedSoli);
+    });
+  }
+
+  it('Milderungs-Schnittpunkt liegt bei ESt ≈ 37.090,31 € (Übergang zu Vollsatz)', () => {
+    // Knapp unter Schnittpunkt: Milderung greift (11,9 % × Diff < 5,5 % × ESt)
+    const just_below = calculateSolidarityTax(37_000);
+    expect(just_below).toBe(Math.floor(0.119 * (37_000 - 19_950)));
+    // Knapp über Schnittpunkt: Vollsatz greift
+    const just_above = calculateSolidarityTax(38_000);
+    expect(just_above).toBe(Math.floor(0.055 * 38_000));
+  });
 });
 
 describe('BMF-PAP 2026 — Tarif (Snapshot bis offizieller PAP)', () => {

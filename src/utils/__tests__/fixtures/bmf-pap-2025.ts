@@ -55,8 +55,15 @@ export interface SoliFixture {
 export const SOLI_FIXTURES_2025: readonly SoliFixture[] = [
   { estJahr:  10_000, expectedSoli: 0,       desc: 'Unter Freigrenze (≤ 19.950 €)' },
   { estJahr:  19_950, expectedSoli: 0,       desc: 'An Freigrenze' },
-  // Über Freigrenze: Milderung bis ESt ≈ 33.912, ab dann voller Soli
-  // Hinweis: konkrete Soli-Berechnung über calculateSolidarityTax verifizieren.
+  // Milderungszone § 4 SolzG: Soli = min(5,5% × ESt; 11,9% × (ESt − 19.950))
+  // Übergang in den Vollsatz bei ca. ESt = 33.911,76 € (Schnittpunkt der Geraden).
+  { estJahr:  20_000, expectedSoli: Math.floor(0.119 * (20_000 - 19_950)),  desc: 'Milderung knapp über Freigrenze' },
+  { estJahr:  25_000, expectedSoli: Math.floor(0.119 * (25_000 - 19_950)),  desc: 'Milderung mittel' },
+  { estJahr:  30_000, expectedSoli: Math.floor(0.119 * (30_000 - 19_950)),  desc: 'Milderung hoch' },
+  // Schnittpunkt Milderung↔Vollsatz: 0,119(x−19.950) = 0,055x → x ≈ 37.090,31
+  { estJahr:  37_000, expectedSoli: Math.floor(0.119 * (37_000 - 19_950)),  desc: 'Milderung kurz vor Schnittpunkt' },
+  { estJahr:  38_000, expectedSoli: Math.floor(0.055 * 38_000),             desc: 'Vollsatz knapp oberhalb Schnittpunkt' },
+  { estJahr: 100_000, expectedSoli: Math.floor(0.055 * 100_000),            desc: 'Vollsatz hohe Einkommen' },
 ] as const;
 
 /**

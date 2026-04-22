@@ -259,11 +259,16 @@ describe('PAP 2025: Solidaritätszuschlag', () => {
   it('kein Soli unter Freigrenze', () => {
     expect(calculateSolidarityTax(19950)).toBe(0);
   });
-  
-  it('Soli über Freigrenze = 5,5%', () => {
-    expect(calculateSolidarityTax(25000)).toBe(Math.floor(25000 * 0.055));
+
+  it('Milderungszone (§ 4 SolzG) zwischen 19.950 € und ~37.090 €', () => {
+    // 11,9 % × (ESt − 19.950) ist hier kleiner als 5,5 % × ESt → Milderung greift
+    expect(calculateSolidarityTax(25_000)).toBe(Math.floor(0.119 * (25_000 - 19_950)));
   });
-  
+
+  it('Vollsatz 5,5 % oberhalb des Milderungs-Schnittpunkts', () => {
+    expect(calculateSolidarityTax(50_000)).toBe(Math.floor(50_000 * 0.055));
+  });
+
   it('kein Soli bei 0 ESt', () => {
     expect(calculateSolidarityTax(0)).toBe(0);
   });

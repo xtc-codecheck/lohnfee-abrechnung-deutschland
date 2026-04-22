@@ -1,1 +1,4 @@
 project_id = "jjmaiywornvbfirmlkol"
+
+[functions.bmf-cross-check]
+verify_jwt = false
