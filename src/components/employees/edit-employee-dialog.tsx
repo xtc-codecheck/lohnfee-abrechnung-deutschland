@@ -15,6 +15,7 @@ import { Upload, FileText, Loader2, Info } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { PdfUploadTab } from "./pdf-upload-tab";
+import { EmployeeWageTypesCard } from "./employee-wage-types-card";
 
 interface EditEmployeeDialogProps {
   employee: Employee | null;
@@ -96,10 +97,11 @@ export function EditEmployeeDialog({ employee, open, onOpenChange, onSave }: Edi
         </DialogHeader>
 
         <Tabs defaultValue="personal" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="personal">Persönliche Daten</TabsTrigger>
             <TabsTrigger value="employment">Beschäftigung</TabsTrigger>
             <TabsTrigger value="salary">Gehalt</TabsTrigger>
+            <TabsTrigger value="wage-types">Lohnarten</TabsTrigger>
             <TabsTrigger value="pdf-upload">PDF-Import</TabsTrigger>
           </TabsList>
 
