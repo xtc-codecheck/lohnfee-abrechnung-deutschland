@@ -203,6 +203,7 @@ export type Database = {
       company_settings: {
         Row: {
           bank_name: string | null
+          besonderheiten: string | null
           betriebsnummer: string | null
           bic: string | null
           city: string | null
@@ -221,6 +222,7 @@ export type Database = {
         }
         Insert: {
           bank_name?: string | null
+          besonderheiten?: string | null
           betriebsnummer?: string | null
           bic?: string | null
           city?: string | null
@@ -239,6 +241,7 @@ export type Database = {
         }
         Update: {
           bank_name?: string | null
+          besonderheiten?: string | null
           betriebsnummer?: string | null
           bic?: string | null
           city?: string | null
@@ -362,6 +365,60 @@ export type Database = {
         }
         Relationships: []
       }
+      eau_records: {
+        Row: {
+          abruf_datum: string | null
+          abruf_status: string
+          arbeitgeber_kenntnis_datum: string | null
+          arzt_name: string | null
+          au_bis: string
+          au_von: string
+          created_at: string
+          created_by: string | null
+          diagnose_vorhanden: boolean | null
+          employee_id: string
+          id: string
+          ist_folge_au: boolean | null
+          notes: string | null
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          abruf_datum?: string | null
+          abruf_status?: string
+          arbeitgeber_kenntnis_datum?: string | null
+          arzt_name?: string | null
+          au_bis: string
+          au_von: string
+          created_at?: string
+          created_by?: string | null
+          diagnose_vorhanden?: boolean | null
+          employee_id: string
+          id?: string
+          ist_folge_au?: boolean | null
+          notes?: string | null
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          abruf_datum?: string | null
+          abruf_status?: string
+          arbeitgeber_kenntnis_datum?: string | null
+          arzt_name?: string | null
+          au_bis?: string
+          au_von?: string
+          created_at?: string
+          created_by?: string | null
+          diagnose_vorhanden?: boolean | null
+          employee_id?: string
+          id?: string
+          ist_folge_au?: boolean | null
+          notes?: string | null
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       employees: {
         Row: {
           bav_monthly_amount: number | null
@@ -393,6 +450,7 @@ export type Database = {
           number_of_children: number | null
           personal_number: string | null
           position: string | null
+          rv_befreit: boolean | null
           state: string | null
           street: string | null
           sv_number: string | null
@@ -400,6 +458,9 @@ export type Database = {
           tax_id: string | null
           tenant_id: string | null
           updated_at: string
+          versorgungswerk_beitragssatz: number | null
+          versorgungswerk_mitgliedsnummer: string | null
+          versorgungswerk_name: string | null
           weekly_hours: number | null
           zip_code: string | null
         }
@@ -433,6 +494,7 @@ export type Database = {
           number_of_children?: number | null
           personal_number?: string | null
           position?: string | null
+          rv_befreit?: boolean | null
           state?: string | null
           street?: string | null
           sv_number?: string | null
@@ -440,6 +502,9 @@ export type Database = {
           tax_id?: string | null
           tenant_id?: string | null
           updated_at?: string
+          versorgungswerk_beitragssatz?: number | null
+          versorgungswerk_mitgliedsnummer?: string | null
+          versorgungswerk_name?: string | null
           weekly_hours?: number | null
           zip_code?: string | null
         }
@@ -473,6 +538,7 @@ export type Database = {
           number_of_children?: number | null
           personal_number?: string | null
           position?: string | null
+          rv_befreit?: boolean | null
           state?: string | null
           street?: string | null
           sv_number?: string | null
@@ -480,6 +546,9 @@ export type Database = {
           tax_id?: string | null
           tenant_id?: string | null
           updated_at?: string
+          versorgungswerk_beitragssatz?: number | null
+          versorgungswerk_mitgliedsnummer?: string | null
+          versorgungswerk_name?: string | null
           weekly_hours?: number | null
           zip_code?: string | null
         }
