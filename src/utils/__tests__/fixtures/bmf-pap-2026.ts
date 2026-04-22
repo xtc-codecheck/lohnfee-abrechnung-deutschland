@@ -11,7 +11,7 @@
  */
 import type { BmfTariffFixture } from './bmf-pap-2025';
 
-const GFB_2026 = 12_348; // Grundfreibetrag 2026 (geplant per JStG 2024)
+const GFB_2026 = 12_348; // Grundfreibetrag 2026 (offiziell per JStG 2024)
 
 /**
  * § 32a Tarifstützstellen 2026 — VORLÄUFIG bis offizielle BMF-PAP-Veröffentlichung.
@@ -19,9 +19,9 @@ const GFB_2026 = 12_348; // Grundfreibetrag 2026 (geplant per JStG 2024)
  * Test prüft, dass Engine und diese Vorab-Werte konsistent bleiben (Regression).
  */
 export const TARIFF_FIXTURES_2026: readonly BmfTariffFixture[] = [
-  { zvE: 0,           expectedESt: 0, desc: 'Grundfreibetrag 2026 – unter GFB' },
-  { zvE: GFB_2026,    expectedESt: 0, desc: 'Grundfreibetrag 2026 – exakt' },
-  { zvE: GFB_2026 - 1, expectedESt: 0, desc: 'Grundfreibetrag 2026 – 1 € drunter' },
+  { zvE: 0,            expectedESt: 0, desc: 'Grundfreibetrag 2026 – 0 €' },
+  { zvE: GFB_2026 - 1, expectedESt: 0, desc: 'Grundfreibetrag 2026 – 1 € drunter (12.347 €)' },
+  { zvE: GFB_2026,     expectedESt: 0, desc: 'Grundfreibetrag 2026 – exakt (12.348 €)' },
   // Zone 2 / 3 / 4 / 5: durch Engine berechnet (Snapshot-Charakter, ersetzt sich nach BMF-PAP-2026-Erscheinen)
 ] as const;
 

@@ -136,7 +136,7 @@ export const TAX_RATES_2025 = {
   proportionalZone2: {
     from: 277826,
     rate: 0.45, // 45% Reichensteuer
-    constant: 19246.67,
+    constant: 19246.67, // § 32a EStG 2025 (JStG 2024)
   },
   solidarityTax: 0.055, // 5,5%
 } as const;
@@ -240,8 +240,8 @@ export const MIDIJOB_2026 = {
  * Grundfreibetrag angehoben nach Inflationsausgleich
  */
 export const TAX_ALLOWANCES_2026 = {
-  basicAllowance: 12336, // Grundfreibetrag 2026 (erhöht von 12.096)
-  childAllowance: 6672, // Kinderfreibetrag 2026 (erhöht von 6.612)
+  basicAllowance: 12348, // Grundfreibetrag 2026 (offiziell per JStG 2024, +252 €)
+  childAllowance: 6828, // Kinderfreibetrag 2026 pro Elternteil (offiziell JStG 2024)
   workRelatedExpenses: 1230, // Werbungskostenpauschale (unverändert)
   specialExpenses: 36, // Sonderausgabenpauschale (unverändert)
   retirementProvision: 3000, // Max. Vorsorgepauschale (unverändert)
@@ -255,28 +255,28 @@ export const TAX_ALLOWANCES_2026 = {
  */
 export const TAX_RATES_2026 = {
   progressionZone1: {
-    from: 12337,
-    to: 17687,
+    from: 12349,
+    to: 17799, // § 32a EStG ab VZ 2026
     formula: 'y',
-    coefficients: [922.98, 1400],
+    coefficients: [914.51, 1400], // § 32a EStG ab VZ 2026
   },
   progressionZone2: {
-    from: 17688,
-    to: 68480,
+    from: 17800,
+    to: 69878,
     formula: 'z',
-    coefficients: [176.64, 2397],
-    constant: 1015.13,
+    coefficients: [173.10, 2397],
+    constant: 1034.87,
   },
   proportionalZone1: {
-    from: 68481,
+    from: 69879,
     to: 277825,
     rate: 0.42,
-    constant: 10911.92,
+    constant: 11135.63,
   },
   proportionalZone2: {
     from: 277826,
     rate: 0.45,
-    constant: 19246.67,
+    constant: 19470.38,
   },
   solidarityTax: 0.055,
 } as const;

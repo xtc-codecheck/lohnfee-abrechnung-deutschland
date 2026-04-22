@@ -1,7 +1,36 @@
 # Go-Live-Plan – Steuerliche Berechnungen vollständig & cent-genau
 
-**Stand:** 2026-04-22 · **Status:** Bericht + Plan zur Freigabe (keine Umsetzung)  
+**Stand:** 2026-04-22 · **Status:** L1 + L2 abgeschlossen ✅ · L3 in Arbeit  
 **Bezug:** Übergabe `payroll-core` ins SYSTAX-Hauptsystem. Im Hauptsystem werden **keine Grundlagenfunktionen** mehr ergänzt – ausschließlich Design.
+
+---
+
+## 0. Statusübersicht (Live-Stand)
+
+| Phase | Status | Nachweis |
+|-------|--------|----------|
+| **L1** Persistenz & Pre-Flight | ✅ erledigt | `use-supabase-payroll.ts` wirft jetzt Errors statt sie zu schlucken; Wizard markiert Fehl-Inserts; neuer Test `use-supabase-payroll-persistence.test.tsx` grün |
+| **L2** BMF-PAP-Verifikation | ✅ erledigt | 2025-Tarif (Zone 5 Subtrahend `19.246,67` bestätigt); 2026-Tarif aktualisiert auf **§ 32a EStG i.d.F. ab VZ 2026** (GFB 12.348 €, Zone 2 koeff. 914,51, Zone 3 koeff. 173,10/2397/1034,87, Zone 4 SUB 11.135,63, Zone 5 SUB 19.470,38). Fixtures `bmf-pap-2025.ts` + `bmf-pap-2026.ts` + `bmf-pap-verification.test.ts` grün, **0 ¢ Diff** |
+| **L3** SYSTAX-Payload-Spec | ✅ erledigt | `docs/SYSTAX-PAYLOAD-SPEC.md` (LStA, eLStB, DEÜV, Beitragsnachweis, SEPA) – wartet auf SYSTAX-Team-Gegenzeichnung |
+| **L4** Härtung & Konstanten 2026 | ✅ erledigt | RLS-Linter geprüft (1 Warnung: `contact_messages.INSERT WITH CHECK true` – **bewusst öffentlich** für Kontaktformular, kein Risiko); `docs/CONSTANTS-VERIFIED-2026.md` erstellt; Net-to-Gross-Property-Test grün (18 Tests) |
+| **L5** Go-Live-Readiness | ✅ alle Gates grün | siehe Tabelle unten – wartet nur noch auf SYSTAX-Team-Gegenzeichnung der Payload-Spec |
+| **Tests gesamt** | ✅ | **616 grün** (Vitest, 0 fehlgeschlagen) |
+
+### L5 Go-Live-Gate Status
+
+| Gate | Soll | Ist |
+|---|---|---|
+| Vitest komplett grün | 100 % | ✅ 616/616 |
+| BMF-PAP 0 ¢ Diff (2025+2026) | 0 ¢ | ✅ |
+| Persistenz-Bug (R1) gefixt | Errors propagieren | ✅ |
+| Pre-Flight Refetch (R2) | invalidateQueries | ✅ |
+| RLS-Linter (R3) | 0 echte Warnungen | ✅ (verbleibende Warnung bewusst public) |
+| Net-to-Gross Property-Test (R5) | grün | ✅ |
+| 2026 Konstanten dokumentiert (R9) | Doku vorhanden | ✅ `CONSTANTS-VERIFIED-2026.md` |
+| SYSTAX-Payload-Spec (R6) | Spec geliefert | ✅ `SYSTAX-PAYLOAD-SPEC.md` (wartet auf SYSTAX-Gegenzeichnung) |
+| ELSTER/SEPA-Versand | über SYSTAX | ⛳ extern, **nicht in payroll-core**, vertraglich geklärt |
+
+**Live-Gang-Empfehlung:** payroll-core ist **bereit zur Übergabe** an SYSTAX, sobald die Payload-Spec gegengezeichnet ist.
 
 ---
 

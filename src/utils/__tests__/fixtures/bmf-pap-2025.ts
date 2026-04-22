@@ -37,9 +37,9 @@ export const TARIFF_FIXTURES_2025: readonly BmfTariffFixture[] = [
   { zvE: 200_000, expectedESt: Math.floor(0.42 * 200_000 - 10_911.92), desc: 'Zone 4 hoch' },
   { zvE: 277_825, expectedESt: Math.floor(0.42 * 277_825 - 10_911.92), desc: 'Zone 4 Obergrenze' },
   // Zone 5: Reichensteuer (≥ 277.826), 45% Grenzsteuer
-  // Formel: ESt = floor(0.45 * zvE - 19256.67)
-  { zvE: 300_000, expectedESt: Math.floor(0.45 * 300_000 - 19_256.67), desc: 'Zone 5 Reichensteuer' },
-  { zvE: 500_000, expectedESt: Math.floor(0.45 * 500_000 - 19_256.67), desc: 'Zone 5 sehr hoch' },
+  // Formel: ESt = floor(0.45 * zvE - 19246.67)  (§ 32a EStG 2025 i.d.F. JStG 2024)
+  { zvE: 300_000, expectedESt: Math.floor(0.45 * 300_000 - 19_246.67), desc: 'Zone 5 Reichensteuer' },
+  { zvE: 500_000, expectedESt: Math.floor(0.45 * 500_000 - 19_246.67), desc: 'Zone 5 sehr hoch' },
 ] as const;
 
 /**
@@ -65,13 +65,14 @@ export const SOLI_FIXTURES_2025: readonly SoliFixture[] = [
  */
 export interface ChurchTaxFixture {
   estJahr: number;
-  rate: 0.08 | 0.09;
+  /** Kirchensteuersatz in Prozent (8 oder 9), passend zur Funktionssignatur */
+  rate: 8 | 9;
   expected: number;
   desc: string;
 }
 
 export const CHURCH_TAX_FIXTURES_2025: readonly ChurchTaxFixture[] = [
-  { estJahr: 5_000,  rate: 0.09, expected: 450, desc: '9% Standard NRW/Berlin' },
-  { estJahr: 5_000,  rate: 0.08, expected: 400, desc: '8% Bayern/BW' },
-  { estJahr: 12_000, rate: 0.09, expected: 1080, desc: '9% mittleres Einkommen' },
+  { estJahr: 5_000,  rate: 9, expected: 450,  desc: '9% Standard NRW/Berlin' },
+  { estJahr: 5_000,  rate: 8, expected: 400,  desc: '8% Bayern/BW' },
+  { estJahr: 12_000, rate: 9, expected: 1080, desc: '9% mittleres Einkommen' },
 ] as const;
