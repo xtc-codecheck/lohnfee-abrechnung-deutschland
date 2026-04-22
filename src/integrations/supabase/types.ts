@@ -419,6 +419,70 @@ export type Database = {
         }
         Relationships: []
       }
+      employee_wage_types: {
+        Row: {
+          amount: number
+          created_at: string
+          employee_id: string
+          id: string
+          is_active: boolean
+          notes: string | null
+          tenant_id: string
+          updated_at: string
+          valid_from: string
+          valid_to: string | null
+          wage_type_id: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          employee_id: string
+          id?: string
+          is_active?: boolean
+          notes?: string | null
+          tenant_id: string
+          updated_at?: string
+          valid_from?: string
+          valid_to?: string | null
+          wage_type_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          employee_id?: string
+          id?: string
+          is_active?: boolean
+          notes?: string | null
+          tenant_id?: string
+          updated_at?: string
+          valid_from?: string
+          valid_to?: string | null
+          wage_type_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_wage_types_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employee_wage_types_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employee_wage_types_wage_type_id_fkey"
+            columns: ["wage_type_id"]
+            isOneToOne: false
+            referencedRelation: "wage_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       employees: {
         Row: {
           bav_monthly_amount: number | null
@@ -1461,6 +1525,74 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "fk_user_roles_tenant_cascade"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wage_types: {
+        Row: {
+          account_skr03: string | null
+          account_skr04: string | null
+          amount_type: string
+          category: string
+          code: string
+          created_at: string
+          default_amount: number | null
+          description: string | null
+          id: string
+          is_active: boolean
+          is_sv_relevant: boolean
+          is_system: boolean
+          is_taxable: boolean
+          name: string
+          pauschal_tax_rate: number | null
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          account_skr03?: string | null
+          account_skr04?: string | null
+          amount_type?: string
+          category: string
+          code: string
+          created_at?: string
+          default_amount?: number | null
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          is_sv_relevant?: boolean
+          is_system?: boolean
+          is_taxable?: boolean
+          name: string
+          pauschal_tax_rate?: number | null
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          account_skr03?: string | null
+          account_skr04?: string | null
+          amount_type?: string
+          category?: string
+          code?: string
+          created_at?: string
+          default_amount?: number | null
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          is_sv_relevant?: boolean
+          is_system?: boolean
+          is_taxable?: boolean
+          name?: string
+          pauschal_tax_rate?: number | null
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wage_types_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
