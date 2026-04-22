@@ -33,6 +33,7 @@ import { useSupabasePayroll } from '@/hooks/use-supabase-payroll';
 import { useTimeTracking } from '@/hooks/use-time-tracking';
 import { useToast } from '@/hooks/use-toast';
 import { HelpTooltip } from '@/components/ui/help-tooltip';
+import { useTenantEmployeeWageTypes } from '@/hooks/use-tenant-employee-wage-types';
 
 interface MonthlyPayrollWizardProps {
   onBack: () => void;
