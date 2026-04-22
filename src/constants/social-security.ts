@@ -136,7 +136,7 @@ export const TAX_RATES_2025 = {
   proportionalZone2: {
     from: 277826,
     rate: 0.45, // 45% Reichensteuer
-    constant: 19246.67,
+    constant: 19256.67, // BMF PAP 2025 (JStG 2024 — angepasst nach Anhebung GFB auf 12.096 €)
   },
   solidarityTax: 0.055, // 5,5%
 } as const;
