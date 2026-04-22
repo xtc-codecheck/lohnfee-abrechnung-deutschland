@@ -207,10 +207,11 @@ export const PV_CHILD_DISCOUNTS_2026 = {
 
 /**
  * Minijob-Konstanten 2026
- * Verdienstgrenze steigt mit Mindestlohn (12,82€ × 130h / 3 ≈ 556€)
+ * Verdienstgrenze steigt mit Mindestlohn (13,90€ × 130h / 3 = 602,33 → 603€)
+ * Quelle: ProCheck 2026 / Mindestlohnkommission
  */
 export const MINIJOB_2026 = {
-  maxEarnings: 556, // €556 monatlich (vorerst unverändert)
+  maxEarnings: 603, // €603 monatlich ab 01.01.2026
   taxRate: 0.02,
   employerRates: {
     health: 0.13,
@@ -223,14 +224,14 @@ export const MINIJOB_2026 = {
  * Midijob-Konstanten 2026
  */
 export const MIDIJOB_2026 = {
-  minEarnings: 556.01,
+  minEarnings: 603.01,
   maxEarnings: 2000,
   factor: 0.6683,
-  lowerThreshold: 556.01,
+  lowerThreshold: 603.01,
   upperThreshold: 2000,
   formula: {
     factor: 0.6683,
-    lowerBound: 556.01,
+    lowerBound: 603.01,
     upperBound: 2000,
   }
 } as const;
