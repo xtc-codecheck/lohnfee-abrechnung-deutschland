@@ -20,6 +20,7 @@ import { MonthlyCloseChecklist } from "./monthly-close-checklist";
 import { PeriodCloseSummary } from "./period-close-summary";
 import { PauschalsteuerOverview } from "./pauschalsteuer-overview";
 import { U1U2Overview } from "./u1-u2-overview";
+import { VersorgungswerkOverview } from "./versorgungswerk-overview";
 
 interface PayrollDashboardProps {
   onBack: () => void;
@@ -159,6 +160,8 @@ export function PayrollDashboard({ onBack, onShowSpecialPayments, onShowAutomati
         <PauschalsteuerOverview />
         <U1U2Overview />
       </div>
+
+      <VersorgungswerkOverview />
 
       <MonthlyCloseChecklist />
 
