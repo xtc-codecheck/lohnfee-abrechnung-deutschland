@@ -50,7 +50,8 @@ export const MINIMUM_WAGES = {
   2022: 10.45,
   2023: 12.00,
   2024: 12.41,
-  2025: 12.82
+  2025: 12.82,
+  2026: 13.90
 } as const;
 
 export const DEPARTMENTS = [
