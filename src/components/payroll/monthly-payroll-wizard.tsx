@@ -66,6 +66,7 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
   const { toast } = useToast();
   const { employees } = useEmployees();
   const { payrollPeriods, payrollEntries, createPayrollPeriod, addPayrollEntry, updatePayrollPeriodStatus } = useSupabasePayroll();
+  const { byEmployee: wageTypesByEmployee } = useTenantEmployeeWageTypes();
   const { timeEntries } = useTimeTracking();
   const { historicalData, addToHistory } = usePayrollGuardian();
 
