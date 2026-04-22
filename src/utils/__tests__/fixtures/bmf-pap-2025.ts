@@ -37,9 +37,9 @@ export const TARIFF_FIXTURES_2025: readonly BmfTariffFixture[] = [
   { zvE: 200_000, expectedESt: Math.floor(0.42 * 200_000 - 10_911.92), desc: 'Zone 4 hoch' },
   { zvE: 277_825, expectedESt: Math.floor(0.42 * 277_825 - 10_911.92), desc: 'Zone 4 Obergrenze' },
   // Zone 5: Reichensteuer (≥ 277.826), 45% Grenzsteuer
-  // Formel: ESt = floor(0.45 * zvE - 19256.67)
-  { zvE: 300_000, expectedESt: Math.floor(0.45 * 300_000 - 19_256.67), desc: 'Zone 5 Reichensteuer' },
-  { zvE: 500_000, expectedESt: Math.floor(0.45 * 500_000 - 19_256.67), desc: 'Zone 5 sehr hoch' },
+  // Formel: ESt = floor(0.45 * zvE - 19246.67)  (§ 32a EStG 2025 i.d.F. JStG 2024)
+  { zvE: 300_000, expectedESt: Math.floor(0.45 * 300_000 - 19_246.67), desc: 'Zone 5 Reichensteuer' },
+  { zvE: 500_000, expectedESt: Math.floor(0.45 * 500_000 - 19_246.67), desc: 'Zone 5 sehr hoch' },
 ] as const;
 
 /**
