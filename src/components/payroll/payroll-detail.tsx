@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowLeft, Calculator, FileText, Download, Check, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Calculator, FileText, Download, Check, ShieldCheck, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageHeader } from "@/components/ui/page-header";
@@ -16,6 +16,7 @@ import { buildTaxParamsFromEmployee } from "@/utils/tax-params-factory";
 import { AnnualReconciliationDialog } from "./annual-reconciliation-dialog";
 import { PayrollCorrectionDialog } from "./payroll-correction-dialog";
 import { PreFlightCheckDialog } from "./preflight-check-dialog";
+import { TaxBreakdownCard } from "./tax-breakdown-card";
 
 interface PayrollDetailProps {
   payrollId: string;
@@ -26,6 +27,7 @@ export function PayrollDetail({ payrollId, onBack }: PayrollDetailProps) {
   const [isCalculating, setIsCalculating] = useState(false);
   const [preflightOpen, setPreflightOpen] = useState(false);
   const [pendingEntries, setPendingEntries] = useState<PayrollEntry[]>([]);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
   const {
     getPayrollReport,
     addPayrollEntry,
