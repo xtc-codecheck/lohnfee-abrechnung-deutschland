@@ -47,7 +47,7 @@ export function PeriodCloseSummary() {
 
   const downloadPdf = () => {
     if (!current) return;
-    const pdf = generatePeriodClosePdf(current, previous, settings?.companyName);
+    const pdf = generatePeriodClosePdf(current, previous, settings?.company_name);
     pdf.save(`periodenabschluss-${current.period.year}-${String(current.period.month).padStart(2, "0")}.pdf`);
   };
 
