@@ -44,7 +44,8 @@ describe('BMF-PAP 2026 — Tarif (Snapshot bis offizieller PAP)', () => {
     }
   });
 
-  it('2026 Grundfreibetrag wirkt (12.347 € → 0)', () => {
-    expect(calculateTariflicheEStPAP2025(12_347, 2026)).toBe(0);
+  it('2026 Grundfreibetrag wirkt (12.348 € → 0, 12.349 € → > 0)', () => {
+    expect(calculateTariflicheEStPAP2025(12_348, 2026)).toBe(0);
+    expect(calculateTariflicheEStPAP2025(12_349, 2026)).toBeGreaterThan(0);
   });
 });
