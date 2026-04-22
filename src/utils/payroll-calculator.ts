@@ -219,8 +219,30 @@ export function calculatePayrollEntry(input: PayrollCalculationInput): PayrollCa
     });
   }
   
-  // 5. Gesamtbrutto berechnen
-  const totalGrossSalary = roundCurrency(baseSalary + additions.total);
+  // 5a. Lohnarten-Katalog anwenden (P4)
+  const wageTypesImpact = input.employeeWageTypes && input.employeeWageTypes.length > 0
+    ? applyWageTypes(
+        input.employeeWageTypes,
+        new Date(input.period.year, input.period.month - 1, 15),
+        input.accountSystem ?? 'SKR03'
+      )
+    : undefined;
+
+  if (wageTypesImpact && wageTypesImpact.lineItems.length > 0) {
+    auditLogger.log('WAGE_TYPES', `${wageTypesImpact.lineItems.length} Lohnart(en) angewendet`, undefined, {
+      Brutto_steuerpflichtig: wageTypesImpact.taxableGrossAddition,
+      Netto_steuerfrei: wageTypesImpact.taxFreeNetAddition,
+      Sachbezug_Abzug: wageTypesImpact.inKindDeduction,
+      Netto_Abzüge: wageTypesImpact.netDeductions,
+      Pauschalsteuer_AG: wageTypesImpact.pauschalTax,
+    }, wageTypesImpact.lineItems.map(li => `${li.code}: ${li.amount}€ (${li.effect})`));
+    log.push(`Lohnarten: +${wageTypesImpact.taxableGrossAddition}€ Brutto, -${wageTypesImpact.netDeductions + wageTypesImpact.inKindDeduction}€ Netto`);
+  }
+
+  // 5b. Gesamtbrutto berechnen (inkl. steuerpflichtiger Lohnarten)
+  const totalGrossSalary = roundCurrency(
+    baseSalary + additions.total + (wageTypesImpact?.taxableGrossAddition ?? 0)
+  );
   log.push(`Gesamtbrutto: ${totalGrossSalary}€`);
   
   auditLogger.log('GROSS_TOTAL', 'Gesamtbrutto ermittelt', {
@@ -370,8 +392,22 @@ export function calculatePayrollEntry(input: PayrollCalculationInput): PayrollCa
   }
 
   // 11. Finale Nettoauszahlung
-  const finalNetSalary = roundCurrency(salaryCalculation.netSalary - deductions.total);
+  const finalNetSalary = roundCurrency(
+    salaryCalculation.netSalary
+    - deductions.total
+    - (wageTypesImpact?.netDeductions ?? 0)
+    - (wageTypesImpact?.inKindDeduction ?? 0)
+    + (wageTypesImpact?.taxFreeNetAddition ?? 0)
+  );
   log.push(`Finale Nettoauszahlung: ${finalNetSalary}€`);
+
+  // Pauschalsteuer erhöht AG-Kosten
+  if (wageTypesImpact && wageTypesImpact.pauschalTax > 0) {
+    salaryCalculation.employerCosts = roundCurrency(
+      salaryCalculation.employerCosts + wageTypesImpact.pauschalTax
+    );
+    log.push(`Pauschalsteuer AG: ${wageTypesImpact.pauschalTax}€ → AG-Kosten erhöht`);
+  }
   
   // 11. Warnungen generieren
   if (finalNetSalary < 0) {
