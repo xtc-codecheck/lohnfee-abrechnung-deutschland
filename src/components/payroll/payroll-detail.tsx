@@ -18,6 +18,7 @@ import { AnnualReconciliationDialog } from "./annual-reconciliation-dialog";
 import { PayrollCorrectionDialog } from "./payroll-correction-dialog";
 import { PreFlightCheckDialog } from "./preflight-check-dialog";
 import { TaxBreakdownCard } from "./tax-breakdown-card";
+import { AppliedWageTypesCard } from "./applied-wage-types-card";
 
 interface PayrollDetailProps {
   payrollId: string;
@@ -325,6 +326,12 @@ export function PayrollDetail({ payrollId, onBack }: PayrollDetailProps) {
                   {expandedId === entry.id && (
                     <div className="p-4 bg-muted/20 border-t border-border animate-fade-in">
                       <TaxBreakdownCard entry={entry} year={report.period.year} />
+                      <div className="mt-4">
+                        <AppliedWageTypesCard
+                          items={wageTypesByEmployee.get(entry.employeeId)}
+                          reference={new Date(report.period.year, report.period.month - 1, 15)}
+                        />
+                      </div>
                     </div>
                   )}
                 </div>
