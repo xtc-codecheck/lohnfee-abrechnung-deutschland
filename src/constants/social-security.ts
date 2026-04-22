@@ -240,8 +240,8 @@ export const MIDIJOB_2026 = {
  * Grundfreibetrag angehoben nach Inflationsausgleich
  */
 export const TAX_ALLOWANCES_2026 = {
-  basicAllowance: 12336, // Grundfreibetrag 2026 (erhöht von 12.096)
-  childAllowance: 6672, // Kinderfreibetrag 2026 (erhöht von 6.612)
+  basicAllowance: 12348, // Grundfreibetrag 2026 (offiziell per JStG 2024, +252 €)
+  childAllowance: 6828, // Kinderfreibetrag 2026 pro Elternteil (offiziell JStG 2024)
   workRelatedExpenses: 1230, // Werbungskostenpauschale (unverändert)
   specialExpenses: 36, // Sonderausgabenpauschale (unverändert)
   retirementProvision: 3000, // Max. Vorsorgepauschale (unverändert)
@@ -255,13 +255,13 @@ export const TAX_ALLOWANCES_2026 = {
  */
 export const TAX_RATES_2026 = {
   progressionZone1: {
-    from: 12337,
-    to: 17687,
+    from: 12349,
+    to: 17443, // Wird sobald BMF-PAP 2026 erschienen ist final überprüft
     formula: 'y',
-    coefficients: [922.98, 1400],
+    coefficients: [932.30, 1400], // Annahme: gleiche Progressionsstruktur wie 2025
   },
   progressionZone2: {
-    from: 17688,
+    from: 17444,
     to: 68480,
     formula: 'z',
     coefficients: [176.64, 2397],
@@ -276,7 +276,7 @@ export const TAX_RATES_2026 = {
   proportionalZone2: {
     from: 277826,
     rate: 0.45,
-    constant: 19246.67,
+    constant: 19256.67,
   },
   solidarityTax: 0.055,
 } as const;
