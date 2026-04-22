@@ -251,6 +251,7 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
           employee: emp,
           period: { year: selectedYear, month: selectedMonth },
           workingData,
+          employeeWageTypes: wageTypesByEmployee.get(emp.id),
         };
         const result = calculatePayrollEntry(input);
         const entryToSave = { ...result.entry, payrollPeriodId: periodId };
@@ -264,7 +265,7 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
       }
     }
     return { saved, failed };
-  }, [activeEmployees, selectedYear, selectedMonth, addPayrollEntry, buildWorkingDataFromTimeEntries]);
+  }, [activeEmployees, selectedYear, selectedMonth, addPayrollEntry, buildWorkingDataFromTimeEntries, wageTypesByEmployee]);
 
   // ─── Auto-Run Engine ──────────────────────────────────────
   const startAutoRun = useCallback(async () => {
