@@ -11,6 +11,7 @@ import { useTimeTracking } from "@/hooks/use-time-tracking";
 import { EmployeeCalendar } from "./employee-calendar";
 import { BulkEntryDialog } from "./bulk-entry-dialog";
 import { EmployeeStatusIndicator } from "./employee-status-indicator";
+import { EauTracking } from "./eau-tracking";
 import { startOfMonth, endOfMonth, format } from "date-fns";
 
 interface TimeTrackingDashboardProps {
@@ -169,6 +170,8 @@ export function TimeTrackingDashboard({ onBack }: TimeTrackingDashboardProps) {
           employees={employees}
         />
       )}
+
+      <EauTracking />
     </div>
   );
 }
