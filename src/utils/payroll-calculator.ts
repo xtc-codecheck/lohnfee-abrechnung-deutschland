@@ -447,7 +447,7 @@ export function calculatePayrollEntry(input: PayrollCalculationInput): PayrollCa
   log.push('Berechnung abgeschlossen');
   log.push(`Audit-ID: ${audit.calculationId}`);
   
-  return { entry, calculationLog: log, warnings, audit };
+  return { entry, calculationLog: log, warnings, audit, wageTypesImpact };
 }
 
 // ============= Hilfsfunktionen =============
