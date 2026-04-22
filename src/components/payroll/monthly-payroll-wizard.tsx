@@ -407,8 +407,20 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
         try {
           const period = await createPayrollPeriod(selectedYear, selectedMonth);
           if (period) {
-            const saved = await calculateAndPersistEntries(period.id);
-            log(`✅ ${saved} Abrechnungen gespeichert`);
+            const { saved, failed } = await calculateAndPersistEntries(period.id);
+            log(`✅ ${saved}/${activeEmployees.length} Abrechnungen gespeichert`);
+            if (failed.length > 0) {
+              log(`❌ ${failed.length} Abrechnungen fehlgeschlagen: ${failed.join(', ')}`);
+              checked.criticalWarnings.push(
+                `${failed.length} Lohnabrechnungen wurden NICHT gespeichert. Bitte prüfen!`
+              );
+              statuses[step] = checked;
+              setStepStatuses([...statuses]);
+              setAutoRunPaused(true);
+              autoRunRef.current = false;
+              setAutoRunActive(false);
+              return;
+            }
           }
           checked.completed = true;
           log('✅ Abrechnung erstellt');
