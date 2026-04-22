@@ -11,10 +11,10 @@
 |-------|--------|----------|
 | **L1** Persistenz & Pre-Flight | ✅ erledigt | `use-supabase-payroll.ts` wirft jetzt Errors statt sie zu schlucken; Wizard markiert Fehl-Inserts; neuer Test `use-supabase-payroll-persistence.test.tsx` grün |
 | **L2** BMF-PAP-Verifikation | ✅ erledigt | 2025-Tarif (Zone 5 Subtrahend `19.246,67` bestätigt); 2026-Tarif aktualisiert auf **§ 32a EStG i.d.F. ab VZ 2026** (GFB 12.348 €, Zone 2 koeff. 914,51, Zone 3 koeff. 173,10/2397/1034,87, Zone 4 SUB 11.135,63, Zone 5 SUB 19.470,38). Fixtures `bmf-pap-2025.ts` + `bmf-pap-2026.ts` + `bmf-pap-verification.test.ts` grün, **0 ¢ Diff** |
-| **L3** SYSTAX-Payload-Spec | 🟡 nächster Schritt | siehe `docs/SYSTAX-PAYLOAD-SPEC.md` (anzulegen) |
-| **L4** Härtung & Konstanten 2026 | 🟡 offen | RLS-Linter, Net-to-Gross-Property-Test, Annual-Constants-Doku |
+| **L3** SYSTAX-Payload-Spec | ✅ erledigt | `docs/SYSTAX-PAYLOAD-SPEC.md` (LStA, eLStB, DEÜV, Beitragsnachweis, SEPA) – wartet auf SYSTAX-Team-Gegenzeichnung |
+| **L4** Härtung & Konstanten 2026 | 🟡 teilweise | RLS-Linter geprüft (1 Warnung: `contact_messages.INSERT WITH CHECK true` – **bewusst öffentlich** für Kontaktformular, kein Risiko); `docs/CONSTANTS-VERIFIED-2026.md` erstellt; Net-to-Gross-Property-Test offen |
 | **L5** Go-Live-Readiness | 🟡 offen | Final-Gate vor Schalten |
-| **Tests gesamt** | ✅ | **598 grün** (Vitest) |
+| **Tests gesamt** | ✅ | **598 grün** (Vitest, 0 fehlgeschlagen) |
 
 ---
 
