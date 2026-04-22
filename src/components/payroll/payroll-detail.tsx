@@ -8,6 +8,7 @@ import { HELP } from "@/constants/help-glossary";
 import { useSupabasePayroll } from "@/hooks/use-supabase-payroll";
 import { useEmployees } from "@/contexts/employee-context";
 import { usePayrollGuardian } from "@/hooks/use-payroll-guardian";
+import { useTenantEmployeeWageTypes } from "@/hooks/use-tenant-employee-wage-types";
 import { PayrollEntry } from "@/types/payroll";
 import { useToast } from "@/hooks/use-toast";
 import { calculatePayrollEntry, createDefaultWorkingData } from "@/utils/payroll-calculator";
@@ -36,6 +37,7 @@ export function PayrollDetail({ payrollId, onBack }: PayrollDetailProps) {
   } = useSupabasePayroll();
   const { employees } = useEmployees();
   const { historicalData, addToHistory } = usePayrollGuardian();
+  const { byEmployee: wageTypesByEmployee } = useTenantEmployeeWageTypes();
   const { toast } = useToast();
 
 
@@ -62,6 +64,7 @@ export function PayrollDetail({ payrollId, onBack }: PayrollDetailProps) {
           month: report.period.month,
         },
         workingData: createDefaultWorkingData(employee),
+        employeeWageTypes: wageTypesByEmployee.get(employeeId),
       });
 
       return {
