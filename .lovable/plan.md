@@ -1,83 +1,198 @@
-# Phase 1 – Test-Härtung der Steuer-/SV-Logik
+# Go-Live-Plan – Steuerliche Berechnungen vollständig & cent-genau
 
-**Status:** Wartet auf Freigabe  
-**Ziel:** Cent-genaue Verifizierung aller 31 Calculation-Utilities gegen amtliche BMF-Stützstellen, ergänzt durch Property-Based-Tests (fast-check) und Mutation-Tests (Stryker) für die Kern-Module.
-
-**Kritische Regel:** Keine produktive Berechnungslogik wird verändert. Alle Änderungen sind **rein additiv** (neue Test-Dateien, neue Fixtures, neue Configs). Falls ein Test einen echten Bug aufdeckt → STOP, Befund dokumentieren, separat freigeben lassen.
-
-**Geschätzte Dauer:** 4–6 Stunden Implementierung + Stryker-Run (15–45 Min).
+**Stand:** 2026-04-22 · **Status:** Bericht + Plan zur Freigabe (keine Umsetzung)  
+**Bezug:** Übergabe `payroll-core` ins SYSTAX-Hauptsystem. Im Hauptsystem werden **keine Grundlagenfunktionen** mehr ergänzt – ausschließlich Design.
 
 ---
 
-## Schritt 0 – Vorbereitung & Dependencies (5 Min)
+## A. Ehrliche Bestandsaufnahme (Ist-Zustand)
 
-- DevDeps: `fast-check`, `@stryker-mutator/core`, `@stryker-mutator/vitest-runner`, `@stryker-mutator/typescript-checker`.
-- Baseline `vitest run` muss grün sein (571 Tests).
+### A.1 Was ist nachweislich fertig & cent-genau
 
-## Schritt 1 – BMF-Referenz-Fixtures 2025 / 2026 (60–90 Min)
+| Bereich | Status | Nachweis |
+|---------|--------|----------|
+| **Lohnsteuer 2025/2026** (allg. + besondere Tabelle, alle StKl I–VI) | ✅ | `tax-calculation.ts` (575 LOC), Golden-Master `golden-master-2026.test.ts`, BMF-Reference `bmf-reference-tax.test.ts` |
+| **Solidaritätszuschlag** (Freigrenze, Milderungszone) | ✅ | im Tax-Calc integriert, Tests grün |
+| **Kirchensteuer** (8 % BY/BW, 9 % Rest, Kappung) | ✅ | Tests grün |
+| **SV KV/RV/AV/PV** (Ost/West, Kinderlosen-Zuschlag, Zusatzbeitrag) | ✅ | `social-security.ts`, `social-security.test.ts` |
+| **Minijob/Midijob** (556 €, Übergangsbereichsformel) | ✅ | `employment-types`-Memory, Tests vorhanden |
+| **BBG-Splits Mehrfachbeschäftigung** | ✅ | `multiple-employment.ts` |
+| **bAV / Dienstwagen / Pfändung** | ✅ | `bav-`, `company-car-`, `garnishment-calculation.ts` |
+| **Märzklausel / Entgeltfortzahlung / Mutterschaft** | ✅ | je eigene Test-Datei |
+| **Branchen: Bau (SOKA), Gastro, Pflege (TVöD-P)** | ✅ | je eigene Test-Datei |
+| **Jahresausgleich (annual-tax-reconciliation)** | ✅ | Tests grün |
+| **DATEV-Export EXTF 7.0** (31-Feld-Header) | ✅ | `datev-export.test.ts` |
+| **GoBD-Export** | ✅ | `gobd-export.test.ts` |
+| **ELStAM-Validierung** | ✅ | `elstam-validation.test.ts` |
+| **FiBu-Buchungssätze SKR03/SKR04** | ✅ | `fibu-booking.ts` |
+| **Lohnkonto §41 EStG** | ✅ | DB-persistiert |
+| **Audit-Trail (Revisionssicherheit)** | ✅ | `calculation-audit.ts` + DB-Trigger |
+| **Tests gesamt** | ✅ | **571 grün** (Vitest 4.0.16) |
 
-**Quelle:** BMF-Programmablaufplan zur maschinellen Lohnsteuerberechnung 2025 / 2026.
+### A.2 Was NICHT 100 % live-fertig ist (ehrliche Liste der Restrisiken)
 
-**Strategie (Mix):**
-- ~20 amtliche BMF-PAP-Stützstellen pro Jahr (Brutto/StKl → erwartete LSt/Soli/KiSt).
-- Ergänzt durch ~15 Snapshot-Stützstellen für Edge Cases (Faktor IV/IV, KiSt-Kappung, Mehrfachbeschäftigung, Midijob-Übergangsbereich, BBG-Splits, Ost/West).
+| # | Befund | Schweregrad | Quelle |
+|---|--------|-------------|--------|
+| **R1** | **Auto-Wizard-Persistenz-Bug**: Berechnung im Monthly-Wizard läuft, aber `payroll_entries`-Insert schlägt teils still fehl. Folge: Werte werden gerechnet, aber nicht in DB gespeichert → Lohnkonto/DATEV/Meldewesen leer. | **🔴 KRITISCH (Live-Blocker)** | `mem://index.md` Core, AUDIT-2026-04 §4.2 |
+| **R2** | **Pre-Flight Status-Refetch**: nach Save aktualisiert UI den Period-Status nicht → Anwender weiß nicht, ob Abrechnung wirklich freigegeben ist. | **🟡 HOCH** | AUDIT-2026-04 §4.2 |
+| **R3** | **RLS-Policy „always true"**: 1 Supabase-Linter-Warnung (UPDATE/DELETE/INSERT). Vermutlich `contact_messages.INSERT` (bewusst öffentlich) – muss verifiziert werden. | **🟡 HOCH (Security)** | `supabase--linter` |
+| **R4** | **BMF-PAP-Fixtures fehlen** als externer Referenz-Anker. Heute „Golden-Master gegen sich selbst". Solange keine echten BMF-PAP-Stützstellen geprüft sind, ist „cent-genau" nur **intern konsistent**, nicht **amtlich verifiziert**. | **🟡 HOCH (Live-Blocker für „Steuerberaterqualität")** | Phase-1-Plan |
+| **R5** | **Net-to-Gross** (Bruttohochrechnung) hat noch keinen Property-Test → Konvergenz/Idempotenz nicht abgesichert. | 🟠 MITTEL | `net-to-gross-calculation.ts` |
+| **R6** | **ELSTER-Übermittlung** (LStA, eLStB, DEÜV) ist im Code als Status/Transfer-Ticket modelliert, aber **kein echter ELSTER-XML-Versand**. Heute werden nur DB-Status gesetzt. | **🔴 LIVE-BLOCKER**, sofern Live = „echte Übermittlung an Finanzamt/Krankenkasse" | `lohnsteueranmeldungen`/`sv_meldungen`-Schema, kein ELSTER-Adapter im Repo |
+| **R7** | **SEPA-XML für Lohnüberweisungen** (pain.001) ist **nicht** im Repo. IBAN/BIC werden gespeichert, aber kein DTA/SEPA-Export. | 🟠 MITTEL (je nach Definition „Live") | grep ergibt keinen `pain.001`/`sepa`-Generator |
+| **R8** | **315 hartkodierte Tailwind-Farben** → Dark-Mode-Risiken (rein optisch, keine Berechnungswirkung). | 🟢 NIEDRIG | AUDIT-2026-04 §2.2 |
+| **R9** | **Beitragssätze 2026** (Zusatzbeitrag KV ⌀, PV-Sätze, BBG, Sachbezugswerte) → ist im Code gepflegt, aber jährliches Re-Validierungs-Datum **nach BMF-Schreiben Nov./Dez. 2025** ist nicht dokumentiert. | 🟠 MITTEL | `src/constants/social-security.ts`, `ANNUAL_UPDATE_CHECKLIST.md` |
+| **R10** | **Lohnsteuer-Jahresausgleich durch Arbeitgeber** (§ 42b EStG) – Funktion vorhanden, aber Trigger-Workflow im UI nicht zwingend integriert. | 🟠 MITTEL | `annual-tax-reconciliation.ts` vorhanden |
 
-**Neue Dateien:**
-- `src/utils/__tests__/fixtures/bmf-pap-2025.ts`
-- `src/utils/__tests__/fixtures/bmf-pap-2026.ts`
-- `src/utils/__tests__/fixtures/sv-bmg-2025.ts`
-- `src/utils/__tests__/fixtures/sv-bmg-2026.ts`
-- `src/utils/__tests__/fixtures/README.md`
-- `src/utils/__tests__/bmf-fixtures-verification.test.ts`
+### A.3 Klare Antwort auf die Frage „cent-genau zu 100 %?"
 
-## Schritt 2 – Property-Based-Tests mit fast-check (120–180 Min)
+**Aktuell: NEIN – mit zwei wichtigen Differenzierungen.**
 
-8 neue Test-Dateien unter `src/utils/__tests__/property/`:
+- **Rechen-Engine isoliert:** intern konsistent, 571 Tests grün, eigene Golden-Master decken alle Lohnsteuerklassen, SV-Zweige, Sonderzahlungen, Branchen ab → in **isolierten Tests cent-genau**.
+- **End-to-End (Eingabe → DB → Lohnkonto → Meldung → Auszahlung):** **NICHT verifiziert**, da R1 (Persistenz-Bug) und R6 (kein echter ELSTER-Versand) offen sind.
+- **Externe BMF-Verifikation:** Fehlt (R4). Ohne mind. 20 amtliche BMF-PAP-Stützstellen pro Jahr ist die Aussage „BMF-konform" eine **Selbstauskunft**, kein **Nachweis**.
 
-1. `tax-calculation.property.test.ts`
-2. `social-security.property.test.ts`
-3. `besondere-lohnsteuer.property.test.ts`
-4. `employment-types.property.test.ts`
-5. `special-payments.property.test.ts`
-6. `industry.property.test.ts`
-7. `payroll-calculator.property.test.ts`
-8. `auxiliaries.property.test.ts`
+→ **Vor Live-Gang sind R1, R4, R6 zwingend; R2, R3, R5, R9 stark empfohlen.**
 
-Konvention: `fc.assert(fc.property(...), { numRuns: 200, seed: 42 })`.
+---
 
-## Schritt 3 – Stryker Mutation-Testing (45–60 Min Setup + 15–45 Min Run)
+## B. Live-Gang-Plan in 5 Phasen
 
-- `stryker.config.json` (neu): testRunner=vitest, mutate auf 4 Kern-Utilities, thresholds high=90/low=70/break=null.
-- `package.json`: Skript `"test:mutation": "stryker run"`.
-- Pilot-Run: `tax-calculation.ts`, `social-security.ts`, `besondere-lohnsteuertabelle.ts`, `payroll-calculator.ts`.
+**Reihenfolge nach „Schaden, wenn übersprungen". Alle Phasen sind unabhängig freigebbar.**
 
-## Schritt 4 – Dokumentation & Verifikation (30 Min)
+### Phase L1 – Persistenz & Pre-Flight reparieren (KRITISCH, ~3–4 h)
 
-- `docs/AUDIT-2026-04.md`: Sektion „Phase 1 – Ergebnisse".
-- `.lovable/memory/logic/test-harness-phase1.md`: Memory-Eintrag.
-- Final: `vitest run` grün + `stryker run` Score dokumentiert.
+**Ziel:** R1 + R2 schließen. Ohne diese Phase ist das System **nicht live-fähig**.
 
-## Was NICHT geändert wird
+- **L1.1** Bug-Reproduktion `payroll_entries`-Persistenz im Monthly-Wizard (`monthly-payroll-wizard.tsx`) – mit echtem Tenant in DB nachvollziehen, Logs prüfen.
+- **L1.2** Root-Cause-Fix (vermutlich: fehlendes `tenant_id`-Feld bei Insert oder fehlerhafter `await` in Schleife).
+- **L1.3** **Neuer Vitest** `monthly-payroll-wizard.persistence.test.ts`: prüft Insert-Aufruf für jeden Mitarbeiter mit korrektem Payload.
+- **L1.4** Pre-Flight Status-Refetch: nach `markAsApproved`/Save → React-Query `invalidateQueries(['payroll-periods'])` ergänzen.
+- **L1.5** **Smoke-Test-Skript** `scripts/e2e-payroll-smoke.ts` (Node, gegen Test-Tenant): legt Mitarbeiter an, läuft Wizard, prüft DB-Inhalt von `payroll_entries`, `lohnkonto`, `beitragsnachweise`.
 
-- Keine Datei in `src/utils/*.ts` (außer Tests).
-- Keine Edge Functions, DB, UI.
-- Keine bestehenden Test-Dateien werden modifiziert.
+**Abnahme:** alle Tests grün **+** Smoke-Skript bestätigt 1:1-Übereinstimmung Berechnung ↔ DB.
 
-## Abbruchkriterien
+---
 
-- Cent-Diff > 1 ¢ in produktiver Logik → STOP, Befund dokumentieren.
-- Stryker-Score < 50 % für ein Modul → als „Test-Lücke" eintragen.
+### Phase L2 – Amtliche BMF-PAP-Verifikation (LIVE-BLOCKER für „Steuerberaterqualität", ~4–6 h)
 
-## Lieferumfang
+**Ziel:** R4 schließen. Externer Nachweis der Cent-Genauigkeit.
 
-| Datei | Typ |
-|-------|-----|
-| 4 Fixture-Dateien + README | neu |
-| 1 Fixture-Verification-Test | neu |
-| 8 Property-Tests | neu |
-| `stryker.config.json` | neu |
-| `package.json` | edit (devDeps + Skript) |
-| `docs/AUDIT-2026-04.md` | edit |
-| `.lovable/memory/logic/test-harness-phase1.md` | neu |
+- **L2.1** Erfassen von **20 BMF-PAP-Stützstellen pro Jahr** (2025 + 2026), Mix:
+  - StKl I, III, IV (mit/ohne Faktor), V, VI
+  - Brutto-Bandbreite 1.500 € / 3.500 € / 5.500 € / 8.000 € / 12.000 €
+  - Mit & ohne Kirchensteuer (8 %/9 %)
+  - Mit Kinderfreibeträgen 0 / 1 / 2 / 3
+- **L2.2** Fixtures: `src/utils/__tests__/fixtures/bmf-pap-2025.ts` + `bmf-pap-2026.ts` + `README.md` mit Quellenangabe BMF-Programmablaufplan (Datum, Version).
+- **L2.3** Verification-Test `bmf-pap-verification.test.ts`: Diff in Cent für **LSt, Soli, KiSt** muss **= 0 ¢**.
+- **L2.4** Wenn Diff > 0 ¢ → **STOP**, Befund dokumentieren, separat freigeben (kein Silent-Fix in Engine!).
+- **L2.5** Analog SV: 10 BBG-Stützstellen Ost/West (KV/RV/AV/PV) mit/ohne Kinder, mit/ohne Zusatzbeitrag.
 
-**Erwartet:** ~600+ neue Test-Cases, Mutation-Score-Baseline für 4 Kern-Module.
+**Abnahme:** Test grün → **„BMF-konform" wird vom Selbstauskunft zum Nachweis**.
+
+---
+
+### Phase L3 – Echte Übermittlung (ELSTER + SEPA) (LIVE-BLOCKER, ~6–10 h, abhängig von SYSTAX-Adapter)
+
+**Ziel:** R6 + R7 schließen. **Hier ist die wichtigste Frage:** Wird die Übermittlung von **payroll-core** geleistet oder von **SYSTAX** (Hauptsystem)?
+
+| Variante | Verantwortung | Was zu tun ist |
+|----------|---------------|----------------|
+| **A: SYSTAX übernimmt** (empfohlen) | SYSTAX hat eigene ELSTER-/Krankenkassen-Schnittstelle | payroll-core liefert nur die **berechneten Datensätze** + DEÜV-/LStA-XML-Payloads über `systax-integration.ts`-Facade. **Wir müssen prüfen, ob SYSTAX dafür alle Felder erhält** (Spec-Abgleich). |
+| **B: payroll-core übernimmt** | LohnPro selbst | ELSTER ERiC-Bibliothek einbinden (proprietär, BMF-Lizenz nötig), SEPA-XML pain.001.001.09-Generator schreiben, Krankenkassen-DEÜV-XML-Versand implementieren. **Größenordnung: separates Projekt, nicht in 1 Phase machbar.** |
+
+**Empfehlung:** **Variante A**. → Konkrete Aufgaben:
+
+- **L3.1** SYSTAX-Integrations-Layer (`src/types/systax-integration.ts`) auf Vollständigkeit prüfen: enthält die Facade alle Felder, die SYSTAX für **LStA, eLStB, DEÜV-Meldungen, Beitragsnachweise** braucht?
+- **L3.2** Spec-Dokument `docs/SYSTAX-PAYLOAD-SPEC.md` (neu) – pro Meldungstyp: Felder, Datentypen, Quell-Tabelle, Beispielwert.
+- **L3.3** Smoke-Adapter: Mock-SYSTAX-Endpoint, der den Payload prüft + zurückgibt.
+- **L3.4** **Falls Variante B doch nötig:** Eigenes Roadmap-Item, separater Plan – nicht Teil dieses Live-Gangs.
+
+**Abnahme:** SYSTAX bestätigt schriftlich Payload-Vollständigkeit ODER Mock-Adapter validiert alle Pflichtfelder.
+
+---
+
+### Phase L4 – Härtung & Annual-Constants (~2–3 h)
+
+**Ziel:** R3, R5, R9, R10 schließen.
+
+- **L4.1** RLS-Policy `always true` identifizieren (vermutlich `contact_messages`): Bestätigen oder einschränken. Migration vorbereiten.
+- **L4.2** Property-Test `net-to-gross.property.test.ts` (R5) – Konvergenz, Idempotenz, Brutto(Netto(B)) ≈ B.
+- **L4.3** **Annual-Constants-Re-Verifikation 2026:**
+  - Zusatzbeitrag KV (⌀): aktuell hinterlegter Wert vs. BMF-Schreiben Nov. 2025 verifizieren.
+  - PV-Beitragssatz + Kinderlosen-Zuschlag.
+  - BBG KV/PV (West/Ost) + RV/AV (West/Ost).
+  - Sachbezugswerte (Frühstück/Mittag/Abend, Unterkunft).
+  - Mindestlohn 2026.
+  - **Output:** `docs/CONSTANTS-VERIFIED-2026.md` mit Quellenangaben + Datum.
+- **L4.4** Lohnsteuer-Jahresausgleich §42b im UI prominent anbieten (Trigger im Dezember-Wizard).
+
+---
+
+### Phase L5 – Go-Live-Readiness-Check (~1 h, ohne Code-Änderung)
+
+**Ziel:** Formaler Go/No-Go-Check vor Schalten.
+
+| Check | Quelle | Soll |
+|-------|--------|------|
+| Vitest grün | `npx vitest run` | 100 % |
+| BMF-PAP-Verification grün | L2 | 0 ¢ Diff |
+| E2E-Smoke grün | L1.5 | DB-Insert verifiziert |
+| Supabase-Linter | `supabase--linter` | 0 Warnings |
+| SYSTAX-Payload-Spec abgenommen | L3.2 | unterschrieben |
+| Annual-Constants 2026 | L4.3 | dokumentiert |
+| Backup-/Restore-Test Tenant-DB | manuell | erfolgreich |
+| Dokumentation Steuerkanzlei-Übergabe | `payroll-core/README.md` + `SYSTAX-INTEGRATION-GUIDE.md` | aktuell |
+
+**Liefer-Artefakt:** `docs/GO-LIVE-CHECK-2026.md` mit grünen/roten Häkchen.
+
+---
+
+## C. Schnellster realistischer Pfad zum Live-Gang
+
+| Reihenfolge | Phase | Dauer | Blockt Live? |
+|-------------|-------|-------|--------------|
+| 1 | **L1** Persistenz-Bug + Pre-Flight | 3–4 h | ✅ ja |
+| 2 | **L2** BMF-PAP-Fixtures | 4–6 h | ✅ ja (für „cent-genau") |
+| 3 | **L3** SYSTAX-Payload-Spec (Variante A) | 3–4 h reine Spec | ✅ ja |
+| 4 | **L4** Härtung + 2026-Konstanten | 2–3 h | ⚠ stark empfohlen |
+| 5 | **L5** Go-Live-Check | 1 h | Pflicht-Gate |
+
+**Summe Mindest-Pfad (L1+L2+L3+L5): ~12–16 h** – realistisch in 2 Arbeitstagen umsetzbar, vorausgesetzt SYSTAX-Spec-Antworten kommen zeitnah.
+
+---
+
+## D. Was im Hauptsystem (SYSTAX) nicht gebaut werden muss
+
+Nach erfolgreichem Abschluss von L1–L5 ist im SYSTAX-Hauptsystem **keine** der folgenden Funktionen mehr nötig:
+
+- Steuerberechnung (LSt, Soli, KiSt)
+- SV-Berechnung (KV/RV/AV/PV inkl. Ost/West, Zusatzbeitrag, Kinderlose)
+- Mini-/Midijob-Logik
+- Branchen-Spezialregeln (Bau, Gastro, Pflege)
+- bAV, Dienstwagen, Pfändung, Mehrfachbeschäftigung, Märzklausel, Entgeltfortzahlung
+- Lohnsteuer-Jahresausgleich
+- DATEV-/GoBD-Export, FiBu-Buchungssätze, Lohnkonto §41 EStG
+- ELStAM-Validierung
+
+SYSTAX braucht ausschließlich: **Tenant-/User-Verwaltung, Übermittlungs-Layer (ELSTER/SEPA/Krankenkassen-Adapter), Druck-/Archiv-Schicht, Design.**
+
+---
+
+## E. Abbruchkriterien (für jede Phase identisch)
+
+- Cent-Diff > 1 ¢ vs. BMF-PAP → STOP, Befund dokumentieren, **kein Silent-Fix**.
+- Persistenz-Bug nicht reproduzierbar → tieferes Logging einbauen, vor Live nicht weiter.
+- SYSTAX-Spec-Lücke → Live-Gang verschieben bis schriftlich geklärt.
+
+---
+
+## F. Was dieser Plan **nicht** vorsieht
+
+- Eigene ELSTER-ERiC-Integration (Variante B aus L3) – wäre eigenes Projekt.
+- Hardcoded-Color-Refactor (R8) – rein optisch, kein Live-Blocker.
+- ts-prune-Cleanup, Logger-Wrapper – Tech-Debt für nach Live.
+
+---
+
+**Freigabe-Frage an dich:** Welche Phasen sollen wir in welcher Reihenfolge starten? Empfehlung: **L1 → L2 → L3 (Spec) → L5**, L4 parallel wenn Kapazität.
