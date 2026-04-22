@@ -147,6 +147,26 @@ export function CompanySettingsPage() {
         </Card>
       </div>
 
+      <Card>
+        <CardHeader>
+          <CardTitle>Mandantenbesonderheiten</CardTitle>
+          <CardDescription>
+            Freitext für individuelle Vereinbarungen — wird im Pre-Close-Check vor jedem Monatsabschluss angezeigt
+            (z. B. Tankgutschein 50 €, individuelle Zuschüsse, Pfändungs-Hinweise).
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Textarea
+            value={form.besonderheiten}
+            onChange={e => setForm(prev => ({ ...prev, besonderheiten: e.target.value }))}
+            placeholder="z.B. Allen Mitarbeitern monatlich 50 € steuerfreier Sachbezug (Tankgutschein). Herr Müller: monatliche Pfändung 250 €."
+            disabled={readOnly}
+            rows={6}
+            className="font-mono text-sm"
+          />
+        </CardContent>
+      </Card>
+
       {!readOnly && (
         <div className="flex justify-end">
           <Button onClick={handleSave} disabled={saving || !form.company_name}>
