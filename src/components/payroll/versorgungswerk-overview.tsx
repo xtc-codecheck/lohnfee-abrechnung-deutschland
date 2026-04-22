@@ -33,14 +33,14 @@ export function VersorgungswerkOverview() {
           (e) => e.employeeId === emp.id && e.payrollPeriodId === latestPeriod.id,
         );
         const beitragssatz = Number((emp as any).versorgungswerk_beitragssatz ?? 0);
-        const svBrutto = entry?.grossSalary ?? emp.grossSalary ?? 0;
+        const svBrutto = entry?.salaryCalculation?.grossSalary ?? emp.salaryData?.grossSalary ?? 0;
         const beitragGesamt = svBrutto * (beitragssatz / 100);
         const beitragAN = beitragGesamt / 2;
         const beitragAG = beitragGesamt / 2;
         return {
           id: emp.id,
-          name: `${emp.firstName} ${emp.lastName}`,
-          personalNumber: emp.personalNumber,
+          name: `${emp.personalData?.firstName ?? ""} ${emp.personalData?.lastName ?? ""}`.trim(),
+          personalNumber: (emp as any).personalNumber ?? "—",
           versorgungswerk: (emp as any).versorgungswerk_name,
           mitgliedsnr: (emp as any).versorgungswerk_mitgliedsnummer ?? "—",
           beitragssatz,
