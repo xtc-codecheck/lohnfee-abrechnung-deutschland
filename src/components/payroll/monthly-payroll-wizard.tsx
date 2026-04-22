@@ -488,6 +488,7 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
             employee: emp,
             period: { year: selectedYear, month: selectedMonth },
             workingData,
+            employeeWageTypes: wageTypesByEmployee.get(emp.id),
           };
           const result = calculatePayrollEntry(input);
           calculated.push({
