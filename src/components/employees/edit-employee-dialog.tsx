@@ -326,6 +326,10 @@ export function EditEmployeeDialog({ employee, open, onOpenChange, onSave }: Edi
             </Card>
           </TabsContent>
 
+          <TabsContent value="wage-types" className="space-y-4">
+            <EmployeeWageTypesCard employeeId={employee.id} />
+          </TabsContent>
+
           <TabsContent value="pdf-upload" className="space-y-4">
             <PdfUploadTab employee={employee} onFieldsExtracted={(fields) => {
               setFormData(prev => {
