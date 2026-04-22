@@ -19,6 +19,8 @@ import { roundCurrency, sumCurrency, isValidPayrollAmount } from '@/lib/formatte
 import { SOCIAL_INSURANCE_RATES_2025, getCareInsuranceRate, BBG_2025_MONTHLY } from '@/constants/social-security';
 import { PayrollAuditLogger, CalculationAudit, createPayrollAudit } from '@/utils/calculation-audit';
 import { calculateEFZG, EFZG_DURATION_DAYS } from '@/utils/entgeltfortzahlung';
+import { applyWageTypes, WageTypesImpact } from '@/utils/wage-types-integration';
+import { EmployeeWageType } from '@/types/wage-types';
 
 // ============= Typen =============
 
@@ -37,6 +39,10 @@ export interface PayrollCalculationInput {
     endDate: Date;
     previousEfzgDaysUsed?: number;
   };
+  /** Aktive Lohnarten-Zuordnungen (P4) — werden additiv auf Brutto/Netto angewendet */
+  employeeWageTypes?: EmployeeWageType[];
+  /** Kontensystem für Buchungssätze (Default: SKR03) */
+  accountSystem?: 'SKR03' | 'SKR04';
 }
 
 export interface PayrollCalculationOutput {
@@ -44,6 +50,7 @@ export interface PayrollCalculationOutput {
   calculationLog: string[];
   warnings: string[];
   audit?: CalculationAudit; // Vollständiges Audit-Dokument für Revisionssicherheit
+  wageTypesImpact?: WageTypesImpact; // Aufschlüsselung der angewandten Lohnarten (P4)
 }
 
 // ============= Input Guards =============
