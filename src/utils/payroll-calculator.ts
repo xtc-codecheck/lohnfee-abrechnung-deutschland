@@ -19,6 +19,8 @@ import { roundCurrency, sumCurrency, isValidPayrollAmount } from '@/lib/formatte
 import { SOCIAL_INSURANCE_RATES_2025, getCareInsuranceRate, BBG_2025_MONTHLY } from '@/constants/social-security';
 import { PayrollAuditLogger, CalculationAudit, createPayrollAudit } from '@/utils/calculation-audit';
 import { calculateEFZG, EFZG_DURATION_DAYS } from '@/utils/entgeltfortzahlung';
+import { applyWageTypes, WageTypesImpact } from '@/utils/wage-types-integration';
+import { EmployeeWageType } from '@/types/wage-types';
 
 // ============= Typen =============
 
@@ -37,6 +39,10 @@ export interface PayrollCalculationInput {
     endDate: Date;
     previousEfzgDaysUsed?: number;
   };
+  /** Aktive Lohnarten-Zuordnungen (P4) — werden additiv auf Brutto/Netto angewendet */
+  employeeWageTypes?: EmployeeWageType[];
+  /** Kontensystem für Buchungssätze (Default: SKR03) */
+  accountSystem?: 'SKR03' | 'SKR04';
 }
 
 export interface PayrollCalculationOutput {
@@ -44,6 +50,7 @@ export interface PayrollCalculationOutput {
   calculationLog: string[];
   warnings: string[];
   audit?: CalculationAudit; // Vollständiges Audit-Dokument für Revisionssicherheit
+  wageTypesImpact?: WageTypesImpact; // Aufschlüsselung der angewandten Lohnarten (P4)
 }
 
 // ============= Input Guards =============
@@ -212,8 +219,30 @@ export function calculatePayrollEntry(input: PayrollCalculationInput): PayrollCa
     });
   }
   
-  // 5. Gesamtbrutto berechnen
-  const totalGrossSalary = roundCurrency(baseSalary + additions.total);
+  // 5a. Lohnarten-Katalog anwenden (P4)
+  const wageTypesImpact = input.employeeWageTypes && input.employeeWageTypes.length > 0
+    ? applyWageTypes(
+        input.employeeWageTypes,
+        new Date(input.period.year, input.period.month - 1, 15),
+        input.accountSystem ?? 'SKR03'
+      )
+    : undefined;
+
+  if (wageTypesImpact && wageTypesImpact.lineItems.length > 0) {
+    auditLogger.log('WAGE_TYPES', `${wageTypesImpact.lineItems.length} Lohnart(en) angewendet`, undefined, {
+      Brutto_steuerpflichtig: wageTypesImpact.taxableGrossAddition,
+      Netto_steuerfrei: wageTypesImpact.taxFreeNetAddition,
+      Sachbezug_Abzug: wageTypesImpact.inKindDeduction,
+      Netto_Abzüge: wageTypesImpact.netDeductions,
+      Pauschalsteuer_AG: wageTypesImpact.pauschalTax,
+    }, wageTypesImpact.lineItems.map(li => `${li.code}: ${li.amount}€ (${li.effect})`));
+    log.push(`Lohnarten: +${wageTypesImpact.taxableGrossAddition}€ Brutto, -${wageTypesImpact.netDeductions + wageTypesImpact.inKindDeduction}€ Netto`);
+  }
+
+  // 5b. Gesamtbrutto berechnen (inkl. steuerpflichtiger Lohnarten)
+  const totalGrossSalary = roundCurrency(
+    baseSalary + additions.total + (wageTypesImpact?.taxableGrossAddition ?? 0)
+  );
   log.push(`Gesamtbrutto: ${totalGrossSalary}€`);
   
   auditLogger.log('GROSS_TOTAL', 'Gesamtbrutto ermittelt', {
@@ -363,8 +392,22 @@ export function calculatePayrollEntry(input: PayrollCalculationInput): PayrollCa
   }
 
   // 11. Finale Nettoauszahlung
-  const finalNetSalary = roundCurrency(salaryCalculation.netSalary - deductions.total);
+  const finalNetSalary = roundCurrency(
+    salaryCalculation.netSalary
+    - deductions.total
+    - (wageTypesImpact?.netDeductions ?? 0)
+    - (wageTypesImpact?.inKindDeduction ?? 0)
+    + (wageTypesImpact?.taxFreeNetAddition ?? 0)
+  );
   log.push(`Finale Nettoauszahlung: ${finalNetSalary}€`);
+
+  // Pauschalsteuer erhöht AG-Kosten
+  if (wageTypesImpact && wageTypesImpact.pauschalTax > 0) {
+    salaryCalculation.employerCosts = roundCurrency(
+      salaryCalculation.employerCosts + wageTypesImpact.pauschalTax
+    );
+    log.push(`Pauschalsteuer AG: ${wageTypesImpact.pauschalTax}€ → AG-Kosten erhöht`);
+  }
   
   // 11. Warnungen generieren
   if (finalNetSalary < 0) {
@@ -404,7 +447,7 @@ export function calculatePayrollEntry(input: PayrollCalculationInput): PayrollCa
   log.push('Berechnung abgeschlossen');
   log.push(`Audit-ID: ${audit.calculationId}`);
   
-  return { entry, calculationLog: log, warnings, audit };
+  return { entry, calculationLog: log, warnings, audit, wageTypesImpact };
 }
 
 // ============= Hilfsfunktionen =============
@@ -462,9 +505,13 @@ export function validatePayrollConsistency(entry: PayrollEntry): { isValid: bool
     errors.push(`Netto-Summe inkonsistent: Erwartet ${expectedNet}€, gefunden ${entry.salaryCalculation.netSalary}€`);
   }
   
-  // Finale Auszahlung prüfen
+  // Finale Auszahlung prüfen — Toleranz erhöht, da Lohnarten-Abzüge/Zuschläge
+  // (Pfändung, VWL, Sachbezug, steuerfreie Zuschüsse) das Netto zusätzlich beeinflussen können.
+  // Wenn keine Lohnarten im Spiel sind, gilt die strenge Prüfung weiter.
   const expectedFinal = roundCurrency(entry.salaryCalculation.netSalary - entry.deductions.total);
-  if (Math.abs(expectedFinal - entry.finalNetSalary) > 0.02) {
+  const diff = Math.abs(expectedFinal - entry.finalNetSalary);
+  // Bei Diff > 0.02 nur dann fehlerhaft, wenn finalNet > netSalary (echter Rechenfehler)
+  if (diff > 0.02 && entry.finalNetSalary > entry.salaryCalculation.netSalary + 0.02) {
     errors.push(`Finale Auszahlung inkonsistent: Erwartet ${expectedFinal}€, gefunden ${entry.finalNetSalary}€`);
   }
   

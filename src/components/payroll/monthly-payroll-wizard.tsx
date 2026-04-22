@@ -33,6 +33,7 @@ import { useSupabasePayroll } from '@/hooks/use-supabase-payroll';
 import { useTimeTracking } from '@/hooks/use-time-tracking';
 import { useToast } from '@/hooks/use-toast';
 import { HelpTooltip } from '@/components/ui/help-tooltip';
+import { useTenantEmployeeWageTypes } from '@/hooks/use-tenant-employee-wage-types';
 
 interface MonthlyPayrollWizardProps {
   onBack: () => void;
@@ -65,6 +66,7 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
   const { toast } = useToast();
   const { employees } = useEmployees();
   const { payrollPeriods, payrollEntries, createPayrollPeriod, addPayrollEntry, updatePayrollPeriodStatus } = useSupabasePayroll();
+  const { byEmployee: wageTypesByEmployee } = useTenantEmployeeWageTypes();
   const { timeEntries } = useTimeTracking();
   const { historicalData, addToHistory } = usePayrollGuardian();
 
@@ -249,6 +251,7 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
           employee: emp,
           period: { year: selectedYear, month: selectedMonth },
           workingData,
+          employeeWageTypes: wageTypesByEmployee.get(emp.id),
         };
         const result = calculatePayrollEntry(input);
         const entryToSave = { ...result.entry, payrollPeriodId: periodId };
@@ -262,7 +265,7 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
       }
     }
     return { saved, failed };
-  }, [activeEmployees, selectedYear, selectedMonth, addPayrollEntry, buildWorkingDataFromTimeEntries]);
+  }, [activeEmployees, selectedYear, selectedMonth, addPayrollEntry, buildWorkingDataFromTimeEntries, wageTypesByEmployee]);
 
   // ─── Auto-Run Engine ──────────────────────────────────────
   const startAutoRun = useCallback(async () => {
@@ -485,6 +488,7 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
             employee: emp,
             period: { year: selectedYear, month: selectedMonth },
             workingData,
+            employeeWageTypes: wageTypesByEmployee.get(emp.id),
           };
           const result = calculatePayrollEntry(input);
           calculated.push({

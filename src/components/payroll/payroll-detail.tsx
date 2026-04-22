@@ -8,6 +8,7 @@ import { HELP } from "@/constants/help-glossary";
 import { useSupabasePayroll } from "@/hooks/use-supabase-payroll";
 import { useEmployees } from "@/contexts/employee-context";
 import { usePayrollGuardian } from "@/hooks/use-payroll-guardian";
+import { useTenantEmployeeWageTypes } from "@/hooks/use-tenant-employee-wage-types";
 import { PayrollEntry } from "@/types/payroll";
 import { useToast } from "@/hooks/use-toast";
 import { calculatePayrollEntry, createDefaultWorkingData } from "@/utils/payroll-calculator";
@@ -17,6 +18,7 @@ import { AnnualReconciliationDialog } from "./annual-reconciliation-dialog";
 import { PayrollCorrectionDialog } from "./payroll-correction-dialog";
 import { PreFlightCheckDialog } from "./preflight-check-dialog";
 import { TaxBreakdownCard } from "./tax-breakdown-card";
+import { AppliedWageTypesCard } from "./applied-wage-types-card";
 
 interface PayrollDetailProps {
   payrollId: string;
@@ -36,6 +38,7 @@ export function PayrollDetail({ payrollId, onBack }: PayrollDetailProps) {
   } = useSupabasePayroll();
   const { employees } = useEmployees();
   const { historicalData, addToHistory } = usePayrollGuardian();
+  const { byEmployee: wageTypesByEmployee } = useTenantEmployeeWageTypes();
   const { toast } = useToast();
 
 
@@ -62,6 +65,7 @@ export function PayrollDetail({ payrollId, onBack }: PayrollDetailProps) {
           month: report.period.month,
         },
         workingData: createDefaultWorkingData(employee),
+        employeeWageTypes: wageTypesByEmployee.get(employeeId),
       });
 
       return {
@@ -322,6 +326,12 @@ export function PayrollDetail({ payrollId, onBack }: PayrollDetailProps) {
                   {expandedId === entry.id && (
                     <div className="p-4 bg-muted/20 border-t border-border animate-fade-in">
                       <TaxBreakdownCard entry={entry} year={report.period.year} />
+                      <div className="mt-4">
+                        <AppliedWageTypesCard
+                          items={wageTypesByEmployee.get(entry.employeeId)}
+                          reference={new Date(report.period.year, report.period.month - 1, 15)}
+                        />
+                      </div>
                     </div>
                   )}
                 </div>
