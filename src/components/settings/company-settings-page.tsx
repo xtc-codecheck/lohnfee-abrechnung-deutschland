@@ -3,6 +3,7 @@ import { Building2, Save, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageHeader } from "@/components/ui/page-header";
 import { useCompanySettings } from "@/hooks/use-company-settings";
@@ -28,6 +29,7 @@ export function CompanySettingsPage() {
     bank_name: '',
     contact_email: '',
     contact_phone: '',
+    besonderheiten: '',
   });
 
   // Sync form when settings load
@@ -46,6 +48,7 @@ export function CompanySettingsPage() {
       bank_name: settings.bank_name ?? '',
       contact_email: settings.contact_email ?? '',
       contact_phone: settings.contact_phone ?? '',
+      besonderheiten: (settings as any).besonderheiten ?? '',
     });
     setInitialized(true);
   }
@@ -143,6 +146,26 @@ export function CompanySettingsPage() {
           </CardContent>
         </Card>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Mandantenbesonderheiten</CardTitle>
+          <CardDescription>
+            Freitext für individuelle Vereinbarungen — wird im Pre-Close-Check vor jedem Monatsabschluss angezeigt
+            (z. B. Tankgutschein 50 €, individuelle Zuschüsse, Pfändungs-Hinweise).
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Textarea
+            value={form.besonderheiten}
+            onChange={e => setForm(prev => ({ ...prev, besonderheiten: e.target.value }))}
+            placeholder="z.B. Allen Mitarbeitern monatlich 50 € steuerfreier Sachbezug (Tankgutschein). Herr Müller: monatliche Pfändung 250 €."
+            disabled={readOnly}
+            rows={6}
+            className="font-mono text-sm"
+          />
+        </CardContent>
+      </Card>
 
       {!readOnly && (
         <div className="flex justify-end">
