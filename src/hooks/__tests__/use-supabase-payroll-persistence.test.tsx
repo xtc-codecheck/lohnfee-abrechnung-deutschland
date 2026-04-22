@@ -85,7 +85,7 @@ const SAMPLE_ENTRY = {
       pensionInsurance: { employee: 280, employer: 280, total: 560 },
       unemploymentInsurance: { employee: 40, employer: 40, total: 80 },
       careInsurance: { employee: 50, employer: 50, total: 100 },
-      total: { employee: 620, employer: 620 },
+      total: { employee: 620, employer: 620, total: 1240 },
     },
     employerCosts: 3620,
   },
