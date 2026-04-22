@@ -241,6 +241,7 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
 
   const calculateAndPersistEntries = useCallback(async (periodId: string) => {
     let saved = 0;
+    const failed: string[] = [];
     for (const emp of activeEmployees) {
       try {
         const workingData = buildWorkingDataFromTimeEntries(emp.id);
@@ -254,10 +255,13 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
         await addPayrollEntry(entryToSave);
         saved++;
       } catch (err) {
-        console.error(`Fehler bei ${emp.personalData.firstName} ${emp.personalData.lastName}:`, err);
+        // L1.1: Fehler werden jetzt sichtbar — gezählt + zurückgegeben
+        const name = `${emp.personalData.firstName} ${emp.personalData.lastName}`;
+        failed.push(name);
+        console.error(`[payroll-persist] Insert fehlgeschlagen für ${name}:`, err);
       }
     }
-    return saved;
+    return { saved, failed };
   }, [activeEmployees, selectedYear, selectedMonth, addPayrollEntry, buildWorkingDataFromTimeEntries]);
 
   // ─── Auto-Run Engine ──────────────────────────────────────
@@ -303,8 +307,20 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
           const period = await createPayrollPeriod(selectedYear, selectedMonth);
           if (period) {
             log('📊 Abrechnungen werden berechnet und gespeichert...');
-            const saved = await calculateAndPersistEntries(period.id);
-            log(`✅ ${saved} Abrechnungen gespeichert`);
+            const { saved, failed } = await calculateAndPersistEntries(period.id);
+            log(`✅ ${saved}/${activeEmployees.length} Abrechnungen gespeichert`);
+            if (failed.length > 0) {
+              log(`❌ ${failed.length} Abrechnungen fehlgeschlagen: ${failed.join(', ')}`);
+              checked.criticalWarnings.push(
+                `${failed.length} Lohnabrechnungen wurden NICHT gespeichert. Bitte prüfen!`
+              );
+              statuses[step] = checked;
+              setStepStatuses([...statuses]);
+              setAutoRunPaused(true);
+              autoRunRef.current = false;
+              setAutoRunActive(false);
+              return;
+            }
           }
           checked.completed = true;
           log('✅ Abrechnung erfolgreich erstellt');
@@ -391,8 +407,20 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
         try {
           const period = await createPayrollPeriod(selectedYear, selectedMonth);
           if (period) {
-            const saved = await calculateAndPersistEntries(period.id);
-            log(`✅ ${saved} Abrechnungen gespeichert`);
+            const { saved, failed } = await calculateAndPersistEntries(period.id);
+            log(`✅ ${saved}/${activeEmployees.length} Abrechnungen gespeichert`);
+            if (failed.length > 0) {
+              log(`❌ ${failed.length} Abrechnungen fehlgeschlagen: ${failed.join(', ')}`);
+              checked.criticalWarnings.push(
+                `${failed.length} Lohnabrechnungen wurden NICHT gespeichert. Bitte prüfen!`
+              );
+              statuses[step] = checked;
+              setStepStatuses([...statuses]);
+              setAutoRunPaused(true);
+              autoRunRef.current = false;
+              setAutoRunActive(false);
+              return;
+            }
           }
           checked.completed = true;
           log('✅ Abrechnung erstellt');
@@ -501,11 +529,30 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
     if (!pendingPeriodId || pendingEntries.length === 0) return;
     try {
       let saved = 0;
+      const failed: string[] = [];
       for (const entry of pendingEntries) {
-        await addPayrollEntry(entry);
-        await addToHistory(entry);
-        saved++;
+        try {
+          await addPayrollEntry(entry);
+          await addToHistory(entry);
+          saved++;
+        } catch (err) {
+          const emp = activeEmployees.find(e => e.id === entry.employeeId);
+          const name = emp ? `${emp.personalData.firstName} ${emp.personalData.lastName}` : entry.employeeId;
+          failed.push(name);
+          console.error(`[payroll-persist] Insert fehlgeschlagen für ${name}:`, err);
+        }
       }
+
+      // L1.1: bei Teilausfall ehrlich melden, Status NICHT auf 'calculated' setzen
+      if (failed.length > 0) {
+        toast({
+          title: `⚠️ Nur ${saved} von ${pendingEntries.length} gespeichert`,
+          description: `Fehlgeschlagen: ${failed.slice(0, 3).join(', ')}${failed.length > 3 ? '…' : ''}. Bitte erneut versuchen.`,
+          variant: 'destructive',
+        });
+        return;
+      }
+
       await updatePayrollPeriodStatus(pendingPeriodId, 'calculated');
 
       const newStatuses = [...stepStatuses];

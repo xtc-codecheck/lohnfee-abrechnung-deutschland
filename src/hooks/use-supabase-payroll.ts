@@ -90,16 +90,21 @@ export function useSupabasePayroll() {
     const updates: { status: string; processed_at?: string } = { status };
     if (status === 'finalized') updates.processed_at = new Date().toISOString();
     const { error: err } = await supabase.from('payroll_periods').update(updates).eq('id', periodId);
-    if (err) return;
+    if (err) {
+      // L1.2: Fehler nicht mehr still verschlucken — Caller muss reagieren können
+      throw new Error(`Status-Update fehlgeschlagen: ${err.message}`);
+    }
+    // Optimistisches Update + zwingende Invalidierung (Pre-Flight-Status-Refetch)
     queryClient.setQueryData<PayrollPeriod[]>(periodsKey, (old = []) =>
       old.map(p => p.id === periodId
         ? { ...p, status, processedAt: status === 'finalized' ? new Date() : p.processedAt }
         : p
       )
     );
+    await queryClient.invalidateQueries({ queryKey: periodsKey });
   }, [queryClient, periodsKey]);
 
-  const addPayrollEntry = useCallback(async (entry: Omit<PayrollEntry, 'id' | 'createdAt' | 'updatedAt'>): Promise<PayrollEntry | null> => {
+  const addPayrollEntry = useCallback(async (entry: Omit<PayrollEntry, 'id' | 'createdAt' | 'updatedAt'>): Promise<PayrollEntry> => {
     const { data, error: err } = await supabase
       .from('payroll_entries')
       .insert({
@@ -130,7 +135,16 @@ export function useSupabasePayroll() {
         deductions: entry.deductions.total,
       })
       .select().single();
-    if (err) return null;
+    if (err) {
+      // L1.1: Live-kritisch — Insert-Fehler MUSS sichtbar werden,
+      // sonst zählt der Wizard "saved", obwohl die DB leer ist.
+      throw new Error(
+        `Lohnabrechnung für Mitarbeiter ${entry.employeeId} konnte nicht gespeichert werden: ${err.message}`
+      );
+    }
+    if (!data) {
+      throw new Error(`Lohnabrechnung für Mitarbeiter ${entry.employeeId}: keine Daten zurückgeliefert`);
+    }
     await queryClient.invalidateQueries({ queryKey: entriesKey });
     return dbToPayrollEntry(data, employeeMap);
   }, [tenantId, employeeMap, queryClient, entriesKey]);
