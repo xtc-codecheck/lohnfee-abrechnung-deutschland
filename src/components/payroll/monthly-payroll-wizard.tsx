@@ -241,6 +241,7 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
 
   const calculateAndPersistEntries = useCallback(async (periodId: string) => {
     let saved = 0;
+    const failed: string[] = [];
     for (const emp of activeEmployees) {
       try {
         const workingData = buildWorkingDataFromTimeEntries(emp.id);
@@ -254,10 +255,13 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
         await addPayrollEntry(entryToSave);
         saved++;
       } catch (err) {
-        console.error(`Fehler bei ${emp.personalData.firstName} ${emp.personalData.lastName}:`, err);
+        // L1.1: Fehler werden jetzt sichtbar — gezählt + zurückgegeben
+        const name = `${emp.personalData.firstName} ${emp.personalData.lastName}`;
+        failed.push(name);
+        console.error(`[payroll-persist] Insert fehlgeschlagen für ${name}:`, err);
       }
     }
-    return saved;
+    return { saved, failed };
   }, [activeEmployees, selectedYear, selectedMonth, addPayrollEntry, buildWorkingDataFromTimeEntries]);
 
   // ─── Auto-Run Engine ──────────────────────────────────────
