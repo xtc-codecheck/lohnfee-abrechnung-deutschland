@@ -3,6 +3,7 @@ import { Building2, Save, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageHeader } from "@/components/ui/page-header";
 import { useCompanySettings } from "@/hooks/use-company-settings";
@@ -28,6 +29,7 @@ export function CompanySettingsPage() {
     bank_name: '',
     contact_email: '',
     contact_phone: '',
+    besonderheiten: '',
   });
 
   // Sync form when settings load
@@ -46,6 +48,7 @@ export function CompanySettingsPage() {
       bank_name: settings.bank_name ?? '',
       contact_email: settings.contact_email ?? '',
       contact_phone: settings.contact_phone ?? '',
+      besonderheiten: (settings as any).besonderheiten ?? '',
     });
     setInitialized(true);
   }
