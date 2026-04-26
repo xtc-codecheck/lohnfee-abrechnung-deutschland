@@ -83,6 +83,15 @@ export function LohnkontoPage({ onBack }: LohnkontoPageProps) {
   const [entries, setEntries] = useState<DbEntry[]>([]);
   const [periods, setPeriods] = useState<DbPeriod[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [openMonths, setOpenMonths] = useState<Set<number>>(new Set());
+
+  const toggleMonth = (month: number) => {
+    setOpenMonths(prev => {
+      const next = new Set(prev);
+      if (next.has(month)) next.delete(month); else next.add(month);
+      return next;
+    });
+  };
 
   // Lade Daten wenn Mitarbeiter oder Jahr sich ändern
   useEffect(() => {
