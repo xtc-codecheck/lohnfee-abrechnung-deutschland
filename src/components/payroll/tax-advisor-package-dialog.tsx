@@ -487,13 +487,41 @@ export function TaxAdvisorPackageDialog({
           <CardContent className="space-y-4">
             {/* Perioden-Auswahl */}
             <div className="space-y-1.5">
-              <Label
-                htmlFor="pkg-period-select"
-                className="text-xs font-medium text-muted-foreground flex items-center gap-1.5"
-              >
-                <CalendarRange className="h-3.5 w-3.5" />
-                Abrechnungsperiode
-              </Label>
+              <div className="flex items-center justify-between gap-2 flex-wrap">
+                <Label
+                  htmlFor="pkg-period-select"
+                  className="text-xs font-medium text-muted-foreground flex items-center gap-1.5"
+                >
+                  <CalendarRange className="h-3.5 w-3.5" />
+                  Abrechnungsperiode
+                </Label>
+                <ToggleGroup
+                  type="single"
+                  size="sm"
+                  value={statusFilter}
+                  onValueChange={(v) => {
+                    if (v === 'closed' || v === 'all') setStatusFilter(v);
+                  }}
+                  disabled={isExporting}
+                  aria-label="Status-Filter für Perioden"
+                  className="h-7"
+                >
+                  <ToggleGroupItem
+                    value="closed"
+                    aria-label="Nur abgeschlossene Perioden"
+                    className="h-7 px-2 text-xs"
+                  >
+                    Nur abgeschlossen
+                  </ToggleGroupItem>
+                  <ToggleGroupItem
+                    value="all"
+                    aria-label="Inklusive Draft-Perioden"
+                    className="h-7 px-2 text-xs"
+                  >
+                    Inkl. Draft
+                  </ToggleGroupItem>
+                </ToggleGroup>
+              </div>
               <div className="flex items-center gap-2">
                 {/* Älterer Monat (sortiert neueste-zuerst → höherer Index) */}
                 <Button
