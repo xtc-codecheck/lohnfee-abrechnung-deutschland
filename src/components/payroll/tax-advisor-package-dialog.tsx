@@ -105,11 +105,23 @@ export function TaxAdvisorPackageDialog({
   // Periode + zugehörige Einträge aus Dropdown ableiten (Fallback: Props)
   const periodOptions = useMemo(() => {
     const list = allPeriods && allPeriods.length > 0 ? allPeriods : [periode];
-    return [...list].sort((a, b) => {
+
+    // Set der Perioden-IDs mit mindestens einer Abrechnung
+    const entriesPool =
+      allEntries && allEntries.length > 0 ? allEntries : payrollEntries;
+    const periodsWithEntries = new Set(entriesPool.map((e) => e.payrollPeriodId));
+
+    // Nur Perioden mit Abrechnungen behalten; aktuelle Prop-Periode immer beibehalten,
+    // damit der Dialog niemals leer/ungültig wird.
+    const filtered = list.filter(
+      (p) => periodsWithEntries.has(p.id) || p.id === periode.id,
+    );
+
+    return filtered.sort((a, b) => {
       if (a.year !== b.year) return b.year - a.year;
       return b.month - a.month;
     });
-  }, [allPeriods, periode]);
+  }, [allPeriods, allEntries, payrollEntries, periode]);
 
   // ─── Persistenz: zuletzt gewählte Periode pro Mandant ────────
   const storageKey = tenantId ? `tax-advisor-pkg:last-period:${tenantId}` : null;
