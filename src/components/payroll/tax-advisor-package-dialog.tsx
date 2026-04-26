@@ -665,16 +665,28 @@ export function TaxAdvisorPackageDialog({
                   Es ist nur eine Periode verfügbar.
                 </p>
               )}
-              {hiddenPeriodsCount > 0 && (
+              {(hiddenNoEntriesCount > 0 || hiddenDraftCount > 0) && (
                 <p className="text-xs text-muted-foreground flex items-start gap-1.5">
                   <AlertTriangle
                     className="h-3 w-3 mt-0.5 shrink-0 text-amber-600 dark:text-amber-400"
                     aria-hidden="true"
                   />
                   <span>
-                    {hiddenPeriodsCount === 1
-                      ? '1 Periode wurde ausgeblendet, weil dafür keine Lohnabrechnungen vorhanden sind.'
-                      : `${hiddenPeriodsCount} Perioden wurden ausgeblendet, weil dafür keine Lohnabrechnungen vorhanden sind.`}
+                    {hiddenNoEntriesCount > 0 && (
+                      <>
+                        {hiddenNoEntriesCount === 1
+                          ? '1 Periode ohne Lohnabrechnungen ausgeblendet.'
+                          : `${hiddenNoEntriesCount} Perioden ohne Lohnabrechnungen ausgeblendet.`}
+                      </>
+                    )}
+                    {hiddenNoEntriesCount > 0 && hiddenDraftCount > 0 && ' '}
+                    {hiddenDraftCount > 0 && (
+                      <>
+                        {hiddenDraftCount === 1
+                          ? '1 Draft-Periode ausgeblendet – wechseln Sie zu „Inkl. Draft", um sie anzuzeigen.'
+                          : `${hiddenDraftCount} Draft-Perioden ausgeblendet – wechseln Sie zu „Inkl. Draft", um sie anzuzeigen.`}
+                      </>
+                    )}
                   </span>
                 </p>
               )}
