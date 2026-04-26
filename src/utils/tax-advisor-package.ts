@@ -450,6 +450,10 @@ function buildReadme(
     '00_Begleitschreiben_<Periode>.pdf',
     '    Übergabeprotokoll mit Summen, Kontakt und Inhaltsverzeichnis.',
     '',
+    '00_So-importieren-Sie-die-Daten_<Periode>.pdf',
+    '    Schritt-für-Schritt-Anleitung zum Import in DATEV und Fibu-Systeme.',
+    '    Erläutert Formate (DATEV ENTF/EXTF), FiBu-Spalten und Importbereiche.',
+    '',
     '01_DATEV/',
     '    EXTF_Lohnbuchungen_<SKR>_<Periode>.csv',
     '    DATEV-Importdatei nach EXTF 7.0 Spezifikation.',
@@ -478,6 +482,219 @@ function buildReadme(
     'genannten Ansprechpartner.',
     '',
   ].join('\r\n');
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Import-Anleitung PDF
+// ─────────────────────────────────────────────────────────────────────────────
+
+function buildImportGuidePdf(
+  periode: PayrollPeriod,
+  datevConfig: DatevExportConfig,
+  monthLabel: string,
+): ArrayBuffer {
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const margin = 18;
+  const contentWidth = pageWidth - 2 * margin;
+  let y = margin;
+
+  const monthHuman = format(periode.startDate, 'MMMM yyyy', { locale: de });
+  const skr = datevConfig.kontenrahmen;
+
+  const ensureSpace = (needed: number) => {
+    if (y + needed > pageHeight - margin) {
+      doc.addPage();
+      y = margin;
+    }
+  };
+
+  const heading = (text: string, size = 13) => {
+    ensureSpace(10);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(size);
+    doc.setTextColor(0);
+    doc.text(text, margin, y);
+    y += size === 13 ? 6 : 5;
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+  };
+
+  const para = (text: string) => {
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    const lines = doc.splitTextToSize(text, contentWidth);
+    ensureSpace(lines.length * 4.6 + 2);
+    doc.text(lines, margin, y);
+    y += lines.length * 4.6 + 1;
+  };
+
+  const bullet = (text: string) => {
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    const lines = doc.splitTextToSize(text, contentWidth - 5);
+    ensureSpace(lines.length * 4.6 + 1);
+    doc.text('•', margin, y);
+    doc.text(lines, margin + 4, y);
+    y += lines.length * 4.6 + 0.5;
+  };
+
+  const code = (text: string) => {
+    doc.setFont('courier', 'normal');
+    doc.setFontSize(9);
+    const lines = doc.splitTextToSize(text, contentWidth - 4);
+    ensureSpace(lines.length * 4.2 + 4);
+    // hellgrauer Hintergrund
+    doc.setFillColor(243, 244, 246);
+    doc.rect(margin, y - 3, contentWidth, lines.length * 4.2 + 3, 'F');
+    doc.setTextColor(20);
+    doc.text(lines, margin + 2, y);
+    y += lines.length * 4.2 + 3;
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    doc.setTextColor(0);
+  };
+
+  // Titel
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(17);
+  doc.text('So importieren Sie die Daten', margin, y);
+  y += 7;
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(10);
+  doc.setTextColor(90);
+  doc.text(
+    `Anleitung zum Steuerberater-Paket · Periode ${monthHuman} · Kontenrahmen ${skr}`,
+    margin,
+    y,
+  );
+  doc.setTextColor(0);
+  y += 8;
+
+  // 1) Überblick Formate
+  heading('1. Welche Formate sind enthalten?');
+  para(
+    'Das Paket enthält drei voneinander unabhängige Datenformate. Importieren Sie nur EIN Format pro System – nicht mehrere parallel, sonst entstehen Doppelbuchungen.',
+  );
+  bullet(
+    'DATEV EXTF 7.0 (CSV): Offizielles DATEV-Importformat für Buchungsstapel. Direkter Import in DATEV Rechnungswesen / Kanzlei-Rechnungswesen.',
+  );
+  bullet(
+    'FiBu-Buchungsjournal (CSV): Universelles Soll/Haben-Journal für andere Buchhaltungs-Systeme (Lexware, Sage, addison u.a.) oder zur Sichtprüfung.',
+  );
+  bullet(
+    'Lohnarten-Excel (XLSX): Detail-Aufschlüsselung pro Mitarbeiter und Lohnart – nicht für den Buchungs-Import, sondern als Belegnachweis.',
+  );
+  y += 2;
+
+  // 2) DATEV ENTF/EXTF
+  heading('2. DATEV-Import (Datei: EXTF_Lohnbuchungen_' + skr + '_' + monthLabel + '.csv)');
+  para(
+    'Hinweis zu DATEV-Formaten: Das ältere Format hieß ENTF (Postversand-Format), wurde 2018 durch EXTF („Externes Format“) abgelöst. Diese Datei verwendet EXTF 7.0 mit dem 31-Feld-Header für Buchungsstapel – das aktuelle DATEV-Standardformat.',
+  );
+  para('Importbereich in DATEV Rechnungswesen:');
+  code(
+    'Bestand → Daten holen → Import → ASCII-Datei (DATEV-Format)\n' +
+      'Datei wählen → Format „EXTF / Buchungsstapel“\n' +
+      'Wirtschaftsjahr: ' +
+      format(datevConfig.wirtschaftsjahrBeginn, 'dd.MM.yyyy') +
+      '\n' +
+      'Sachkontenlänge: ' +
+      datevConfig.sachkontenlaenge +
+      ' (entsprechend ' +
+      skr +
+      ')\n' +
+      'Berater-Nr.: ' +
+      datevConfig.beraterNr +
+      '   Mandanten-Nr.: ' +
+      datevConfig.mandantenNr,
+  );
+  para('Eigenschaften der Datei:');
+  bullet('Kodierung: UTF-8 mit BOM (für Excel/DATEV korrekt darstellbar)');
+  bullet('Trennzeichen: Semikolon (;) – Textbegrenzer: Anführungszeichen (")');
+  bullet('Dezimaltrenner: Komma (,) · Datumsformat: TTMM (z.B. 3105 für 31.05.)');
+  bullet(
+    'Erste Zeile: 31-Feld-Header (Versionsinfo, Mandant, Konsolidierung). Ab Zeile 3 folgen die Buchungssätze.',
+  );
+  y += 2;
+
+  // 3) FiBu CSV
+  heading('3. FiBu-Buchungsjournal (Datei: Buchungsjournal_' + skr + '_' + monthLabel + '.csv)');
+  para(
+    'Universelles CSV-Journal für Buchhaltungssysteme ohne DATEV-Schnittstelle oder zur manuellen Prüfung. Alle Buchungen sind doppisch (Soll = Haben) und bereits ' +
+      skr +
+      '-Konten zugeordnet.',
+  );
+  para('Spaltenstruktur (Semikolon-getrennt, UTF-8 mit BOM):');
+  bullet('Lfd.Nr – fortlaufende Buchungsnummer im Stapel');
+  bullet('Datum – Buchungsdatum (TT.MM.JJJJ), in der Regel Periodenende');
+  bullet('Periode – Referenz auf die Lohn-Periode (z.B. „05/2025“)');
+  bullet('Belegnummer – interne Belegreferenz (LOHN-JJJJMM-NNN)');
+  bullet('Soll-Konto + Soll-Konto Bezeichnung – belasteter Sachkonten-Eintrag');
+  bullet('Haben-Konto + Haben-Konto Bezeichnung – entlasteter Sachkonten-Eintrag');
+  bullet('Betrag (EUR) – Buchungsbetrag, Komma als Dezimaltrenner');
+  bullet('Buchungstext – sprechender Text (z.B. „Lohnsteuer Mai 2025“)');
+  bullet('Mitarbeiter – Name (sofern personenbezogen, sonst leer)');
+  bullet('Kategorie – Buchungsart (Lohn/Gehalt, SV-AN, SV-AG, Steuer, Auszahlung)');
+  para(
+    'Ergänzend liegt im selben Ordner eine Saldenliste_' +
+      skr +
+      '_' +
+      monthLabel +
+      '.csv mit Soll-, Haben- und Saldo-Werten je Konto – ideal zur Plausibilitätsprüfung.',
+  );
+  y += 2;
+
+  // 4) Lohnarten Excel
+  heading('4. Lohnarten-Excel (Datei: Lohnarten_' + monthLabel + '.xlsx)');
+  para('Drei Tabellenblätter, ausschließlich zur Belegdokumentation – nicht für den FiBu-Import:');
+  bullet('„Zusammenfassung“ – ein Mitarbeiter pro Zeile mit Brutto, Steuern, SV, Netto');
+  bullet(
+    '„Lohnarten“ – jede angewandte Lohnart als Detailzeile (Code, Effekt, Betrag, ' +
+      skr +
+      '-Konto, Pauschalsteuer)',
+  );
+  bullet('„Summen je Lohnart“ – Aggregation über alle Mitarbeiter pro Lohnart-Code');
+  y += 2;
+
+  // 5) Empfohlener Ablauf
+  heading('5. Empfohlener Ablauf');
+  bullet('Begleitschreiben (00_Begleitschreiben_…pdf) öffnen und Summen abgleichen.');
+  bullet(
+    'Nur ein Buchungsformat in das Buchhaltungssystem importieren: entweder DATEV EXTF ODER FiBu-Journal.',
+  );
+  bullet(
+    'Nach dem Import die Saldenliste im Buchhaltungssystem mit der mitgelieferten Saldenliste vergleichen (Soll-Summe = Haben-Summe).',
+  );
+  bullet(
+    'Lohnarten-Excel zur Beleg-Ablage / Mitarbeiter-Dokumentation archivieren (10 Jahre, § 257 HGB).',
+  );
+  y += 2;
+
+  // 6) Bei Rückfragen
+  heading('6. Bei Abweichungen oder Rückfragen');
+  para(
+    'Wenden Sie sich an den im Begleitschreiben genannten Ansprechpartner. Bitte geben Sie die Periode (' +
+      monthHuman +
+      ') und die betroffene Datei an. Die Berechnungen folgen dem amtlichen BMF-PAP des jeweiligen Kalenderjahres.',
+  );
+
+  // Footer auf jeder Seite
+  const pages = doc.getNumberOfPages();
+  for (let i = 1; i <= pages; i++) {
+    doc.setPage(i);
+    doc.setFontSize(8);
+    doc.setTextColor(120);
+    doc.text(
+      `Import-Anleitung · ${monthHuman} · ${skr} · Seite ${i} / ${pages}`,
+      pageWidth / 2,
+      pageHeight - 8,
+      { align: 'center' },
+    );
+  }
+
+  return doc.output('arraybuffer');
 }
 
 function round2(v: number): number {
