@@ -103,7 +103,7 @@ export function TaxAdvisorPackageDialog({
   const [selectedPeriodId, setSelectedPeriodId] = useState<string>(periode.id);
 
   // Periode + zugehörige Einträge aus Dropdown ableiten (Fallback: Props)
-  const periodOptions = useMemo(() => {
+  const { periodOptions, hiddenPeriodsCount } = useMemo(() => {
     const list = allPeriods && allPeriods.length > 0 ? allPeriods : [periode];
 
     // Set der Perioden-IDs mit mindestens einer Abrechnung
@@ -116,11 +116,15 @@ export function TaxAdvisorPackageDialog({
     const filtered = list.filter(
       (p) => periodsWithEntries.has(p.id) || p.id === periode.id,
     );
+    const hidden = list.length - filtered.length;
 
-    return filtered.sort((a, b) => {
-      if (a.year !== b.year) return b.year - a.year;
-      return b.month - a.month;
-    });
+    return {
+      periodOptions: filtered.sort((a, b) => {
+        if (a.year !== b.year) return b.year - a.year;
+        return b.month - a.month;
+      }),
+      hiddenPeriodsCount: hidden,
+    };
   }, [allPeriods, allEntries, payrollEntries, periode]);
 
   // ─── Persistenz: zuletzt gewählte Periode pro Mandant ────────
@@ -500,6 +504,19 @@ export function TaxAdvisorPackageDialog({
               {periodOptions.length <= 1 && (
                 <p className="text-xs text-muted-foreground">
                   Es ist nur eine Periode verfügbar.
+                </p>
+              )}
+              {hiddenPeriodsCount > 0 && (
+                <p className="text-xs text-muted-foreground flex items-start gap-1.5">
+                  <AlertTriangle
+                    className="h-3 w-3 mt-0.5 shrink-0 text-amber-600 dark:text-amber-400"
+                    aria-hidden="true"
+                  />
+                  <span>
+                    {hiddenPeriodsCount === 1
+                      ? '1 Periode wurde ausgeblendet, weil dafür keine Lohnabrechnungen vorhanden sind.'
+                      : `${hiddenPeriodsCount} Perioden wurden ausgeblendet, weil dafür keine Lohnabrechnungen vorhanden sind.`}
+                  </span>
                 </p>
               )}
             </div>
