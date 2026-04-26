@@ -66,7 +66,7 @@ export function TaxAdvisorPackageDialog({
   trigger,
   onExportComplete,
 }: TaxAdvisorPackageDialogProps) {
-  const { data: companySettings } = useCompanySettings();
+  const { settings: companySettings } = useCompanySettings();
   const [open, setOpen] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [kontenrahmen, setKontenrahmen] = useState<Kontenrahmen>('SKR03');
