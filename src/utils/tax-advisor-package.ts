@@ -125,15 +125,15 @@ function buildFibuJournalCsv(buchungen: ReturnType<typeof generateFibuJournal>['
     [
       b.lfdNr,
       b.datum,
-      b.periode,
-      csvEsc(b.belegnummer),
+      csvEsc(b.referenz),
+      csvEsc(b.belegNr),
       b.sollKonto,
       csvEsc(b.sollKontoName),
       b.habenKonto,
       csvEsc(b.habenKontoName),
       fmtNum(b.betrag),
-      csvEsc(b.buchungstext),
-      csvEsc(b.mitarbeiterName ?? ''),
+      csvEsc(b.text),
+      csvEsc(b.employeeName ?? ''),
       b.kategorie,
     ].join(';'),
   );
@@ -168,11 +168,11 @@ function buildWageTypesWorkbook(entries: PayrollEntry[], periode: PayrollPeriod)
     const items = e.wageTypeLineItems ?? [];
     const pauschalSum = items.reduce((s, li) => s + (li.pauschalTaxAmount ?? 0), 0);
     return {
-      Mitarbeiter: `${e.employee.lastName}, ${e.employee.firstName}`,
-      Personalnummer: e.employee.personalNumber ?? '',
+      Mitarbeiter: `${e.employee.personalData.lastName}, ${e.employee.personalData.firstName}`,
+      'Mitarbeiter-ID': e.employee.id,
       Brutto: round2(e.salaryCalculation.grossSalary),
       Lohnsteuer: round2(e.salaryCalculation.taxes.incomeTax),
-      Soli: round2(e.salaryCalculation.taxes.solidaritySurcharge),
+      Soli: round2(e.salaryCalculation.taxes.solidarityTax),
       Kirchensteuer: round2(e.salaryCalculation.taxes.churchTax),
       'SV-AN': round2(e.salaryCalculation.socialSecurityContributions.total.employee),
       'SV-AG': round2(e.salaryCalculation.socialSecurityContributions.total.employer),
@@ -191,8 +191,8 @@ function buildWageTypesWorkbook(entries: PayrollEntry[], periode: PayrollPeriod)
     for (const li of items) {
       detailRows.push({
         Periode: `${String(periode.month).padStart(2, '0')}/${periode.year}`,
-        Mitarbeiter: `${entry.employee.lastName}, ${entry.employee.firstName}`,
-        Personalnummer: entry.employee.personalNumber ?? '',
+        Mitarbeiter: `${entry.employee.personalData.lastName}, ${entry.employee.personalData.firstName}`,
+        'Mitarbeiter-ID': entry.employee.id,
         'Lohnart-Code': li.code,
         Bezeichnung: li.name,
         Kategorie: li.category,
@@ -306,7 +306,7 @@ function buildCoverPdf(
       acc.brutto += e.salaryCalculation.grossSalary;
       acc.netto += e.finalNetSalary;
       acc.lst += e.salaryCalculation.taxes.incomeTax;
-      acc.soli += e.salaryCalculation.taxes.solidaritySurcharge;
+      acc.soli += e.salaryCalculation.taxes.solidarityTax;
       acc.kist += e.salaryCalculation.taxes.churchTax;
       acc.svAn += e.salaryCalculation.socialSecurityContributions.total.employee;
       acc.svAg += e.salaryCalculation.socialSecurityContributions.total.employer;
