@@ -544,8 +544,148 @@ export function generatePayrollBookings(
     belegNr,
     buchungstext: `Netto ${employeeName}`,
   }));
-  
+
+  // 10. LOHNARTEN — separate Buchungssätze pro Wage Type (P4)
+  // Statt im Sammel-Bruttolohn unterzugehen, erhält jede Lohnart eine eigene
+  // Buchungszeile auf das in der Lohnart hinterlegte SKR03/SKR04-Konto.
+  if (entry.wageTypeLineItems && entry.wageTypeLineItems.length > 0) {
+    for (const li of entry.wageTypeLineItems) {
+      const lines = createWageTypeBookingLines(li, {
+        kontenrahmen: config.kontenrahmen,
+        konten,
+        belegDatum,
+        belegNr,
+        employeeName,
+        kostenstelle: entry.employee.employmentData.department,
+      });
+      buchungen.push(...lines);
+    }
+  }
+
   return buchungen;
+}
+
+/**
+ * Erzeugt DATEV-Buchungszeilen für eine einzelne Lohnart.
+ *
+ * Mapping je nach Effekt:
+ *  - gross_taxable: Aufwand (Lohnart-Konto) an Verb. Löhne
+ *  - net_taxfree:   Aufwand (Lohnart-Konto) an Verb. Löhne
+ *  - in_kind:       Aufwand (Lohnart-Konto) an Verb. Löhne   (Sachbezug — Brutto)
+ *                   + Verb. Löhne an Lohnart-Konto           (Netto-Abzug, Sachbezug bleibt beim AN)
+ *  - net_deduction: Verb. Löhne an Lohnart-Konto             (Pfändung, Darlehen, …)
+ *  - pauschal:      Aufwand (Lohnart-Konto) an Verb. Löhne   (Auszahlungsbetrag an AN)
+ *
+ * Pauschale Lohnsteuer (sofern > 0) wird IMMER als zusätzliche Zeile gebucht:
+ *   Aufwand (Lohnart-Konto) an Verb. Finanzamt (pauschalsteuerAbfuehrung)
+ */
+export function createWageTypeBookingLines(
+  li: WageTypeLineItem,
+  ctx: {
+    kontenrahmen: Kontenrahmen;
+    konten: KontenrahmenKonten;
+    belegDatum: string;
+    belegNr: string;
+    employeeName: string;
+    kostenstelle?: string;
+  }
+): string[][] {
+  const { konten, belegDatum, belegNr, employeeName, kostenstelle } = ctx;
+  const out: string[][] = [];
+
+  // Konto aus der Lohnart, Fallback je nach Kategorie auf das passende Standard-Konto
+  const account = li.account || pickFallbackAccount(li, konten);
+  const text = `${li.code} ${li.name} ${employeeName}`;
+
+  if (li.amount > 0) {
+    switch (li.effect) {
+      case 'gross_taxable':
+      case 'net_taxfree':
+      case 'pauschal':
+        out.push(createBookingLine({
+          umsatz: li.amount,
+          sollHaben: 'S',
+          konto: account,
+          gegenKonto: konten.verbindlichkeitenLoehne,
+          belegDatum,
+          belegNr,
+          buchungstext: text,
+          kostenstelle,
+        }));
+        break;
+
+      case 'in_kind':
+        // Sachbezug: erst als Aufwand erfassen …
+        out.push(createBookingLine({
+          umsatz: li.amount,
+          sollHaben: 'S',
+          konto: account,
+          gegenKonto: konten.verbindlichkeitenLoehne,
+          belegDatum,
+          belegNr,
+          buchungstext: `${text} (Sachbezug)`,
+          kostenstelle,
+        }));
+        // … und vom Netto wieder abziehen (Mitarbeiter erhält die Sache, kein Geld)
+        out.push(createBookingLine({
+          umsatz: li.amount,
+          sollHaben: 'S',
+          konto: konten.verbindlichkeitenLoehne,
+          gegenKonto: account,
+          belegDatum,
+          belegNr,
+          buchungstext: `${text} (Netto-Abzug)`,
+        }));
+        break;
+
+      case 'net_deduction':
+        out.push(createBookingLine({
+          umsatz: li.amount,
+          sollHaben: 'S',
+          konto: konten.verbindlichkeitenLoehne,
+          gegenKonto: account,
+          belegDatum,
+          belegNr,
+          buchungstext: text,
+        }));
+        break;
+    }
+  }
+
+  // Pauschale Lohnsteuer (AG trägt) — eigene Buchung an Finanzamt
+  if (li.pauschalTaxAmount && li.pauschalTaxAmount > 0) {
+    out.push(createBookingLine({
+      umsatz: li.pauschalTaxAmount,
+      sollHaben: 'S',
+      konto: account,
+      gegenKonto: konten.pauschalsteuerAbfuehrung,
+      belegDatum,
+      belegNr,
+      buchungstext: `Pausch.LSt ${li.pauschalTaxRate ?? ''}% ${li.code} ${employeeName}`.trim(),
+      kostenstelle,
+    }));
+  }
+
+  return out;
+}
+
+/** Fallback-Konto, falls Lohnart kein eigenes SKR03/04-Konto hinterlegt hat. */
+function pickFallbackAccount(li: WageTypeLineItem, konten: KontenrahmenKonten): string {
+  switch (li.category) {
+    case 'sachbezug':
+      return konten.sachbezuege;
+    case 'vwl':
+      return konten.vermoegenswirksameLeistungen;
+    case 'pauschalsteuer':
+    case 'zuschuss':
+      return konten.sachbezuege;
+    case 'pfaendung':
+    case 'abzug':
+      return konten.verbindlichkeitenLoehne;
+    case 'bezug':
+    default:
+      return konten.loehneGehalt;
+  }
 }
 
 /**
