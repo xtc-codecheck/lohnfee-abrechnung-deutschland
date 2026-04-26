@@ -136,6 +136,16 @@ export function LohnkontoPage({ onBack }: LohnkontoPageProps) {
       const entry = period ? entries.find(e => e.payroll_period_id === period.id) : null;
 
       if (entry) {
+        // Lohnarten aus audit_data extrahieren (P4-Persistierung)
+        let wageTypeLineItems: WageTypeLineItem[] | undefined;
+        const auditData = entry.audit_data;
+        if (auditData && typeof auditData === 'object' && !Array.isArray(auditData)) {
+          const items = (auditData as { wageTypeLineItems?: unknown }).wageTypeLineItems;
+          if (Array.isArray(items) && items.length > 0) {
+            wageTypeLineItems = items as WageTypeLineItem[];
+          }
+        }
+
         const row: LohnkontoRow = {
           month,
           monthName: MONTH_NAMES[month - 1],
@@ -158,6 +168,7 @@ export function LohnkontoPage({ onBack }: LohnkontoPageProps) {
           bonus: Number(entry.bonus ?? 0),
           deductions: Number(entry.deductions ?? 0),
           finalNetSalary: Number(entry.final_net_salary),
+          wageTypeLineItems,
         };
         rows.push(row);
 
