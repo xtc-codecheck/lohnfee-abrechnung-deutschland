@@ -92,7 +92,11 @@ export async function generateTaxAdvisorPackage(
   const pdfBytes = buildCoverPdf(entries, periode, journal, options);
   zip.file(`00_Begleitschreiben_${monthLabel}.pdf`, pdfBytes);
 
-  // 5) README
+  // 5) Import-Anleitung PDF (DATEV ENTF/EXTF, FiBu-Spalten, Importbereiche)
+  const importGuideBytes = buildImportGuidePdf(periode, datevConfig, monthLabel);
+  zip.file(`00_So-importieren-Sie-die-Daten_${monthLabel}.pdf`, importGuideBytes);
+
+  // 6) README
   const readme = buildReadme(entries, periode, datevConfig, options, monthLabelHuman);
   zip.file('README.txt', readme);
 
@@ -363,11 +367,12 @@ function buildCoverPdf(
   doc.setFont('helvetica', 'normal');
   const inhalt = [
     '1. 00_Begleitschreiben_<Periode>.pdf — dieses Dokument',
-    '2. 01_DATEV/EXTF_Lohnbuchungen_<SKR>_<Periode>.csv — DATEV-Importdatei (EXTF 7.0)',
-    '3. 02_FiBu/Buchungsjournal_<SKR>_<Periode>.csv — Soll/Haben-Journal',
-    '4. 02_FiBu/Saldenliste_<SKR>_<Periode>.csv — Saldenliste pro Konto',
-    '5. 03_Lohnarten/Lohnarten_<Periode>.xlsx — Lohnarten-Aufschlüsselung pro Mitarbeiter',
-    '6. README.txt — Inhaltsverzeichnis und Hinweise',
+    '2. 00_So-importieren-Sie-die-Daten_<Periode>.pdf — Schritt-für-Schritt Import-Anleitung',
+    '3. 01_DATEV/EXTF_Lohnbuchungen_<SKR>_<Periode>.csv — DATEV-Importdatei (EXTF 7.0)',
+    '4. 02_FiBu/Buchungsjournal_<SKR>_<Periode>.csv — Soll/Haben-Journal',
+    '5. 02_FiBu/Saldenliste_<SKR>_<Periode>.csv — Saldenliste pro Konto',
+    '6. 03_Lohnarten/Lohnarten_<Periode>.xlsx — Lohnarten-Aufschlüsselung pro Mitarbeiter',
+    '7. README.txt — Inhaltsverzeichnis und Hinweise',
   ];
   for (const line of inhalt) {
     const wrapped = doc.splitTextToSize(line, pageWidth - 2 * margin);
