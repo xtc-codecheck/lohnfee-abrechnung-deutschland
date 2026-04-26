@@ -506,6 +506,19 @@ export function TaxAdvisorPackageDialog({
                   Es ist nur eine Periode verfügbar.
                 </p>
               )}
+              {hiddenPeriodsCount > 0 && (
+                <p className="text-xs text-muted-foreground flex items-start gap-1.5">
+                  <AlertTriangle
+                    className="h-3 w-3 mt-0.5 shrink-0 text-amber-600 dark:text-amber-400"
+                    aria-hidden="true"
+                  />
+                  <span>
+                    {hiddenPeriodsCount === 1
+                      ? '1 Periode wurde ausgeblendet, weil dafür keine Lohnabrechnungen vorhanden sind.'
+                      : `${hiddenPeriodsCount} Perioden wurden ausgeblendet, weil dafür keine Lohnabrechnungen vorhanden sind.`}
+                  </span>
+                </p>
+              )}
             </div>
 
               <div className="flex flex-wrap items-center gap-2">
