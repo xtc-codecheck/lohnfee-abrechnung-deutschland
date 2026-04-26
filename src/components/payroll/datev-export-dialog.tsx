@@ -5,7 +5,7 @@
  * mit Auswahl von SKR03 oder SKR04 Kontenrahmen.
  */
 
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -55,6 +55,7 @@ import {
 } from '@/utils/datev-export';
 import { format } from 'date-fns';
 import { de } from 'date-fns/locale';
+import { useTenant } from '@/contexts/tenant-context';
 
 interface DatevExportDialogProps {
   payrollEntries: PayrollEntry[];
@@ -62,22 +63,86 @@ interface DatevExportDialogProps {
   onExportComplete?: () => void;
 }
 
+const STORAGE_KEY_PREFIX = 'datev-kontenrahmen';
+
+function buildStorageKey(tenantId: string | null | undefined, year: number, month: number) {
+  const t = tenantId ?? 'default';
+  const m = String(month).padStart(2, '0');
+  return `${STORAGE_KEY_PREFIX}:${t}:${year}-${m}`;
+}
+
+function loadStoredKontenrahmen(
+  tenantId: string | null | undefined,
+  year: number,
+  month: number,
+): Kontenrahmen | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const monthly = window.localStorage.getItem(buildStorageKey(tenantId, year, month));
+    if (monthly === 'SKR03' || monthly === 'SKR04') return monthly;
+    // Fallback: letzte Mandanten-Auswahl
+    const tenantFallback = window.localStorage.getItem(
+      `${STORAGE_KEY_PREFIX}:${tenantId ?? 'default'}:last`,
+    );
+    if (tenantFallback === 'SKR03' || tenantFallback === 'SKR04') return tenantFallback;
+  } catch {
+    /* ignore */
+  }
+  return null;
+}
+
+function persistKontenrahmen(
+  tenantId: string | null | undefined,
+  year: number,
+  month: number,
+  value: Kontenrahmen,
+) {
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.setItem(buildStorageKey(tenantId, year, month), value);
+    window.localStorage.setItem(`${STORAGE_KEY_PREFIX}:${tenantId ?? 'default'}:last`, value);
+  } catch {
+    /* ignore */
+  }
+}
+
 export function DatevExportDialog({
   payrollEntries,
   periode,
   onExportComplete,
 }: DatevExportDialogProps) {
+  const { tenantId } = useTenant();
   const [open, setOpen] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
-  const [config, setConfig] = useState<DatevExportConfig>(getDefaultDatevConfig());
+  const [config, setConfig] = useState<DatevExportConfig>(() => {
+    const base = getDefaultDatevConfig();
+    const stored = loadStoredKontenrahmen(tenantId, periode.year, periode.month);
+    return { ...base, kontenrahmen: stored ?? base.kontenrahmen };
+  });
   const [includeSummary, setIncludeSummary] = useState(true);
   const [separateFiles, setSeparateFiles] = useState(false);
+  const [savedFromStorage, setSavedFromStorage] = useState<boolean>(() =>
+    loadStoredKontenrahmen(tenantId, periode.year, periode.month) !== null,
+  );
+
+  // Bei Wechsel von Mandant/Monat erneut laden
+  useEffect(() => {
+    const stored = loadStoredKontenrahmen(tenantId, periode.year, periode.month);
+    setSavedFromStorage(stored !== null);
+    if (stored) {
+      setConfig((prev) => (prev.kontenrahmen === stored ? prev : { ...prev, kontenrahmen: stored }));
+    }
+  }, [tenantId, periode.year, periode.month]);
 
   const handleConfigChange = <K extends keyof DatevExportConfig>(
     key: K,
     value: DatevExportConfig[K]
   ) => {
     setConfig(prev => ({ ...prev, [key]: value }));
+    if (key === 'kontenrahmen') {
+      persistKontenrahmen(tenantId, periode.year, periode.month, value as Kontenrahmen);
+      setSavedFromStorage(true);
+    }
   };
 
   const handleExport = async () => {
@@ -92,6 +157,9 @@ export function DatevExportDialog({
     setIsExporting(true);
 
     try {
+      // Auswahl beim Export ebenfalls persistieren (Sicherheitsnetz)
+      persistKontenrahmen(tenantId, periode.year, periode.month, config.kontenrahmen);
+
       // Hauptexport generieren
       const csvContent = generateDatevExport(payrollEntries, periode, config);
       
@@ -140,6 +208,11 @@ export function DatevExportDialog({
 
   // Vorschau der verwendeten Konten
   const previewKonten = config.kontenrahmen === 'SKR03' ? SKR03_KONTEN : SKR04_KONTEN;
+
+  const periodLabel = useMemo(
+    () => format(periode.startDate, 'MMMM yyyy', { locale: de }),
+    [periode.startDate],
+  );
 
   // Berechne Statistiken
   const stats = {
@@ -199,7 +272,18 @@ export function DatevExportDialog({
 
           {/* Kontenrahmen Auswahl */}
           <div className="space-y-3">
-            <Label className="text-base font-medium">Kontenrahmen</Label>
+            <div className="flex items-center justify-between gap-2">
+              <Label className="text-base font-medium">Kontenrahmen</Label>
+              {savedFromStorage ? (
+                <Badge variant="secondary" className="text-xs">
+                  Gespeichert für {periodLabel}
+                </Badge>
+              ) : (
+                <Badge variant="outline" className="text-xs">
+                  Standard: SKR04
+                </Badge>
+              )}
+            </div>
             <RadioGroup
               value={config.kontenrahmen}
               onValueChange={(value) => handleConfigChange('kontenrahmen', value as Kontenrahmen)}
@@ -234,6 +318,9 @@ export function DatevExportDialog({
                 </span>
               </Label>
             </RadioGroup>
+            <p className="text-xs text-muted-foreground">
+              Die Auswahl wird automatisch pro Mandant und Abrechnungsmonat gespeichert.
+            </p>
           </div>
 
           <Separator />
