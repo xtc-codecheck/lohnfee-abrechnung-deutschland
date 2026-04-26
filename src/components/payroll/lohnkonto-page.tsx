@@ -17,17 +17,22 @@
  */
 
 import { useState, useEffect, useMemo } from 'react';
-import { ArrowLeft, FileText, Download, Loader2 } from 'lucide-react';
+import { ArrowLeft, FileText, Download, Loader2, ChevronRight, Receipt } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { PageHeader } from '@/components/ui/page-header';
 import { HelpTooltip } from '@/components/ui/help-tooltip';
 import { HELP } from '@/constants/help-glossary';
 import { supabase } from '@/integrations/supabase/client';
 import { useEmployees } from '@/contexts/employee-context';
 import { Tables } from '@/integrations/supabase/types';
+import type { WageTypeLineItem } from '@/utils/wage-types-integration';
+import { CATEGORY_LABELS, type WageTypeCategory } from '@/types/wage-types';
+import { cn } from '@/lib/utils';
 
 type DbEntry = Tables<'payroll_entries'>;
 type DbPeriod = Tables<'payroll_periods'>;
@@ -54,6 +59,7 @@ interface LohnkontoRow {
   bonus: number;
   deductions: number;
   finalNetSalary: number;
+  wageTypeLineItems?: WageTypeLineItem[];
 }
 
 interface LohnkontoSummary {
