@@ -255,7 +255,14 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
         };
         const result = calculatePayrollEntry(input);
         const entryToSave = { ...result.entry, payrollPeriodId: periodId };
-        await addPayrollEntry(entryToSave);
+        const persisted = await addPayrollEntry(entryToSave);
+        // Guardian-Historie SOFORT mitschreiben (sonst rutschen Auto-Run-Läufe
+        // an der Anomalie-Erkennung vorbei – der manuelle Pfad tat das schon).
+        try {
+          await addToHistory(persisted);
+        } catch (histErr) {
+          console.warn('[payroll-persist] Guardian-Historie fehlgeschlagen:', histErr);
+        }
         saved++;
       } catch (err) {
         // L1.1: Fehler werden jetzt sichtbar — gezählt + zurückgegeben
@@ -265,7 +272,20 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
       }
     }
     return { saved, failed };
-  }, [activeEmployees, selectedYear, selectedMonth, addPayrollEntry, buildWorkingDataFromTimeEntries, wageTypesByEmployee]);
+  }, [activeEmployees, selectedYear, selectedMonth, addPayrollEntry, addToHistory, buildWorkingDataFromTimeEntries, wageTypesByEmployee]);
+
+  /**
+   * Wiederverwendung statt Doppel-Insert:
+   * Wenn bereits eine Draft-Periode für diesen Monat existiert, nutzen wir sie.
+   * Andernfalls neu anlegen. Verhindert Zombie-Perioden bei Wiederholungs-Klicks.
+   */
+  const ensurePayrollPeriod = useCallback(async () => {
+    const existing = payrollPeriods.find(
+      p => p.month === selectedMonth && p.year === selectedYear
+    );
+    if (existing) return existing;
+    return await createPayrollPeriod(selectedYear, selectedMonth);
+  }, [payrollPeriods, selectedYear, selectedMonth, createPayrollPeriod]);
 
   // ─── Auto-Run Engine ──────────────────────────────────────
   const startAutoRun = useCallback(async () => {
@@ -307,7 +327,17 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
       if (step === 2 && !checked.completed) {
         log('📊 Abrechnung wird erstellt...');
         try {
-          const period = await createPayrollPeriod(selectedYear, selectedMonth);
+          if (activeEmployees.length === 0) {
+            log('⏹ Keine aktiven Mitarbeiter – Abrechnung übersprungen');
+            checked.criticalWarnings.push('Keine aktiven Mitarbeiter vorhanden');
+            statuses[step] = checked;
+            setStepStatuses([...statuses]);
+            setAutoRunPaused(true);
+            autoRunRef.current = false;
+            setAutoRunActive(false);
+            return;
+          }
+          const period = await ensurePayrollPeriod();
           if (period) {
             log('📊 Abrechnungen werden berechnet und gespeichert...');
             const { saved, failed } = await calculateAndPersistEntries(period.id);
@@ -323,6 +353,14 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
               autoRunRef.current = false;
               setAutoRunActive(false);
               return;
+            }
+            // Periode auf 'calculated' setzen, sonst sehen DATEV/Lohnkonto/Meldewesen den Lauf nicht.
+            try {
+              await updatePayrollPeriodStatus(period.id, 'calculated');
+              log('✅ Periode als "calculated" markiert');
+            } catch (statusErr) {
+              console.error('[payroll-persist] Status-Update fehlgeschlagen:', statusErr);
+              log('⚠️ Periodenstatus konnte nicht aktualisiert werden (Daten sind aber gespeichert)');
             }
           }
           checked.completed = true;
@@ -354,7 +392,7 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
       setAutoRunActive(false);
       autoRunRef.current = false;
     }
-  }, [checkStep, createPayrollPeriod, calculateAndPersistEntries, selectedYear, selectedMonth]);
+  }, [checkStep, ensurePayrollPeriod, calculateAndPersistEntries, updatePayrollPeriodStatus, activeEmployees.length]);
 
   const stopAutoRun = useCallback(() => {
     autoRunRef.current = false;
@@ -408,7 +446,17 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
       if (step === 2 && !checked.completed) {
         log('📊 Abrechnung wird erstellt...');
         try {
-          const period = await createPayrollPeriod(selectedYear, selectedMonth);
+          if (activeEmployees.length === 0) {
+            log('⏹ Keine aktiven Mitarbeiter – Abrechnung übersprungen');
+            checked.criticalWarnings.push('Keine aktiven Mitarbeiter vorhanden');
+            statuses[step] = checked;
+            setStepStatuses([...statuses]);
+            setAutoRunPaused(true);
+            autoRunRef.current = false;
+            setAutoRunActive(false);
+            return;
+          }
+          const period = await ensurePayrollPeriod();
           if (period) {
             const { saved, failed } = await calculateAndPersistEntries(period.id);
             log(`✅ ${saved}/${activeEmployees.length} Abrechnungen gespeichert`);
@@ -423,6 +471,13 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
               autoRunRef.current = false;
               setAutoRunActive(false);
               return;
+            }
+            try {
+              await updatePayrollPeriodStatus(period.id, 'calculated');
+              log('✅ Periode als "calculated" markiert');
+            } catch (statusErr) {
+              console.error('[payroll-persist] Status-Update fehlgeschlagen:', statusErr);
+              log('⚠️ Periodenstatus konnte nicht aktualisiert werden (Daten sind aber gespeichert)');
             }
           }
           checked.completed = true;
@@ -473,12 +528,22 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
   /**
    * Schritt 1 (Manueller Modus): Berechnet alle Abrechnungen IM SPEICHER
    * (ohne zu persistieren) und öffnet den Pre-Flight-Check-Dialog.
+   *
+   * WICHTIG: Es wird HIER bewusst KEINE payroll_period angelegt – sonst
+   * bleiben Zombie-Perioden zurück, wenn der User im Pre-Flight abbricht.
+   * Die Periode wird erst in handleConfirmSave() angelegt.
    */
   const handleCreatePayroll = async () => {
     setIsProcessing(true);
     try {
-      const period = await createPayrollPeriod(selectedYear, selectedMonth);
-      if (!period) throw new Error('Periode konnte nicht erstellt werden');
+      if (activeEmployees.length === 0) {
+        toast({
+          title: 'Keine aktiven Mitarbeiter',
+          description: 'Es gibt keine Mitarbeiter, für die eine Abrechnung erstellt werden könnte.',
+          variant: 'destructive',
+        });
+        return;
+      }
 
       const calculated: PayrollEntry[] = [];
       for (const emp of activeEmployees) {
@@ -494,7 +559,7 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
           calculated.push({
             ...result.entry,
             id: '',
-            payrollPeriodId: period.id,
+            payrollPeriodId: '', // wird in handleConfirmSave gesetzt
             createdAt: new Date(),
             updatedAt: new Date(),
           } as PayrollEntry);
@@ -513,7 +578,7 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
       }
 
       setPendingEntries(calculated);
-      setPendingPeriodId(period.id);
+      setPendingPeriodId(null); // Periode wird erst beim Confirm angelegt
       setPreflightOpen(true);
     } catch (error) {
       toast({
@@ -528,16 +593,29 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
 
   /**
    * Schritt 2: Nach Pre-Flight-Bestätigung → Persistieren + Guardian-Historie + Status.
+   * Legt die payroll_period erst JETZT an (oder verwendet eine bestehende Draft-Periode).
    */
   const handleConfirmSave = async () => {
-    if (!pendingPeriodId || pendingEntries.length === 0) return;
+    if (pendingEntries.length === 0) return;
     try {
+      // Periode lazy anlegen / wiederverwenden
+      const period = await ensurePayrollPeriod();
+      if (!period) {
+        toast({
+          title: 'Periode konnte nicht angelegt werden',
+          description: 'Bitte erneut versuchen.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
       let saved = 0;
       const failed: string[] = [];
       for (const entry of pendingEntries) {
         try {
-          await addPayrollEntry(entry);
-          await addToHistory(entry);
+          // payrollPeriodId aus der frisch angelegten Periode setzen
+          const persisted = await addPayrollEntry({ ...entry, payrollPeriodId: period.id });
+          await addToHistory(persisted);
           saved++;
         } catch (err) {
           const emp = activeEmployees.find(e => e.id === entry.employeeId);
@@ -557,7 +635,7 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
         return;
       }
 
-      await updatePayrollPeriodStatus(pendingPeriodId, 'calculated');
+      await updatePayrollPeriodStatus(period.id, 'calculated');
 
       const newStatuses = [...stepStatuses];
       newStatuses[2] = { ...newStatuses[2], completed: true, approved: true };

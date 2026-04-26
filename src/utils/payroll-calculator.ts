@@ -433,6 +433,7 @@ export function calculatePayrollEntry(input: PayrollCalculationInput): PayrollCa
     deductions,
     additions,
     finalNetSalary,
+    wageTypeLineItems: wageTypesImpact?.lineItems,
   };
   
   // 13. Audit finalisieren
