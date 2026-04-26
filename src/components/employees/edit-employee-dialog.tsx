@@ -16,6 +16,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { PdfUploadTab } from "./pdf-upload-tab";
 import { EmployeeWageTypesCard } from "./employee-wage-types-card";
+import { useAuth } from "@/contexts/auth-context";
+import { detectUserPayslipLanguage } from "@/utils/user-locale";
 
 interface EditEmployeeDialogProps {
   employee: Employee | null;
@@ -26,12 +28,23 @@ interface EditEmployeeDialogProps {
 
 export function EditEmployeeDialog({ employee, open, onOpenChange, onSave }: EditEmployeeDialogProps) {
   const [formData, setFormData] = useState<Partial<Employee>>({});
+  const { user } = useAuth();
+  const userPayslipDefault = detectUserPayslipLanguage(user);
 
   useEffect(() => {
     if (employee) {
-      setFormData(employee);
+      // Falls der Mitarbeiter noch keine explizite Lohnzettel-Sprache hat,
+      // schlagen wir den Default des angemeldeten Users vor.
+      const merged: Employee = {
+        ...employee,
+        personalData: {
+          ...employee.personalData,
+          payslipLanguage: employee.personalData.payslipLanguage ?? userPayslipDefault,
+        },
+      };
+      setFormData(merged);
     }
-  }, [employee]);
+  }, [employee, userPayslipDefault]);
 
   const handleSave = () => {
     if (formData && employee) {
