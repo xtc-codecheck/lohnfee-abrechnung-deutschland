@@ -233,7 +233,7 @@ export function EditEmployeeDialog({ employee, open, onOpenChange, onSave }: Edi
                   <div>
                     <Label htmlFor="payslipLanguage">Sprache Lohnzettel</Label>
                     <Select
-                      value={formData.personalData.payslipLanguage ?? 'de'}
+                      value={formData.personalData.payslipLanguage ?? userPayslipDefault}
                       onValueChange={(value) => updatePersonalData('payslipLanguage', value as 'de' | 'en')}
                     >
                       <SelectTrigger id="payslipLanguage">
