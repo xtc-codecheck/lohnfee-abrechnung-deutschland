@@ -107,6 +107,7 @@ export function TaxAdvisorPackageDialog({
   const [contactEmail, setContactEmail] = useState('');
   const [notes, setNotes] = useState('');
   const [selectedPeriodId, setSelectedPeriodId] = useState<string>(periode.id);
+  const [periodPickerOpen, setPeriodPickerOpen] = useState(false);
 
   // Periode + zugehörige Einträge aus Dropdown ableiten (Fallback: Props)
   const periodOptions = useMemo(() => {
@@ -154,6 +155,7 @@ export function TaxAdvisorPackageDialog({
   // Auswahl persistieren (nutzt year-month statt DB-ID, damit es Mandant-übergreifend stabil ist)
   const handlePeriodChange = (id: string) => {
     setSelectedPeriodId(id);
+    setPeriodPickerOpen(false);
     if (!storageKey) return;
     const next = periodOptions.find((p) => p.id === id);
     if (!next) return;
