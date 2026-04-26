@@ -26,6 +26,12 @@ export interface PersonalData {
   socialSecurityNumber: string;
   childAllowances: number;
   numberOfChildren?: number; // Für PV-Kinderabschläge (seit 07/2023), default 0
+  /**
+   * Sprache des Lohnzettel-PDFs ("de" = deutsch, "en" = englisch).
+   * Default: "de". Englische Fassung dient als Übersetzungshilfe;
+   * rechtsverbindlich bleibt die deutsche Version.
+   */
+  payslipLanguage?: 'de' | 'en';
 }
 
 export interface Address {

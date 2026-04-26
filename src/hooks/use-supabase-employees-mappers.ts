@@ -112,6 +112,7 @@ export function dbToEmployee(row: DbEmployee): Employee {
       childAllowances: Number(row.children_allowance ?? 0),
       numberOfChildren: Number((row as any).number_of_children ?? 0),
       relationshipStatus: 'single',
+      payslipLanguage: ((row as any).payslip_language === 'en' ? 'en' : 'de'),
     },
     employmentData: {
       employmentType: (row.employment_type as EmploymentType) ?? 'fulltime',
