@@ -186,7 +186,7 @@ export function ExportManager({
   function generateWageTypeDetailRows(): (string | number)[][] | null {
     const detail: (string | number)[][] = [[
       'Monat',
-      'Personalnr.',
+      'Mitarbeiter-ID',
       'Mitarbeiter',
       'Lohnart-Code',
       'Lohnart-Name',
@@ -203,13 +203,13 @@ export function ExportManager({
         const items = entry.wageTypeLineItems;
         if (!items || items.length === 0) continue;
         const empName = `${entry.employee.personalData?.firstName ?? ''} ${entry.employee.personalData?.lastName ?? ''}`.trim();
-        const persNr = entry.employee.personalData?.personalNumber ?? '';
+        const empId = entry.employee.id ?? entry.employeeId ?? '';
         for (const li of items) {
           if (li.amount === 0 && (li.pauschalTaxAmount ?? 0) === 0) continue;
           any = true;
           detail.push([
             periodKey(period),
-            persNr,
+            empId,
             empName,
             li.code,
             li.name,
