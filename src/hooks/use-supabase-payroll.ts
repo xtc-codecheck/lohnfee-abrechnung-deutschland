@@ -10,6 +10,7 @@ import { PayrollPeriod, PayrollEntry, PayrollReport, PayrollStatus } from '@/typ
 import { Employee } from '@/types/employee';
 import { queryKeys } from '@/lib/query-keys';
 import { dbToPeriod, dbToPayrollEntry } from './use-supabase-payroll-mappers';
+import type { Json } from '@/integrations/supabase/types';
 
 export function useSupabasePayroll() {
   const { employees } = useEmployees();
@@ -134,9 +135,9 @@ export function useSupabasePayroll() {
         overtime_pay: entry.additions.overtimePay,
         deductions: entry.deductions.total,
         // Lohnarten-Aufschlüsselung in JSONB (für PDF, DATEV, Lohnkonto, Audit)
-        audit_data: entry.wageTypeLineItems && entry.wageTypeLineItems.length > 0
+        audit_data: (entry.wageTypeLineItems && entry.wageTypeLineItems.length > 0
           ? { wageTypeLineItems: entry.wageTypeLineItems }
-          : null,
+          : null) as Json,
       })
       .select().single();
     if (err) {
