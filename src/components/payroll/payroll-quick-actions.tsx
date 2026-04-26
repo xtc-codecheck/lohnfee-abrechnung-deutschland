@@ -1,7 +1,8 @@
-import { Plus, Settings, ClipboardList, Clock, Shield, Download, BookOpen, Baby, Wand2, BookOpenCheck } from "lucide-react";
+import { Plus, Settings, ClipboardList, Clock, Shield, Download, BookOpen, Baby, Wand2, BookOpenCheck, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { DatevExportDialog } from "./datev-export-dialog";
+import { TaxAdvisorPackageDialog } from "./tax-advisor-package-dialog";
 import { PayrollEntry, PayrollPeriod } from "@/types/payroll";
 
 interface PayrollQuickActionsProps {
@@ -173,6 +174,26 @@ export function PayrollQuickActions({
             />
           ) : (
             <Button variant="outline" className="w-full" disabled>Keine Abrechnungen vorhanden</Button>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card className="shadow-card hover:shadow-elegant transition-shadow border-primary/30 bg-gradient-to-br from-primary/10 to-accent/20">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Package className="h-5 w-5 text-primary" />
+            Steuerberater-Paket
+          </CardTitle>
+          <CardDescription>One-Click ZIP: DATEV + FiBu-Journal + Lohnarten + Begleit-PDF</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {sortedPeriods.length > 0 && payrollEntries.length > 0 ? (
+            <TaxAdvisorPackageDialog
+              payrollEntries={payrollEntries.filter(e => e.payrollPeriodId === sortedPeriods[0]?.id)}
+              periode={sortedPeriods[0]}
+            />
+          ) : (
+            <Button className="w-full bg-gradient-primary hover:opacity-90" disabled>Keine Abrechnungen vorhanden</Button>
           )}
         </CardContent>
       </Card>
