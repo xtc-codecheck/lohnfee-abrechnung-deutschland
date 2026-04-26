@@ -2,6 +2,8 @@
 
 import { Employee, SalaryCalculation } from './employee';
 
+import type { WageTypeLineItem } from '@/utils/wage-types-integration';
+
 export interface PayrollPeriod {
   id: string;
   year: number;
@@ -23,6 +25,8 @@ export interface PayrollEntry {
   deductions: Deductions;
   additions: Additions;
   finalNetSalary: number;
+  /** Aufschlüsselung der angewandten Lohnarten (P4) — für PDF & DATEV */
+  wageTypeLineItems?: WageTypeLineItem[];
   createdAt: Date;
   updatedAt: Date;
 }
