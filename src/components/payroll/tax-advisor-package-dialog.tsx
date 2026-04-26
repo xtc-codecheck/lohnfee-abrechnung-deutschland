@@ -5,7 +5,7 @@
  * Lohnarten-Excel und Begleit-PDF für die Übergabe an den Steuerberater.
  */
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -60,6 +60,7 @@ import {
 import type { Kontenrahmen } from '@/utils/datev-export';
 import { generateFibuJournal } from '@/utils/fibu-booking';
 import { useCompanySettings } from '@/hooks/use-company-settings';
+import { useTenant } from '@/contexts/tenant-context';
 
 interface TaxAdvisorPackageDialogProps {
   payrollEntries: PayrollEntry[];
@@ -94,6 +95,7 @@ export function TaxAdvisorPackageDialog({
   allEntries,
 }: TaxAdvisorPackageDialogProps) {
   const { settings: companySettings } = useCompanySettings();
+  const { tenantId } = useTenant();
   const [open, setOpen] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [kontenrahmen, setKontenrahmen] = useState<Kontenrahmen>('SKR03');
@@ -125,6 +127,43 @@ export function TaxAdvisorPackageDialog({
 
   const activePeriod: PayrollPeriod =
     periodOptions.find((p) => p.id === selectedPeriodId) ?? periode;
+
+  // ─── Persistenz: zuletzt gewählte Periode pro Mandant ────────
+  const storageKey = tenantId ? `tax-advisor-pkg:last-period:${tenantId}` : null;
+
+  // Beim Öffnen: gespeicherten Monat (YYYY-MM) auf eine vorhandene Periode mappen.
+  useEffect(() => {
+    if (!open || !storageKey) return;
+    try {
+      const stored = localStorage.getItem(storageKey);
+      if (!stored) return;
+      const match = periodOptions.find(
+        (p) => `${p.year}-${String(p.month).padStart(2, '0')}` === stored,
+      );
+      if (match && match.id !== selectedPeriodId) {
+        setSelectedPeriodId(match.id);
+      }
+    } catch {
+      /* localStorage nicht verfügbar – ignorieren */
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, storageKey]);
+
+  // Auswahl persistieren (year-month statt DB-ID, damit Mandant-übergreifend stabil)
+  const handlePeriodChange = (id: string) => {
+    setSelectedPeriodId(id);
+    if (!storageKey) return;
+    const next = periodOptions.find((p) => p.id === id);
+    if (!next) return;
+    try {
+      localStorage.setItem(
+        storageKey,
+        `${next.year}-${String(next.month).padStart(2, '0')}`,
+      );
+    } catch {
+      /* ignorieren */
+    }
+  };
 
   const activeEntries: PayrollEntry[] = useMemo(() => {
     if (allEntries && allEntries.length > 0) {
