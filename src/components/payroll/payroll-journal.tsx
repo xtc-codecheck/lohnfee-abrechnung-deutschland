@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { ArrowLeft, Calendar, Download, FileDown, Filter, Search, User } from "lucide-react";
+import { ArrowLeft, Calendar, Download, FileDown, Filter, Search, User, Languages } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -7,11 +7,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/ui/page-header";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useSupabasePayroll } from "@/hooks/use-supabase-payroll";
 import { useEmployees } from "@/contexts/employee-context";
 import { useCompanySettings } from "@/hooks/use-company-settings";
 import { PayrollEntry } from "@/types/payroll";
 import { downloadPayrollPdf } from "@/utils/payroll-pdf-generator";
+import type { PayslipLocale } from "@/utils/payroll-pdf-i18n";
 
 interface PayrollJournalProps {
   onBack: () => void;
@@ -36,10 +38,12 @@ export function PayrollJournal({ onBack, onViewAccount }: PayrollJournalProps) {
     betriebsnummer: companySettings?.betriebsnummer ?? undefined,
   }), [companySettings]);
 
-  const handleDownloadPdf = (entry: PayrollEntry) => {
+  const handleDownloadPdf = (entry: PayrollEntry, localeOverride?: PayslipLocale) => {
     const period = payrollPeriods.find(p => p.id === entry.payrollPeriodId);
     if (!period) return;
-    downloadPayrollPdf(entry, period, companyInfo);
+    const locale: PayslipLocale =
+      localeOverride ?? (entry.employee.personalData.payslipLanguage === 'en' ? 'en' : 'de');
+    downloadPayrollPdf(entry, period, companyInfo, locale);
   };
 
   const handleDownloadAll = () => {
@@ -291,25 +295,55 @@ export function PayrollJournal({ onBack, onViewAccount }: PayrollJournalProps) {
                         })}
                       </TableCell>
                       <TableCell className="text-center">
-                        <div className="flex items-center justify-center gap-1">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDownloadPdf(entry)}
-                            title="PDF herunterladen"
-                          >
-                            <FileDown className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => onViewAccount(entry.employeeId)}
-                            className="flex items-center gap-1"
-                          >
-                            <User className="h-4 w-4" />
-                            Konto
-                          </Button>
-                        </div>
+                        <TooltipProvider delayDuration={200}>
+                          <div className="flex items-center justify-center gap-1">
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleDownloadPdf(entry)}
+                                >
+                                  <FileDown className="h-4 w-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                PDF (
+                                {entry.employee.personalData.payslipLanguage === 'en' ? 'EN' : 'DE'}
+                                )
+                              </TooltipContent>
+                            </Tooltip>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() =>
+                                    handleDownloadPdf(
+                                      entry,
+                                      entry.employee.personalData.payslipLanguage === 'en' ? 'de' : 'en',
+                                    )
+                                  }
+                                >
+                                  <Languages className="h-4 w-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                PDF in{' '}
+                                {entry.employee.personalData.payslipLanguage === 'en' ? 'Deutsch' : 'English'}
+                              </TooltipContent>
+                            </Tooltip>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => onViewAccount(entry.employeeId)}
+                              className="flex items-center gap-1"
+                            >
+                              <User className="h-4 w-4" />
+                              Konto
+                            </Button>
+                          </div>
+                        </TooltipProvider>
                       </TableCell>
                     </TableRow>
                   ))}
