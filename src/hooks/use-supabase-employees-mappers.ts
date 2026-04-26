@@ -112,6 +112,7 @@ export function dbToEmployee(row: DbEmployee): Employee {
       childAllowances: Number(row.children_allowance ?? 0),
       numberOfChildren: Number((row as any).number_of_children ?? 0),
       relationshipStatus: 'single',
+      payslipLanguage: ((row as any).payslip_language === 'en' ? 'en' : 'de'),
     },
     employmentData: {
       employmentType: (row.employment_type as EmploymentType) ?? 'fulltime',
@@ -163,6 +164,7 @@ export function employeeToInsert(emp: Omit<Employee, 'id' | 'createdAt' | 'updat
     children_allowance: emp.personalData.childAllowances,
     number_of_children: emp.personalData.numberOfChildren ?? 0,
     gross_salary: emp.salaryData.grossSalary,
+    payslip_language: emp.personalData.payslipLanguage ?? 'de',
     employment_type: emp.employmentData.employmentType,
     weekly_hours: emp.employmentData.weeklyHours,
     entry_date: emp.employmentData.startDate.toISOString().split('T')[0],
@@ -199,6 +201,7 @@ export function employeeToUpdate(updates: Partial<Employee>): TablesUpdate<'empl
     if (p.socialSecurityNumber !== undefined) result.sv_number = p.socialSecurityNumber;
     if (p.childAllowances !== undefined) result.children_allowance = p.childAllowances;
     if (p.healthInsurance) result.health_insurance = p.healthInsurance.name;
+    if (p.payslipLanguage !== undefined) (result as any).payslip_language = p.payslipLanguage;
   }
   
   if (updates.employmentData) {

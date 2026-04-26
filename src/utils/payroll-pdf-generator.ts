@@ -1,10 +1,13 @@
 /**
  * PDF-Generator für Entgeltabrechnungen
  * Erzeugt druckfertige Lohnzettel im deutschen Format (DIN A4).
+ * Unterstützt zweisprachige Ausgabe (DE/EN) — siehe payroll-pdf-i18n.ts.
+ * Hinweis: Englische Fassung ist eine Übersetzungshilfe; rechtsverbindlich
+ * bleibt die deutsche Version (entsprechender Disclaimer wird im Footer gedruckt).
  */
 import jsPDF from 'jspdf';
 import { PayrollEntry, PayrollPeriod } from '@/types/payroll';
-import { formatCurrency } from '@/lib/formatters';
+import { getPayslipLabels, formatPayslipCurrency, type PayslipLocale } from './payroll-pdf-i18n';
 
 interface CompanyInfo {
   companyName: string;
@@ -13,15 +16,6 @@ interface CompanyInfo {
   city?: string;
   taxNumber?: string;
   betriebsnummer?: string;
-}
-
-const MONTHS = [
-  'Januar', 'Februar', 'März', 'April', 'Mai', 'Juni',
-  'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember',
-];
-
-function fmt(value: number): string {
-  return formatCurrency(value);
 }
 
 function line(doc: jsPDF, y: number, x1 = 20, x2 = 190) {
@@ -51,11 +45,14 @@ export function generatePayrollPdf(
   entry: PayrollEntry,
   period: PayrollPeriod,
   company: CompanyInfo,
+  locale: PayslipLocale = 'de',
 ): jsPDF {
   const doc = new jsPDF({ unit: 'mm', format: 'a4' });
   const emp = entry.employee;
   const calc = entry.salaryCalculation;
-  const periodLabel = `${MONTHS[period.month - 1]} ${period.year}`;
+  const L = getPayslipLabels(locale);
+  const fmt = (v: number) => formatPayslipCurrency(v, locale);
+  const periodLabel = `${L.months[period.month - 1]} ${period.year}`;
 
   // ── Header ────────────────────────────────────────────────
   doc.setFillColor(24, 24, 38); // dark header
@@ -64,7 +61,7 @@ export function generatePayrollPdf(
   doc.setTextColor(255, 255, 255);
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(16);
-  doc.text(company.companyName || 'Unternehmen', 20, 14);
+  doc.text(company.companyName || (locale === 'en' ? 'Company' : 'Unternehmen'), 20, 14);
 
   doc.setFontSize(9);
   doc.setFont('helvetica', 'normal');
@@ -73,16 +70,16 @@ export function generatePayrollPdf(
 
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(12);
-  doc.text(`Entgeltabrechnung ${periodLabel}`, 186, 14, { align: 'right' });
+  doc.text(`${L.payslipTitle} ${periodLabel}`, 186, 14, { align: 'right' });
 
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8);
-  if (company.betriebsnummer) doc.text(`Betriebsnr.: ${company.betriebsnummer}`, 186, 22, { align: 'right' });
-  if (company.taxNumber) doc.text(`Steuernr.: ${company.taxNumber}`, 186, 27, { align: 'right' });
+  if (company.betriebsnummer) doc.text(`${L.betriebsNr}: ${company.betriebsnummer}`, 186, 22, { align: 'right' });
+  if (company.taxNumber) doc.text(`${L.taxNr}: ${company.taxNumber}`, 186, 27, { align: 'right' });
 
   // ── Mitarbeiter-Daten ─────────────────────────────────────
   let y = 42;
-  y = sectionTitle(doc, 'Mitarbeiter', y);
+  y = sectionTitle(doc, L.employee, y);
 
   const leftCol = (label: string, value: string, yy: number) => {
     doc.setFont('helvetica', 'normal');
@@ -106,76 +103,76 @@ export function generatePayrollPdf(
   };
 
   const fullName = `${emp.personalData.firstName} ${emp.personalData.lastName}`;
-  leftCol('Name', fullName, y);
-  rightCol('Steuer-ID', emp.personalData.taxId || '–', y);
+  leftCol(L.name, fullName, y);
+  rightCol(L.taxId, emp.personalData.taxId || '–', y);
   y += 5;
-  leftCol('Steuerklasse', String(emp.personalData.taxClass), y);
-  rightCol('SV-Nummer', emp.personalData.socialSecurityNumber || '–', y);
+  leftCol(L.taxClass, String(emp.personalData.taxClass), y);
+  rightCol(L.svNumber, emp.personalData.socialSecurityNumber || '–', y);
   y += 5;
-  leftCol('KV', emp.personalData.healthInsurance?.name || '–', y);
-  rightCol('Kinder', String(emp.personalData.numberOfChildren ?? 0), y);
+  leftCol(L.healthInsurance, emp.personalData.healthInsurance?.name || '–', y);
+  rightCol(L.children, String(emp.personalData.numberOfChildren ?? 0), y);
   y += 8;
 
   // ── Arbeitszeit ───────────────────────────────────────────
-  y = sectionTitle(doc, 'Arbeitszeit', y);
+  y = sectionTitle(doc, L.workingTime, y);
   const wd = entry.workingData;
-  y = row(doc, 'Reguläre Stunden', `${wd.regularHours.toFixed(1)} h`, y);
-  if (wd.overtimeHours > 0) y = row(doc, 'Überstunden', `${wd.overtimeHours.toFixed(1)} h`, y);
-  if (wd.vacationDays > 0) y = row(doc, 'Urlaubstage', `${wd.vacationDays}`, y);
-  if (wd.sickDays > 0) y = row(doc, 'Krankheitstage', `${wd.sickDays}`, y);
-  y = row(doc, 'Arbeitstage (Ist / Soll)', `${wd.actualWorkingDays} / ${wd.expectedWorkingDays}`, y);
+  y = row(doc, L.regularHours, `${wd.regularHours.toFixed(1)} ${L.hoursUnit}`, y);
+  if (wd.overtimeHours > 0) y = row(doc, L.overtimeHours, `${wd.overtimeHours.toFixed(1)} ${L.hoursUnit}`, y);
+  if (wd.vacationDays > 0) y = row(doc, L.vacationDays, `${wd.vacationDays}`, y);
+  if (wd.sickDays > 0) y = row(doc, L.sickDays, `${wd.sickDays}`, y);
+  y = row(doc, L.workingDaysActualExpected, `${wd.actualWorkingDays} / ${wd.expectedWorkingDays}`, y);
   y += 3;
 
   // ── Brutto ────────────────────────────────────────────────
-  y = sectionTitle(doc, 'Bruttobezüge', y);
-  y = row(doc, 'Grundgehalt', fmt(emp.salaryData.grossSalary), y);
+  y = sectionTitle(doc, L.grossPay, y);
+  y = row(doc, L.baseSalary, fmt(emp.salaryData.grossSalary), y);
   if (entry.additions.overtimePay > 0)
-    y = row(doc, 'Überstundenzuschlag', fmt(entry.additions.overtimePay), y);
+    y = row(doc, L.overtimeSurcharge, fmt(entry.additions.overtimePay), y);
   if (entry.additions.nightShiftBonus > 0)
-    y = row(doc, 'Nachtarbeitszuschlag', fmt(entry.additions.nightShiftBonus), y);
+    y = row(doc, L.nightShiftBonus, fmt(entry.additions.nightShiftBonus), y);
   if (entry.additions.sundayBonus > 0)
-    y = row(doc, 'Sonntagszuschlag', fmt(entry.additions.sundayBonus), y);
+    y = row(doc, L.sundayBonus, fmt(entry.additions.sundayBonus), y);
   if (entry.additions.holidayBonus > 0)
-    y = row(doc, 'Feiertagszuschlag', fmt(entry.additions.holidayBonus), y);
+    y = row(doc, L.holidayBonus, fmt(entry.additions.holidayBonus), y);
   if (entry.additions.bonuses > 0)
-    y = row(doc, 'Prämien / Boni', fmt(entry.additions.bonuses), y);
+    y = row(doc, L.bonuses, fmt(entry.additions.bonuses), y);
   line(doc, y);
   y += 2;
-  y = row(doc, 'Gesamtbrutto', fmt(calc.grossSalary), y, true);
+  y = row(doc, L.totalGross, fmt(calc.grossSalary), y, true);
   y += 3;
 
   // ── Steuern ───────────────────────────────────────────────
-  y = sectionTitle(doc, 'Steuerliche Abzüge', y);
-  y = row(doc, 'Lohnsteuer', `– ${fmt(calc.taxes.incomeTax)}`, y);
-  y = row(doc, 'Solidaritätszuschlag', `– ${fmt(calc.taxes.solidarityTax)}`, y);
+  y = sectionTitle(doc, L.taxes, y);
+  y = row(doc, L.incomeTax, `– ${fmt(calc.taxes.incomeTax)}`, y);
+  y = row(doc, L.solidarityTax, `– ${fmt(calc.taxes.solidarityTax)}`, y);
   if (calc.taxes.churchTax > 0)
-    y = row(doc, 'Kirchensteuer', `– ${fmt(calc.taxes.churchTax)}`, y);
+    y = row(doc, L.churchTax, `– ${fmt(calc.taxes.churchTax)}`, y);
   line(doc, y);
   y += 2;
-  y = row(doc, 'Steuern gesamt', `– ${fmt(calc.taxes.total)}`, y, true);
+  y = row(doc, L.totalTaxes, `– ${fmt(calc.taxes.total)}`, y, true);
   y += 3;
 
   // ── Sozialversicherung ────────────────────────────────────
-  y = sectionTitle(doc, 'Sozialversicherung (AN-Anteil)', y);
+  y = sectionTitle(doc, L.socialSecurityEmployee, y);
   const sv = calc.socialSecurityContributions;
-  y = row(doc, 'Krankenversicherung', `– ${fmt(sv.healthInsurance.employee)}`, y);
-  y = row(doc, 'Rentenversicherung', `– ${fmt(sv.pensionInsurance.employee)}`, y);
-  y = row(doc, 'Arbeitslosenversicherung', `– ${fmt(sv.unemploymentInsurance.employee)}`, y);
-  y = row(doc, 'Pflegeversicherung', `– ${fmt(sv.careInsurance.employee)}`, y);
+  y = row(doc, L.healthIns, `– ${fmt(sv.healthInsurance.employee)}`, y);
+  y = row(doc, L.pensionIns, `– ${fmt(sv.pensionInsurance.employee)}`, y);
+  y = row(doc, L.unemploymentIns, `– ${fmt(sv.unemploymentInsurance.employee)}`, y);
+  y = row(doc, L.careIns, `– ${fmt(sv.careInsurance.employee)}`, y);
   line(doc, y);
   y += 2;
-  y = row(doc, 'SV gesamt (AN)', `– ${fmt(sv.total.employee)}`, y, true);
+  y = row(doc, L.totalSV, `– ${fmt(sv.total.employee)}`, y, true);
   y += 3;
 
   // ── Sonstige Abzüge ──────────────────────────────────────
   if (entry.deductions.total > 0) {
-    y = sectionTitle(doc, 'Sonstige Abzüge', y);
+    y = sectionTitle(doc, L.otherDeductions, y);
     if (entry.deductions.unpaidLeave > 0)
-      y = row(doc, 'Unbezahlter Urlaub', `– ${fmt(entry.deductions.unpaidLeave)}`, y);
+      y = row(doc, L.unpaidLeave, `– ${fmt(entry.deductions.unpaidLeave)}`, y);
     if (entry.deductions.advancePayments > 0)
-      y = row(doc, 'Vorschüsse', `– ${fmt(entry.deductions.advancePayments)}`, y);
+      y = row(doc, L.advancePayments, `– ${fmt(entry.deductions.advancePayments)}`, y);
     if (entry.deductions.otherDeductions > 0)
-      y = row(doc, 'Sonstiges', `– ${fmt(entry.deductions.otherDeductions)}`, y);
+      y = row(doc, L.otherDeductionsLine, `– ${fmt(entry.deductions.otherDeductions)}`, y);
     y += 3;
   }
 
@@ -185,7 +182,7 @@ export function generatePayrollPdf(
   doc.setTextColor(255, 255, 255);
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(12);
-  doc.text('Auszahlungsbetrag (Netto)', 24, y + 6);
+  doc.text(L.netPayout, 24, y + 6);
   doc.text(fmt(entry.finalNetSalary), 186, y + 6, { align: 'right' });
   y += 16;
 
@@ -193,7 +190,7 @@ export function generatePayrollPdf(
   doc.setTextColor(120, 120, 120);
   doc.setFont('helvetica', 'italic');
   doc.setFontSize(7);
-  doc.text(`Arbeitgeberkosten gesamt: ${fmt(calc.employerCosts)}`, 24, y);
+  doc.text(`${L.totalEmployerCost}: ${fmt(calc.employerCosts)}`, 24, y);
   y += 10;
 
   // ── Footer ────────────────────────────────────────────────
@@ -202,9 +199,15 @@ export function generatePayrollPdf(
   doc.setTextColor(150);
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(7);
-  doc.text('Diese Entgeltabrechnung wurde maschinell erstellt und ist ohne Unterschrift gültig.', 105, 280, { align: 'center' });
-  doc.text(`Erstellt am: ${new Date().toLocaleDateString('de-DE')}`, 105, 284, { align: 'center' });
+  doc.text(L.machineGenerated, 105, 280, { align: 'center' });
+  doc.text(`${L.createdOn}: ${new Date().toLocaleDateString(L.dateLocale)}`, 105, 284, { align: 'center' });
   doc.text(`LohnPro – ${company.companyName}`, 105, 288, { align: 'center' });
+  if (locale === 'en' && L.legalDisclaimerEN) {
+    doc.setFont('helvetica', 'italic');
+    doc.setFontSize(6.5);
+    doc.setTextColor(170);
+    doc.text(L.legalDisclaimerEN, 105, 292, { align: 'center', maxWidth: 180 });
+  }
 
   return doc;
 }
@@ -216,10 +219,12 @@ export function downloadPayrollPdf(
   entry: PayrollEntry,
   period: PayrollPeriod,
   company: CompanyInfo,
+  locale: PayslipLocale = 'de',
 ) {
-  const doc = generatePayrollPdf(entry, period, company);
+  const doc = generatePayrollPdf(entry, period, company, locale);
   const emp = entry.employee;
-  const fileName = `Entgeltabrechnung_${emp.personalData.lastName}_${emp.personalData.firstName}_${period.year}-${String(period.month).padStart(2, '0')}.pdf`;
+  const L = getPayslipLabels(locale);
+  const fileName = `${L.filenamePrefix}_${emp.personalData.lastName}_${emp.personalData.firstName}_${period.year}-${String(period.month).padStart(2, '0')}.pdf`;
   doc.save(fileName);
 }
 

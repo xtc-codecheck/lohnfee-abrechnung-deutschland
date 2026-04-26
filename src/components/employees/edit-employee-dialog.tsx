@@ -215,6 +215,28 @@ export function EditEmployeeDialog({ employee, open, onOpenChange, onSave }: Edi
                     </Select>
                   </div>
                 </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="payslipLanguage">Sprache Lohnzettel</Label>
+                    <Select
+                      value={formData.personalData.payslipLanguage ?? 'de'}
+                      onValueChange={(value) => updatePersonalData('payslipLanguage', value as 'de' | 'en')}
+                    >
+                      <SelectTrigger id="payslipLanguage">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="de">Deutsch (rechtsverbindlich)</SelectItem>
+                        <SelectItem value="en">English (translation only)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Englische Lohnzettel sind eine Übersetzungshilfe für internationale Mitarbeiter.
+                      Rechtsverbindlich bleibt die deutsche Fassung.
+                    </p>
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
