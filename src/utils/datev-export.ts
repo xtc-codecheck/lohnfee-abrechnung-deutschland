@@ -11,6 +11,7 @@
 import { PayrollEntry, PayrollPeriod } from '@/types/payroll';
 import { Employee } from '@/types/employee';
 import { format } from 'date-fns';
+import type { WageTypeLineItem } from './wage-types-integration';
 
 // ============= Kontenrahmen Definitionen =============
 
@@ -47,6 +48,7 @@ export const SKR03_KONTEN = {
   verbindlichkeitenKrankenkasse: '1743',
   verbindlichkeitenUmlagen: '1744',
   lohnsteuerAbfuehrung: '1741',
+  pauschalsteuerAbfuehrung: '1741',
   kirchensteuerAbfuehrung: '1741',
   solidaritaetszuschlag: '1741',
   bank: '1200',
@@ -83,6 +85,7 @@ export const SKR04_KONTEN = {
   verbindlichkeitenKrankenkasse: '3741',
   verbindlichkeitenUmlagen: '3742',
   lohnsteuerAbfuehrung: '3730',
+  pauschalsteuerAbfuehrung: '3730',
   kirchensteuerAbfuehrung: '3730',
   solidaritaetszuschlag: '3730',
   bank: '1800',
