@@ -906,7 +906,7 @@ export function validateDatevConfig(config: DatevExportConfig): string[] {
  */
 export function getDefaultDatevConfig(): DatevExportConfig {
   return {
-    kontenrahmen: 'SKR03',
+    kontenrahmen: 'SKR04',
     beraterNr: '1234567',
     mandantenNr: '12345',
     wirtschaftsjahrBeginn: new Date(new Date().getFullYear(), 0, 1),
