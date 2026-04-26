@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import {
   Command,
   CommandEmpty,
@@ -108,9 +109,11 @@ export function TaxAdvisorPackageDialog({
   const [notes, setNotes] = useState('');
   const [selectedPeriodId, setSelectedPeriodId] = useState<string>(periode.id);
   const [periodPickerOpen, setPeriodPickerOpen] = useState(false);
+  // Status-Filter für die Perioden-Auswahl: nur abgeschlossene Perioden oder inkl. Draft
+  const [statusFilter, setStatusFilter] = useState<'closed' | 'all'>('closed');
 
   // Periode + zugehörige Einträge aus Dropdown ableiten (Fallback: Props)
-  const { periodOptions, hiddenPeriodsCount } = useMemo(() => {
+  const { periodOptions, hiddenNoEntriesCount, hiddenDraftCount } = useMemo(() => {
     const list = allPeriods && allPeriods.length > 0 ? allPeriods : [periode];
 
     // Set der Perioden-IDs mit mindestens einer Abrechnung
@@ -120,19 +123,35 @@ export function TaxAdvisorPackageDialog({
 
     // Nur Perioden mit Abrechnungen behalten; aktuelle Prop-Periode immer beibehalten,
     // damit der Dialog niemals leer/ungültig wird.
-    const filtered = list.filter(
+    const withEntries = list.filter(
       (p) => periodsWithEntries.has(p.id) || p.id === periode.id,
     );
-    const hidden = list.length - filtered.length;
+    const hiddenNoEntries = list.length - withEntries.length;
+
+    // Status-Filter anwenden (aktuelle Prop-Periode immer behalten, damit der Dialog
+    // niemals leer wird, auch wenn diese im Draft-Status ist).
+    const isClosed = (status?: string) => {
+      const s = (status ?? 'draft').toLowerCase();
+      return ['closed', 'completed', 'processed', 'abgeschlossen'].includes(s);
+    };
+    const afterStatus =
+      statusFilter === 'closed'
+        ? withEntries.filter((p) => isClosed(p.status) || p.id === periode.id)
+        : withEntries;
+    const hiddenDraft =
+      statusFilter === 'closed'
+        ? withEntries.length - afterStatus.length
+        : 0;
 
     return {
-      periodOptions: filtered.sort((a, b) => {
+      periodOptions: afterStatus.sort((a, b) => {
         if (a.year !== b.year) return b.year - a.year;
         return b.month - a.month;
       }),
-      hiddenPeriodsCount: hidden,
+      hiddenNoEntriesCount: hiddenNoEntries,
+      hiddenDraftCount: hiddenDraft,
     };
-  }, [allPeriods, allEntries, payrollEntries, periode]);
+  }, [allPeriods, allEntries, payrollEntries, periode, statusFilter]);
 
   // ─── Persistenz: zuletzt gewählte Periode pro Mandant ────────
   const storageKey = tenantId ? `tax-advisor-pkg:last-period:${tenantId}` : null;
@@ -468,13 +487,41 @@ export function TaxAdvisorPackageDialog({
           <CardContent className="space-y-4">
             {/* Perioden-Auswahl */}
             <div className="space-y-1.5">
-              <Label
-                htmlFor="pkg-period-select"
-                className="text-xs font-medium text-muted-foreground flex items-center gap-1.5"
-              >
-                <CalendarRange className="h-3.5 w-3.5" />
-                Abrechnungsperiode
-              </Label>
+              <div className="flex items-center justify-between gap-2 flex-wrap">
+                <Label
+                  htmlFor="pkg-period-select"
+                  className="text-xs font-medium text-muted-foreground flex items-center gap-1.5"
+                >
+                  <CalendarRange className="h-3.5 w-3.5" />
+                  Abrechnungsperiode
+                </Label>
+                <ToggleGroup
+                  type="single"
+                  size="sm"
+                  value={statusFilter}
+                  onValueChange={(v) => {
+                    if (v === 'closed' || v === 'all') setStatusFilter(v);
+                  }}
+                  disabled={isExporting}
+                  aria-label="Status-Filter für Perioden"
+                  className="h-7"
+                >
+                  <ToggleGroupItem
+                    value="closed"
+                    aria-label="Nur abgeschlossene Perioden"
+                    className="h-7 px-2 text-xs"
+                  >
+                    Nur abgeschlossen
+                  </ToggleGroupItem>
+                  <ToggleGroupItem
+                    value="all"
+                    aria-label="Inklusive Draft-Perioden"
+                    className="h-7 px-2 text-xs"
+                  >
+                    Inkl. Draft
+                  </ToggleGroupItem>
+                </ToggleGroup>
+              </div>
               <div className="flex items-center gap-2">
                 {/* Älterer Monat (sortiert neueste-zuerst → höherer Index) */}
                 <Button
@@ -618,16 +665,28 @@ export function TaxAdvisorPackageDialog({
                   Es ist nur eine Periode verfügbar.
                 </p>
               )}
-              {hiddenPeriodsCount > 0 && (
+              {(hiddenNoEntriesCount > 0 || hiddenDraftCount > 0) && (
                 <p className="text-xs text-muted-foreground flex items-start gap-1.5">
                   <AlertTriangle
                     className="h-3 w-3 mt-0.5 shrink-0 text-amber-600 dark:text-amber-400"
                     aria-hidden="true"
                   />
                   <span>
-                    {hiddenPeriodsCount === 1
-                      ? '1 Periode wurde ausgeblendet, weil dafür keine Lohnabrechnungen vorhanden sind.'
-                      : `${hiddenPeriodsCount} Perioden wurden ausgeblendet, weil dafür keine Lohnabrechnungen vorhanden sind.`}
+                    {hiddenNoEntriesCount > 0 && (
+                      <>
+                        {hiddenNoEntriesCount === 1
+                          ? '1 Periode ohne Lohnabrechnungen ausgeblendet.'
+                          : `${hiddenNoEntriesCount} Perioden ohne Lohnabrechnungen ausgeblendet.`}
+                      </>
+                    )}
+                    {hiddenNoEntriesCount > 0 && hiddenDraftCount > 0 && ' '}
+                    {hiddenDraftCount > 0 && (
+                      <>
+                        {hiddenDraftCount === 1
+                          ? '1 Draft-Periode ausgeblendet – wechseln Sie zu „Inkl. Draft", um sie anzuzeigen.'
+                          : `${hiddenDraftCount} Draft-Perioden ausgeblendet – wechseln Sie zu „Inkl. Draft", um sie anzuzeigen.`}
+                      </>
+                    )}
                   </span>
                 </p>
               )}
