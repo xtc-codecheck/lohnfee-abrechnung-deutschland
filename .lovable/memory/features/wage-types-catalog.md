@@ -21,3 +21,9 @@ Lohnarten-Katalog (Phase P4 — vollständig):
 - Hook `useTenantEmployeeWageTypes` lädt alle aktiven Zuordnungen eines Mandanten gebündelt für den Wizard
 - Anzeige: `AppliedWageTypesCard` in der Payroll-Detail-Ansicht (aufklappbar pro Mitarbeiter)
 - Tests: 8 Unit-Tests in `src/utils/__tests__/wage-types-integration.test.ts`
+- **DATEV/FiBu-Integration**: `generatePayrollBookings` (datev-export.ts) und `generateBuchungenForEntry` (fibu-booking.ts) erzeugen pro Lohnart eine eigene Buchungszeile auf das in der Lohnart hinterlegte SKR03/04-Konto (Fallback je Kategorie). Effekt-Mapping:
+  - `gross_taxable` / `net_taxfree` / `pauschal` → Aufwand (Lohnart-Konto) an Verb. Löhne
+  - `in_kind` (Sachbezug) → Brutto-Aufwand UND Netto-Abzug (2 Buchungen)
+  - `net_deduction` (Pfändung/Darlehen) → Verb. Löhne an Lohnart-Konto
+  - Pauschalsteuer (`pauschalTaxAmount > 0`) → eigene Buchung an `pauschalsteuerAbfuehrung` (= 1741/3730), Buchungstext „Pausch.LSt {rate}% {code}"
+- 8 zusätzliche Tests in `src/utils/__tests__/wage-type-bookings.test.ts`
