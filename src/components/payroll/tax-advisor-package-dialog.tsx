@@ -12,6 +12,13 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -38,6 +45,7 @@ import {
   XCircle,
   AlertTriangle,
   ShieldCheck,
+  CalendarRange,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
@@ -56,6 +64,13 @@ interface TaxAdvisorPackageDialogProps {
   periode: PayrollPeriod;
   trigger?: React.ReactNode;
   onExportComplete?: () => void;
+  /**
+   * Optional: alle verfügbaren Perioden für Dropdown-Auswahl.
+   * Wenn angegeben (zusammen mit `allEntries`), kann der User die Periode wechseln.
+   */
+  allPeriods?: PayrollPeriod[];
+  /** Optional: alle Payroll-Entries (über alle Perioden) für die Dropdown-Auswahl. */
+  allEntries?: PayrollEntry[];
 }
 
 type CheckStatus = 'ok' | 'warn' | 'error';
@@ -73,6 +88,8 @@ export function TaxAdvisorPackageDialog({
   periode,
   trigger,
   onExportComplete,
+  allPeriods,
+  allEntries,
 }: TaxAdvisorPackageDialogProps) {
   const { settings: companySettings } = useCompanySettings();
   const [open, setOpen] = useState(false);
@@ -81,6 +98,28 @@ export function TaxAdvisorPackageDialog({
   const [contactName, setContactName] = useState('');
   const [contactEmail, setContactEmail] = useState('');
   const [notes, setNotes] = useState('');
+  const [selectedPeriodId, setSelectedPeriodId] = useState<string>(periode.id);
+
+  // Periode + zugehörige Einträge aus Dropdown ableiten (Fallback: Props)
+  const periodOptions = useMemo(() => {
+    const list = allPeriods && allPeriods.length > 0 ? allPeriods : [periode];
+    return [...list].sort((a, b) => {
+      if (a.year !== b.year) return b.year - a.year;
+      return b.month - a.month;
+    });
+  }, [allPeriods, periode]);
+
+  const activePeriod: PayrollPeriod =
+    periodOptions.find((p) => p.id === selectedPeriodId) ?? periode;
+
+  const activeEntries: PayrollEntry[] = useMemo(() => {
+    if (allEntries && allEntries.length > 0) {
+      return allEntries.filter((e) => e.payrollPeriodId === activePeriod.id);
+    }
+    // Fallback: Wenn keine globale Liste übergeben wurde, nur die ursprünglichen Entries verwenden,
+    // sofern sie zur aktiven Periode passen.
+    return payrollEntries.filter((e) => e.payrollPeriodId === activePeriod.id);
+  }, [allEntries, payrollEntries, activePeriod.id]);
 
   const companyName = companySettings?.company_name ?? 'Mandant';
   const companyAddress = [
@@ -91,9 +130,9 @@ export function TaxAdvisorPackageDialog({
     .join(', ');
 
   const stats = {
-    employees: payrollEntries.length,
-    brutto: payrollEntries.reduce((s, e) => s + e.salaryCalculation.grossSalary, 0),
-    netto: payrollEntries.reduce((s, e) => s + e.finalNetSalary, 0),
+    employees: activeEntries.length,
+    brutto: activeEntries.reduce((s, e) => s + e.salaryCalculation.grossSalary, 0),
+    netto: activeEntries.reduce((s, e) => s + e.finalNetSalary, 0),
   };
 
   // ─── Validierung: Pflichtdaten vor Export ────────────────────
@@ -101,7 +140,7 @@ export function TaxAdvisorPackageDialog({
     const checks: ValidationCheck[] = [];
 
     // 1) Abrechnungen vorhanden?
-    if (payrollEntries.length === 0) {
+    if (activeEntries.length === 0) {
       checks.push({
         id: 'entries',
         label: 'Lohnabrechnungen vorhanden',
@@ -114,13 +153,13 @@ export function TaxAdvisorPackageDialog({
         id: 'entries',
         label: 'Lohnabrechnungen vorhanden',
         status: 'ok',
-        detail: `${payrollEntries.length} Mitarbeiter abgerechnet.`,
+        detail: `${activeEntries.length} Mitarbeiter abgerechnet.`,
         blocking: true,
       });
     }
 
     // 2) Periode-Status (gebucht / abgeschlossen?)
-    const periodStatus = (periode.status ?? 'draft').toLowerCase();
+    const periodStatus = (activePeriod.status ?? 'draft').toLowerCase();
     const periodClosed = ['closed', 'completed', 'processed', 'abgeschlossen'].includes(
       periodStatus,
     );
@@ -129,19 +168,19 @@ export function TaxAdvisorPackageDialog({
       label: 'Abrechnungsperiode abgeschlossen',
       status: periodClosed ? 'ok' : 'warn',
       detail: periodClosed
-        ? `Periode ${format(periode.startDate, 'MM/yyyy')} ist abgeschlossen.`
+        ? `Periode ${format(activePeriod.startDate, 'MM/yyyy')} ist abgeschlossen.`
         : `Periode hat Status "${periodStatus}". Export ist möglich, aber Daten könnten sich noch ändern.`,
       blocking: false,
     });
 
     // 3) Lohnarten-Aufschlüsselung
-    const entriesWithLineItems = payrollEntries.filter(
+    const entriesWithLineItems = activeEntries.filter(
       (e) => (e.wageTypeLineItems ?? []).length > 0,
     );
-    const lineItemRatio = payrollEntries.length
-      ? entriesWithLineItems.length / payrollEntries.length
+    const lineItemRatio = activeEntries.length
+      ? entriesWithLineItems.length / activeEntries.length
       : 0;
-    if (payrollEntries.length === 0) {
+    if (activeEntries.length === 0) {
       // bereits durch Check 1 abgedeckt
     } else if (lineItemRatio === 1) {
       checks.push({
@@ -156,7 +195,7 @@ export function TaxAdvisorPackageDialog({
         id: 'wagetypes',
         label: 'Lohnarten-Aufschlüsselung vollständig',
         status: 'warn',
-        detail: `${entriesWithLineItems.length}/${payrollEntries.length} Mitarbeiter haben Lohnarten-Details. Sammelbuchungen werden für die Übrigen verwendet.`,
+        detail: `${entriesWithLineItems.length}/${activeEntries.length} Mitarbeiter haben Lohnarten-Details. Sammelbuchungen werden für die Übrigen verwendet.`,
         blocking: false,
       });
     } else {
@@ -173,7 +212,7 @@ export function TaxAdvisorPackageDialog({
     const accountField = kontenrahmen === 'SKR03' ? 'account_skr03' : 'account_skr04';
     let totalLineItems = 0;
     let lineItemsWithAccount = 0;
-    for (const e of payrollEntries) {
+    for (const e of activeEntries) {
       for (const li of e.wageTypeLineItems ?? []) {
         totalLineItems++;
         if (li.account && String(li.account).trim().length > 0) lineItemsWithAccount++;
@@ -209,13 +248,13 @@ export function TaxAdvisorPackageDialog({
     let fibuStatus: CheckStatus = 'ok';
     let fibuDetail = '';
     let blockOnFibu = false;
-    if (payrollEntries.length > 0) {
+    if (activeEntries.length > 0) {
       try {
         const journal = generateFibuJournal(
-          payrollEntries,
+          activeEntries,
           kontenrahmen,
-          periode.month,
-          periode.year,
+          activePeriod.month,
+          activePeriod.year,
         );
         const diff = Math.abs(journal.summen.differenz);
         if (journal.summen.anzahlBuchungen === 0) {
@@ -284,10 +323,10 @@ export function TaxAdvisorPackageDialog({
 
     return { checks, errors, warnings, blocked, okCount };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [payrollEntries, periode, kontenrahmen, companySettings]);
+  }, [activeEntries, activePeriod, kontenrahmen, companySettings]);
 
   const handleExport = async () => {
-    if (payrollEntries.length === 0) {
+    if (activeEntries.length === 0) {
       toast.error('Keine Abrechnungen', {
         description: 'Es wurden keine Lohnabrechnungen für diese Periode gefunden.',
       });
@@ -303,7 +342,7 @@ export function TaxAdvisorPackageDialog({
 
     setIsExporting(true);
     try {
-      const { blob, fileName } = await generateTaxAdvisorPackage(payrollEntries, periode, {
+      const { blob, fileName } = await generateTaxAdvisorPackage(activeEntries, activePeriod, {
         kontenrahmen,
         companyName: companySettings?.company_name ?? undefined,
         companyAddress: companyAddress || undefined,
@@ -359,10 +398,60 @@ export function TaxAdvisorPackageDialog({
             <CardHeader className="pb-3">
               <CardTitle className="text-base flex items-center gap-2">
                 <FileText className="h-4 w-4" />
-                Übergabe für {format(periode.startDate, 'MMMM yyyy', { locale: de })}
+              Übergabe für {format(activePeriod.startDate, 'MMMM yyyy', { locale: de })}
               </CardTitle>
             </CardHeader>
-            <CardContent>
+          <CardContent className="space-y-4">
+            {/* Perioden-Auswahl */}
+            <div className="space-y-1.5">
+              <Label
+                htmlFor="pkg-period-select"
+                className="text-xs font-medium text-muted-foreground flex items-center gap-1.5"
+              >
+                <CalendarRange className="h-3.5 w-3.5" />
+                Abrechnungsperiode
+              </Label>
+              <Select
+                value={selectedPeriodId}
+                onValueChange={setSelectedPeriodId}
+                disabled={periodOptions.length <= 1 || isExporting}
+              >
+                <SelectTrigger id="pkg-period-select" className="w-full">
+                  <SelectValue placeholder="Periode wählen" />
+                </SelectTrigger>
+                <SelectContent>
+                  {periodOptions.map((p) => {
+                    const status = (p.status ?? 'draft').toLowerCase();
+                    const closed = [
+                      'closed',
+                      'completed',
+                      'processed',
+                      'abgeschlossen',
+                    ].includes(status);
+                    return (
+                      <SelectItem key={p.id} value={p.id}>
+                        <span className="flex items-center gap-2">
+                          <span>
+                            {format(p.startDate, 'MMMM yyyy', { locale: de })}
+                          </span>
+                          <span
+                            className={`text-xs ${closed ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'}`}
+                          >
+                            {closed ? '· abgeschlossen' : `· ${status}`}
+                          </span>
+                        </span>
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
+              {periodOptions.length <= 1 && (
+                <p className="text-xs text-muted-foreground">
+                  Es ist nur eine Periode verfügbar.
+                </p>
+              )}
+            </div>
+
               <div className="flex flex-wrap items-center gap-2">
                 <Badge variant="outline">{stats.employees} Mitarbeiter</Badge>
                 <Badge variant="secondary">Brutto {fmtCur(stats.brutto)}</Badge>
@@ -495,7 +584,7 @@ export function TaxAdvisorPackageDialog({
           </Button>
           <Button
             onClick={handleExport}
-            disabled={isExporting || payrollEntries.length === 0 || validation.blocked}
+            disabled={isExporting || activeEntries.length === 0 || validation.blocked}
             className="gap-2"
           >
             {isExporting ? (
