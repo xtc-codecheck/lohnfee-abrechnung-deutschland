@@ -18,6 +18,8 @@ import {
 } from "lucide-react";
 import { Employee } from "@/types/employee";
 import { PayrollPeriod, PayrollEntry } from "@/types/payroll";
+import type { WageTypeLineItem } from "@/utils/wage-types-integration";
+import { CATEGORY_LABELS, type WageTypeCategory } from "@/types/wage-types";
 // jspdf and xlsx are loaded dynamically to reduce initial bundle size
 
 interface ExportManagerProps {
@@ -33,6 +35,25 @@ interface ExportManagerProps {
 }
 
 type ExportFormat = 'pdf' | 'csv' | 'xlsx' | 'datev';
+
+const EFFECT_LABEL_DE: Record<WageTypeLineItem['effect'], string> = {
+  gross_taxable: 'Brutto (st./SV-pfl.)',
+  net_taxfree: 'Netto (steuerfrei)',
+  in_kind: 'Sachbezug',
+  net_deduction: 'Netto-Abzug',
+  pauschal: 'Pauschalsteuer',
+};
+
+/** Summe Pauschalsteuer aus den Lohnarten-Items eines Eintrags. */
+function sumPauschalTax(items?: WageTypeLineItem[]): number {
+  if (!items || items.length === 0) return 0;
+  return items.reduce((s, li) => s + (li.pauschalTaxAmount ?? 0), 0);
+}
+
+/** Hilfsformat: Datum als YYYY-MM (für Sortier-/Gruppierschlüssel). */
+function periodKey(p: PayrollPeriod): string {
+  return `${p.year}-${String(p.month).padStart(2, '0')}`;
+}
 
 export function ExportManager({ 
   reportType, 
@@ -82,23 +103,7 @@ export function ExportManager({
   const generateCSVData = () => {
     switch (reportType) {
       case 'cost-overview':
-        return [
-          ['Monat', 'Mitarbeiter', 'Bruttolöhne', 'SV-Beiträge AN', 'SV-Beiträge AG', 'Steuern', 'Gesamtkosten AG'],
-          ...payrollPeriods.map(period => [
-            period.startDate.toLocaleDateString('de-DE'),
-            payrollEntries.filter(e => e.payrollPeriodId === period.id).length,
-            payrollEntries.filter(e => e.payrollPeriodId === period.id)
-              .reduce((sum, entry) => sum + entry.salaryCalculation.grossSalary, 0),
-            payrollEntries.filter(e => e.payrollPeriodId === period.id)
-              .reduce((sum, entry) => sum + entry.salaryCalculation.socialSecurityContributions.total.employee, 0),
-            payrollEntries.filter(e => e.payrollPeriodId === period.id)
-              .reduce((sum, entry) => sum + entry.salaryCalculation.socialSecurityContributions.total.employer, 0),
-            payrollEntries.filter(e => e.payrollPeriodId === period.id)
-              .reduce((sum, entry) => sum + entry.salaryCalculation.taxes.total, 0),
-            payrollEntries.filter(e => e.payrollPeriodId === period.id)
-              .reduce((sum, entry) => sum + entry.salaryCalculation.employerCosts, 0)
-          ])
-        ];
+        return generateCostOverviewRows();
       
       case 'sick-vacation':
         return [
@@ -128,6 +133,97 @@ export function ExportManager({
         return [['No data available']];
     }
   };
+
+  /**
+   * Lohnkostenübersicht — pro Monat eine Zeile + erweiterte Kennzahlen.
+   * Spalten: Monat, Mitarbeiter, Brutto, SV-AN, SV-AG, Steuern (regulär),
+   * Pauschalsteuer (aus Lohnarten), AG-Gesamtkosten, Anzahl Lohnarten.
+   */
+  function generateCostOverviewRows(): (string | number)[][] {
+    const header = [
+      'Monat',
+      'Mitarbeiter',
+      'Bruttolöhne',
+      'SV-Beiträge AN',
+      'SV-Beiträge AG',
+      'Steuern (regulär)',
+      'Pauschalsteuer',
+      'Gesamtkosten AG',
+      'Anzahl Lohnarten',
+    ];
+    const rows: (string | number)[][] = [header];
+
+    for (const period of payrollPeriods) {
+      const entries = payrollEntries.filter(e => e.payrollPeriodId === period.id);
+      const gross = entries.reduce((s, e) => s + e.salaryCalculation.grossSalary, 0);
+      const svAn = entries.reduce((s, e) => s + e.salaryCalculation.socialSecurityContributions.total.employee, 0);
+      const svAg = entries.reduce((s, e) => s + e.salaryCalculation.socialSecurityContributions.total.employer, 0);
+      const taxes = entries.reduce((s, e) => s + e.salaryCalculation.taxes.total, 0);
+      const pauschal = entries.reduce((s, e) => s + sumPauschalTax(e.wageTypeLineItems), 0);
+      const employerCosts = entries.reduce((s, e) => s + e.salaryCalculation.employerCosts, 0);
+      const wageTypeCount = entries.reduce((s, e) => s + (e.wageTypeLineItems?.length ?? 0), 0);
+
+      rows.push([
+        periodKey(period),
+        entries.length,
+        Number(gross.toFixed(2)),
+        Number(svAn.toFixed(2)),
+        Number(svAg.toFixed(2)),
+        Number(taxes.toFixed(2)),
+        Number(pauschal.toFixed(2)),
+        Number(employerCosts.toFixed(2)),
+        wageTypeCount,
+      ]);
+    }
+    return rows;
+  }
+
+  /**
+   * Detail-Sheet/Block für die Lohnarten-Aufschlüsselung pro Mitarbeiter+Monat.
+   * Wird nur erzeugt, wenn `includeDetails` aktiv ist und mindestens eine
+   * Lohnart in den Einträgen vorkommt.
+   */
+  function generateWageTypeDetailRows(): (string | number)[][] | null {
+    const detail: (string | number)[][] = [[
+      'Monat',
+      'Personalnr.',
+      'Mitarbeiter',
+      'Lohnart-Code',
+      'Lohnart-Name',
+      'Kategorie',
+      'Effekt',
+      'Betrag',
+      'Pausch.LSt-Satz (%)',
+      'Pausch.LSt-Betrag',
+    ]];
+    let any = false;
+    for (const period of payrollPeriods) {
+      const entries = payrollEntries.filter(e => e.payrollPeriodId === period.id);
+      for (const entry of entries) {
+        const items = entry.wageTypeLineItems;
+        if (!items || items.length === 0) continue;
+        const empName = `${entry.employee.personalData?.firstName ?? ''} ${entry.employee.personalData?.lastName ?? ''}`.trim();
+        const persNr = entry.employee.personalData?.personalNumber ?? '';
+        for (const li of items) {
+          if (li.amount === 0 && (li.pauschalTaxAmount ?? 0) === 0) continue;
+          any = true;
+          detail.push([
+            periodKey(period),
+            persNr,
+            empName,
+            li.code,
+            li.name,
+            CATEGORY_LABELS[li.category as WageTypeCategory] ?? li.category,
+            EFFECT_LABEL_DE[li.effect] ?? li.effect,
+            Number(li.amount.toFixed(2)),
+            li.pauschalTaxRate ?? 0,
+            Number((li.pauschalTaxAmount ?? 0).toFixed(2)),
+          ]);
+        }
+      }
+    }
+    return any ? detail : null;
+  }
 
   const generateDATEVData = () => {
     // DATEV LODAS format for payroll data
@@ -195,7 +291,20 @@ export function ExportManager({
 
   const exportToCSV = () => {
     const data = generateCSVData();
-    const csvContent = data.map(row => row.join(';')).join('\n');
+    const blocks: string[] = [];
+    blocks.push(data.map(row => row.join(';')).join('\n'));
+
+    if (includeDetails && reportType === 'cost-overview') {
+      const detail = generateWageTypeDetailRows();
+      if (detail) {
+        blocks.push(''); // Leerzeile
+        blocks.push('# Lohnarten-Aufschlüsselung');
+        blocks.push(detail.map(row => row.join(';')).join('\n'));
+      }
+    }
+
+    // BOM für Excel-Kompatibilität bei Umlauten
+    const csvContent = '\uFEFF' + blocks.join('\n');
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
@@ -210,9 +319,18 @@ export function ExportManager({
   const exportToExcel = async () => {
     const XLSX = await import('xlsx');
     const data = generateCSVData();
-    const ws = XLSX.utils.aoa_to_sheet(data);
     const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet(data);
     XLSX.utils.book_append_sheet(wb, ws, 'Report');
+
+    if (includeDetails && reportType === 'cost-overview') {
+      const detail = generateWageTypeDetailRows();
+      if (detail) {
+        const wsDetail = XLSX.utils.aoa_to_sheet(detail);
+        XLSX.utils.book_append_sheet(wb, wsDetail, 'Lohnarten');
+      }
+    }
+
     XLSX.writeFile(wb, `lohnpro-${reportType}-${new Date().toISOString().split('T')[0]}.xlsx`);
   };
 
