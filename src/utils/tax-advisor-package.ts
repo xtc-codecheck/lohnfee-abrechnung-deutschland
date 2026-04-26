@@ -510,6 +510,10 @@ function buildImportGuidePdf(
 
   const monthHuman = format(periode.startDate, 'MMMM yyyy', { locale: de });
   const skr = datevConfig.kontenrahmen;
+  // Periodenbezogene Beispielwerte für die Anleitung
+  const monthShort = format(periode.startDate, 'MM/yyyy'); // z.B. "04/2026"
+  const monthNameOnly = format(periode.startDate, 'MMMM', { locale: de }); // z.B. "April"
+  const periodYear = periode.year;
 
   const ensureSpace = (needed: number) => {
     if (y + needed > pageHeight - margin) {
@@ -637,12 +641,12 @@ function buildImportGuidePdf(
   para('Spaltenstruktur (Semikolon-getrennt, UTF-8 mit BOM):');
   bullet('Lfd.Nr – fortlaufende Buchungsnummer im Stapel');
   bullet('Datum – Buchungsdatum (TT.MM.JJJJ), in der Regel Periodenende');
-  bullet('Periode – Referenz auf die Lohn-Periode (z.B. „05/2025“)');
+  bullet(`Periode – Referenz auf die Lohn-Periode (z.B. „${monthShort}")`);
   bullet('Belegnummer – interne Belegreferenz (LOHN-JJJJMM-NNN)');
   bullet('Soll-Konto + Soll-Konto Bezeichnung – belasteter Sachkonten-Eintrag');
   bullet('Haben-Konto + Haben-Konto Bezeichnung – entlasteter Sachkonten-Eintrag');
   bullet('Betrag (EUR) – Buchungsbetrag, Komma als Dezimaltrenner');
-  bullet('Buchungstext – sprechender Text (z.B. „Lohnsteuer Mai 2025“)');
+  bullet(`Buchungstext – sprechender Text (z.B. „Lohnsteuer ${monthNameOnly} ${periodYear}")`);
   bullet('Mitarbeiter – Name (sofern personenbezogen, sonst leer)');
   bullet('Kategorie – Buchungsart (Lohn/Gehalt, SV-AN, SV-AG, Steuer, Auszahlung)');
   para(
