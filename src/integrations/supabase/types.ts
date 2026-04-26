@@ -512,6 +512,7 @@ export type Database = {
           is_active: boolean | null
           last_name: string
           number_of_children: number | null
+          payslip_language: string
           personal_number: string | null
           position: string | null
           rv_befreit: boolean | null
@@ -556,6 +557,7 @@ export type Database = {
           is_active?: boolean | null
           last_name: string
           number_of_children?: number | null
+          payslip_language?: string
           personal_number?: string | null
           position?: string | null
           rv_befreit?: boolean | null
@@ -600,6 +602,7 @@ export type Database = {
           is_active?: boolean | null
           last_name?: string
           number_of_children?: number | null
+          payslip_language?: string
           personal_number?: string | null
           position?: string | null
           rv_befreit?: boolean | null
