@@ -528,12 +528,22 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
   /**
    * Schritt 1 (Manueller Modus): Berechnet alle Abrechnungen IM SPEICHER
    * (ohne zu persistieren) und öffnet den Pre-Flight-Check-Dialog.
+   *
+   * WICHTIG: Es wird HIER bewusst KEINE payroll_period angelegt – sonst
+   * bleiben Zombie-Perioden zurück, wenn der User im Pre-Flight abbricht.
+   * Die Periode wird erst in handleConfirmSave() angelegt.
    */
   const handleCreatePayroll = async () => {
     setIsProcessing(true);
     try {
-      const period = await createPayrollPeriod(selectedYear, selectedMonth);
-      if (!period) throw new Error('Periode konnte nicht erstellt werden');
+      if (activeEmployees.length === 0) {
+        toast({
+          title: 'Keine aktiven Mitarbeiter',
+          description: 'Es gibt keine Mitarbeiter, für die eine Abrechnung erstellt werden könnte.',
+          variant: 'destructive',
+        });
+        return;
+      }
 
       const calculated: PayrollEntry[] = [];
       for (const emp of activeEmployees) {
@@ -549,7 +559,7 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
           calculated.push({
             ...result.entry,
             id: '',
-            payrollPeriodId: period.id,
+            payrollPeriodId: '', // wird in handleConfirmSave gesetzt
             createdAt: new Date(),
             updatedAt: new Date(),
           } as PayrollEntry);
@@ -568,7 +578,7 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
       }
 
       setPendingEntries(calculated);
-      setPendingPeriodId(period.id);
+      setPendingPeriodId(null); // Periode wird erst beim Confirm angelegt
       setPreflightOpen(true);
     } catch (error) {
       toast({
@@ -583,16 +593,29 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
 
   /**
    * Schritt 2: Nach Pre-Flight-Bestätigung → Persistieren + Guardian-Historie + Status.
+   * Legt die payroll_period erst JETZT an (oder verwendet eine bestehende Draft-Periode).
    */
   const handleConfirmSave = async () => {
-    if (!pendingPeriodId || pendingEntries.length === 0) return;
+    if (pendingEntries.length === 0) return;
     try {
+      // Periode lazy anlegen / wiederverwenden
+      const period = await ensurePayrollPeriod();
+      if (!period) {
+        toast({
+          title: 'Periode konnte nicht angelegt werden',
+          description: 'Bitte erneut versuchen.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
       let saved = 0;
       const failed: string[] = [];
       for (const entry of pendingEntries) {
         try {
-          await addPayrollEntry(entry);
-          await addToHistory(entry);
+          // payrollPeriodId aus der frisch angelegten Periode setzen
+          const persisted = await addPayrollEntry({ ...entry, payrollPeriodId: period.id });
+          await addToHistory(persisted);
           saved++;
         } catch (err) {
           const emp = activeEmployees.find(e => e.id === entry.employeeId);
@@ -612,7 +635,7 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
         return;
       }
 
-      await updatePayrollPeriodStatus(pendingPeriodId, 'calculated');
+      await updatePayrollPeriodStatus(period.id, 'calculated');
 
       const newStatuses = [...stepStatuses];
       newStatuses[2] = { ...newStatuses[2], completed: true, approved: true };
