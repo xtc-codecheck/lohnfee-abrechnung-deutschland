@@ -8,12 +8,14 @@
  * 4. Zusatzleistungen
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { ArrowLeft, ArrowRight, Save, Calculator, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { PageHeader } from '@/components/ui/page-header';
 import { useToast } from '@/hooks/use-toast';
 import { useEmployees } from '@/contexts/employee-context';
+import { useAuth } from '@/contexts/auth-context';
+import { detectUserPayslipLanguage } from '@/utils/user-locale';
 import { validateEmployeeForm, validatePersonalData, validateEmploymentData, validateSalaryData, getValidationErrors, bankingDataSchema } from '@/lib/validations/employee';
 
 import { WizardProgress } from './wizard-progress';
@@ -32,10 +34,29 @@ interface EmployeeWizardProps {
 export function EmployeeWizard({ onBack, onSave, onCalculate }: EmployeeWizardProps) {
   const { addEmployee } = useEmployees();
   const { toast } = useToast();
+  const { user } = useAuth();
   
   const [currentStep, setCurrentStep] = useState(0);
-  const [formData, setFormData] = useState<EmployeeFormData>(initialFormData);
+  const [formData, setFormData] = useState<EmployeeFormData>(() => ({
+    ...initialFormData,
+    payslipLanguage: detectUserPayslipLanguage(user),
+  }));
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Wenn der User-Kontext erst nach dem Mount geladen wird, Default nachziehen –
+  // aber nur, solange der Nutzer den Wert nicht selbst überschrieben hat.
+  useEffect(() => {
+    setFormData(prev => {
+      // Nur überschreiben, wenn noch der Initialwert ('de') gesetzt ist UND
+      // der User-Default davon abweicht.
+      const userDefault = detectUserPayslipLanguage(user);
+      if (prev.payslipLanguage === 'de' && userDefault !== 'de') {
+        return { ...prev, payslipLanguage: userDefault };
+      }
+      return prev;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
 
   const isFirstStep = currentStep === 0;
   const isLastStep = currentStep === WIZARD_STEPS.length - 1;

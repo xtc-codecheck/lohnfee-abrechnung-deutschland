@@ -82,6 +82,9 @@ export interface EmployeeFormData {
   iban: string;
   bic: string;
   bankName: string;
+
+  // Lohnzettel
+  payslipLanguage: 'de' | 'en';
 }
 
 export interface WorkDayData {
@@ -181,6 +184,9 @@ export const initialFormData: EmployeeFormData = {
   iban: '',
   bic: '',
   bankName: '',
+
+  // Lohnzettel: wird beim Wizard-Mount aus User-Profil/Browser überschrieben
+  payslipLanguage: 'de',
 };
 
 // ============= Step Konfiguration =============
