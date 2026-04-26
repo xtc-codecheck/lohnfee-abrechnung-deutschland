@@ -69,6 +69,8 @@ export async function generateTaxAdvisorPackage(
 
   const monthLabel = format(periode.startDate, 'yyyy-MM');
   const monthLabelHuman = format(periode.startDate, 'MMMM yyyy', { locale: de });
+  // Sprechender Periodenslug für Dateinamen, z.B. "2026-04_April-2026"
+  const periodSlug = `${monthLabel}_${format(periode.startDate, 'MMMM-yyyy', { locale: de })}`;
 
   // 1) DATEV CSV
   const datevCsv = generateDatevExport(entries, periode, datevConfig);
@@ -101,7 +103,9 @@ export async function generateTaxAdvisorPackage(
   zip.file('README.txt', readme);
 
   const blob = await zip.generateAsync({ type: 'blob' });
-  const fileName = `Steuerberater-Paket_${(options.companyName || 'Mandant').replace(/[^\w-]+/g, '_')}_${monthLabel}.zip`;
+  const safeCompany = (options.companyName || 'Mandant').replace(/[^\w-]+/g, '_');
+  // Periode steht bewusst direkt nach dem Paket-Präfix für eindeutige Sortierung im Download-Ordner.
+  const fileName = `Steuerberater-Paket_${periodSlug}_${safeCompany}.zip`;
   return { blob, fileName };
 }
 
