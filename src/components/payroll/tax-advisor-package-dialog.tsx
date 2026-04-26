@@ -425,16 +425,40 @@ export function TaxAdvisorPackageDialog({
                 <CalendarRange className="h-3.5 w-3.5" />
                 Abrechnungsperiode
               </Label>
-              <Select
-                value={selectedPeriodId}
-                onValueChange={setSelectedPeriodId}
-                disabled={periodOptions.length <= 1 || isExporting}
-              >
-                <SelectTrigger id="pkg-period-select" className="w-full">
-                  <SelectValue placeholder="Periode wählen" />
-                </SelectTrigger>
-                <SelectContent>
-                  {periodOptions.map((p) => {
+              <div className="flex items-center gap-2">
+                {/* Älterer Monat: im sortierten (neueste-zuerst) Array bedeutet das "weiter nach hinten" → höherer Index */}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="h-10 w-10 shrink-0"
+                  aria-label="Vorheriger Monat (älter)"
+                  title="Vorheriger Monat"
+                  disabled={
+                    isExporting ||
+                    periodOptions.length <= 1 ||
+                    periodOptions.findIndex((p) => p.id === selectedPeriodId) >=
+                      periodOptions.length - 1
+                  }
+                  onClick={() => {
+                    const idx = periodOptions.findIndex((p) => p.id === selectedPeriodId);
+                    const next = periodOptions[idx + 1];
+                    if (next) handlePeriodChange(next.id);
+                  }}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+
+                <Select
+                  value={selectedPeriodId}
+                  onValueChange={handlePeriodChange}
+                  disabled={periodOptions.length <= 1 || isExporting}
+                >
+                  <SelectTrigger id="pkg-period-select" className="w-full">
+                    <SelectValue placeholder="Periode wählen" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {periodOptions.map((p) => {
                     const status = (p.status ?? 'draft').toLowerCase();
                     const closed = [
                       'closed',
@@ -457,8 +481,31 @@ export function TaxAdvisorPackageDialog({
                       </SelectItem>
                     );
                   })}
-                </SelectContent>
-              </Select>
+                  </SelectContent>
+                </Select>
+
+                {/* Neuerer Monat → niedrigerer Index */}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="h-10 w-10 shrink-0"
+                  aria-label="Nächster Monat (neuer)"
+                  title="Nächster Monat"
+                  disabled={
+                    isExporting ||
+                    periodOptions.length <= 1 ||
+                    periodOptions.findIndex((p) => p.id === selectedPeriodId) <= 0
+                  }
+                  onClick={() => {
+                    const idx = periodOptions.findIndex((p) => p.id === selectedPeriodId);
+                    const prev = periodOptions[idx - 1];
+                    if (prev) handlePeriodChange(prev.id);
+                  }}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
               {periodOptions.length <= 1 && (
                 <p className="text-xs text-muted-foreground">
                   Es ist nur eine Periode verfügbar.
