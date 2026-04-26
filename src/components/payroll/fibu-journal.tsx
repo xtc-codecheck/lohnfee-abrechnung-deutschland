@@ -51,6 +51,8 @@ const KATEGORIE_LABELS: Record<BuchungsKategorie, string> = {
   'ag-sv': 'AG-SV',
   nettolohn: 'Nettolohn',
   sonderzahlung: 'Sonderzahlung',
+  lohnart: 'Lohnart',
+  pauschalsteuer: 'Pausch.LSt',
 };
 
 const KATEGORIE_COLORS: Record<BuchungsKategorie, string> = {
@@ -65,6 +67,8 @@ const KATEGORIE_COLORS: Record<BuchungsKategorie, string> = {
   'ag-sv': 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300',
   nettolohn: 'bg-primary/10 text-primary',
   sonderzahlung: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300',
+  lohnart: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900/30 dark:text-cyan-300',
+  pauschalsteuer: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300',
 };
 
 const fmt = (v: number) =>
