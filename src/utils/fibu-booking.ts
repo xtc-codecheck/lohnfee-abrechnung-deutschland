@@ -16,6 +16,7 @@
 
 import { PayrollEntry, PayrollPeriod } from '@/types/payroll';
 import { SKR03_KONTEN, SKR04_KONTEN, Kontenrahmen } from './datev-export';
+import type { WageTypeLineItem } from './wage-types-integration';
 
 // ─── Types ──────────────────────────────────────────────────
 
@@ -60,7 +61,9 @@ export type BuchungsKategorie =
   | 'pflegeversicherung'
   | 'ag-sv'
   | 'nettolohn'
-  | 'sonderzahlung';
+  | 'sonderzahlung'
+  | 'lohnart'
+  | 'pauschalsteuer';
 
 export interface FibuJournal {
   periode: string;
@@ -285,7 +288,94 @@ export function generateBuchungenForEntry(
     if (b) buchungen.push(b);
   }
 
+  // 13. LOHNARTEN — separate Buchungssätze pro Wage Type (P4)
+  if (entry.wageTypeLineItems && entry.wageTypeLineItems.length > 0) {
+    for (const li of entry.wageTypeLineItems) {
+      const account = li.account || pickWageTypeFallbackAccount(li, kontenrahmen);
+
+      if (li.amount > 0) {
+        switch (li.effect) {
+          case 'gross_taxable':
+          case 'net_taxfree':
+          case 'pauschal': {
+            const b = makeBuchung(
+              account,
+              konten.verbindlichkeitenLoehne,
+              li.amount,
+              `${li.code} ${li.name}`,
+              'lohnart'
+            );
+            if (b) buchungen.push(b);
+            break;
+          }
+          case 'in_kind': {
+            const b1 = makeBuchung(
+              account,
+              konten.verbindlichkeitenLoehne,
+              li.amount,
+              `${li.code} ${li.name} (Sachbezug)`,
+              'lohnart'
+            );
+            if (b1) buchungen.push(b1);
+            const b2 = makeBuchung(
+              konten.verbindlichkeitenLoehne,
+              account,
+              li.amount,
+              `${li.code} ${li.name} (Netto-Abzug)`,
+              'lohnart'
+            );
+            if (b2) buchungen.push(b2);
+            break;
+          }
+          case 'net_deduction': {
+            const b = makeBuchung(
+              konten.verbindlichkeitenLoehne,
+              account,
+              li.amount,
+              `${li.code} ${li.name}`,
+              'lohnart'
+            );
+            if (b) buchungen.push(b);
+            break;
+          }
+        }
+      }
+
+      // Pauschalsteuer — separate Buchung an Finanzamt
+      if (li.pauschalTaxAmount && li.pauschalTaxAmount > 0) {
+        const pBuchung = makeBuchung(
+          account,
+          konten.lohnsteuerAbfuehrung,
+          li.pauschalTaxAmount,
+          `Pausch.LSt ${li.pauschalTaxRate ?? ''}% ${li.code}`.trim(),
+          'pauschalsteuer'
+        );
+        if (pBuchung) buchungen.push(pBuchung);
+      }
+    }
+  }
+
   return buchungen;
+}
+
+/** Fallback-Konto, falls Lohnart kein eigenes SKR03/04-Konto hinterlegt hat. */
+function pickWageTypeFallbackAccount(li: WageTypeLineItem, kontenrahmen: Kontenrahmen): string {
+  const k = getKonten(kontenrahmen);
+  switch (li.category) {
+    case 'sachbezug':
+      return k.sachbezuege;
+    case 'vwl':
+      return k.vermoegenswirksameLeistungen;
+    case 'pauschalsteuer':
+    case 'zuschuss':
+      return k.sachbezuege;
+    case 'pfaendung':
+    case 'abzug':
+      return k.verbindlichkeitenLoehne;
+    case 'bezug':
+    default:
+      return k.loehneGehalt;
+  }
 }
 
 // ─── Journal-Generator ──────────────────────────────────────
