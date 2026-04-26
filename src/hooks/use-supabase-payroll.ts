@@ -136,8 +136,8 @@ export function useSupabasePayroll() {
         deductions: entry.deductions.total,
         // Lohnarten-Aufschlüsselung in JSONB (für PDF, DATEV, Lohnkonto, Audit)
         audit_data: (entry.wageTypeLineItems && entry.wageTypeLineItems.length > 0
-          ? { wageTypeLineItems: entry.wageTypeLineItems }
-          : null) as Json,
+          ? ({ wageTypeLineItems: entry.wageTypeLineItems } as unknown as Json)
+          : null),
       })
       .select().single();
     if (err) {
