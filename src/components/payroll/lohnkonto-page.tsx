@@ -464,3 +464,89 @@ export function LohnkontoPage({ onBack }: LohnkontoPageProps) {
     </div>
   );
 }
+
+// ---------------------------------------------------------------------------
+// Aufklappbare Lohnarten-Übersicht je Monat
+// ---------------------------------------------------------------------------
+
+const EFFECT_LABEL: Record<WageTypeLineItem['effect'], string> = {
+  gross_taxable: 'Brutto (st./SV-pfl.)',
+  net_taxfree: 'Netto (steuerfrei)',
+  in_kind: 'Sachbezug',
+  net_deduction: 'Netto-Abzug',
+  pauschal: 'Pauschalsteuer',
+};
+
+const EFFECT_VARIANT: Record<WageTypeLineItem['effect'], 'default' | 'secondary' | 'destructive' | 'outline'> = {
+  gross_taxable: 'default',
+  net_taxfree: 'secondary',
+  in_kind: 'outline',
+  net_deduction: 'destructive',
+  pauschal: 'outline',
+};
+
+interface WageTypeBreakdownProps {
+  items: WageTypeLineItem[];
+  fmt: (v: number) => string;
+}
+
+function WageTypeBreakdown({ items, fmt }: WageTypeBreakdownProps) {
+  const visible = items.filter(li => li.amount !== 0 || (li.pauschalTaxAmount ?? 0) > 0);
+  if (visible.length === 0) {
+    return (
+      <div className="px-6 py-3 text-xs text-muted-foreground inline-flex items-center gap-2">
+        <Receipt className="h-3.5 w-3.5" />
+        Keine wirksamen Lohnarten in diesem Monat.
+      </div>
+    );
+  }
+  return (
+    <div className="px-6 py-3">
+      <div className="text-xs font-semibold text-muted-foreground mb-2 inline-flex items-center gap-1.5">
+        <Receipt className="h-3.5 w-3.5" />
+        Angewandte Lohnarten ({visible.length})
+      </div>
+      <div className="overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow className="hover:bg-transparent">
+              <TableHead className="h-8 text-xs">Code</TableHead>
+              <TableHead className="h-8 text-xs">Name</TableHead>
+              <TableHead className="h-8 text-xs">Kategorie</TableHead>
+              <TableHead className="h-8 text-xs">Effekt</TableHead>
+              <TableHead className="h-8 text-xs text-right">Betrag</TableHead>
+              <TableHead className="h-8 text-xs text-right">Pausch.LSt</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {visible.map((li, i) => {
+              const sign = (li.effect === 'net_deduction' || li.effect === 'in_kind') ? '−' : '';
+              return (
+                <TableRow key={`${li.code}-${i}`} className="hover:bg-muted/30">
+                  <TableCell className="py-1.5 font-mono text-xs">{li.code}</TableCell>
+                  <TableCell className="py-1.5 text-xs">{li.name}</TableCell>
+                  <TableCell className="py-1.5 text-xs text-muted-foreground">
+                    {CATEGORY_LABELS[li.category as WageTypeCategory] ?? li.category}
+                  </TableCell>
+                  <TableCell className="py-1.5">
+                    <Badge variant={EFFECT_VARIANT[li.effect]} className="text-[10px] px-1.5 py-0 h-4 font-normal">
+                      {EFFECT_LABEL[li.effect] ?? li.effect}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="py-1.5 text-right tabular-nums text-xs font-medium">
+                    {sign}{fmt(li.amount)}
+                  </TableCell>
+                  <TableCell className="py-1.5 text-right tabular-nums text-xs text-muted-foreground">
+                    {li.pauschalTaxAmount && li.pauschalTaxAmount > 0
+                      ? `${li.pauschalTaxRate ?? ''}% · ${fmt(li.pauschalTaxAmount)}`
+                      : '—'}
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </div>
+    </div>
+  );
+}
