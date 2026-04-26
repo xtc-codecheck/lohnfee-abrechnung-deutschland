@@ -27,3 +27,4 @@ Lohnarten-Katalog (Phase P4 — vollständig):
   - `net_deduction` (Pfändung/Darlehen) → Verb. Löhne an Lohnart-Konto
   - Pauschalsteuer (`pauschalTaxAmount > 0`) → eigene Buchung an `pauschalsteuerAbfuehrung` (= 1741/3730), Buchungstext „Pausch.LSt {rate}% {code}"
 - 8 zusätzliche Tests in `src/utils/__tests__/wage-type-bookings.test.ts`
+- **Lohnkonto-Anzeige (§41 EStG)**: Lohnkonto-Tabelle (`lohnkonto-page.tsx`) zeigt pro Monat einen Toggle-Pfeil + Badge mit Anzahl LA. Aufklapp-Sub-Row rendert `WageTypeBreakdown` mit Spalten Code, Name, Kategorie, Effekt-Badge, Betrag (mit Vorzeichen je Effekt), Pausch.LSt-Spalte (Rate · Betrag). Datenquelle: `wageTypeLineItems` aus `audit_data` JSONB der `payroll_entries`.
