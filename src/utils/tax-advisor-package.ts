@@ -64,6 +64,10 @@ export async function generateTaxAdvisorPackage(
   const datevConfig: DatevExportConfig = {
     ...getDefaultDatevConfig(),
     kontenrahmen: options.kontenrahmen,
+    // Wirtschaftsjahr automatisch an die ausgewählte Periode anpassen
+    // (Default greift nur auf das aktuelle Kalenderjahr zurück und wäre für
+    // Vorjahres-Exports falsch). Override via options.datevConfig bleibt möglich.
+    wirtschaftsjahrBeginn: new Date(periode.year, 0, 1),
     ...(options.datevConfig ?? {}),
   };
 
