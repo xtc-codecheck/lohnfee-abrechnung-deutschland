@@ -279,6 +279,7 @@ export function LohnkontoPage({ onBack }: LohnkontoPageProps) {
                 <Table>
                   <TableHeader>
                     <TableRow>
+                      <TableHead className="sticky left-0 bg-card z-10 w-8 p-0" />
                       <TableHead className="sticky left-0 bg-card z-10">Monat</TableHead>
                       <TableHead className="text-right">
                         <span className="inline-flex items-center gap-1 justify-end">
@@ -339,24 +340,64 @@ export function LohnkontoPage({ onBack }: LohnkontoPageProps) {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {lohnkonto.rows.map(row => (
-                      <TableRow key={row.month} className={row.grossSalary === 0 ? 'opacity-40' : ''}>
-                        <TableCell className="sticky left-0 bg-card z-10 font-medium">{row.monthName}</TableCell>
-                        <TableCell className="text-right tabular-nums">{fmt(row.grossSalary)}</TableCell>
-                        <TableCell className="text-right tabular-nums">{fmt(row.incomeTax)}</TableCell>
-                        <TableCell className="text-right tabular-nums">{fmt(row.solidarityTax)}</TableCell>
-                        <TableCell className="text-right tabular-nums">{fmt(row.churchTax)}</TableCell>
-                        <TableCell className="text-right tabular-nums font-medium">{fmt(row.totalTax)}</TableCell>
-                        <TableCell className="text-right tabular-nums">{fmt(row.svHealthEmployee)}</TableCell>
-                        <TableCell className="text-right tabular-nums">{fmt(row.svPensionEmployee)}</TableCell>
-                        <TableCell className="text-right tabular-nums">{fmt(row.svUnemploymentEmployee)}</TableCell>
-                        <TableCell className="text-right tabular-nums">{fmt(row.svCareEmployee)}</TableCell>
-                        <TableCell className="text-right tabular-nums font-medium">{fmt(row.svTotalEmployee)}</TableCell>
-                        <TableCell className="text-right tabular-nums font-bold">{fmt(row.finalNetSalary)}</TableCell>
-                      </TableRow>
-                    ))}
+                    {lohnkonto.rows.map(row => {
+                      const hasItems = !!row.wageTypeLineItems && row.wageTypeLineItems.length > 0;
+                      const isOpen = openMonths.has(row.month);
+                      return (
+                        <>
+                          <TableRow
+                            key={`m-${row.month}`}
+                            className={cn(row.grossSalary === 0 ? 'opacity-40' : '', hasItems && 'cursor-pointer hover:bg-muted/30')}
+                            onClick={() => hasItems && toggleMonth(row.month)}
+                          >
+                            <TableCell className="sticky left-0 bg-card z-10 w-8 p-0 align-middle">
+                              {hasItems ? (
+                                <button
+                                  type="button"
+                                  onClick={(e) => { e.stopPropagation(); toggleMonth(row.month); }}
+                                  className="h-6 w-6 inline-flex items-center justify-center rounded hover:bg-muted text-muted-foreground"
+                                  aria-label={isOpen ? `Lohnarten ${row.monthName} zuklappen` : `Lohnarten ${row.monthName} aufklappen`}
+                                  aria-expanded={isOpen}
+                                >
+                                  <ChevronRight className={cn('h-4 w-4 transition-transform', isOpen && 'rotate-90')} />
+                                </button>
+                              ) : null}
+                            </TableCell>
+                            <TableCell className="sticky left-0 bg-card z-10 font-medium">
+                              <span className="inline-flex items-center gap-2">
+                                {row.monthName}
+                                {hasItems && (
+                                  <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4">
+                                    {row.wageTypeLineItems!.length} LA
+                                  </Badge>
+                                )}
+                              </span>
+                            </TableCell>
+                            <TableCell className="text-right tabular-nums">{fmt(row.grossSalary)}</TableCell>
+                            <TableCell className="text-right tabular-nums">{fmt(row.incomeTax)}</TableCell>
+                            <TableCell className="text-right tabular-nums">{fmt(row.solidarityTax)}</TableCell>
+                            <TableCell className="text-right tabular-nums">{fmt(row.churchTax)}</TableCell>
+                            <TableCell className="text-right tabular-nums font-medium">{fmt(row.totalTax)}</TableCell>
+                            <TableCell className="text-right tabular-nums">{fmt(row.svHealthEmployee)}</TableCell>
+                            <TableCell className="text-right tabular-nums">{fmt(row.svPensionEmployee)}</TableCell>
+                            <TableCell className="text-right tabular-nums">{fmt(row.svUnemploymentEmployee)}</TableCell>
+                            <TableCell className="text-right tabular-nums">{fmt(row.svCareEmployee)}</TableCell>
+                            <TableCell className="text-right tabular-nums font-medium">{fmt(row.svTotalEmployee)}</TableCell>
+                            <TableCell className="text-right tabular-nums font-bold">{fmt(row.finalNetSalary)}</TableCell>
+                          </TableRow>
+                          {hasItems && isOpen && (
+                            <TableRow key={`m-${row.month}-items`} className="bg-muted/20 hover:bg-muted/20">
+                              <TableCell colSpan={13} className="p-0">
+                                <WageTypeBreakdown items={row.wageTypeLineItems!} fmt={fmt} />
+                              </TableCell>
+                            </TableRow>
+                          )}
+                        </>
+                      );
+                    })}
                     {/* Jahressumme */}
                     <TableRow className="border-t-2 border-foreground bg-muted/50 font-bold">
+                      <TableCell className="sticky left-0 bg-muted/50 z-10 w-8 p-0" />
                       <TableCell className="sticky left-0 bg-muted/50 z-10">JAHRESSUMME</TableCell>
                       <TableCell className="text-right tabular-nums">{fmt(lohnkonto.cumulative.grossSalary)}</TableCell>
                       <TableCell className="text-right tabular-nums">{fmt(lohnkonto.cumulative.incomeTax)}</TableCell>
