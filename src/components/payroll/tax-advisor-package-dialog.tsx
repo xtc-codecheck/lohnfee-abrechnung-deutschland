@@ -11,13 +11,15 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command';
 import {
   Dialog,
   DialogContent,
@@ -46,6 +48,10 @@ import {
   AlertTriangle,
   ShieldCheck,
   CalendarRange,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsUpDown,
+  Check,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
@@ -101,6 +107,7 @@ export function TaxAdvisorPackageDialog({
   const [contactEmail, setContactEmail] = useState('');
   const [notes, setNotes] = useState('');
   const [selectedPeriodId, setSelectedPeriodId] = useState<string>(periode.id);
+  const [periodPickerOpen, setPeriodPickerOpen] = useState(false);
 
   // Periode + zugehörige Einträge aus Dropdown ableiten (Fallback: Props)
   const { periodOptions, hiddenPeriodsCount } = useMemo(() => {
@@ -152,6 +159,7 @@ export function TaxAdvisorPackageDialog({
   // Auswahl persistieren (nutzt year-month statt DB-ID, damit es Mandant-übergreifend stabil ist)
   const handlePeriodChange = (id: string) => {
     setSelectedPeriodId(id);
+    setPeriodPickerOpen(false);
     if (!storageKey) return;
     const next = periodOptions.find((p) => p.id === id);
     if (!next) return;
@@ -467,40 +475,144 @@ export function TaxAdvisorPackageDialog({
                 <CalendarRange className="h-3.5 w-3.5" />
                 Abrechnungsperiode
               </Label>
-              <Select
-                value={selectedPeriodId}
-                onValueChange={handlePeriodChange}
-                disabled={periodOptions.length <= 1 || isExporting}
-              >
-                <SelectTrigger id="pkg-period-select" className="w-full">
-                  <SelectValue placeholder="Periode wählen" />
-                </SelectTrigger>
-                <SelectContent>
-                  {periodOptions.map((p) => {
-                    const status = (p.status ?? 'draft').toLowerCase();
-                    const closed = [
-                      'closed',
-                      'completed',
-                      'processed',
-                      'abgeschlossen',
-                    ].includes(status);
-                    return (
-                      <SelectItem key={p.id} value={p.id}>
-                        <span className="flex items-center gap-2">
-                          <span>
-                            {format(p.startDate, 'MMMM yyyy', { locale: de })}
-                          </span>
-                          <span
-                            className={`text-xs ${closed ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'}`}
-                          >
-                            {closed ? '· abgeschlossen' : `· ${status}`}
-                          </span>
+              <div className="flex items-center gap-2">
+                {/* Älterer Monat (sortiert neueste-zuerst → höherer Index) */}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="h-10 w-10 shrink-0"
+                  aria-label="Vorheriger Monat (älter)"
+                  title="Vorheriger Monat"
+                  disabled={
+                    isExporting ||
+                    periodOptions.length <= 1 ||
+                    periodOptions.findIndex((p) => p.id === selectedPeriodId) >=
+                      periodOptions.length - 1
+                  }
+                  onClick={() => {
+                    const idx = periodOptions.findIndex((p) => p.id === selectedPeriodId);
+                    const next = periodOptions[idx + 1];
+                    if (next) handlePeriodChange(next.id);
+                  }}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+
+                {/* Combobox mit Suchfunktion */}
+                <Popover open={periodPickerOpen} onOpenChange={setPeriodPickerOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      id="pkg-period-select"
+                      type="button"
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={periodPickerOpen}
+                      disabled={periodOptions.length <= 1 || isExporting}
+                      className="w-full justify-between font-normal"
+                    >
+                      <span className="flex items-center gap-2 truncate">
+                        <span className="truncate">
+                          {format(activePeriod.startDate, 'MMMM yyyy', { locale: de })}
                         </span>
-                      </SelectItem>
-                    );
-                  })}
-                </SelectContent>
-              </Select>
+                        {(() => {
+                          const status = (activePeriod.status ?? 'draft').toLowerCase();
+                          const closed = [
+                            'closed',
+                            'completed',
+                            'processed',
+                            'abgeschlossen',
+                          ].includes(status);
+                          return (
+                            <span
+                              className={`text-xs ${closed ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'}`}
+                            >
+                              {closed ? '· abgeschlossen' : `· ${status}`}
+                            </span>
+                          );
+                        })()}
+                      </span>
+                      <ChevronsUpDown className="h-4 w-4 opacity-50 shrink-0" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent
+                    className="w-[--radix-popover-trigger-width] p-0"
+                    align="start"
+                  >
+                    <Command
+                      filter={(value, search) => {
+                        // value = "MMMM yyyy MM/yyyy yyyy-MM status" (siehe unten)
+                        if (!search) return 1;
+                        return value.toLowerCase().includes(search.toLowerCase()) ? 1 : 0;
+                      }}
+                    >
+                      <CommandInput placeholder="Monat suchen, z.B. Mai 2026 …" />
+                      <CommandList>
+                        <CommandEmpty>Keine Periode gefunden.</CommandEmpty>
+                        <CommandGroup>
+                          {periodOptions.map((p) => {
+                            const status = (p.status ?? 'draft').toLowerCase();
+                            const closed = [
+                              'closed',
+                              'completed',
+                              'processed',
+                              'abgeschlossen',
+                            ].includes(status);
+                            const monthHuman = format(p.startDate, 'MMMM yyyy', {
+                              locale: de,
+                            });
+                            const monthNumeric = format(p.startDate, 'MM/yyyy');
+                            const monthIso = `${p.year}-${String(p.month).padStart(2, '0')}`;
+                            // value-String wird vom Command für die Suche genutzt
+                            const searchValue =
+                              `${monthHuman} ${monthNumeric} ${monthIso} ${status}`;
+                            const isSelected = p.id === selectedPeriodId;
+                            return (
+                              <CommandItem
+                                key={p.id}
+                                value={searchValue}
+                                onSelect={() => handlePeriodChange(p.id)}
+                              >
+                                <Check
+                                  className={`mr-2 h-4 w-4 ${isSelected ? 'opacity-100' : 'opacity-0'}`}
+                                />
+                                <span className="flex-1 truncate">{monthHuman}</span>
+                                <span
+                                  className={`text-xs ml-2 ${closed ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'}`}
+                                >
+                                  {closed ? 'abgeschlossen' : status}
+                                </span>
+                              </CommandItem>
+                            );
+                          })}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+
+                {/* Neuerer Monat (niedrigerer Index) */}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="h-10 w-10 shrink-0"
+                  aria-label="Nächster Monat (neuer)"
+                  title="Nächster Monat"
+                  disabled={
+                    isExporting ||
+                    periodOptions.length <= 1 ||
+                    periodOptions.findIndex((p) => p.id === selectedPeriodId) <= 0
+                  }
+                  onClick={() => {
+                    const idx = periodOptions.findIndex((p) => p.id === selectedPeriodId);
+                    const prev = periodOptions[idx - 1];
+                    if (prev) handlePeriodChange(prev.id);
+                  }}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
               {periodOptions.length <= 1 && (
                 <p className="text-xs text-muted-foreground">
                   Es ist nur eine Periode verfügbar.
