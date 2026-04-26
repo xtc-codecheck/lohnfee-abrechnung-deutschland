@@ -595,8 +595,8 @@ function buildImportGuidePdf(
   );
   para('Importbereich in DATEV Rechnungswesen:');
   code(
-    'Bestand → Daten holen → Import → ASCII-Datei (DATEV-Format)\n' +
-      'Datei wählen → Format „EXTF / Buchungsstapel“\n' +
+    'Bestand > Daten holen > Import > ASCII-Datei (DATEV-Format)\n' +
+      'Datei waehlen > Format "EXTF / Buchungsstapel"\n' +
       'Wirtschaftsjahr: ' +
       format(datevConfig.wirtschaftsjahrBeginn, 'dd.MM.yyyy') +
       '\n' +
