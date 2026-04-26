@@ -176,6 +176,36 @@ export function generatePayrollPdf(
     y += 3;
   }
 
+  // ── Lohnarten (P4) ───────────────────────────────────────
+  // Aufschlüsselung der angewandten Lohnarten je Effekt – wichtig für
+  // Transparenz gegenüber Mitarbeiter UND für steuerliche Nachvollziehbarkeit.
+  if (entry.wageTypeLineItems && entry.wageTypeLineItems.length > 0) {
+    y = sectionTitle(doc, L.wageTypesSection, y);
+    const effectLabel: Record<string, string> = {
+      gross_taxable: L.wageTypeEffectGrossTaxable,
+      net_taxfree: L.wageTypeEffectNetTaxFree,
+      in_kind: L.wageTypeEffectInKind,
+      net_deduction: L.wageTypeEffectNetDeduction,
+      pauschal: L.wageTypeEffectPauschal,
+    };
+    for (const li of entry.wageTypeLineItems) {
+      // Nur Items mit Betrag > 0 anzeigen (steuerfreie Sachbezugsfreigrenze hat amount=0)
+      if (li.amount === 0) continue;
+      const sign = (li.effect === 'net_deduction' || li.effect === 'in_kind') ? '– ' : '';
+      const label = `${li.code} ${li.name} (${effectLabel[li.effect] ?? li.effect})`;
+      y = row(doc, label, `${sign}${fmt(li.amount)}`, y);
+      // Pauschalsteuer-Hinweis als Sub-Zeile
+      if (li.pauschalTaxAmount && li.pauschalTaxAmount > 0) {
+        doc.setFont('helvetica', 'italic');
+        doc.setFontSize(7);
+        doc.setTextColor(120, 120, 120);
+        doc.text(`   ${L.wageTypeEffectPauschal} ${li.pauschalTaxRate}%: ${fmt(li.pauschalTaxAmount)}`, 24, y);
+        y += 4;
+      }
+    }
+    y += 3;
+  }
+
   // ── Netto ─────────────────────────────────────────────────
   doc.setFillColor(34, 197, 94); // green accent
   doc.roundedRect(19, y - 1, 172, 10, 2, 2, 'F');

@@ -22,6 +22,13 @@ export interface PayslipLabels {
   taxes: string;
   socialSecurityEmployee: string;
   otherDeductions: string;
+  // Lohnarten-Sektion (P4)
+  wageTypesSection: string;
+  wageTypeEffectGrossTaxable: string;
+  wageTypeEffectNetTaxFree: string;
+  wageTypeEffectInKind: string;
+  wageTypeEffectNetDeduction: string;
+  wageTypeEffectPauschal: string;
   // Employee fields
   name: string;
   taxId: string;
@@ -85,6 +92,12 @@ const DE: PayslipLabels = {
   taxes: 'Steuerliche Abzüge',
   socialSecurityEmployee: 'Sozialversicherung (AN-Anteil)',
   otherDeductions: 'Sonstige Abzüge',
+  wageTypesSection: 'Lohnarten',
+  wageTypeEffectGrossTaxable: 'Brutto (steuer-/SV-pflichtig)',
+  wageTypeEffectNetTaxFree: 'Netto (steuer-/SV-frei)',
+  wageTypeEffectInKind: 'Sachbezug',
+  wageTypeEffectNetDeduction: 'Netto-Abzug',
+  wageTypeEffectPauschal: 'Pauschalsteuer (AG)',
   name: 'Name',
   taxId: 'Steuer-ID',
   taxClass: 'Steuerklasse',
@@ -139,6 +152,12 @@ const EN: PayslipLabels = {
   taxes: 'Tax Deductions',
   socialSecurityEmployee: 'Social Security (Employee Share)',
   otherDeductions: 'Other Deductions',
+  wageTypesSection: 'Wage Items',
+  wageTypeEffectGrossTaxable: 'Gross (taxable / SS-relevant)',
+  wageTypeEffectNetTaxFree: 'Net (tax-free / SS-free)',
+  wageTypeEffectInKind: 'In-kind benefit',
+  wageTypeEffectNetDeduction: 'Net deduction',
+  wageTypeEffectPauschal: 'Flat-rate tax (employer)',
   name: 'Name',
   taxId: 'Tax ID',
   taxClass: 'Tax Class',
