@@ -6,6 +6,7 @@
 import { PayrollPeriod, PayrollEntry, PayrollStatus } from '@/types/payroll';
 import { Tables } from '@/integrations/supabase/types';
 import { Employee } from '@/types/employee';
+import type { WageTypeLineItem } from '@/utils/wage-types-integration';
 
 type DbPeriod = Tables<'payroll_periods'>;
 type DbEntry = Tables<'payroll_entries'>;
@@ -25,6 +26,15 @@ export function dbToPeriod(row: DbPeriod): PayrollPeriod {
 
 export function dbToPayrollEntry(row: DbEntry, employeeMap: Map<string, Employee>): PayrollEntry {
   const emp = employeeMap.get(row.employee_id);
+  // Lohnarten-Aufschlüsselung aus JSONB rekonstruieren (P4 — Lohnarten in PDF & DATEV)
+  let wageTypeLineItems: WageTypeLineItem[] | undefined;
+  if (row.audit_data && typeof row.audit_data === 'object' && !Array.isArray(row.audit_data)) {
+    const auditObj = row.audit_data as Record<string, unknown>;
+    const items = auditObj.wageTypeLineItems;
+    if (Array.isArray(items)) {
+      wageTypeLineItems = items as WageTypeLineItem[];
+    }
+  }
   return {
     id: row.id,
     employeeId: row.employee_id,
@@ -67,6 +77,7 @@ export function dbToPayrollEntry(row: DbEntry, employeeMap: Map<string, Employee
       total: Number(row.overtime_pay ?? 0) + Number(row.bonus ?? 0),
     },
     finalNetSalary: Number(row.final_net_salary),
+    wageTypeLineItems,
     createdAt: new Date(row.created_at),
     updatedAt: new Date(row.updated_at),
   };

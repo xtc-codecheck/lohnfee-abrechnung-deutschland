@@ -133,6 +133,10 @@ export function useSupabasePayroll() {
         overtime_hours: entry.workingData.overtimeHours,
         overtime_pay: entry.additions.overtimePay,
         deductions: entry.deductions.total,
+        // Lohnarten-Aufschlüsselung in JSONB (für PDF, DATEV, Lohnkonto, Audit)
+        audit_data: entry.wageTypeLineItems && entry.wageTypeLineItems.length > 0
+          ? { wageTypeLineItems: entry.wageTypeLineItems }
+          : null,
       })
       .select().single();
     if (err) {
