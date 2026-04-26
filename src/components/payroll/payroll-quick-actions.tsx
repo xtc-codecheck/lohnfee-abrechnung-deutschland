@@ -192,6 +192,8 @@ export function PayrollQuickActions({
             <TaxAdvisorPackageDialog
               payrollEntries={payrollEntries.filter(e => e.payrollPeriodId === sortedPeriods[0]?.id)}
               periode={sortedPeriods[0]}
+              allPeriods={sortedPeriods}
+              allEntries={payrollEntries}
             />
           ) : (
             <Button className="w-full bg-gradient-primary hover:opacity-90" disabled>Keine Abrechnungen vorhanden</Button>
