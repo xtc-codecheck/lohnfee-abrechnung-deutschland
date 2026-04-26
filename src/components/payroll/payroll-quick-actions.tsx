@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { DatevExportDialog } from "./datev-export-dialog";
 import { TaxAdvisorPackageDialog } from "./tax-advisor-package-dialog";
+import { ExportScheduleCard } from "./export-schedule-card";
 import { PayrollEntry, PayrollPeriod } from "@/types/payroll";
 
 interface PayrollQuickActionsProps {
@@ -197,6 +198,9 @@ export function PayrollQuickActions({
           )}
         </CardContent>
       </Card>
+
+      {/* Monatlicher Exportplan – breite Karte mit Konfiguration & Download-Liste */}
+      <ExportScheduleCard periods={sortedPeriods} entries={payrollEntries} />
 
       <Card className="shadow-card hover:shadow-elegant transition-shadow cursor-pointer" onClick={onShowSettings}>
         <CardHeader>

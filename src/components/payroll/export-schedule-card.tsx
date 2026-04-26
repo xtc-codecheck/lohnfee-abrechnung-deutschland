@@ -120,7 +120,7 @@ export function ExportScheduleCard({ periods, entries }: ExportScheduleCardProps
             <p className="text-xs text-muted-foreground mt-1">
               Zielperiode: {formatPeriod(targetPeriodLabel)}{' '}
               {targetReady ? (
-                <span className="text-emerald-600">· Daten verfügbar</span>
+                <span className="text-primary font-medium">· Daten verfügbar</span>
               ) : (
                 <span className="text-muted-foreground">· wartet auf Abrechnung</span>
               )}
