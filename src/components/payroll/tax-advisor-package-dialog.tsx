@@ -5,7 +5,7 @@
  * Lohnarten-Excel und Begleit-PDF für die Übergabe an den Steuerberater.
  */
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -20,15 +20,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import {
@@ -41,6 +34,10 @@ import {
   Loader2,
   Building2,
   Calculator,
+  CheckCircle2,
+  XCircle,
+  AlertTriangle,
+  ShieldCheck,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
@@ -51,6 +48,7 @@ import {
   downloadTaxAdvisorPackage,
 } from '@/utils/tax-advisor-package';
 import type { Kontenrahmen } from '@/utils/datev-export';
+import { generateFibuJournal } from '@/utils/fibu-booking';
 import { useCompanySettings } from '@/hooks/use-company-settings';
 
 interface TaxAdvisorPackageDialogProps {
@@ -58,6 +56,16 @@ interface TaxAdvisorPackageDialogProps {
   periode: PayrollPeriod;
   trigger?: React.ReactNode;
   onExportComplete?: () => void;
+}
+
+type CheckStatus = 'ok' | 'warn' | 'error';
+
+interface ValidationCheck {
+  id: string;
+  label: string;
+  status: CheckStatus;
+  detail: string;
+  blocking: boolean;
 }
 
 export function TaxAdvisorPackageDialog({
@@ -88,10 +96,207 @@ export function TaxAdvisorPackageDialog({
     netto: payrollEntries.reduce((s, e) => s + e.finalNetSalary, 0),
   };
 
+  // ─── Validierung: Pflichtdaten vor Export ────────────────────
+  const validation = useMemo(() => {
+    const checks: ValidationCheck[] = [];
+
+    // 1) Abrechnungen vorhanden?
+    if (payrollEntries.length === 0) {
+      checks.push({
+        id: 'entries',
+        label: 'Lohnabrechnungen vorhanden',
+        status: 'error',
+        detail: 'Für diesen Monat existieren keine Abrechnungen.',
+        blocking: true,
+      });
+    } else {
+      checks.push({
+        id: 'entries',
+        label: 'Lohnabrechnungen vorhanden',
+        status: 'ok',
+        detail: `${payrollEntries.length} Mitarbeiter abgerechnet.`,
+        blocking: true,
+      });
+    }
+
+    // 2) Periode-Status (gebucht / abgeschlossen?)
+    const periodStatus = (periode.status ?? 'draft').toLowerCase();
+    const periodClosed = ['closed', 'completed', 'processed', 'abgeschlossen'].includes(
+      periodStatus,
+    );
+    checks.push({
+      id: 'period',
+      label: 'Abrechnungsperiode abgeschlossen',
+      status: periodClosed ? 'ok' : 'warn',
+      detail: periodClosed
+        ? `Periode ${format(periode.startDate, 'MM/yyyy')} ist abgeschlossen.`
+        : `Periode hat Status "${periodStatus}". Export ist möglich, aber Daten könnten sich noch ändern.`,
+      blocking: false,
+    });
+
+    // 3) Lohnarten-Aufschlüsselung
+    const entriesWithLineItems = payrollEntries.filter(
+      (e) => (e.wageTypeLineItems ?? []).length > 0,
+    );
+    const lineItemRatio = payrollEntries.length
+      ? entriesWithLineItems.length / payrollEntries.length
+      : 0;
+    if (payrollEntries.length === 0) {
+      // bereits durch Check 1 abgedeckt
+    } else if (lineItemRatio === 1) {
+      checks.push({
+        id: 'wagetypes',
+        label: 'Lohnarten-Aufschlüsselung vollständig',
+        status: 'ok',
+        detail: 'Alle Mitarbeiter haben detaillierte Lohnarten-Buchungen.',
+        blocking: false,
+      });
+    } else if (lineItemRatio > 0) {
+      checks.push({
+        id: 'wagetypes',
+        label: 'Lohnarten-Aufschlüsselung vollständig',
+        status: 'warn',
+        detail: `${entriesWithLineItems.length}/${payrollEntries.length} Mitarbeiter haben Lohnarten-Details. Sammelbuchungen werden für die Übrigen verwendet.`,
+        blocking: false,
+      });
+    } else {
+      checks.push({
+        id: 'wagetypes',
+        label: 'Lohnarten-Aufschlüsselung vollständig',
+        status: 'warn',
+        detail: 'Keine Lohnarten-Details. Es werden nur Sammelbuchungen erzeugt.',
+        blocking: false,
+      });
+    }
+
+    // 4) Kontenrahmen-Konten in Wage-Types gepflegt?
+    const accountField = kontenrahmen === 'SKR03' ? 'account_skr03' : 'account_skr04';
+    let totalLineItems = 0;
+    let lineItemsWithAccount = 0;
+    for (const e of payrollEntries) {
+      for (const li of e.wageTypeLineItems ?? []) {
+        totalLineItems++;
+        if (li.account && String(li.account).trim().length > 0) lineItemsWithAccount++;
+      }
+    }
+    if (totalLineItems === 0) {
+      checks.push({
+        id: 'accounts',
+        label: `${kontenrahmen}-Konten gepflegt`,
+        status: 'warn',
+        detail: 'Keine Lohnarten zur Kontenprüfung vorhanden – Standardkonten werden verwendet.',
+        blocking: false,
+      });
+    } else if (lineItemsWithAccount === totalLineItems) {
+      checks.push({
+        id: 'accounts',
+        label: `${kontenrahmen}-Konten gepflegt`,
+        status: 'ok',
+        detail: `Alle ${totalLineItems} Lohnart-Buchungen haben ein ${kontenrahmen}-Konto.`,
+        blocking: false,
+      });
+    } else {
+      checks.push({
+        id: 'accounts',
+        label: `${kontenrahmen}-Konten gepflegt`,
+        status: 'warn',
+        detail: `${totalLineItems - lineItemsWithAccount} von ${totalLineItems} Lohnart-Buchungen ohne ${kontenrahmen}-Konto. Standardkonten greifen als Fallback. Pflege unter "Lohnarten verwalten".`,
+        blocking: false,
+      });
+    }
+
+    // 5) Buchungsstapel ausgeglichen (Soll = Haben)
+    let fibuStatus: CheckStatus = 'ok';
+    let fibuDetail = '';
+    let blockOnFibu = false;
+    if (payrollEntries.length > 0) {
+      try {
+        const journal = generateFibuJournal(
+          payrollEntries,
+          kontenrahmen,
+          periode.month,
+          periode.year,
+        );
+        const diff = Math.abs(journal.summen.differenz);
+        if (journal.summen.anzahlBuchungen === 0) {
+          fibuStatus = 'error';
+          fibuDetail = 'Buchungsstapel ist leer.';
+          blockOnFibu = true;
+        } else if (diff < 0.01) {
+          fibuStatus = 'ok';
+          fibuDetail = `${journal.summen.anzahlBuchungen} Buchungen, Soll = Haben (${fmtCur(journal.summen.sollGesamt)}).`;
+        } else if (diff < 1) {
+          fibuStatus = 'warn';
+          fibuDetail = `Rundungsdifferenz: ${fmtCur(diff)}. Export möglich.`;
+        } else {
+          fibuStatus = 'error';
+          fibuDetail = `Soll/Haben-Differenz: ${fmtCur(diff)}. Bitte Daten prüfen.`;
+          blockOnFibu = true;
+        }
+      } catch (err) {
+        fibuStatus = 'error';
+        fibuDetail =
+          err instanceof Error
+            ? `Buchungsstapel konnte nicht erzeugt werden: ${err.message}`
+            : 'Buchungsstapel konnte nicht erzeugt werden.';
+        blockOnFibu = true;
+      }
+    } else {
+      fibuStatus = 'error';
+      fibuDetail = 'Kein Buchungsstapel ohne Abrechnungen.';
+      blockOnFibu = true;
+    }
+    checks.push({
+      id: 'fibu',
+      label: 'Buchungsstapel ausgeglichen',
+      status: fibuStatus,
+      detail: fibuDetail,
+      blocking: blockOnFibu,
+    });
+
+    // 6) Mandantenstammdaten (für DATEV-Header empfohlen)
+    const missingCompany: string[] = [];
+    if (!companySettings?.company_name) missingCompany.push('Firmenname');
+    if (!companySettings?.tax_number) missingCompany.push('Steuernummer');
+    if (!companySettings?.betriebsnummer) missingCompany.push('Betriebsnummer');
+    if (missingCompany.length === 0) {
+      checks.push({
+        id: 'company',
+        label: 'Mandantenstammdaten vollständig',
+        status: 'ok',
+        detail: 'Firmenname, Steuernummer und Betriebsnummer sind gepflegt.',
+        blocking: false,
+      });
+    } else {
+      checks.push({
+        id: 'company',
+        label: 'Mandantenstammdaten vollständig',
+        status: 'warn',
+        detail: `Fehlt: ${missingCompany.join(', ')}. Pflege unter "Einstellungen > Firma".`,
+        blocking: false,
+      });
+    }
+
+    const errors = checks.filter((c) => c.status === 'error').length;
+    const warnings = checks.filter((c) => c.status === 'warn').length;
+    const blocked = checks.some((c) => c.blocking && c.status === 'error');
+    const okCount = checks.filter((c) => c.status === 'ok').length;
+
+    return { checks, errors, warnings, blocked, okCount };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [payrollEntries, periode, kontenrahmen, companySettings]);
+
   const handleExport = async () => {
     if (payrollEntries.length === 0) {
       toast.error('Keine Abrechnungen', {
         description: 'Es wurden keine Lohnabrechnungen für diese Periode gefunden.',
+      });
+      return;
+    }
+
+    if (validation.blocked) {
+      toast.error('Export blockiert', {
+        description: 'Bitte beheben Sie die markierten Fehler in der Checkliste.',
       });
       return;
     }
@@ -125,9 +330,6 @@ export function TaxAdvisorPackageDialog({
       setIsExporting(false);
     }
   };
-
-  const fmtCur = (v: number) =>
-    new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(v);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -168,6 +370,15 @@ export function TaxAdvisorPackageDialog({
               </div>
             </CardContent>
           </Card>
+
+          {/* Validierungs-Checkliste */}
+          <ValidationChecklist
+            checks={validation.checks}
+            errors={validation.errors}
+            warnings={validation.warnings}
+            okCount={validation.okCount}
+            blocked={validation.blocked}
+          />
 
           {/* Inhalt */}
           <div className="rounded-lg border bg-muted/30 p-4 space-y-2">
@@ -284,7 +495,7 @@ export function TaxAdvisorPackageDialog({
           </Button>
           <Button
             onClick={handleExport}
-            disabled={isExporting || payrollEntries.length === 0}
+            disabled={isExporting || payrollEntries.length === 0 || validation.blocked}
             className="gap-2"
           >
             {isExporting ? (
@@ -302,5 +513,109 @@ export function TaxAdvisorPackageDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+}
+
+const fmtCur = (v: number) =>
+  new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(v);
+
+function ValidationChecklist({
+  checks,
+  errors,
+  warnings,
+  okCount,
+  blocked,
+}: {
+  checks: ValidationCheck[];
+  errors: number;
+  warnings: number;
+  okCount: number;
+  blocked: boolean;
+}) {
+  const headerStatus: CheckStatus = errors > 0 ? 'error' : warnings > 0 ? 'warn' : 'ok';
+  const headerLabel =
+    headerStatus === 'ok'
+      ? 'Alle Pflichtdaten vollständig'
+      : headerStatus === 'warn'
+        ? `${warnings} Hinweis${warnings === 1 ? '' : 'e'}, Export möglich`
+        : `${errors} Fehler – Export blockiert`;
+
+  const headerClass =
+    headerStatus === 'ok'
+      ? 'border-emerald-500/40 bg-emerald-500/5 dark:bg-emerald-500/10'
+      : headerStatus === 'warn'
+        ? 'border-amber-500/40 bg-amber-500/5 dark:bg-amber-500/10'
+        : 'border-destructive/40 bg-destructive/5';
+
+  const HeaderIcon =
+    headerStatus === 'ok' ? ShieldCheck : headerStatus === 'warn' ? AlertTriangle : XCircle;
+  const headerIconClass =
+    headerStatus === 'ok'
+      ? 'text-emerald-600 dark:text-emerald-400'
+      : headerStatus === 'warn'
+        ? 'text-amber-600 dark:text-amber-400'
+        : 'text-destructive';
+
+  return (
+    <Card className={`shadow-card ${headerClass}`}>
+      <CardHeader className="pb-3">
+        <CardTitle className="text-base flex items-center justify-between gap-2">
+          <span className="flex items-center gap-2">
+            <HeaderIcon className={`h-5 w-5 ${headerIconClass}`} />
+            Validierung der Pflichtdaten
+          </span>
+          <Badge
+            variant={headerStatus === 'ok' ? 'secondary' : headerStatus === 'warn' ? 'outline' : 'destructive'}
+          >
+            {okCount}/{checks.length} OK
+          </Badge>
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-2">
+        <p className="text-sm text-muted-foreground mb-2">{headerLabel}</p>
+        <ul className="space-y-2" role="list">
+          {checks.map((c) => (
+            <li key={c.id} className="flex items-start gap-2 text-sm">
+              {c.status === 'ok' && (
+                <CheckCircle2
+                  className="h-4 w-4 mt-0.5 shrink-0 text-emerald-600 dark:text-emerald-400"
+                  aria-label="OK"
+                />
+              )}
+              {c.status === 'warn' && (
+                <AlertTriangle
+                  className="h-4 w-4 mt-0.5 shrink-0 text-amber-600 dark:text-amber-400"
+                  aria-label="Hinweis"
+                />
+              )}
+              {c.status === 'error' && (
+                <XCircle
+                  className="h-4 w-4 mt-0.5 shrink-0 text-destructive"
+                  aria-label="Fehler"
+                />
+              )}
+              <span className="flex-1">
+                <span className="font-medium text-foreground">{c.label}</span>
+                <span className="block text-xs text-muted-foreground mt-0.5">{c.detail}</span>
+              </span>
+              {c.blocking && c.status === 'error' && (
+                <Badge variant="destructive" className="text-[10px] uppercase tracking-wider">
+                  Pflicht
+                </Badge>
+              )}
+            </li>
+          ))}
+        </ul>
+        {blocked && (
+          <Alert variant="destructive" className="mt-3">
+            <XCircle className="h-4 w-4" />
+            <AlertTitle>Export blockiert</AlertTitle>
+            <AlertDescription>
+              Bitte beheben Sie die mit „Pflicht" markierten Fehler, bevor Sie das Paket erstellen.
+            </AlertDescription>
+          </Alert>
+        )}
+      </CardContent>
+    </Card>
   );
 }
