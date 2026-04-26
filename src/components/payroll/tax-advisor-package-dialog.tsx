@@ -103,7 +103,7 @@ export function TaxAdvisorPackageDialog({
   const [selectedPeriodId, setSelectedPeriodId] = useState<string>(periode.id);
 
   // Periode + zugehörige Einträge aus Dropdown ableiten (Fallback: Props)
-  const periodOptions = useMemo(() => {
+  const { periodOptions, hiddenPeriodsCount } = useMemo(() => {
     const list = allPeriods && allPeriods.length > 0 ? allPeriods : [periode];
 
     // Set der Perioden-IDs mit mindestens einer Abrechnung
@@ -116,11 +116,15 @@ export function TaxAdvisorPackageDialog({
     const filtered = list.filter(
       (p) => periodsWithEntries.has(p.id) || p.id === periode.id,
     );
+    const hidden = list.length - filtered.length;
 
-    return filtered.sort((a, b) => {
-      if (a.year !== b.year) return b.year - a.year;
-      return b.month - a.month;
-    });
+    return {
+      periodOptions: filtered.sort((a, b) => {
+        if (a.year !== b.year) return b.year - a.year;
+        return b.month - a.month;
+      }),
+      hiddenPeriodsCount: hidden,
+    };
   }, [allPeriods, allEntries, payrollEntries, periode]);
 
   // ─── Persistenz: zuletzt gewählte Periode pro Mandant ────────
