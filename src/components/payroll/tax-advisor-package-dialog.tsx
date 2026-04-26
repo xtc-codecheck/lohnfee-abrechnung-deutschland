@@ -109,9 +109,11 @@ export function TaxAdvisorPackageDialog({
   const [notes, setNotes] = useState('');
   const [selectedPeriodId, setSelectedPeriodId] = useState<string>(periode.id);
   const [periodPickerOpen, setPeriodPickerOpen] = useState(false);
+  // Status-Filter für die Perioden-Auswahl: nur abgeschlossene Perioden oder inkl. Draft
+  const [statusFilter, setStatusFilter] = useState<'closed' | 'all'>('closed');
 
   // Periode + zugehörige Einträge aus Dropdown ableiten (Fallback: Props)
-  const { periodOptions, hiddenPeriodsCount } = useMemo(() => {
+  const { periodOptions, hiddenNoEntriesCount, hiddenDraftCount } = useMemo(() => {
     const list = allPeriods && allPeriods.length > 0 ? allPeriods : [periode];
 
     // Set der Perioden-IDs mit mindestens einer Abrechnung
@@ -121,19 +123,35 @@ export function TaxAdvisorPackageDialog({
 
     // Nur Perioden mit Abrechnungen behalten; aktuelle Prop-Periode immer beibehalten,
     // damit der Dialog niemals leer/ungültig wird.
-    const filtered = list.filter(
+    const withEntries = list.filter(
       (p) => periodsWithEntries.has(p.id) || p.id === periode.id,
     );
-    const hidden = list.length - filtered.length;
+    const hiddenNoEntries = list.length - withEntries.length;
+
+    // Status-Filter anwenden (aktuelle Prop-Periode immer behalten, damit der Dialog
+    // niemals leer wird, auch wenn diese im Draft-Status ist).
+    const isClosed = (status?: string) => {
+      const s = (status ?? 'draft').toLowerCase();
+      return ['closed', 'completed', 'processed', 'abgeschlossen'].includes(s);
+    };
+    const afterStatus =
+      statusFilter === 'closed'
+        ? withEntries.filter((p) => isClosed(p.status) || p.id === periode.id)
+        : withEntries;
+    const hiddenDraft =
+      statusFilter === 'closed'
+        ? withEntries.length - afterStatus.length
+        : 0;
 
     return {
-      periodOptions: filtered.sort((a, b) => {
+      periodOptions: afterStatus.sort((a, b) => {
         if (a.year !== b.year) return b.year - a.year;
         return b.month - a.month;
       }),
-      hiddenPeriodsCount: hidden,
+      hiddenNoEntriesCount: hiddenNoEntries,
+      hiddenDraftCount: hiddenDraft,
     };
-  }, [allPeriods, allEntries, payrollEntries, periode]);
+  }, [allPeriods, allEntries, payrollEntries, periode, statusFilter]);
 
   // ─── Persistenz: zuletzt gewählte Periode pro Mandant ────────
   const storageKey = tenantId ? `tax-advisor-pkg:last-period:${tenantId}` : null;
