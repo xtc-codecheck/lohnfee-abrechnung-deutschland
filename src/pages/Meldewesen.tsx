@@ -7,14 +7,15 @@ import { LohnsteuerbescheinigungPage } from "@/components/meldewesen/lohnsteuerb
 import { LohnsteueranmeldungPage } from "@/components/meldewesen/lohnsteueranmeldung-page";
 import { AagPage } from "@/components/meldewesen/aag-page";
 import { SofortmeldungPage } from "@/components/meldewesen/sofortmeldung-page";
+import { UvJahresmeldungPage } from "@/components/meldewesen/uv-jahresmeldung-page";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/page-header";
 import { AppBreadcrumb } from "@/components/ui/app-breadcrumb";
-import { FileText, Send, ClipboardList, Calculator, HeartPulse, Zap } from "lucide-react";
+import { FileText, Send, ClipboardList, Calculator, HeartPulse, Zap, Shield } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-type MeldewesenView = 'overview' | 'sv-meldungen' | 'beitragsnachweise' | 'lstb' | 'lsta' | 'aag' | 'sofortmeldung';
+type MeldewesenView = 'overview' | 'sv-meldungen' | 'beitragsnachweise' | 'lstb' | 'lsta' | 'aag' | 'sofortmeldung' | 'uv-jahr';
 
 const viewLabels: Record<Exclude<MeldewesenView, 'overview'>, string> = {
   'sv-meldungen': 'SV-Meldungen',
@@ -23,6 +24,7 @@ const viewLabels: Record<Exclude<MeldewesenView, 'overview'>, string> = {
   'lsta': 'Lohnsteueranmeldung',
   'aag': 'AAG U1/U2',
   'sofortmeldung': 'Sofortmeldung § 28a',
+  'uv-jahr': 'UV-Jahresmeldung',
 };
 
 export default function Meldewesen() {
@@ -46,6 +48,7 @@ export default function Meldewesen() {
         {currentView === 'lsta' && <LohnsteueranmeldungPage onBack={handleBack} />}
         {currentView === 'aag' && <AagPage onBack={handleBack} />}
         {currentView === 'sofortmeldung' && <SofortmeldungPage onBack={handleBack} />}
+        {currentView === 'uv-jahr' && <UvJahresmeldungPage onBack={handleBack} />}
       </MainLayout>
     );
   }
@@ -144,6 +147,21 @@ export default function Meldewesen() {
             </CardHeader>
             <CardContent>
               <Button variant="outline" className="w-full">Meldungen verwalten</Button>
+            </CardContent>
+          </Card>
+
+          <Card className="shadow-card hover:shadow-elegant transition-shadow cursor-pointer" onClick={() => setCurrentView('uv-jahr')}>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Shield className="h-5 w-5 text-primary" />
+                UV-Jahresmeldung (BG)
+              </CardTitle>
+              <CardDescription>
+                Digitaler Lohnnachweis (DSLN) an die Berufsgenossenschaft – Frist 16.02.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button variant="outline" className="w-full">Lohnnachweis erstellen</Button>
             </CardContent>
           </Card>
         </div>
