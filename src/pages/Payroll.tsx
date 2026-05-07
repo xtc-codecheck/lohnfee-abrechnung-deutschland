@@ -1,15 +1,38 @@
-import { useState } from "react";
+import { useState, lazy, Suspense } from "react";
 import { useNavigate } from "react-router-dom";
 import { PageSeo } from "@/components/seo/page-seo";
 import { MainLayout } from "@/components/layout/main-layout";
 import { PayrollDashboard } from "@/components/payroll/payroll-dashboard";
-import { SpecialPaymentsManager } from "@/components/payroll/special-payments-manager";
-import { AutomationDashboard } from "@/components/automation/automation-dashboard";
-import { PayrollGuardianDashboard } from "@/components/payroll/payroll-guardian-dashboard";
-import { LohnkontoPage } from "@/components/payroll/lohnkonto-page";
-import { MonthlyPayrollWizard } from "@/components/payroll/monthly-payroll-wizard";
-import { FibuJournalPage } from "@/components/payroll/fibu-journal";
 import { AppBreadcrumb } from "@/components/ui/app-breadcrumb";
+import { Loader2 } from "lucide-react";
+
+// Heavy sub-views – lazy-loaded um den initialen Payroll-Chunk klein zu halten.
+const SpecialPaymentsManager = lazy(() =>
+  import("@/components/payroll/special-payments-manager").then(m => ({ default: m.SpecialPaymentsManager }))
+);
+const AutomationDashboard = lazy(() =>
+  import("@/components/automation/automation-dashboard").then(m => ({ default: m.AutomationDashboard }))
+);
+const PayrollGuardianDashboard = lazy(() =>
+  import("@/components/payroll/payroll-guardian-dashboard").then(m => ({ default: m.PayrollGuardianDashboard }))
+);
+const LohnkontoPage = lazy(() =>
+  import("@/components/payroll/lohnkonto-page").then(m => ({ default: m.LohnkontoPage }))
+);
+const MonthlyPayrollWizard = lazy(() =>
+  import("@/components/payroll/monthly-payroll-wizard").then(m => ({ default: m.MonthlyPayrollWizard }))
+);
+const FibuJournalPage = lazy(() =>
+  import("@/components/payroll/fibu-journal").then(m => ({ default: m.FibuJournalPage }))
+);
+
+function ViewLoader() {
+  return (
+    <div className="flex items-center justify-center py-24">
+      <Loader2 className="h-6 w-6 animate-spin text-primary" />
+    </div>
+  );
+}
 
 type PayrollView = 'dashboard' | 'special-payments' | 'automation' | 'guardian' | 'lohnkonto' | 'monthly-wizard' | 'fibu';
 
