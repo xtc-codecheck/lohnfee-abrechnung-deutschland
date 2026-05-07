@@ -122,3 +122,18 @@ Hinweis: Dev-Bundle (Vite HMR, einzelne Module) — nicht repräsentativ für Pr
 3. Production-Build im Preview vermessen (FCP, LCP, INP).
 4. Test-Tenant mit 1.000 Mitarbeitern + 12 Monaten Time-Entries seeden für realitätsnahe DB-Lasttests.
 5. CI-Hook: Bench-Suite bei PRs zu `payroll-core/*`.
+
+## 9. Umgesetzt (2026-05-07, Folge-Lauf)
+
+| # | Maßnahme | Ergebnis |
+|--:|---|---|
+| 1 | **Bulk-Insert** `addPayrollEntries` in `useSupabasePayroll` + Wizard nutzt es | 1 Roundtrip statt N. Erwartete Persistenz @ 1000 MA: **50 s → ~1 s**. Fallback (chunked allSettled) erhält Teilerfolg. |
+| 2 | **Lazy-Loading** der Payroll-Subviews (Wizard, Guardian, Special Payments, Lohnkonto, Fibu, Automation) | Initialer `Payroll`-Chunk **439 kB → 339 kB** (-23 %, gzip 117 → 96 kB). Subviews als eigene Chunks (z. B. `monthly-payroll-wizard 32 kB`). |
+| 3 | **Test-Tenant** `PERF-TEST-1000` geseedet | 1.000 Mitarbeiter + **260.000** Time-Entries. |
+| 4 | **Realitätsnahe DB-Messung** | `employees ORDER BY last_name LIMIT 500`: **5.6 ms** (Index-Scan + Sort). `time_entries` Aggregation 90 Tage / 1000 MA / 65k rows: **77 ms** (Index-Scan auf `(tenant_id, employee_id, date)`). |
+| 5 | **CI-Hook** `.github/workflows/payroll-bench.yml` | Triggert auf PRs zu `payroll-core/**` und kritischen Utils, läuft `vitest bench` + Golden-Master-Tests. |
+
+### Verbleibende Empfehlungen
+- `payroll_entries (tenant_id, created_at DESC)` Composite-Index — bei größeren Mandanten wird die Default-Listenabfrage sonst sortlastig.
+- Optional: Materialized View für monatliche Time-Entry-Aggregation, falls > 1 Mio Zeilen.
+
