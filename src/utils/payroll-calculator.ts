@@ -420,7 +420,7 @@ export function calculatePayrollEntry(input: PayrollCalculationInput): PayrollCa
   // 11a. Pfändungs-Auto-Berechnung nach §850c ZPO (Rangfolge berücksichtigt)
   let garnishmentImpact: PayrollCalculationOutput['garnishmentImpact'] | undefined;
   if (input.activeGarnishments && input.activeGarnishments.length > 0 && finalNetSalary > 0) {
-    const dependents = employee.salaryData.numberOfChildren ?? 0;
+    const dependents = (employee as any).personalData?.numberOfChildren ?? 0;
     const calc = calculateGarnishment({
       netIncome: finalNetSalary,
       numberOfDependents: dependents,
