@@ -65,7 +65,7 @@ const WIZARD_STEPS = [
 export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizardProps) {
   const { toast } = useToast();
   const { employees } = useEmployees();
-  const { payrollPeriods, payrollEntries, createPayrollPeriod, addPayrollEntry, updatePayrollPeriodStatus } = useSupabasePayroll();
+  const { payrollPeriods, payrollEntries, createPayrollPeriod, addPayrollEntry, addPayrollEntries, updatePayrollPeriodStatus } = useSupabasePayroll();
   const { byEmployee: wageTypesByEmployee } = useTenantEmployeeWageTypes();
   const { timeEntries } = useTimeTracking();
   const { historicalData, addToHistory } = usePayrollGuardian();
