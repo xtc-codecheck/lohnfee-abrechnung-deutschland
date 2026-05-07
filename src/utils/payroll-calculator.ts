@@ -407,8 +407,8 @@ export function calculatePayrollEntry(input: PayrollCalculationInput): PayrollCa
     }
   }
 
-  // 11. Finale Nettoauszahlung
-  const finalNetSalary = roundCurrency(
+  // 11. Vorläufige Nettoauszahlung (vor Pfändung)
+  let finalNetSalary = roundCurrency(
     salaryCalculation.netSalary
     - deductions.total
     - (wageTypesImpact?.netDeductions ?? 0)
@@ -416,6 +416,46 @@ export function calculatePayrollEntry(input: PayrollCalculationInput): PayrollCa
     + (wageTypesImpact?.taxFreeNetAddition ?? 0)
   );
   log.push(`Finale Nettoauszahlung: ${finalNetSalary}€`);
+
+  // 11a. Pfändungs-Auto-Berechnung nach §850c ZPO (Rangfolge berücksichtigt)
+  let garnishmentImpact: PayrollCalculationOutput['garnishmentImpact'] | undefined;
+  if (input.activeGarnishments && input.activeGarnishments.length > 0 && finalNetSalary > 0) {
+    const dependents = employee.salaryData.numberOfChildren ?? 0;
+    const calc = calculateGarnishment({
+      netIncome: finalNetSalary,
+      numberOfDependents: dependents,
+      year: input.period.year,
+    });
+    let remaining = calc.garnishableAmount;
+    const distributions: Array<{ id: string; glaeubiger: string; amount: number }> = [];
+    const sorted = [...input.activeGarnishments].sort((a, b) => (a.rang ?? 1) - (b.rang ?? 1));
+    for (const g of sorted) {
+      if (remaining <= 0) break;
+      const cap = Number(g.resttbetrag ?? g.forderungsbetrag ?? remaining);
+      const take = roundCurrency(Math.min(remaining, cap));
+      if (take <= 0) continue;
+      distributions.push({ id: g.id, glaeubiger: g.glaeubiger, amount: take });
+      remaining = roundCurrency(remaining - take);
+    }
+    const totalDistributed = roundCurrency(distributions.reduce((s, d) => s + d.amount, 0));
+    if (totalDistributed > 0) {
+      finalNetSalary = roundCurrency(finalNetSalary - totalDistributed);
+      garnishmentImpact = {
+        totalGarnishable: calc.garnishableAmount,
+        exemptAmount: calc.exemptAmount,
+        distributions,
+      };
+      auditLogger.log('GARNISHMENT', 'Pfändung nach §850c ZPO verrechnet', {
+        Pfaendbar: calc.garnishableAmount,
+        Freibetrag: calc.exemptAmount,
+        Unterhaltspflichten: dependents,
+      }, {
+        Abgeführt_Gesamt: totalDistributed,
+        Verbleibendes_Netto: finalNetSalary,
+      });
+      log.push(`Pfändung verrechnet: ${totalDistributed}€ an ${distributions.length} Gläubiger`);
+    }
+  }
 
   // Pauschalsteuer erhöht AG-Kosten
   if (wageTypesImpact && wageTypesImpact.pauschalTax > 0) {
