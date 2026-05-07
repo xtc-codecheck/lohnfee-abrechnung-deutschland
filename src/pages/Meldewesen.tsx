@@ -9,14 +9,16 @@ import { AagPage } from "@/components/meldewesen/aag-page";
 import { SofortmeldungPage } from "@/components/meldewesen/sofortmeldung-page";
 import { UvJahresmeldungPage } from "@/components/meldewesen/uv-jahresmeldung-page";
 import { BescheinigungenPage } from "@/components/meldewesen/bescheinigungen-page";
+import { DeuevRueckmeldungenPage } from "@/components/meldewesen/deuev-rueckmeldungen-page";
+import { ZvkPage } from "@/components/meldewesen/zvk-page";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/page-header";
 import { AppBreadcrumb } from "@/components/ui/app-breadcrumb";
-import { FileText, Send, ClipboardList, Calculator, HeartPulse, Zap, Shield, FileSignature } from "lucide-react";
+import { FileText, Send, ClipboardList, Calculator, HeartPulse, Zap, Shield, FileSignature, Inbox, Building2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-type MeldewesenView = 'overview' | 'sv-meldungen' | 'beitragsnachweise' | 'lstb' | 'lsta' | 'aag' | 'sofortmeldung' | 'uv-jahr' | 'bescheinigungen';
+type MeldewesenView = 'overview' | 'sv-meldungen' | 'beitragsnachweise' | 'lstb' | 'lsta' | 'aag' | 'sofortmeldung' | 'uv-jahr' | 'bescheinigungen' | 'deuev-rueck' | 'zvk';
 
 const viewLabels: Record<Exclude<MeldewesenView, 'overview'>, string> = {
   'sv-meldungen': 'SV-Meldungen',
@@ -27,6 +29,8 @@ const viewLabels: Record<Exclude<MeldewesenView, 'overview'>, string> = {
   'sofortmeldung': 'Sofortmeldung § 28a',
   'uv-jahr': 'UV-Jahresmeldung',
   'bescheinigungen': 'Bescheinigungen (EEL/BEA)',
+  'deuev-rueck': 'DEÜV-Rückmeldungen',
+  'zvk': 'ZVK / Pensionskassen',
 };
 
 export default function Meldewesen() {
@@ -52,6 +56,8 @@ export default function Meldewesen() {
         {currentView === 'sofortmeldung' && <SofortmeldungPage onBack={handleBack} />}
         {currentView === 'uv-jahr' && <UvJahresmeldungPage onBack={handleBack} />}
         {currentView === 'bescheinigungen' && <BescheinigungenPage onBack={handleBack} />}
+        {currentView === 'deuev-rueck' && <DeuevRueckmeldungenPage onBack={handleBack} />}
+        {currentView === 'zvk' && <ZvkPage onBack={handleBack} />}
       </MainLayout>
     );
   }
@@ -180,6 +186,36 @@ export default function Meldewesen() {
             </CardHeader>
             <CardContent>
               <Button variant="outline" className="w-full">Bescheinigungen verwalten</Button>
+            </CardContent>
+          </Card>
+
+          <Card className="shadow-card hover:shadow-elegant transition-shadow cursor-pointer" onClick={() => setCurrentView('deuev-rueck')}>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Inbox className="h-5 w-5 text-primary" />
+                DEÜV-Rückmeldungen
+              </CardTitle>
+              <CardDescription>
+                Antworten der Krankenkassen einlesen und Status zuordnen
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button variant="outline" className="w-full">Inbox öffnen</Button>
+            </CardContent>
+          </Card>
+
+          <Card className="shadow-card hover:shadow-elegant transition-shadow cursor-pointer" onClick={() => setCurrentView('zvk')}>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Building2 className="h-5 w-5 text-primary" />
+                ZVK / Pensionskassen
+              </CardTitle>
+              <CardDescription>
+                Beitrags- und Jahresmeldungen außerhalb SOKA-BAU
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button variant="outline" className="w-full">Kassen verwalten</Button>
             </CardContent>
           </Card>
         </div>
