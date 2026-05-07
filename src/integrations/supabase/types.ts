@@ -14,6 +14,75 @@ export type Database = {
   }
   public: {
     Tables: {
+      aag_antraege: {
+        Row: {
+          antrag_typ: string
+          bestaetigt_am: string | null
+          betriebsnummer_kk: string | null
+          brutto_entgelt: number
+          created_at: string
+          created_by: string | null
+          employee_id: string
+          erstattungsbetrag: number
+          erstattungssatz: number
+          fortzahlungstage: number
+          gemeldet_am: string | null
+          id: string
+          krankenkasse: string
+          notes: string | null
+          status: string
+          sv_beitraege: number
+          tenant_id: string
+          updated_at: string
+          zeitraum_bis: string
+          zeitraum_von: string
+        }
+        Insert: {
+          antrag_typ: string
+          bestaetigt_am?: string | null
+          betriebsnummer_kk?: string | null
+          brutto_entgelt?: number
+          created_at?: string
+          created_by?: string | null
+          employee_id: string
+          erstattungsbetrag?: number
+          erstattungssatz?: number
+          fortzahlungstage?: number
+          gemeldet_am?: string | null
+          id?: string
+          krankenkasse: string
+          notes?: string | null
+          status?: string
+          sv_beitraege?: number
+          tenant_id: string
+          updated_at?: string
+          zeitraum_bis: string
+          zeitraum_von: string
+        }
+        Update: {
+          antrag_typ?: string
+          bestaetigt_am?: string | null
+          betriebsnummer_kk?: string | null
+          brutto_entgelt?: number
+          created_at?: string
+          created_by?: string | null
+          employee_id?: string
+          erstattungsbetrag?: number
+          erstattungssatz?: number
+          fortzahlungstage?: number
+          gemeldet_am?: string | null
+          id?: string
+          krankenkasse?: string
+          notes?: string | null
+          status?: string
+          sv_beitraege?: number
+          tenant_id?: string
+          updated_at?: string
+          zeitraum_bis?: string
+          zeitraum_von?: string
+        }
+        Relationships: []
+      }
       audit_log: {
         Row: {
           action: string
