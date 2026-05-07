@@ -124,7 +124,7 @@ export function AagPage({ onBack }: AagPageProps) {
     const { error } = await supabase.from('aag_antraege').insert({
       tenant_id: tenantId,
       employee_id: employeeId,
-      krankenkasse: employee?.healthInsurance?.name ?? 'Unbekannt',
+      krankenkasse: employee?.personalData?.healthInsurance?.name ?? 'Unbekannt',
       antrag_typ: antragTyp,
       zeitraum_von: zeitraumVon,
       zeitraum_bis: zeitraumBis,
@@ -161,7 +161,7 @@ export function AagPage({ onBack }: AagPageProps) {
 
   const employeeName = (id: string) => {
     const e = employees.find(x => x.id === id);
-    return e ? `${e.firstName} ${e.lastName}` : '—';
+    return e ? `${e.personalData.firstName} ${e.personalData.lastName}` : '—';
   };
 
   return (
@@ -208,7 +208,7 @@ export function AagPage({ onBack }: AagPageProps) {
                     <SelectTrigger><SelectValue placeholder="Auswählen…" /></SelectTrigger>
                     <SelectContent>
                       {employees.map(e => (
-                        <SelectItem key={e.id} value={e.id}>{e.firstName} {e.lastName}</SelectItem>
+                        <SelectItem key={e.id} value={e.id}>{e.personalData.firstName} {e.personalData.lastName}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
