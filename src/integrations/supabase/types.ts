@@ -14,6 +14,72 @@ export type Database = {
   }
   public: {
     Tables: {
+      a1_bescheinigungen: {
+        Row: {
+          art: string
+          auftraggeber: string | null
+          auftraggeber_adresse: string | null
+          ausgestellt_am: string | null
+          beantragt_am: string | null
+          bescheinigung_nr: string | null
+          created_at: string
+          created_by: string | null
+          employee_id: string
+          entsendeland: string
+          id: string
+          notes: string | null
+          status: string
+          taetigkeit: string | null
+          tenant_id: string
+          transfer_ticket: string | null
+          updated_at: string
+          zeitraum_bis: string
+          zeitraum_von: string
+        }
+        Insert: {
+          art?: string
+          auftraggeber?: string | null
+          auftraggeber_adresse?: string | null
+          ausgestellt_am?: string | null
+          beantragt_am?: string | null
+          bescheinigung_nr?: string | null
+          created_at?: string
+          created_by?: string | null
+          employee_id: string
+          entsendeland: string
+          id?: string
+          notes?: string | null
+          status?: string
+          taetigkeit?: string | null
+          tenant_id: string
+          transfer_ticket?: string | null
+          updated_at?: string
+          zeitraum_bis: string
+          zeitraum_von: string
+        }
+        Update: {
+          art?: string
+          auftraggeber?: string | null
+          auftraggeber_adresse?: string | null
+          ausgestellt_am?: string | null
+          beantragt_am?: string | null
+          bescheinigung_nr?: string | null
+          created_at?: string
+          created_by?: string | null
+          employee_id?: string
+          entsendeland?: string
+          id?: string
+          notes?: string | null
+          status?: string
+          taetigkeit?: string | null
+          tenant_id?: string
+          transfer_ticket?: string | null
+          updated_at?: string
+          zeitraum_bis?: string
+          zeitraum_von?: string
+        }
+        Relationships: []
+      }
       aag_antraege: {
         Row: {
           antrag_typ: string
@@ -611,6 +677,75 @@ export type Database = {
         }
         Relationships: []
       }
+      employee_garnishments: {
+        Row: {
+          aktenzeichen: string | null
+          bank_iban: string | null
+          beginn_datum: string
+          created_at: string
+          created_by: string | null
+          employee_id: string
+          ende_datum: string | null
+          forderungsbetrag: number
+          glaeubiger: string
+          glaeubiger_adresse: string | null
+          id: string
+          notes: string | null
+          pfaendungs_typ: string
+          rang: number
+          resttbetrag: number
+          status: string
+          tenant_id: string
+          unterhaltsberechtigte: number
+          updated_at: string
+          zustellungsdatum: string | null
+        }
+        Insert: {
+          aktenzeichen?: string | null
+          bank_iban?: string | null
+          beginn_datum: string
+          created_at?: string
+          created_by?: string | null
+          employee_id: string
+          ende_datum?: string | null
+          forderungsbetrag?: number
+          glaeubiger: string
+          glaeubiger_adresse?: string | null
+          id?: string
+          notes?: string | null
+          pfaendungs_typ?: string
+          rang?: number
+          resttbetrag?: number
+          status?: string
+          tenant_id: string
+          unterhaltsberechtigte?: number
+          updated_at?: string
+          zustellungsdatum?: string | null
+        }
+        Update: {
+          aktenzeichen?: string | null
+          bank_iban?: string | null
+          beginn_datum?: string
+          created_at?: string
+          created_by?: string | null
+          employee_id?: string
+          ende_datum?: string | null
+          forderungsbetrag?: number
+          glaeubiger?: string
+          glaeubiger_adresse?: string | null
+          id?: string
+          notes?: string | null
+          pfaendungs_typ?: string
+          rang?: number
+          resttbetrag?: number
+          status?: string
+          tenant_id?: string
+          unterhaltsberechtigte?: number
+          updated_at?: string
+          zustellungsdatum?: string | null
+        }
+        Relationships: []
+      }
       employee_wage_types: {
         Row: {
           amount: number
@@ -888,6 +1023,117 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      kug_antraege: {
+        Row: {
+          agentur_arbeit: string | null
+          antrag_typ: string
+          anzahl_betroffene: number
+          arbeitsausfall_grund: string | null
+          arbeitsausfall_prozent: number
+          beantragt_am: string | null
+          betriebsnummer: string | null
+          bewilligt_am: string | null
+          bewilligungs_nr: string | null
+          created_at: string
+          created_by: string | null
+          einverstaendnis_betriebsrat: boolean
+          id: string
+          ist_betriebsrat: boolean
+          notes: string | null
+          status: string
+          tenant_id: string
+          updated_at: string
+          voraussichtliche_dauer_monate: number | null
+          zeitraum_bis: string
+          zeitraum_von: string
+        }
+        Insert: {
+          agentur_arbeit?: string | null
+          antrag_typ?: string
+          anzahl_betroffene?: number
+          arbeitsausfall_grund?: string | null
+          arbeitsausfall_prozent?: number
+          beantragt_am?: string | null
+          betriebsnummer?: string | null
+          bewilligt_am?: string | null
+          bewilligungs_nr?: string | null
+          created_at?: string
+          created_by?: string | null
+          einverstaendnis_betriebsrat?: boolean
+          id?: string
+          ist_betriebsrat?: boolean
+          notes?: string | null
+          status?: string
+          tenant_id: string
+          updated_at?: string
+          voraussichtliche_dauer_monate?: number | null
+          zeitraum_bis: string
+          zeitraum_von: string
+        }
+        Update: {
+          agentur_arbeit?: string | null
+          antrag_typ?: string
+          anzahl_betroffene?: number
+          arbeitsausfall_grund?: string | null
+          arbeitsausfall_prozent?: number
+          beantragt_am?: string | null
+          betriebsnummer?: string | null
+          bewilligt_am?: string | null
+          bewilligungs_nr?: string | null
+          created_at?: string
+          created_by?: string | null
+          einverstaendnis_betriebsrat?: boolean
+          id?: string
+          ist_betriebsrat?: boolean
+          notes?: string | null
+          status?: string
+          tenant_id?: string
+          updated_at?: string
+          voraussichtliche_dauer_monate?: number | null
+          zeitraum_bis?: string
+          zeitraum_von?: string
+        }
+        Relationships: []
+      }
+      kug_antrag_personen: {
+        Row: {
+          ausgefallene_stunden: number
+          created_at: string
+          employee_id: string
+          hat_kind: boolean
+          id: string
+          ist_entgelt: number
+          kug_antrag_id: string
+          kug_betrag: number
+          soll_entgelt: number
+          tenant_id: string
+        }
+        Insert: {
+          ausgefallene_stunden?: number
+          created_at?: string
+          employee_id: string
+          hat_kind?: boolean
+          id?: string
+          ist_entgelt?: number
+          kug_antrag_id: string
+          kug_betrag?: number
+          soll_entgelt?: number
+          tenant_id: string
+        }
+        Update: {
+          ausgefallene_stunden?: number
+          created_at?: string
+          employee_id?: string
+          hat_kind?: boolean
+          id?: string
+          ist_entgelt?: number
+          kug_antrag_id?: string
+          kug_betrag?: number
+          soll_entgelt?: number
+          tenant_id?: string
+        }
+        Relationships: []
       }
       lohnsteueranmeldungen: {
         Row: {

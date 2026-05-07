@@ -15,7 +15,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/page-header";
 import { AppBreadcrumb } from "@/components/ui/app-breadcrumb";
-import { FileText, Send, ClipboardList, Calculator, HeartPulse, Zap, Shield, FileSignature, Inbox, Building2 } from "lucide-react";
+import { FileText, Send, ClipboardList, Calculator, HeartPulse, Zap, Shield, FileSignature, Inbox, Building2, Plane, Scale } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 type MeldewesenView = 'overview' | 'sv-meldungen' | 'beitragsnachweise' | 'lstb' | 'lsta' | 'aag' | 'sofortmeldung' | 'uv-jahr' | 'bescheinigungen' | 'deuev-rueck' | 'zvk';
@@ -216,6 +216,51 @@ export default function Meldewesen() {
             </CardHeader>
             <CardContent>
               <Button variant="outline" className="w-full">Kassen verwalten</Button>
+            </CardContent>
+          </Card>
+
+          <Card className="shadow-card hover:shadow-elegant transition-shadow cursor-pointer" onClick={() => navigate('/a1')}>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Plane className="h-5 w-5 text-primary" />
+                A1-Bescheinigung
+              </CardTitle>
+              <CardDescription>
+                Entsendung in EU/EWR/Schweiz – VO (EG) 883/2004
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button variant="outline" className="w-full">A1-Anträge verwalten</Button>
+            </CardContent>
+          </Card>
+
+          <Card className="shadow-card hover:shadow-elegant transition-shadow cursor-pointer" onClick={() => navigate('/kug')}>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Zap className="h-5 w-5 text-primary" />
+                Kurzarbeitergeld (KUG)
+              </CardTitle>
+              <CardDescription>
+                Anzeige Arbeitsausfall und Leistungsantrag § 95 ff. SGB III
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button variant="outline" className="w-full">KUG-Anträge verwalten</Button>
+            </CardContent>
+          </Card>
+
+          <Card className="shadow-card hover:shadow-elegant transition-shadow cursor-pointer" onClick={() => navigate('/pfaendungen')}>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Scale className="h-5 w-5 text-primary" />
+                Pfändungsverwaltung
+              </CardTitle>
+              <CardDescription>
+                Lohnpfändungen mit Rangfolge, Pfändungsrechner 2026
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button variant="outline" className="w-full">Pfändungen verwalten</Button>
             </CardContent>
           </Card>
         </div>
