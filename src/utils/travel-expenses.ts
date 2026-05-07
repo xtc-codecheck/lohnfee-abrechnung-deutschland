@@ -121,10 +121,11 @@ export function calculateTravelLeg(input: TravelLegInput): TravelLegResult {
 export function aggregateTrip(legs: TravelLegResult[]) {
   return legs.reduce((acc, l) => ({
     mealAllowance: round2(acc.mealAllowance + l.mealAllowance),
+    mealReduction: round2(acc.mealReduction + (l.mealReduction ?? 0)),
     lodgingAmount: round2(acc.lodgingAmount + l.lodgingAmount),
     mileageAmount: round2(acc.mileageAmount + l.mileageAmount),
     total: round2(acc.total + l.total),
     taxFree: round2(acc.taxFree + l.taxFree),
     taxable: round2(acc.taxable + l.taxable),
-  }), { mealAllowance: 0, lodgingAmount: 0, mileageAmount: 0, total: 0, taxFree: 0, taxable: 0 });
+  }), { mealAllowance: 0, mealReduction: 0, lodgingAmount: 0, mileageAmount: 0, total: 0, taxFree: 0, taxable: 0 });
 }
