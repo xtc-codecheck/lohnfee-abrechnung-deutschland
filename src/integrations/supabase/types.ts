@@ -509,6 +509,54 @@ export type Database = {
         }
         Relationships: []
       }
+      deuev_rueckmeldungen: {
+        Row: {
+          betriebsnummer_kk: string | null
+          created_at: string
+          empfangen_am: string
+          fehler_code: string | null
+          fehler_text: string | null
+          id: string
+          krankenkasse: string
+          raw_xml: string | null
+          rueckmeldung_typ: string
+          status: string
+          sv_meldung_id: string | null
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          betriebsnummer_kk?: string | null
+          created_at?: string
+          empfangen_am?: string
+          fehler_code?: string | null
+          fehler_text?: string | null
+          id?: string
+          krankenkasse: string
+          raw_xml?: string | null
+          rueckmeldung_typ: string
+          status?: string
+          sv_meldung_id?: string | null
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          betriebsnummer_kk?: string | null
+          created_at?: string
+          empfangen_am?: string
+          fehler_code?: string | null
+          fehler_text?: string | null
+          id?: string
+          krankenkasse?: string
+          raw_xml?: string | null
+          rueckmeldung_typ?: string
+          status?: string
+          sv_meldung_id?: string | null
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       eau_records: {
         Row: {
           abruf_datum: string | null
@@ -1036,6 +1084,33 @@ export type Database = {
           },
         ]
       }
+      mandant_zuordnung: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          permission_level: string
+          steuerberater_user_id: string
+          tenant_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          permission_level?: string
+          steuerberater_user_id: string
+          tenant_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          permission_level?: string
+          steuerberater_user_id?: string
+          tenant_id?: string
+        }
+        Relationships: []
+      }
       payroll_entries: {
         Row: {
           audit_data: Json | null
@@ -1291,8 +1366,13 @@ export type Database = {
           month: number
           processed_at: string | null
           processed_by: string | null
+          released_at: string | null
+          released_by: string | null
+          review_status: string
           start_date: string
           status: string
+          submitted_for_review_at: string | null
+          submitted_for_review_by: string | null
           tenant_id: string | null
           year: number
         }
@@ -1303,8 +1383,13 @@ export type Database = {
           month: number
           processed_at?: string | null
           processed_by?: string | null
+          released_at?: string | null
+          released_by?: string | null
+          review_status?: string
           start_date: string
           status?: string
+          submitted_for_review_at?: string | null
+          submitted_for_review_by?: string | null
           tenant_id?: string | null
           year: number
         }
@@ -1315,8 +1400,13 @@ export type Database = {
           month?: number
           processed_at?: string | null
           processed_by?: string | null
+          released_at?: string | null
+          released_by?: string | null
+          review_status?: string
           start_date?: string
           status?: string
+          submitted_for_review_at?: string | null
+          submitted_for_review_by?: string | null
           tenant_id?: string | null
           year?: number
         }
@@ -1329,6 +1419,81 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      payroll_run_messages: {
+        Row: {
+          author_role: string
+          author_user_id: string
+          created_at: string
+          id: string
+          message: string
+          payroll_period_id: string
+          tenant_id: string
+        }
+        Insert: {
+          author_role: string
+          author_user_id: string
+          created_at?: string
+          id?: string
+          message: string
+          payroll_period_id: string
+          tenant_id: string
+        }
+        Update: {
+          author_role?: string
+          author_user_id?: string
+          created_at?: string
+          id?: string
+          message?: string
+          payroll_period_id?: string
+          tenant_id?: string
+        }
+        Relationships: []
+      }
+      pfaendung_tabellen: {
+        Row: {
+          base_exemption: number
+          base_pfaendungs_rate: number
+          created_at: string
+          full_garnishment_threshold: number
+          id: string
+          max_dependents: number
+          per_dependent_increase: number
+          rate_reduction_per_dependent: number
+          source: string | null
+          updated_at: string
+          valid_from: string
+          year: number
+        }
+        Insert: {
+          base_exemption: number
+          base_pfaendungs_rate?: number
+          created_at?: string
+          full_garnishment_threshold: number
+          id?: string
+          max_dependents?: number
+          per_dependent_increase: number
+          rate_reduction_per_dependent?: number
+          source?: string | null
+          updated_at?: string
+          valid_from: string
+          year: number
+        }
+        Update: {
+          base_exemption?: number
+          base_pfaendungs_rate?: number
+          created_at?: string
+          full_garnishment_threshold?: number
+          id?: string
+          max_dependents?: number
+          per_dependent_increase?: number
+          rate_reduction_per_dependent?: number
+          source?: string | null
+          updated_at?: string
+          valid_from?: string
+          year?: number
+        }
+        Relationships: []
       }
       platform_admins: {
         Row: {
@@ -1653,6 +1818,193 @@ export type Database = {
           },
         ]
       }
+      travel_legs: {
+        Row: {
+          country_code: string
+          created_at: string
+          duration_hours: number
+          id: string
+          is_arrival_or_departure: boolean
+          is_overnight: boolean
+          km_distance: number
+          leg_date: string
+          lodging_amount: number
+          lodging_is_receipt: boolean
+          meal_allowance: number
+          mileage_amount: number
+          notes: string | null
+          tenant_id: string
+          trip_id: string
+          vehicle_type: string
+        }
+        Insert: {
+          country_code?: string
+          created_at?: string
+          duration_hours?: number
+          id?: string
+          is_arrival_or_departure?: boolean
+          is_overnight?: boolean
+          km_distance?: number
+          leg_date: string
+          lodging_amount?: number
+          lodging_is_receipt?: boolean
+          meal_allowance?: number
+          mileage_amount?: number
+          notes?: string | null
+          tenant_id: string
+          trip_id: string
+          vehicle_type?: string
+        }
+        Update: {
+          country_code?: string
+          created_at?: string
+          duration_hours?: number
+          id?: string
+          is_arrival_or_departure?: boolean
+          is_overnight?: boolean
+          km_distance?: number
+          leg_date?: string
+          lodging_amount?: number
+          lodging_is_receipt?: boolean
+          meal_allowance?: number
+          mileage_amount?: number
+          notes?: string | null
+          tenant_id?: string
+          trip_id?: string
+          vehicle_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "travel_legs_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "travel_trips"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      travel_receipts: {
+        Row: {
+          amount: number
+          category: string
+          created_at: string
+          description: string | null
+          id: string
+          is_taxable: boolean
+          receipt_date: string
+          storage_path: string | null
+          tenant_id: string
+          trip_id: string
+          vat_amount: number
+        }
+        Insert: {
+          amount?: number
+          category: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_taxable?: boolean
+          receipt_date: string
+          storage_path?: string | null
+          tenant_id: string
+          trip_id: string
+          vat_amount?: number
+        }
+        Update: {
+          amount?: number
+          category?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_taxable?: boolean
+          receipt_date?: string
+          storage_path?: string | null
+          tenant_id?: string
+          trip_id?: string
+          vat_amount?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "travel_receipts_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "travel_trips"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      travel_trips: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          country_code: string
+          created_at: string
+          created_by: string | null
+          destination: string
+          employee_id: string
+          end_at: string
+          id: string
+          notes: string | null
+          purpose: string
+          start_at: string
+          status: string
+          tenant_id: string
+          total_lodging: number
+          total_meal_allowance: number
+          total_mileage: number
+          total_other: number
+          total_tax_free: number
+          total_taxable: number
+          updated_at: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          country_code?: string
+          created_at?: string
+          created_by?: string | null
+          destination: string
+          employee_id: string
+          end_at: string
+          id?: string
+          notes?: string | null
+          purpose: string
+          start_at: string
+          status?: string
+          tenant_id: string
+          total_lodging?: number
+          total_meal_allowance?: number
+          total_mileage?: number
+          total_other?: number
+          total_tax_free?: number
+          total_taxable?: number
+          updated_at?: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          country_code?: string
+          created_at?: string
+          created_by?: string | null
+          destination?: string
+          employee_id?: string
+          end_at?: string
+          id?: string
+          notes?: string | null
+          purpose?: string
+          start_at?: string
+          status?: string
+          tenant_id?: string
+          total_lodging?: number
+          total_meal_allowance?: number
+          total_mileage?: number
+          total_other?: number
+          total_tax_free?: number
+          total_taxable?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -1810,6 +2162,110 @@ export type Database = {
           },
         ]
       }
+      zvk_kassen: {
+        Row: {
+          beitragssatz_arbeitgeber: number
+          beitragssatz_arbeitnehmer: number
+          bemessungsgrundlage: string
+          created_at: string
+          id: string
+          is_active: boolean
+          kassen_typ: string
+          mitgliedsnummer: string | null
+          name: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          beitragssatz_arbeitgeber?: number
+          beitragssatz_arbeitnehmer?: number
+          bemessungsgrundlage?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          kassen_typ: string
+          mitgliedsnummer?: string | null
+          name: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          beitragssatz_arbeitgeber?: number
+          beitragssatz_arbeitnehmer?: number
+          bemessungsgrundlage?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          kassen_typ?: string
+          mitgliedsnummer?: string | null
+          name?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      zvk_meldungen: {
+        Row: {
+          anzahl_versicherte: number
+          beitrag_arbeitgeber: number
+          beitrag_arbeitnehmer: number
+          bemessungssumme: number
+          created_at: string
+          details: Json
+          id: string
+          kasse_id: string
+          meldungs_typ: string
+          month: number | null
+          status: string
+          tenant_id: string
+          uebermittelt_am: string | null
+          updated_at: string
+          year: number
+        }
+        Insert: {
+          anzahl_versicherte?: number
+          beitrag_arbeitgeber?: number
+          beitrag_arbeitnehmer?: number
+          bemessungssumme?: number
+          created_at?: string
+          details?: Json
+          id?: string
+          kasse_id: string
+          meldungs_typ?: string
+          month?: number | null
+          status?: string
+          tenant_id: string
+          uebermittelt_am?: string | null
+          updated_at?: string
+          year: number
+        }
+        Update: {
+          anzahl_versicherte?: number
+          beitrag_arbeitgeber?: number
+          beitrag_arbeitnehmer?: number
+          bemessungssumme?: number
+          created_at?: string
+          details?: Json
+          id?: string
+          kasse_id?: string
+          meldungs_typ?: string
+          month?: number | null
+          status?: string
+          tenant_id?: string
+          uebermittelt_am?: string | null
+          updated_at?: string
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "zvk_meldungen_kasse_id_fkey"
+            columns: ["kasse_id"]
+            isOneToOne: false
+            referencedRelation: "zvk_kassen"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -1833,6 +2289,10 @@ export type Database = {
         Returns: boolean
       }
       is_primary_admin: { Args: { _user_id: string }; Returns: boolean }
+      is_steuerberater_for_tenant: {
+        Args: { _tenant_id: string; _user_id: string }
+        Returns: boolean
+      }
       is_tenant_member: {
         Args: { _tenant_id: string; _user_id: string }
         Returns: boolean
@@ -1843,7 +2303,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "sachbearbeiter" | "leserecht"
+      app_role: "admin" | "sachbearbeiter" | "leserecht" | "steuerberater"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1971,7 +2431,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "sachbearbeiter", "leserecht"],
+      app_role: ["admin", "sachbearbeiter", "leserecht", "steuerberater"],
     },
   },
 } as const
