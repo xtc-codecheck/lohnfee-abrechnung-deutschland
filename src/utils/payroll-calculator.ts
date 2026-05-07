@@ -61,6 +61,12 @@ export interface PayrollCalculationOutput {
   warnings: string[];
   audit?: CalculationAudit; // Vollständiges Audit-Dokument für Revisionssicherheit
   wageTypesImpact?: WageTypesImpact; // Aufschlüsselung der angewandten Lohnarten (P4)
+  /** Aufschlüsselung automatisch verrechneter Pfändungen */
+  garnishmentImpact?: {
+    totalGarnishable: number;
+    exemptAmount: number;
+    distributions: Array<{ id: string; glaeubiger: string; amount: number }>;
+  };
 }
 
 // ============= Input Guards =============
