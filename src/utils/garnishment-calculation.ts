@@ -8,6 +8,7 @@
  */
 
 import { roundCurrency } from '@/lib/formatters';
+import { getPfaendungstabelle } from '@/constants/pfaendung-tabellen';
 
 // ============= Pfändungsfreigrenzen 2025 =============
 
@@ -41,6 +42,8 @@ export interface GarnishmentInput {
   numberOfDependents: number;
   /** Mehrere Pfändungen? Rangfolge beachten */
   garnishmentRank?: number;
+  /** Jahr für die anzuwendende Pfändungstabelle (Default: aktuelles Jahr) */
+  year?: number;
 }
 
 export interface GarnishmentResult {
@@ -66,7 +69,15 @@ export interface GarnishmentResult {
 export function calculateGarnishment(input: GarnishmentInput): GarnishmentResult {
   const { netIncome, numberOfDependents } = input;
   const details: string[] = [];
-  const table = GARNISHMENT_TABLE_2025;
+  const params = getPfaendungstabelle(input.year ?? new Date().getFullYear());
+  const table = {
+    baseExemption: params.baseExemption,
+    perDependentIncrease: params.perDependentIncrease,
+    maxDependents: params.maxDependents,
+    basePfaendungsRate: params.basePfaendungsRate,
+    rateReductionPerDependent: params.rateReductionPerDependent,
+    fullGarnishmentThreshold: params.fullGarnishmentThreshold,
+  };
 
   // Anzahl auf Maximum begrenzen
   const effectiveDependents = Math.min(Math.max(0, numberOfDependents), table.maxDependents);
