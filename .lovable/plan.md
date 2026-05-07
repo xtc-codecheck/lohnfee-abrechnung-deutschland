@@ -1,102 +1,74 @@
+# Performance-Test Plan
 
-# Roadmap: Vollständigkeit Richtung DATEV/Lexware
+Ziel: Belastbare Messung von Frontend-, Backend- und Berechnungs-Performance der App – inklusive realer Lohnabrechnungs-Last (100/500/1000 Mitarbeiter), DB-Queries, Edge Functions und UI-Rendering.
 
-Ziel: Die im letzten Assessment identifizierten Lücken systematisch in 4 Phasen schließen, geordnet nach Rechtspflicht (Echtbetriebsrelevanz) → Produktivitätsnutzen → Zertifizierungs-/Integrationsarbeit.
+## 1. Berechnungskern (Pure Logic Benchmarks)
+Vitest-basierte Benchmarks (`bench/`) ohne UI/DB:
+- `payroll-calculator.bench.ts` – `calculatePayrollEntry` für 1, 10, 100, 1000 MA (Standard, mit Lohnarten, mit Zuschlägen, mit EFZG)
+- `tax-calculation.bench.ts` – `calculateCompleteTax` über alle 6 Steuerklassen × Ost/West × Kirchensteuer
+- `net-to-gross.bench.ts` – Iterative Netto→Brutto-Konvergenz
+- `garnishment.bench.ts` – Pfändungstabellen-Lookup 2025/2026
+- `wage-types-integration.bench.ts` – 50 Lohnarten gleichzeitig
+- `datev-export.bench.ts` – DATEV-ASCII-Generierung 1k Buchungssätze
+- `payroll-pdf-generator.bench.ts` – PDF-Erzeugung 100 Lohnabrechnungen
 
-## Phase 1 – Pflicht-Meldungen (Compliance kritisch)
+Metriken: ops/s, mean, p95, p99, Speicherverbrauch (heapUsed delta).
+Schwellwerte: 1 Berechnung < 5 ms, 100 MA < 500 ms, 1000 MA < 5 s.
 
-Lücken, die für legalen Echtbetrieb zwingend sind, aber rein intern lösbar (ohne externe Zertifizierung).
+## 2. Datenbank- & Backend-Last
+Skript `scripts/perf-db.ts` (Service-Role, gegen Test-Tenant):
+- Seed: 1 Tenant, 1000 MA, 12 Monate Time-Entries (~250k Zeilen)
+- Messung typischer Queries (EXPLAIN ANALYZE via `supabase--read_query`):
+  - `employees` Liste (mit `tenant_id` Filter)
+  - `payroll_entries` 90-Tage-Fenster
+  - `time_entries` Aggregation pro Mitarbeiter/Monat
+  - DEÜV-Rückmeldungen + Lohnkonto-Read
+- Index-Check: vorhandene Indizes vs. langsame Queries
+- RLS-Overhead messen (mit/ohne JWT)
 
-1. **AAG U1/U2 – Erstattungsanträge nach AAG**
-   - Neues Modul `src/utils/aag-calculation.ts` (U1 = Krankheit, U2 = Mutterschaft).
-   - Erstattungssätze pro Krankenkasse (Stammdaten-Tabelle `kk_erstattungssaetze`).
-   - UI: `src/components/meldewesen/aag-page.tsx` mit Antragsliste, Status, PDF/XML-Export.
-   - DB: Tabelle `aag_antraege` (tenant_id, employee_id, periode, typ, brutto, erstattung, status).
+## 3. Edge Functions
+Lasttest via `autocannon`/`curl`-Loop:
+- `sv-net-submit` – 50 parallele Requests, 1 Minute
+- `parse-pdf-employee` – seriell, 20 PDFs
+- `bmf-cross-check` – 100 Requests
+Metriken: p50/p95/p99-Latenz, Fehlerrate, Cold-Start-Zeit (Logs).
 
-2. **Sofortmeldung § 28a SGB IV** (Bau, Gastro, Gebäudereinigung, Spedition, Schausteller, Fleisch, Forst, Messebau)
-   - Trigger bei Neuanlage Mitarbeiter wenn Branche in Liste.
-   - DEÜV-Datensatz `DSME` Abgabegrund `20`.
-   - UI-Hinweis "Sofortmeldung erforderlich" + One-Click-Export.
+## 4. Frontend-Performance (Browser-Profiling)
+Mit `browser--performance_profile` + `start_profiling`/`stop_profiling`:
+- `/dashboard` – initial load, Web Vitals (LCP, CLS, INP, TTFB)
+- `/employees` – Liste mit 1000 MA (Render-Zeit, lange Tasks)
+- `/payroll` – Lohnlauf-Wizard (5 Schritte, Re-Renders)
+- `/time-tracking` – Kalender + Bulk-Entry
+- `/reports` – PDF-Export & Charts
+- `/meldewesen` – alle Subseiten (AAG, DEÜV, ZVK …)
 
-3. **UV-Jahresmeldung / Berufsgenossenschaft (Lohnnachweis digital)**
-   - Stammdaten Mitarbeiter: `bg_mitgliedsnummer`, `gefahrtarifstelle`.
-   - Jahreslauf `src/utils/uv-jahresmeldung.ts` aggregiert Bruttos je Gefahrtarifstelle.
-   - Export: XML-Lohnnachweis (Format DSLN).
-   - UI: `src/components/meldewesen/uv-jahresmeldung-page.tsx`.
+Bundle-Analyse: `vite build --mode production` + `rollup-plugin-visualizer` Snapshot, Top-10 Chunks.
 
-4. **Bescheinigungswesen EEL & BEA**
-   - **EEL** (Entgeltersatzleistungen, §§107 SGB IV): Krankengeld, Mutterschaft, Kinderkrankengeld, Verletztengeld.
-   - **BEA** (Arbeitslosengeld-Bescheinigung).
-   - Generator-Modul `src/utils/bescheinigungen.ts` mit XML/PDF-Output.
-   - UI in Meldewesen: neuer Tab "Bescheinigungen".
+## 5. End-to-End Lohnlauf
+Realistisches Szenario via Test-Skript:
+- Automated Payroll Wizard für 100 / 500 / 1000 MA
+- Messen: Wall-Clock pro Phase (Input-Load, Berechnung, Persist, PDF, DATEV)
+- Identifizieren: Engpass beim Bulk-`insert` in `payroll_entries` (bekannter Bug aus Memory)
 
-## Phase 2 – Datenpflege & Aktualität
+## 6. Reporting
+- `docs/PERFORMANCE-REPORT-2026-05.md` mit:
+  - Tabellen je Bereich (Baseline, Median, p95, Schwellwert, Status)
+  - Top-5 Bottlenecks mit konkretem Fix-Vorschlag (Index, Memoization, Batch-Insert, Lazy-Load)
+  - Vorher/Nachher falls Quick-Wins direkt umgesetzt
+- Artefakt nach `/mnt/documents/performance-report.pdf`
 
-5. **Pfändungstabelle automatische Jahrespflege**
-   - Konstanten in `src/constants/pfaendung-tabelle-2025.ts`, `…-2026.ts`.
-   - Loader `getPfaendungstabelle(year)` analog zu Tax-Params.
-   - Jahres-Update-Checkliste in `src/constants/ANNUAL_UPDATE_CHECKLIST.md` ergänzen.
-   - Edge Function (optional) `bmf-pfaendung-check` zur Validierung.
+## Technische Details
+- Tooling: vitest `bench`, `tinybench`, `autocannon` (npm), `puppeteer` via Lovable Browser-Tools, `supabase--read_query` für `EXPLAIN ANALYZE`.
+- Test-Tenant wird angelegt und nach Lauf bereinigt (Cleanup-Skript).
+- Keine Production-Daten, keine echte SV-Übermittlung (Stub bleibt aktiv).
+- Läuft nicht im CI – manuell ausführbar via `bun run perf:all`.
 
-6. **Reisekosten als Vollmodul**
-   - Bestehenden Tab `travel-expenses-tab.tsx` ablösen durch eigenständiges Modul.
-   - Funktionen: Verpflegungspauschalen (DE/Ausland, BMF-Sätze), Übernachtung (Beleg/Pauschale), km-Pauschale (0,30 €/0,38 €), Auslandstagegelder.
-   - DB: `travel_trips`, `travel_legs`, `travel_receipts` (mit tenant_id, RLS).
-   - Verknüpfung an Lohnabrechnung (lohnsteuerfrei vs. pflichtig automatisch).
-   - Belegupload via Storage, Genehmigungsworkflow (Einreichung → Vorgesetzter → Lohn).
+## Lieferumfang
+1. Bench-Suite unter `bench/`
+2. Skripte unter `scripts/perf-*.ts`
+3. NPM-Scripts: `perf:bench`, `perf:db`, `perf:edge`, `perf:frontend`, `perf:all`
+4. PDF-Report mit Empfehlungen
 
-## Phase 3 – Workflow & Mandantenfähigkeit
-
-7. **Steuerberater-Mandanten-Workflow** (DATEV-Unternehmen-Online-Style)
-   - Rolle `steuerberater` (cross-tenant Lesezugriff über `mandant_zuordnung`).
-   - Freigabe-Workflow: Mandant erstellt Lauf → "Zur Freigabe" → StB prüft → "Freigegeben" → Versand.
-   - Kommunikationsmodul: Nachrichten/Rückfragen pro Lauf (`payroll_run_messages`).
-   - Dokumentenaustausch: Mandant lädt Belege hoch, StB sieht im Postkorb.
-
-8. **DEÜV-Rückmeldungsverarbeitung**
-   - Importer `src/utils/deuev-rueckmeldung-import.ts` für Krankenkassen-Antworten (XML).
-   - Status-Update der ursprünglichen Meldungen (akzeptiert / abgewiesen mit Fehlercode).
-   - UI-Inbox in SV-Meldungen-Seite.
-
-9. **Pensionskassen-/ZVK-Meldungen außerhalb SOKA-BAU**
-   - Generisches ZVK-Meldewesen-Modul (Kassen-Stammdaten, Beitragsmeldung, Jahresmeldung).
-   - Adapter-Pattern, damit weitere Kassen (z. B. ZVK Gerüstbau, Maler-/Lackierer-ZVK) konfigurierbar sind.
-
-## Phase 4 – Externe Zertifizierung & Übermittlung
-
-Erfordert Drittanbieter, juristische Schritte, ggf. Kosten – daher zuletzt.
-
-10. **ITSG-/GKV-Zertifizierung (systemuntersucht, "GKV-Zulassung")**
-    - Vorbereitung: Prüfprotokoll der ITSG durchlaufen (Testfälle DEÜV/BNW/EEL).
-    - Modul `src/payroll-core/certification/` mit ITSG-Testdatensätzen (Golden Master).
-    - Antragsprozess + jährliche Re-Zertifizierung dokumentieren.
-
-11. **dakota.le / sv.net-Integration**
-    - Adapter-Service als Edge Function `sv-net-submit` (Payload-Build, Quittungsabholung).
-    - Alternative: dakota.le-API (kostenpflichtige Lib) hinter Interface `ISvSubmissionProvider`.
-    - Stub bleibt für Standalone, echter Provider hinter Feature-Flag `submission.svnet`.
-
-12. **ELSTER ERiC-Anbindung** (war im Assessment als "nur Facade" markiert)
-    - ERiC-Bibliothek nur serverseitig nutzbar → Edge Function/eigener Submission-Service.
-    - Interface bereits vorhanden (`SystaxIntegrationStub`) – produktive Implementierung ergänzen.
-
-## Vorschlag zur Priorisierung
-
-| Phase | Aufwand grob | Empfehlung |
-|---|---|---|
-| 1 (AAG, Sofortmeldung, UV, EEL/BEA) | 3-5 Sprints | **Jetzt starten** – Pflicht für Echtbetrieb |
-| 2 (Pfändung, Reisekosten) | 2-3 Sprints | Direkt danach – hoher Nutzerwert |
-| 3 (StB-Workflow, DEÜV-Rückmeldung, ZVK) | 4-6 Sprints | Mittelfristig |
-| 4 (ITSG, sv.net, ERiC) | 6-12 Monate, juristisch | Langfristig, parallel vorbereiten |
-
-## Technische Querschnittsthemen
-
-- **DB**: alle neuen Tabellen mit `tenant_id` + RLS, Audit-Trigger.
-- **Konstanten**: jährliche Werte (Pfändung, BG-Gefahrtarif, Verpflegungspauschalen) zentral in `src/constants/` mit Year-Loader.
-- **Tests**: Golden-Master-Tests für jedes neue Meldungs-XML.
-- **Feature-Flags**: neue Flags `meldung.aag`, `meldung.sofortmeldung`, `meldung.uv`, `bescheinigung.eel`, `bescheinigung.bea`, `travel.full`, `workflow.steuerberater`, `submission.svnet`, `submission.eric`.
-- **Security-Memory**: bei Workflow-Rollen (Steuerberater) und Cross-Tenant-Zugriff aktualisieren.
-
-## Empfehlung als nächster Schritt
-
-Ich schlage vor, **Phase 1 zu starten und dort mit AAG U1/U2** zu beginnen (kleinster Scope, aber sofort spürbarer Compliance-Gewinn). Bestätige bitte, ob ich (a) Phase 1 komplett detailliert ausarbeiten soll, oder (b) direkt mit AAG U1/U2 als erstem Implementierungs-Plan loslege.
+## Offene Fragen
+- Soll der Test gegen die **Live-Cloud** oder einen separaten Test-Tenant laufen?
+- Sollen identifizierte Quick-Wins (Indizes, Batch-Insert-Fix für Wizard) direkt im selben Lauf umgesetzt werden, oder erst nach Review des Reports?
