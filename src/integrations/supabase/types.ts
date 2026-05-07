@@ -555,6 +555,7 @@ export type Database = {
       employees: {
         Row: {
           bav_monthly_amount: number | null
+          bg_mitgliedsnummer: string | null
           bic: string | null
           children_allowance: number | null
           church_tax: boolean | null
@@ -570,6 +571,7 @@ export type Database = {
           entry_date: string | null
           exit_date: string | null
           first_name: string
+          gefahrtarifstelle: string | null
           gender: string | null
           gross_salary: number
           has_bav: boolean | null
@@ -600,6 +602,7 @@ export type Database = {
         }
         Insert: {
           bav_monthly_amount?: number | null
+          bg_mitgliedsnummer?: string | null
           bic?: string | null
           children_allowance?: number | null
           church_tax?: boolean | null
@@ -615,6 +618,7 @@ export type Database = {
           entry_date?: string | null
           exit_date?: string | null
           first_name: string
+          gefahrtarifstelle?: string | null
           gender?: string | null
           gross_salary?: number
           has_bav?: boolean | null
@@ -645,6 +649,7 @@ export type Database = {
         }
         Update: {
           bav_monthly_amount?: number | null
+          bg_mitgliedsnummer?: string | null
           bic?: string | null
           children_allowance?: number | null
           church_tax?: boolean | null
@@ -660,6 +665,7 @@ export type Database = {
           entry_date?: string | null
           exit_date?: string | null
           first_name?: string
+          gefahrtarifstelle?: string | null
           gender?: string | null
           gross_salary?: number
           has_bav?: boolean | null
@@ -1603,6 +1609,63 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      uv_jahresmeldungen: {
+        Row: {
+          anzahl_versicherte: number
+          bg_mitgliedsnummer: string
+          brutto_summe: number
+          created_at: string
+          created_by: string | null
+          details: Json
+          gefahrtarifstelle: string
+          geleistete_arbeitsstunden: number
+          id: string
+          notes: string | null
+          status: string
+          tenant_id: string
+          transfer_ticket: string | null
+          uebermittelt_am: string | null
+          updated_at: string
+          year: number
+        }
+        Insert: {
+          anzahl_versicherte?: number
+          bg_mitgliedsnummer: string
+          brutto_summe?: number
+          created_at?: string
+          created_by?: string | null
+          details?: Json
+          gefahrtarifstelle: string
+          geleistete_arbeitsstunden?: number
+          id?: string
+          notes?: string | null
+          status?: string
+          tenant_id: string
+          transfer_ticket?: string | null
+          uebermittelt_am?: string | null
+          updated_at?: string
+          year: number
+        }
+        Update: {
+          anzahl_versicherte?: number
+          bg_mitgliedsnummer?: string
+          brutto_summe?: number
+          created_at?: string
+          created_by?: string | null
+          details?: Json
+          gefahrtarifstelle?: string
+          geleistete_arbeitsstunden?: number
+          id?: string
+          notes?: string | null
+          status?: string
+          tenant_id?: string
+          transfer_ticket?: string | null
+          uebermittelt_am?: string | null
+          updated_at?: string
+          year?: number
+        }
+        Relationships: []
       }
       wage_types: {
         Row: {
