@@ -21,6 +21,7 @@ import { PayrollAuditLogger, CalculationAudit, createPayrollAudit } from '@/util
 import { calculateEFZG, EFZG_DURATION_DAYS } from '@/utils/entgeltfortzahlung';
 import { applyWageTypes, WageTypesImpact } from '@/utils/wage-types-integration';
 import { EmployeeWageType } from '@/types/wage-types';
+import { calculateGarnishment } from '@/utils/garnishment-calculation';
 
 // ============= Typen =============
 
@@ -43,6 +44,15 @@ export interface PayrollCalculationInput {
   employeeWageTypes?: EmployeeWageType[];
   /** Kontensystem für Buchungssätze (Default: SKR03) */
   accountSystem?: 'SKR03' | 'SKR04';
+  /** Aktive Pfändungen (Rang aufsteigend); werden nach Netto automatisch nach §850c ZPO abgezogen */
+  activeGarnishments?: Array<{
+    id: string;
+    glaeubiger: string;
+    pfaendungs_typ?: 'normal' | 'unterhalt' | 'insolvenz' | string;
+    rang?: number;
+    forderungsbetrag?: number;
+    resttbetrag?: number;
+  }>;
 }
 
 export interface PayrollCalculationOutput {
