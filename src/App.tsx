@@ -34,6 +34,9 @@ const ExtendedCalculationsPage = lazy(() => import("./pages/ExtendedCalculations
 const SalaryCalculatorPage = lazy(() => import("./pages/SalaryCalculator"));
 const Travel = lazy(() => import("./pages/Travel"));
 const Steuerberater = lazy(() => import("./pages/Steuerberater"));
+const A1Bescheinigung = lazy(() => import("./pages/A1Bescheinigung"));
+const Kug = lazy(() => import("./pages/Kug"));
+const Pfaendungen = lazy(() => import("./pages/Pfaendungen"));
 
 // Lazy: Rechtliche Seiten (selten aufgerufen)
 const Impressum = lazy(() => import("./pages/Impressum"));
@@ -83,6 +86,9 @@ const App = () => (
                     <Route path="/salary-calculator" element={<ProtectedRoute><SalaryCalculatorPage /></ProtectedRoute>} />
                     <Route path="/travel" element={<ProtectedRoute><Travel /></ProtectedRoute>} />
                     <Route path="/steuerberater" element={<ProtectedRoute><Steuerberater /></ProtectedRoute>} />
+                    <Route path="/a1" element={<ProtectedRoute><A1Bescheinigung /></ProtectedRoute>} />
+                    <Route path="/kug" element={<ProtectedRoute><Kug /></ProtectedRoute>} />
+                    <Route path="/pfaendungen" element={<ProtectedRoute><Pfaendungen /></ProtectedRoute>} />
                     <Route path="/impressum" element={<Impressum />} />
                     <Route path="/datenschutz" element={<Datenschutz />} />
                     <Route path="/agb" element={<AGB />} />
