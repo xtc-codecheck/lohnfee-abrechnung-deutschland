@@ -8,14 +8,15 @@ import { LohnsteueranmeldungPage } from "@/components/meldewesen/lohnsteueranmel
 import { AagPage } from "@/components/meldewesen/aag-page";
 import { SofortmeldungPage } from "@/components/meldewesen/sofortmeldung-page";
 import { UvJahresmeldungPage } from "@/components/meldewesen/uv-jahresmeldung-page";
+import { BescheinigungenPage } from "@/components/meldewesen/bescheinigungen-page";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/page-header";
 import { AppBreadcrumb } from "@/components/ui/app-breadcrumb";
-import { FileText, Send, ClipboardList, Calculator, HeartPulse, Zap, Shield } from "lucide-react";
+import { FileText, Send, ClipboardList, Calculator, HeartPulse, Zap, Shield, FileSignature } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-type MeldewesenView = 'overview' | 'sv-meldungen' | 'beitragsnachweise' | 'lstb' | 'lsta' | 'aag' | 'sofortmeldung' | 'uv-jahr';
+type MeldewesenView = 'overview' | 'sv-meldungen' | 'beitragsnachweise' | 'lstb' | 'lsta' | 'aag' | 'sofortmeldung' | 'uv-jahr' | 'bescheinigungen';
 
 const viewLabels: Record<Exclude<MeldewesenView, 'overview'>, string> = {
   'sv-meldungen': 'SV-Meldungen',
@@ -25,6 +26,7 @@ const viewLabels: Record<Exclude<MeldewesenView, 'overview'>, string> = {
   'aag': 'AAG U1/U2',
   'sofortmeldung': 'Sofortmeldung § 28a',
   'uv-jahr': 'UV-Jahresmeldung',
+  'bescheinigungen': 'Bescheinigungen (EEL/BEA)',
 };
 
 export default function Meldewesen() {
@@ -49,6 +51,7 @@ export default function Meldewesen() {
         {currentView === 'aag' && <AagPage onBack={handleBack} />}
         {currentView === 'sofortmeldung' && <SofortmeldungPage onBack={handleBack} />}
         {currentView === 'uv-jahr' && <UvJahresmeldungPage onBack={handleBack} />}
+        {currentView === 'bescheinigungen' && <BescheinigungenPage onBack={handleBack} />}
       </MainLayout>
     );
   }
@@ -162,6 +165,21 @@ export default function Meldewesen() {
             </CardHeader>
             <CardContent>
               <Button variant="outline" className="w-full">Lohnnachweis erstellen</Button>
+            </CardContent>
+          </Card>
+
+          <Card className="shadow-card hover:shadow-elegant transition-shadow cursor-pointer" onClick={() => setCurrentView('bescheinigungen')}>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FileSignature className="h-5 w-5 text-primary" />
+                Bescheinigungen (EEL & BEA)
+              </CardTitle>
+              <CardDescription>
+                Krankengeld, Mutterschaft, Verletztengeld, Arbeitslosengeld
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button variant="outline" className="w-full">Bescheinigungen verwalten</Button>
             </CardContent>
           </Card>
         </div>
