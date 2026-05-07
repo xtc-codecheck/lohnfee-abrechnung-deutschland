@@ -75,23 +75,15 @@ export default function Payroll() {
           onShowFibu={() => setCurrentView('fibu')}
         />
       )}
-      {currentView === 'special-payments' && (
-        <SpecialPaymentsManager onBack={handleBack} />
-      )}
-      {currentView === 'automation' && (
-        <AutomationDashboard onBack={handleBack} />
-      )}
-      {currentView === 'guardian' && (
-        <PayrollGuardianDashboard onBack={handleBack} />
-      )}
-      {currentView === 'lohnkonto' && (
-        <LohnkontoPage onBack={handleBack} />
-      )}
-      {currentView === 'monthly-wizard' && (
-        <MonthlyPayrollWizard onBack={handleBack} onComplete={handleBack} />
-      )}
-      {currentView === 'fibu' && (
-        <FibuJournalPage onBack={handleBack} />
+      {currentView !== 'dashboard' && (
+        <Suspense fallback={<ViewLoader />}>
+          {currentView === 'special-payments' && <SpecialPaymentsManager onBack={handleBack} />}
+          {currentView === 'automation' && <AutomationDashboard onBack={handleBack} />}
+          {currentView === 'guardian' && <PayrollGuardianDashboard onBack={handleBack} />}
+          {currentView === 'lohnkonto' && <LohnkontoPage onBack={handleBack} />}
+          {currentView === 'monthly-wizard' && <MonthlyPayrollWizard onBack={handleBack} onComplete={handleBack} />}
+          {currentView === 'fibu' && <FibuJournalPage onBack={handleBack} />}
+        </Suspense>
       )}
     </MainLayout>
   );
