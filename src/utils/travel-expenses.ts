@@ -48,10 +48,18 @@ export interface TravelLegInput {
   kmDistance: number;
   vehicleType: VehicleType;
   lodgingReceiptAmount?: number; // wenn Beleg vorhanden
+  /** Vom Arbeitgeber/Hotel gestelltes Frühstück (Kürzung 20% Tagespauschale) */
+  breakfastProvided?: boolean;
+  /** Mittagessen gestellt (Kürzung 40%) */
+  lunchProvided?: boolean;
+  /** Abendessen gestellt (Kürzung 40%) */
+  dinnerProvided?: boolean;
 }
 
 export interface TravelLegResult {
   mealAllowance: number;
+  /** Kürzungsbetrag durch gestellte Mahlzeiten */
+  mealReduction: number;
   lodgingAmount: number;
   mileageAmount: number;
   total: number;
@@ -80,6 +88,15 @@ function round2(n: number) { return Math.round(n * 100) / 100; }
 
 export function calculateTravelLeg(input: TravelLegInput): TravelLegResult {
   const meal = getMealAllowance(input.countryCode, input.durationHours, input.isArrivalOrDeparture);
+  // § 9 Abs. 4a Satz 8 EStG: Kürzung der Verpflegungspauschale bei gestellten Mahlzeiten
+  // Bezugsgröße ist die VOLLE Inlandstagespauschale (auch im Ausland), § 9 Abs. 4a Satz 8 EStG.
+  const fullDayBase = VERPFLEGUNG_DE_2025.fullDay;
+  let reduction = 0;
+  if (input.breakfastProvided) reduction += round2(fullDayBase * 0.20);
+  if (input.lunchProvided) reduction += round2(fullDayBase * 0.40);
+  if (input.dinnerProvided) reduction += round2(fullDayBase * 0.40);
+  const mealAfter = round2(Math.max(0, meal - reduction));
+
   const lodging = input.isOvernight
     ? (input.lodgingReceiptAmount ?? getLodgingPauschale(input.countryCode))
     : 0;
@@ -89,13 +106,14 @@ export function calculateTravelLeg(input: TravelLegInput): TravelLegResult {
   // Lodging mit Beleg ist immer steuerfrei (bis Belegbetrag); Pauschale nur DE 20€.
   const lodgingTaxFree = lodging;
 
-  const total = round2(meal + lodging + mileage);
+  const total = round2(mealAfter + lodging + mileage);
   return {
-    mealAllowance: meal,
+    mealAllowance: mealAfter,
+    mealReduction: round2(Math.min(reduction, meal)),
     lodgingAmount: round2(lodging),
     mileageAmount: mileage,
     total,
-    taxFree: round2(meal + lodgingTaxFree + mileage),
+    taxFree: round2(mealAfter + lodgingTaxFree + mileage),
     taxable: 0,
   };
 }
@@ -103,10 +121,11 @@ export function calculateTravelLeg(input: TravelLegInput): TravelLegResult {
 export function aggregateTrip(legs: TravelLegResult[]) {
   return legs.reduce((acc, l) => ({
     mealAllowance: round2(acc.mealAllowance + l.mealAllowance),
+    mealReduction: round2(acc.mealReduction + (l.mealReduction ?? 0)),
     lodgingAmount: round2(acc.lodgingAmount + l.lodgingAmount),
     mileageAmount: round2(acc.mileageAmount + l.mileageAmount),
     total: round2(acc.total + l.total),
     taxFree: round2(acc.taxFree + l.taxFree),
     taxable: round2(acc.taxable + l.taxable),
-  }), { mealAllowance: 0, lodgingAmount: 0, mileageAmount: 0, total: 0, taxFree: 0, taxable: 0 });
+  }), { mealAllowance: 0, mealReduction: 0, lodgingAmount: 0, mileageAmount: 0, total: 0, taxFree: 0, taxable: 0 });
 }

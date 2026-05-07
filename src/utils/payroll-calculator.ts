@@ -21,6 +21,7 @@ import { PayrollAuditLogger, CalculationAudit, createPayrollAudit } from '@/util
 import { calculateEFZG, EFZG_DURATION_DAYS } from '@/utils/entgeltfortzahlung';
 import { applyWageTypes, WageTypesImpact } from '@/utils/wage-types-integration';
 import { EmployeeWageType } from '@/types/wage-types';
+import { calculateGarnishment } from '@/utils/garnishment-calculation';
 
 // ============= Typen =============
 
@@ -43,6 +44,15 @@ export interface PayrollCalculationInput {
   employeeWageTypes?: EmployeeWageType[];
   /** Kontensystem für Buchungssätze (Default: SKR03) */
   accountSystem?: 'SKR03' | 'SKR04';
+  /** Aktive Pfändungen (Rang aufsteigend); werden nach Netto automatisch nach §850c ZPO abgezogen */
+  activeGarnishments?: Array<{
+    id: string;
+    glaeubiger: string;
+    pfaendungs_typ?: 'normal' | 'unterhalt' | 'insolvenz' | string;
+    rang?: number;
+    forderungsbetrag?: number;
+    resttbetrag?: number;
+  }>;
 }
 
 export interface PayrollCalculationOutput {
@@ -51,6 +61,12 @@ export interface PayrollCalculationOutput {
   warnings: string[];
   audit?: CalculationAudit; // Vollständiges Audit-Dokument für Revisionssicherheit
   wageTypesImpact?: WageTypesImpact; // Aufschlüsselung der angewandten Lohnarten (P4)
+  /** Aufschlüsselung automatisch verrechneter Pfändungen */
+  garnishmentImpact?: {
+    totalGarnishable: number;
+    exemptAmount: number;
+    distributions: Array<{ id: string; glaeubiger: string; amount: number }>;
+  };
 }
 
 // ============= Input Guards =============
@@ -391,8 +407,8 @@ export function calculatePayrollEntry(input: PayrollCalculationInput): PayrollCa
     }
   }
 
-  // 11. Finale Nettoauszahlung
-  const finalNetSalary = roundCurrency(
+  // 11. Vorläufige Nettoauszahlung (vor Pfändung)
+  let finalNetSalary = roundCurrency(
     salaryCalculation.netSalary
     - deductions.total
     - (wageTypesImpact?.netDeductions ?? 0)
@@ -400,6 +416,46 @@ export function calculatePayrollEntry(input: PayrollCalculationInput): PayrollCa
     + (wageTypesImpact?.taxFreeNetAddition ?? 0)
   );
   log.push(`Finale Nettoauszahlung: ${finalNetSalary}€`);
+
+  // 11a. Pfändungs-Auto-Berechnung nach §850c ZPO (Rangfolge berücksichtigt)
+  let garnishmentImpact: PayrollCalculationOutput['garnishmentImpact'] | undefined;
+  if (input.activeGarnishments && input.activeGarnishments.length > 0 && finalNetSalary > 0) {
+    const dependents = (employee as any).personalData?.numberOfChildren ?? 0;
+    const calc = calculateGarnishment({
+      netIncome: finalNetSalary,
+      numberOfDependents: dependents,
+      year: input.period.year,
+    });
+    let remaining = calc.garnishableAmount;
+    const distributions: Array<{ id: string; glaeubiger: string; amount: number }> = [];
+    const sorted = [...input.activeGarnishments].sort((a, b) => (a.rang ?? 1) - (b.rang ?? 1));
+    for (const g of sorted) {
+      if (remaining <= 0) break;
+      const cap = Number(g.resttbetrag ?? g.forderungsbetrag ?? remaining);
+      const take = roundCurrency(Math.min(remaining, cap));
+      if (take <= 0) continue;
+      distributions.push({ id: g.id, glaeubiger: g.glaeubiger, amount: take });
+      remaining = roundCurrency(remaining - take);
+    }
+    const totalDistributed = roundCurrency(distributions.reduce((s, d) => s + d.amount, 0));
+    if (totalDistributed > 0) {
+      finalNetSalary = roundCurrency(finalNetSalary - totalDistributed);
+      garnishmentImpact = {
+        totalGarnishable: calc.garnishableAmount,
+        exemptAmount: calc.exemptAmount,
+        distributions,
+      };
+      auditLogger.log('GARNISHMENT', 'Pfändung nach §850c ZPO verrechnet', {
+        Pfaendbar: calc.garnishableAmount,
+        Freibetrag: calc.exemptAmount,
+        Unterhaltspflichten: dependents,
+      }, {
+        Abgeführt_Gesamt: totalDistributed,
+        Verbleibendes_Netto: finalNetSalary,
+      });
+      log.push(`Pfändung verrechnet: ${totalDistributed}€ an ${distributions.length} Gläubiger`);
+    }
+  }
 
   // Pauschalsteuer erhöht AG-Kosten
   if (wageTypesImpact && wageTypesImpact.pauschalTax > 0) {
@@ -448,7 +504,7 @@ export function calculatePayrollEntry(input: PayrollCalculationInput): PayrollCa
   log.push('Berechnung abgeschlossen');
   log.push(`Audit-ID: ${audit.calculationId}`);
   
-  return { entry, calculationLog: log, warnings, audit, wageTypesImpact };
+  return { entry, calculationLog: log, warnings, audit, wageTypesImpact, garnishmentImpact };
 }
 
 // ============= Hilfsfunktionen =============
