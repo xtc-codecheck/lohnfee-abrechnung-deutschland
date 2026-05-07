@@ -6,14 +6,15 @@ import { BeitragsnachweisPage } from "@/components/meldewesen/beitragsnachweis-p
 import { LohnsteuerbescheinigungPage } from "@/components/meldewesen/lohnsteuerbescheinigung-page";
 import { LohnsteueranmeldungPage } from "@/components/meldewesen/lohnsteueranmeldung-page";
 import { AagPage } from "@/components/meldewesen/aag-page";
+import { SofortmeldungPage } from "@/components/meldewesen/sofortmeldung-page";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/page-header";
 import { AppBreadcrumb } from "@/components/ui/app-breadcrumb";
-import { FileText, Send, ClipboardList, Calculator, HeartPulse } from "lucide-react";
+import { FileText, Send, ClipboardList, Calculator, HeartPulse, Zap } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-type MeldewesenView = 'overview' | 'sv-meldungen' | 'beitragsnachweise' | 'lstb' | 'lsta' | 'aag';
+type MeldewesenView = 'overview' | 'sv-meldungen' | 'beitragsnachweise' | 'lstb' | 'lsta' | 'aag' | 'sofortmeldung';
 
 const viewLabels: Record<Exclude<MeldewesenView, 'overview'>, string> = {
   'sv-meldungen': 'SV-Meldungen',
@@ -21,6 +22,7 @@ const viewLabels: Record<Exclude<MeldewesenView, 'overview'>, string> = {
   'lstb': 'Lohnsteuerbescheinigung',
   'lsta': 'Lohnsteueranmeldung',
   'aag': 'AAG U1/U2',
+  'sofortmeldung': 'Sofortmeldung § 28a',
 };
 
 export default function Meldewesen() {
@@ -43,6 +45,7 @@ export default function Meldewesen() {
         {currentView === 'lstb' && <LohnsteuerbescheinigungPage onBack={handleBack} />}
         {currentView === 'lsta' && <LohnsteueranmeldungPage onBack={handleBack} />}
         {currentView === 'aag' && <AagPage onBack={handleBack} />}
+        {currentView === 'sofortmeldung' && <SofortmeldungPage onBack={handleBack} />}
       </MainLayout>
     );
   }
@@ -126,6 +129,21 @@ export default function Meldewesen() {
             </CardHeader>
             <CardContent>
               <Button variant="outline" className="w-full">Anträge verwalten</Button>
+            </CardContent>
+          </Card>
+
+          <Card className="shadow-card hover:shadow-elegant transition-shadow cursor-pointer" onClick={() => setCurrentView('sofortmeldung')}>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Zap className="h-5 w-5 text-primary" />
+                Sofortmeldung § 28a SGB IV
+              </CardTitle>
+              <CardDescription>
+                Pflichtmeldung bei Beschäftigungsbeginn (Bau, Gastro, Spedition u. a.)
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button variant="outline" className="w-full">Meldungen verwalten</Button>
             </CardContent>
           </Card>
         </div>
