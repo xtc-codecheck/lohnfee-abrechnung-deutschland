@@ -53,10 +53,11 @@ export function aggregateUvJahresmeldung(
   const buckets = new Map<string, UvJahresmeldungAggregat>();
 
   for (const emp of input.employees) {
-    const bgNr = (emp as any).bgMitgliedsnummer ?? emp.employmentData?.industryConfig
-      ? (emp as any).bgMitgliedsnummer
-      : undefined;
-    const gts = (emp as any).gefahrtarifstelle as string | undefined;
+    const anyEmp = emp as any;
+    const bgNr: string | undefined =
+      anyEmp.bgMitgliedsnummer ?? anyEmp.employmentData?.bgMitgliedsnummer;
+    const gts: string | undefined =
+      anyEmp.gefahrtarifstelle ?? anyEmp.employmentData?.gefahrtarifstelle;
 
     if (!bgNr || !gts) continue;
 
