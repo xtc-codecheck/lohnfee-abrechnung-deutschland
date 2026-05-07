@@ -575,6 +575,48 @@ export type Database = {
         }
         Relationships: []
       }
+      datev_connect_transfers: {
+        Row: {
+          completed_at: string | null
+          document_count: number
+          error: string | null
+          external_ticket: string | null
+          id: string
+          initiated_at: string
+          initiated_by: string | null
+          payload_summary: Json | null
+          status: string
+          tenant_id: string
+          transfer_type: string
+        }
+        Insert: {
+          completed_at?: string | null
+          document_count?: number
+          error?: string | null
+          external_ticket?: string | null
+          id?: string
+          initiated_at?: string
+          initiated_by?: string | null
+          payload_summary?: Json | null
+          status?: string
+          tenant_id: string
+          transfer_type: string
+        }
+        Update: {
+          completed_at?: string | null
+          document_count?: number
+          error?: string | null
+          external_ticket?: string | null
+          id?: string
+          initiated_at?: string
+          initiated_by?: string | null
+          payload_summary?: Json | null
+          status?: string
+          tenant_id?: string
+          transfer_type?: string
+        }
+        Relationships: []
+      }
       deuev_rueckmeldungen: {
         Row: {
           betriebsnummer_kk: string | null
@@ -743,6 +785,39 @@ export type Database = {
           unterhaltsberechtigte?: number
           updated_at?: string
           zustellungsdatum?: string | null
+        }
+        Relationships: []
+      }
+      employee_portal_users: {
+        Row: {
+          activated_at: string | null
+          created_at: string
+          employee_id: string
+          id: string
+          invited_at: string
+          is_active: boolean
+          tenant_id: string
+          user_id: string
+        }
+        Insert: {
+          activated_at?: string | null
+          created_at?: string
+          employee_id: string
+          id?: string
+          invited_at?: string
+          is_active?: boolean
+          tenant_id: string
+          user_id: string
+        }
+        Update: {
+          activated_at?: string | null
+          created_at?: string
+          employee_id?: string
+          id?: string
+          invited_at?: string
+          is_active?: boolean
+          tenant_id?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -1786,6 +1861,51 @@ export type Database = {
         }
         Relationships: []
       }
+      receipt_ocr_jobs: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          error: string | null
+          extracted: Json | null
+          id: string
+          processed_at: string | null
+          raw_text: string | null
+          receipt_id: string | null
+          status: string
+          storage_path: string
+          tenant_id: string
+          trip_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          error?: string | null
+          extracted?: Json | null
+          id?: string
+          processed_at?: string | null
+          raw_text?: string | null
+          receipt_id?: string | null
+          status?: string
+          storage_path: string
+          tenant_id: string
+          trip_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          error?: string | null
+          extracted?: Json | null
+          id?: string
+          processed_at?: string | null
+          raw_text?: string | null
+          receipt_id?: string | null
+          status?: string
+          storage_path?: string
+          tenant_id?: string
+          trip_id?: string | null
+        }
+        Relationships: []
+      }
       special_payments: {
         Row: {
           created_at: string
@@ -2066,8 +2186,10 @@ export type Database = {
       }
       travel_legs: {
         Row: {
+          breakfast_provided: boolean
           country_code: string
           created_at: string
+          dinner_provided: boolean
           duration_hours: number
           id: string
           is_arrival_or_departure: boolean
@@ -2076,7 +2198,9 @@ export type Database = {
           leg_date: string
           lodging_amount: number
           lodging_is_receipt: boolean
+          lunch_provided: boolean
           meal_allowance: number
+          meal_reduction: number
           mileage_amount: number
           notes: string | null
           tenant_id: string
@@ -2084,8 +2208,10 @@ export type Database = {
           vehicle_type: string
         }
         Insert: {
+          breakfast_provided?: boolean
           country_code?: string
           created_at?: string
+          dinner_provided?: boolean
           duration_hours?: number
           id?: string
           is_arrival_or_departure?: boolean
@@ -2094,7 +2220,9 @@ export type Database = {
           leg_date: string
           lodging_amount?: number
           lodging_is_receipt?: boolean
+          lunch_provided?: boolean
           meal_allowance?: number
+          meal_reduction?: number
           mileage_amount?: number
           notes?: string | null
           tenant_id: string
@@ -2102,8 +2230,10 @@ export type Database = {
           vehicle_type?: string
         }
         Update: {
+          breakfast_provided?: boolean
           country_code?: string
           created_at?: string
+          dinner_provided?: boolean
           duration_hours?: number
           id?: string
           is_arrival_or_departure?: boolean
@@ -2112,7 +2242,9 @@ export type Database = {
           leg_date?: string
           lodging_amount?: number
           lodging_is_receipt?: boolean
+          lunch_provided?: boolean
           meal_allowance?: number
+          meal_reduction?: number
           mileage_amount?: number
           notes?: string | null
           tenant_id?: string
@@ -2137,7 +2269,10 @@ export type Database = {
           description: string | null
           id: string
           is_taxable: boolean
+          ocr_confidence: number | null
+          ocr_status: string
           receipt_date: string
+          source: string
           storage_path: string | null
           tenant_id: string
           trip_id: string
@@ -2150,7 +2285,10 @@ export type Database = {
           description?: string | null
           id?: string
           is_taxable?: boolean
+          ocr_confidence?: number | null
+          ocr_status?: string
           receipt_date: string
+          source?: string
           storage_path?: string | null
           tenant_id: string
           trip_id: string
@@ -2163,7 +2301,10 @@ export type Database = {
           description?: string | null
           id?: string
           is_taxable?: boolean
+          ocr_confidence?: number | null
+          ocr_status?: string
           receipt_date?: string
+          source?: string
           storage_path?: string | null
           tenant_id?: string
           trip_id?: string
@@ -2337,6 +2478,57 @@ export type Database = {
           uebermittelt_am?: string | null
           updated_at?: string
           year?: number
+        }
+        Relationships: []
+      }
+      vacation_requests: {
+        Row: {
+          created_at: string
+          days: number
+          decided_at: string | null
+          decided_by: string | null
+          decision_note: string | null
+          employee_id: string
+          end_date: string
+          id: string
+          reason: string | null
+          request_type: string
+          start_date: string
+          status: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          days?: number
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_note?: string | null
+          employee_id: string
+          end_date: string
+          id?: string
+          reason?: string | null
+          request_type?: string
+          start_date: string
+          status?: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          days?: number
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_note?: string | null
+          employee_id?: string
+          end_date?: string
+          id?: string
+          reason?: string | null
+          request_type?: string
+          start_date?: string
+          status?: string
+          tenant_id?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -2517,6 +2709,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      current_portal_employee_id: {
+        Args: { _tenant_id: string }
+        Returns: string
+      }
       get_default_tenant: { Args: { _user_id: string }; Returns: string }
       has_any_role: { Args: { _user_id: string }; Returns: boolean }
       has_role: {
