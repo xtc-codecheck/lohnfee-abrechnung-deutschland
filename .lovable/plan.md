@@ -1,74 +1,40 @@
-# Performance-Test Plan
+## Funktionsumfang vs. DATEV / Lexware Lohn — Dokumentation aktualisieren
 
-Ziel: Belastbare Messung von Frontend-, Backend- und Berechnungs-Performance der App – inklusive realer Lohnabrechnungs-Last (100/500/1000 Mitarbeiter), DB-Queries, Edge Functions und UI-Rendering.
+### Ziel
+Die existierende Gegenüberstellung auf den tatsächlichen Implementierungsstand prüfen und korrigieren. Viele als „fehlend" markierte Features sind inzwischen implementiert.
 
-## 1. Berechnungskern (Pure Logic Benchmarks)
-Vitest-basierte Benchmarks (`bench/`) ohne UI/DB:
-- `payroll-calculator.bench.ts` – `calculatePayrollEntry` für 1, 10, 100, 1000 MA (Standard, mit Lohnarten, mit Zuschlägen, mit EFZG)
-- `tax-calculation.bench.ts` – `calculateCompleteTax` über alle 6 Steuerklassen × Ost/West × Kirchensteuer
-- `net-to-gross.bench.ts` – Iterative Netto→Brutto-Konvergenz
-- `garnishment.bench.ts` – Pfändungstabellen-Lookup 2025/2026
-- `wage-types-integration.bench.ts` – 50 Lohnarten gleichzeitig
-- `datev-export.bench.ts` – DATEV-ASCII-Generierung 1k Buchungssätze
-- `payroll-pdf-generator.bench.ts` – PDF-Erzeugung 100 Lohnabrechnungen
+### Festgestellter Implementierungsstand (DB + Code geprüft)
 
-Metriken: ops/s, mean, p95, p99, Speicherverbrauch (heapUsed delta).
-Schwellwerte: 1 Berechnung < 5 ms, 100 MA < 500 ms, 1000 MA < 5 s.
+**Neu implementiert seit letzter Einschätzung:**
 
-## 2. Datenbank- & Backend-Last
-Skript `scripts/perf-db.ts` (Service-Role, gegen Test-Tenant):
-- Seed: 1 Tenant, 1000 MA, 12 Monate Time-Entries (~250k Zeilen)
-- Messung typischer Queries (EXPLAIN ANALYZE via `supabase--read_query`):
-  - `employees` Liste (mit `tenant_id` Filter)
-  - `payroll_entries` 90-Tage-Fenster
-  - `time_entries` Aggregation pro Mitarbeiter/Monat
-  - DEÜV-Rückmeldungen + Lohnkonto-Read
-- Index-Check: vorhandene Indizes vs. langsame Queries
-- RLS-Overhead messen (mit/ohne JWT)
+| Feature | DB-Tabelle | Code | Status |
+|---|---|---|---|
+| AAG U1/U2 | `aag_antraege` | `aag-page.tsx`, `aag-calculation.ts` | Vollständig |
+| Sofortmeldung §28a SGB IV | `sv_meldungen` | `sofortmeldung-page.tsx`, `sofortmeldung.ts` | Vollständig |
+| UV-Jahresmeldung (DSLN) | `uv_jahresmeldungen` | `uv-jahresmeldung-page.tsx`, `uv-jahresmeldung.ts` | Vollständig |
+| Bescheinigungen EEL/BEA | `bescheinigungen` | `bescheinigungen-page.tsx`, `bescheinigungen.ts` | Vollständig |
+| ZVK / Pensionskassen | `zvk_kassen`, `zvk_meldungen` | `zvk-page.tsx`, `zvk-meldung.ts` | Vollständig |
+| DEÜV-Rückmeldungen | `deuev_rueckmeldungen` | `deuev-rueckmeldungen-page.tsx` | Vollständig |
+| Reisekosten/Spesen | `travel_trips`, `travel_legs`, `travel_receipts` | `Travel.tsx`, `travel-expenses.ts` | Rudimentär (Tab vorhanden) |
+| Pfändung | `pfaendung_tabellen` | `garnishment-calculation.ts` | Vollständig |
 
-## 3. Edge Functions
-Lasttest via `autocannon`/`curl`-Loop:
-- `sv-net-submit` – 50 parallele Requests, 1 Minute
-- `parse-pdf-employee` – seriell, 20 PDFs
-- `bmf-cross-check` – 100 Requests
-Metriken: p50/p95/p99-Latenz, Fehlerrate, Cold-Start-Zeit (Logs).
+### Korrekturen an der Übersicht
 
-## 4. Frontend-Performance (Browser-Profiling)
-Mit `browser--performance_profile` + `start_profiling`/`stop_profiling`:
-- `/dashboard` – initial load, Web Vitals (LCP, CLS, INP, TTFB)
-- `/employees` – Liste mit 1000 MA (Render-Zeit, lange Tasks)
-- `/payroll` – Lohnlauf-Wizard (5 Schritte, Re-Renders)
-- `/time-tracking` – Kalender + Bulk-Entry
-- `/reports` – PDF-Export & Charts
-- `/meldewesen` – alle Subseiten (AAG, DEÜV, ZVK …)
+1. **AAG U1/U2** — Von „nicht implementiert" → „Implementiert, aber ohne zertifizierte Übermittlung"
+2. **Sofortmeldung §28a** — Von „nicht implementiert" → „Implementiert, aber ohne zertifizierte Übermittlung"
+3. **UV-Jahresmeldung** — Von „fehlt" → „Implementiert, aber ohne zertifizierte Übermittlung"
+4. **Bescheinigungen EEL/BEA** — Von „fehlt" → „Implementiert, aber ohne zertifizierte Übermittlung"
+5. **ZVK/Pensionskassen** — Von „fehlt" → „Implementiert, aber ohne zertifizierte Übermittlung"
+6. **DEÜV-Rückmeldungen** — Von „fehlt" → „Implementiert (Import-Logik vorhanden)"
+7. **Reisekosten** — Von „rudimentär" → „Tab + Stammdaten vorhanden, kein vollwertiges Modul"
+8. **Pfändung** — Von „nicht jährlich automatisch aktualisiert" → „Tabellen + Berechnung vorhanden, jährliches Update manuell"
 
-Bundle-Analyse: `vite build --mode production` + `rollup-plugin-visualizer` Snapshot, Top-10 Chunks.
+### Neue Einschätzung
 
-## 5. End-to-End Lohnlauf
-Realistisches Szenario via Test-Skript:
-- Automated Payroll Wizard für 100 / 500 / 1000 MA
-- Messen: Wall-Clock pro Phase (Input-Load, Berechnung, Persist, PDF, DATEV)
-- Identifizieren: Engpass beim Bulk-`insert` in `payroll_entries` (bekannter Bug aus Memory)
+- **Berechnung & Belegerzeugung:** ~95 % (unverändert)
+- **Meldewesen (Datenerzeugung):** ~75 % (vorher ~40 % — AAG, Sofortmeldung, UV, Bescheinigungen, ZVK sind jetzt da)
+- **Meldewesen (zertifizierte Übermittlung):** ~40 % (unverändert — immer noch kein ITSG/sv.net/ERiC)
+- **Reisekosten:** ~20 % (Tab vorhanden, kein vollwertiges Modul)
 
-## 6. Reporting
-- `docs/PERFORMANCE-REPORT-2026-05.md` mit:
-  - Tabellen je Bereich (Baseline, Median, p95, Schwellwert, Status)
-  - Top-5 Bottlenecks mit konkretem Fix-Vorschlag (Index, Memoization, Batch-Insert, Lazy-Load)
-  - Vorher/Nachher falls Quick-Wins direkt umgesetzt
-- Artefakt nach `/mnt/documents/performance-report.pdf`
-
-## Technische Details
-- Tooling: vitest `bench`, `tinybench`, `autocannon` (npm), `puppeteer` via Lovable Browser-Tools, `supabase--read_query` für `EXPLAIN ANALYZE`.
-- Test-Tenant wird angelegt und nach Lauf bereinigt (Cleanup-Skript).
-- Keine Production-Daten, keine echte SV-Übermittlung (Stub bleibt aktiv).
-- Läuft nicht im CI – manuell ausführbar via `bun run perf:all`.
-
-## Lieferumfang
-1. Bench-Suite unter `bench/`
-2. Skripte unter `scripts/perf-*.ts`
-3. NPM-Scripts: `perf:bench`, `perf:db`, `perf:edge`, `perf:frontend`, `perf:all`
-4. PDF-Report mit Empfehlungen
-
-## Offene Fragen
-- Soll der Test gegen die **Live-Cloud** oder einen separaten Test-Tenant laufen?
-- Sollen identifizierte Quick-Wins (Indizes, Batch-Insert-Fix für Wizard) direkt im selben Lauf umgesetzt werden, oder erst nach Review des Reports?
+### Deliverable
+Neue Datei `docs/FUNKTIONSUMFANG-DATEV-VERGLEICH.md` mit der aktualisierten, ehrlichen Gegenüberstellung.
