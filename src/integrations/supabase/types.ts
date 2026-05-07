@@ -269,6 +269,81 @@ export type Database = {
           },
         ]
       }
+      bescheinigungen: {
+        Row: {
+          arbeitsstunden: number
+          bescheinigung_typ: string
+          brutto_entgelt: number
+          created_at: string
+          created_by: string | null
+          details: Json
+          empfaenger_betriebsnummer: string | null
+          empfaenger_name: string
+          empfaenger_typ: string
+          employee_id: string
+          id: string
+          letzter_arbeitstag: string | null
+          netto_entgelt: number
+          notes: string | null
+          status: string
+          sv_brutto: number
+          tenant_id: string
+          transfer_ticket: string | null
+          uebermittelt_am: string | null
+          updated_at: string
+          zeitraum_bis: string
+          zeitraum_von: string
+        }
+        Insert: {
+          arbeitsstunden?: number
+          bescheinigung_typ: string
+          brutto_entgelt?: number
+          created_at?: string
+          created_by?: string | null
+          details?: Json
+          empfaenger_betriebsnummer?: string | null
+          empfaenger_name: string
+          empfaenger_typ: string
+          employee_id: string
+          id?: string
+          letzter_arbeitstag?: string | null
+          netto_entgelt?: number
+          notes?: string | null
+          status?: string
+          sv_brutto?: number
+          tenant_id: string
+          transfer_ticket?: string | null
+          uebermittelt_am?: string | null
+          updated_at?: string
+          zeitraum_bis: string
+          zeitraum_von: string
+        }
+        Update: {
+          arbeitsstunden?: number
+          bescheinigung_typ?: string
+          brutto_entgelt?: number
+          created_at?: string
+          created_by?: string | null
+          details?: Json
+          empfaenger_betriebsnummer?: string | null
+          empfaenger_name?: string
+          empfaenger_typ?: string
+          employee_id?: string
+          id?: string
+          letzter_arbeitstag?: string | null
+          netto_entgelt?: number
+          notes?: string | null
+          status?: string
+          sv_brutto?: number
+          tenant_id?: string
+          transfer_ticket?: string | null
+          uebermittelt_am?: string | null
+          updated_at?: string
+          zeitraum_bis?: string
+          zeitraum_von?: string
+        }
+        Relationships: []
+      }
       company_settings: {
         Row: {
           bank_name: string | null
