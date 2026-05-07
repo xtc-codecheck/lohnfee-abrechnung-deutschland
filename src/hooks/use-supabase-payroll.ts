@@ -154,6 +154,88 @@ export function useSupabasePayroll() {
     return dbToPayrollEntry(data, employeeMap);
   }, [tenantId, employeeMap, queryClient, entriesKey]);
 
+  /**
+   * Bulk-Insert mehrerer Lohnabrechnungen in EINEM Roundtrip.
+   * Reduziert die Persistenz-Zeit beim Wizard von O(N * RTT) auf O(1 * RTT).
+   *
+   * Gibt { saved, failed } zurück; bei Konflikten oder Teilausfall werden die
+   * betroffenen employee_ids in `failed` gemeldet, damit der Wizard ehrlich
+   * berichten kann (kein Silent-Fail).
+   */
+  const addPayrollEntries = useCallback(async (
+    entries: Array<Omit<PayrollEntry, 'id' | 'createdAt' | 'updatedAt'>>
+  ): Promise<{ saved: PayrollEntry[]; failed: Array<{ employeeId: string; error: string }> }> => {
+    if (entries.length === 0) return { saved: [], failed: [] };
+
+    const rows = entries.map(entry => ({
+      tenant_id: tenantId,
+      employee_id: entry.employeeId,
+      payroll_period_id: entry.payrollPeriodId,
+      gross_salary: entry.salaryCalculation.grossSalary,
+      net_salary: entry.salaryCalculation.netSalary,
+      final_net_salary: entry.finalNetSalary,
+      tax_income_tax: entry.salaryCalculation.taxes.incomeTax,
+      tax_church: entry.salaryCalculation.taxes.churchTax,
+      tax_solidarity: entry.salaryCalculation.taxes.solidarityTax,
+      tax_total: entry.salaryCalculation.taxes.total,
+      sv_health_employee: entry.salaryCalculation.socialSecurityContributions.healthInsurance.employee,
+      sv_health_employer: entry.salaryCalculation.socialSecurityContributions.healthInsurance.employer,
+      sv_pension_employee: entry.salaryCalculation.socialSecurityContributions.pensionInsurance.employee,
+      sv_pension_employer: entry.salaryCalculation.socialSecurityContributions.pensionInsurance.employer,
+      sv_unemployment_employee: entry.salaryCalculation.socialSecurityContributions.unemploymentInsurance.employee,
+      sv_unemployment_employer: entry.salaryCalculation.socialSecurityContributions.unemploymentInsurance.employer,
+      sv_care_employee: entry.salaryCalculation.socialSecurityContributions.careInsurance.employee,
+      sv_care_employer: entry.salaryCalculation.socialSecurityContributions.careInsurance.employer,
+      sv_total_employee: entry.salaryCalculation.socialSecurityContributions.total.employee,
+      sv_total_employer: entry.salaryCalculation.socialSecurityContributions.total.employer,
+      employer_costs: entry.salaryCalculation.employerCosts,
+      bonus: entry.additions.bonuses,
+      overtime_hours: entry.workingData.overtimeHours,
+      overtime_pay: entry.additions.overtimePay,
+      deductions: entry.deductions.total,
+      audit_data: (entry.wageTypeLineItems && entry.wageTypeLineItems.length > 0
+        ? ({ wageTypeLineItems: entry.wageTypeLineItems } as unknown as Json)
+        : null),
+    }));
+
+    // 1 Roundtrip statt N. Bei Fehler einer Zeile schlägt nur der ganze Batch fehl;
+    // Fallback: row-by-row, um Teilerfolge zu ermöglichen und konkrete Fehler zu sammeln.
+    const { data, error: err } = await supabase
+      .from('payroll_entries')
+      .insert(rows)
+      .select();
+
+    if (!err && data) {
+      await queryClient.invalidateQueries({ queryKey: entriesKey });
+      return { saved: data.map(d => dbToPayrollEntry(d, employeeMap)), failed: [] };
+    }
+
+    // Fallback: einzeln einfügen, um Teilerfolge zu sichern und konkrete Fehler zu sammeln.
+    const saved: PayrollEntry[] = [];
+    const failed: Array<{ employeeId: string; error: string }> = [];
+    // Chunked statt Sequenz: 25 parallele Inserts gleichzeitig.
+    const CHUNK = 25;
+    for (let i = 0; i < rows.length; i += CHUNK) {
+      const slice = rows.slice(i, i + CHUNK);
+      const results = await Promise.allSettled(
+        slice.map(row => supabase.from('payroll_entries').insert(row).select().single())
+      );
+      results.forEach((res, idx) => {
+        const row = slice[idx];
+        if (res.status === 'fulfilled' && !res.value.error && res.value.data) {
+          saved.push(dbToPayrollEntry(res.value.data, employeeMap));
+        } else {
+          const msg = res.status === 'fulfilled'
+            ? (res.value.error?.message ?? 'unknown')
+            : String(res.reason);
+          failed.push({ employeeId: row.employee_id as string, error: msg });
+        }
+      });
+    }
+    await queryClient.invalidateQueries({ queryKey: entriesKey });
+    return { saved, failed };
+  }, [tenantId, employeeMap, queryClient, entriesKey]);
+
   const getPayrollEntriesForPeriod = useCallback((periodId: string): PayrollEntry[] => {
     return payrollEntries.filter(e => e.payrollPeriodId === periodId);
   }, [payrollEntries]);
@@ -244,6 +326,7 @@ export function useSupabasePayroll() {
     createPayrollPeriod,
     updatePayrollPeriodStatus,
     addPayrollEntry,
+    addPayrollEntries,
     updatePayrollEntry,
     getPayrollEntriesForPeriod,
     getPayrollReport,
