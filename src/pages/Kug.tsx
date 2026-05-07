@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { MainLayout } from "@/components/layout/main-layout";
 import { PageSeo } from "@/components/seo/page-seo";
 import { PageHeader } from "@/components/ui/page-header";
@@ -17,6 +17,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/contexts/tenant-context";
 import { useToast } from "@/hooks/use-toast";
+import { calculateKug } from "@/utils/kug-calculation";
 
 const STATUS: Record<string,string> = { entwurf: "Entwurf", beantragt: "Beantragt", bewilligt: "Bewilligt", abgelehnt: "Abgelehnt" };
 
@@ -39,6 +40,17 @@ export default function Kug() {
   const [betriebsrat, setBetriebsrat] = useState(false);
   const [einverstaendnis, setEinverstaendnis] = useState(false);
   const [notes, setNotes] = useState("");
+
+  // KUG-Rechner
+  const [soll, setSoll] = useState("3000");
+  const [ist, setIst] = useState("1500");
+  const [hasChild, setHasChild] = useState(false);
+  const kugRes = useMemo(() => calculateKug({
+    sollEntgelt: Number(soll) || 0,
+    istEntgelt: Number(ist) || 0,
+    hasChild,
+  }), [soll, ist, hasChild]);
+  const fmt = (v: number) => Number(v ?? 0).toFixed(2).replace(".", ",") + " €";
 
   const load = useCallback(async () => {
     if (!tenantId) return;
@@ -79,6 +91,23 @@ export default function Kug() {
       <AppBreadcrumb segments={[{ label: "Meldewesen", path: "/meldewesen" }, { label: "Kurzarbeitergeld" }]} />
       <div className="space-y-6 animate-fade-in">
         <PageHeader title="Kurzarbeitergeld (KUG)" description="§§ 95 ff. SGB III – Anzeige Arbeitsausfall & Leistungsantrag" onBack={() => navigate("/meldewesen")} />
+        <Card className="shadow-card">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2"><Zap className="h-5 w-5 text-primary" />KUG-Rechner</CardTitle>
+            <CardDescription>Pauschaliertes Netto nach BA-Tabelle 2026 · §§ 105 ff. SGB III</CardDescription>
+          </CardHeader>
+          <CardContent className="grid md:grid-cols-4 gap-4">
+            <div><Label>Soll-Entgelt (Brutto)</Label><Input type="number" value={soll} onChange={e => setSoll(e.target.value)} /></div>
+            <div><Label>Ist-Entgelt (Brutto)</Label><Input type="number" value={ist} onChange={e => setIst(e.target.value)} /></div>
+            <div className="flex items-center gap-2 pt-6"><input type="checkbox" id="kug-kind" checked={hasChild} onChange={e => setHasChild(e.target.checked)} /><Label htmlFor="kug-kind">Mit Kind (67 %)</Label></div>
+            <div className="rounded-lg bg-muted/50 p-3 text-sm space-y-1">
+              <div>Netto-Differenz: <strong>{fmt(kugRes.nettoEntgeltdifferenz)}</strong></div>
+              <div>Leistungssatz: <strong>{(kugRes.leistungssatz * 100).toFixed(0)} %</strong></div>
+              <div className="text-base">KUG-Betrag: <strong className="text-primary">{fmt(kugRes.kugBetrag)}</strong></div>
+            </div>
+          </CardContent>
+        </Card>
+
         <Card className="shadow-card">
           <CardHeader className="flex flex-row items-center justify-between">
             <div>

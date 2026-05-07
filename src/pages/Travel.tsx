@@ -12,13 +12,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
-import { Plus, Plane, Loader2, Trash2, CheckCircle2 } from "lucide-react";
+import { Plus, Plane, Loader2, Trash2, CheckCircle2, Upload, FileScan } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useEmployees } from "@/contexts/employee-context";
 import { useTenant } from "@/contexts/tenant-context";
 import { useToast } from "@/hooks/use-toast";
 import { calculateTravelLeg, aggregateTrip, type TravelLegInput, VERPFLEGUNG_AUSLAND_2025 } from "@/utils/travel-expenses";
+import { parseCreditCardCsv } from "@/utils/credit-card-import";
 
 const STATUS_LABEL: Record<string, string> = {
   entwurf: "Entwurf",
@@ -162,6 +163,65 @@ export default function Travel() {
     fetchTrips();
   };
 
+  // ── Kreditkarten-Import ───────────────────────────────────────
+  const [importTripId, setImportTripId] = useState("");
+  const [importBusy, setImportBusy] = useState(false);
+  const handleCardCsv = async (file: File) => {
+    if (!tenantId || !importTripId) {
+      toast({ title: "Bitte zuerst Reise wählen", variant: "destructive" }); return;
+    }
+    setImportBusy(true);
+    try {
+      const text = await file.text();
+      const txs = parseCreditCardCsv(text);
+      if (!txs.length) {
+        toast({ title: "Keine Transaktionen erkannt", variant: "destructive" });
+        return;
+      }
+      const rows = txs.map(t => ({
+        tenant_id: tenantId, trip_id: importTripId,
+        receipt_date: t.date, amount: t.amount, vat_amount: 0,
+        category: t.category ?? "other", description: t.description,
+        source: "creditcard", ocr_status: "skipped",
+      }));
+      const { error } = await supabase.from("travel_receipts").insert(rows);
+      if (error) throw error;
+      toast({ title: `${rows.length} Belege importiert` });
+    } catch (e: any) {
+      toast({ title: "Import-Fehler", description: e.message, variant: "destructive" });
+    } finally { setImportBusy(false); }
+  };
+
+  // ── Beleg-Upload mit OCR ──────────────────────────────────────
+  const [ocrTripId, setOcrTripId] = useState("");
+  const [ocrBusy, setOcrBusy] = useState(false);
+  const handleReceiptOcr = async (file: File) => {
+    if (!tenantId || !ocrTripId) {
+      toast({ title: "Bitte zuerst Reise wählen", variant: "destructive" }); return;
+    }
+    setOcrBusy(true);
+    try {
+      const ext = file.name.split(".").pop() || "jpg";
+      const path = `${tenantId}/${ocrTripId}/${crypto.randomUUID()}.${ext}`;
+      const { error: upErr } = await supabase.storage.from("receipts").upload(path, file);
+      if (upErr) throw upErr;
+      const { data: rec, error: recErr } = await supabase.from("travel_receipts").insert({
+        tenant_id: tenantId, trip_id: ocrTripId, receipt_date: new Date().toISOString().slice(0,10),
+        amount: 0, category: "other", source: "upload", ocr_status: "pending", storage_path: path,
+      }).select().single();
+      if (recErr) throw recErr;
+      const { data: job, error: jobErr } = await supabase.from("receipt_ocr_jobs" as any).insert({
+        tenant_id: tenantId, receipt_id: rec.id, storage_path: path, status: "pending",
+      }).select().single();
+      if (jobErr) throw jobErr;
+      const { error: fnErr } = await supabase.functions.invoke("receipt-ocr", { body: { jobId: (job as any).id } });
+      if (fnErr) throw fnErr;
+      toast({ title: "Beleg hochgeladen & OCR gestartet" });
+    } catch (e: any) {
+      toast({ title: "Upload-Fehler", description: e.message, variant: "destructive" });
+    } finally { setOcrBusy(false); }
+  };
+
   const fmt = (v: number) => Number(v ?? 0).toFixed(2).replace(".", ",") + " €";
 
   const countryOptions = ["DE", ...Object.keys(VERPFLEGUNG_AUSLAND_2025)];
@@ -274,6 +334,50 @@ export default function Travel() {
             )}
           </CardContent>
         </Card>
+
+        <div className="grid md:grid-cols-2 gap-4">
+          <Card className="shadow-card">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2"><Upload className="h-5 w-5 text-primary" />Kreditkarten-CSV-Import</CardTitle>
+              <CardDescription>Amex / Visa Business / Mastercard / DKB – automatische Kategorisierung</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div>
+                <Label>Reise auswählen</Label>
+                <Select value={importTripId} onValueChange={setImportTripId}>
+                  <SelectTrigger><SelectValue placeholder="Reise wählen" /></SelectTrigger>
+                  <SelectContent>
+                    {trips.map(t => <SelectItem key={t.id} value={t.id}>{t.purpose || t.destination || t.id.slice(0,8)}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <Input type="file" accept=".csv,text/csv" disabled={importBusy || !importTripId}
+                onChange={e => e.target.files?.[0] && handleCardCsv(e.target.files[0])} />
+              {importBusy && <Loader2 className="h-4 w-4 animate-spin" />}
+            </CardContent>
+          </Card>
+
+          <Card className="shadow-card">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2"><FileScan className="h-5 w-5 text-primary" />Beleg hochladen (OCR)</CardTitle>
+              <CardDescription>Foto/PDF – Datum, Händler, Betrag werden per KI extrahiert</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div>
+                <Label>Reise auswählen</Label>
+                <Select value={ocrTripId} onValueChange={setOcrTripId}>
+                  <SelectTrigger><SelectValue placeholder="Reise wählen" /></SelectTrigger>
+                  <SelectContent>
+                    {trips.map(t => <SelectItem key={t.id} value={t.id}>{t.purpose || t.destination || t.id.slice(0,8)}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <Input type="file" accept="image/*,application/pdf" disabled={ocrBusy || !ocrTripId}
+                onChange={e => e.target.files?.[0] && handleReceiptOcr(e.target.files[0])} />
+              {ocrBusy && <Loader2 className="h-4 w-4 animate-spin" />}
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </MainLayout>
   );

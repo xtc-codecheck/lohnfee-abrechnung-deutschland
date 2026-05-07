@@ -20,6 +20,7 @@ const navItems = [
   { path: "/travel", label: "Reisekosten" },
   { path: "/steuerberater", label: "Steuerberater" },
   { path: "/autolohn", label: "Autolohn" },
+  { path: "/portal", label: "Mein Portal" },
   { path: "/settings", label: "Einstellungen" },
 ];
 

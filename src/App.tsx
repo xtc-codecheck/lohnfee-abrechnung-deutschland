@@ -37,6 +37,7 @@ const Steuerberater = lazy(() => import("./pages/Steuerberater"));
 const A1Bescheinigung = lazy(() => import("./pages/A1Bescheinigung"));
 const Kug = lazy(() => import("./pages/Kug"));
 const Pfaendungen = lazy(() => import("./pages/Pfaendungen"));
+const Portal = lazy(() => import("./pages/Portal"));
 
 // Lazy: Rechtliche Seiten (selten aufgerufen)
 const Impressum = lazy(() => import("./pages/Impressum"));
@@ -89,6 +90,7 @@ const App = () => (
                     <Route path="/a1" element={<ProtectedRoute><A1Bescheinigung /></ProtectedRoute>} />
                     <Route path="/kug" element={<ProtectedRoute><Kug /></ProtectedRoute>} />
                     <Route path="/pfaendungen" element={<ProtectedRoute><Pfaendungen /></ProtectedRoute>} />
+                    <Route path="/portal" element={<ProtectedRoute><Portal /></ProtectedRoute>} />
                     <Route path="/impressum" element={<Impressum />} />
                     <Route path="/datenschutz" element={<Datenschutz />} />
                     <Route path="/agb" element={<AGB />} />
