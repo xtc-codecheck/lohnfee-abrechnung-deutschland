@@ -5,20 +5,22 @@ import { SVMeldungenPage } from "@/components/meldewesen/sv-meldungen-page";
 import { BeitragsnachweisPage } from "@/components/meldewesen/beitragsnachweis-page";
 import { LohnsteuerbescheinigungPage } from "@/components/meldewesen/lohnsteuerbescheinigung-page";
 import { LohnsteueranmeldungPage } from "@/components/meldewesen/lohnsteueranmeldung-page";
+import { AagPage } from "@/components/meldewesen/aag-page";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/page-header";
 import { AppBreadcrumb } from "@/components/ui/app-breadcrumb";
-import { FileText, Send, ClipboardList, Calculator } from "lucide-react";
+import { FileText, Send, ClipboardList, Calculator, HeartPulse } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-type MeldewesenView = 'overview' | 'sv-meldungen' | 'beitragsnachweise' | 'lstb' | 'lsta';
+type MeldewesenView = 'overview' | 'sv-meldungen' | 'beitragsnachweise' | 'lstb' | 'lsta' | 'aag';
 
 const viewLabels: Record<Exclude<MeldewesenView, 'overview'>, string> = {
   'sv-meldungen': 'SV-Meldungen',
   'beitragsnachweise': 'Beitragsnachweise',
   'lstb': 'Lohnsteuerbescheinigung',
   'lsta': 'Lohnsteueranmeldung',
+  'aag': 'AAG U1/U2',
 };
 
 export default function Meldewesen() {
@@ -40,6 +42,7 @@ export default function Meldewesen() {
         {currentView === 'beitragsnachweise' && <BeitragsnachweisPage onBack={handleBack} />}
         {currentView === 'lstb' && <LohnsteuerbescheinigungPage onBack={handleBack} />}
         {currentView === 'lsta' && <LohnsteueranmeldungPage onBack={handleBack} />}
+        {currentView === 'aag' && <AagPage onBack={handleBack} />}
       </MainLayout>
     );
   }
@@ -108,6 +111,21 @@ export default function Meldewesen() {
             </CardHeader>
             <CardContent>
               <Button variant="outline" className="w-full">Bescheinigungen erstellen</Button>
+            </CardContent>
+          </Card>
+
+          <Card className="shadow-card hover:shadow-elegant transition-shadow cursor-pointer" onClick={() => setCurrentView('aag')}>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <HeartPulse className="h-5 w-5 text-primary" />
+                AAG-Erstattung U1/U2
+              </CardTitle>
+              <CardDescription>
+                Erstattungsanträge bei Krankheit (U1) und Mutterschaft (U2)
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button variant="outline" className="w-full">Anträge verwalten</Button>
             </CardContent>
           </Card>
         </div>
