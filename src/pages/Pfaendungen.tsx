@@ -49,7 +49,7 @@ export default function Pfaendungen() {
   const [simDeps, setSimDeps] = useState("0");
   const simResult = useMemo(() => {
     try {
-      return calculateGarnishment({ netSalary: Number(simNetto), dependents: Number(simDeps), year: 2026 });
+      return calculateGarnishment({ netIncome: Number(simNetto), numberOfDependents: Number(simDeps), year: 2026 });
     } catch { return null; }
   }, [simNetto, simDeps]);
 
@@ -108,7 +108,7 @@ export default function Pfaendungen() {
             <div className="bg-muted/40 rounded-md p-3">
               <div className="text-sm text-muted-foreground">Pfändbarer Betrag</div>
               <div className="text-2xl font-semibold">{simResult ? fmt(simResult.garnishableAmount) : "—"}</div>
-              <div className="text-xs text-muted-foreground">Freibetrag: {simResult ? fmt(simResult.exemptionAmount) : "—"}</div>
+              <div className="text-xs text-muted-foreground">Freibetrag: {simResult ? fmt(simResult.exemptAmount) : "—"}</div>
             </div>
           </CardContent>
         </Card>
