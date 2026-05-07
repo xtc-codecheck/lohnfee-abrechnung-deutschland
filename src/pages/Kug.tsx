@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { MainLayout } from "@/components/layout/main-layout";
 import { PageSeo } from "@/components/seo/page-seo";
 import { PageHeader } from "@/components/ui/page-header";
@@ -18,7 +18,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/contexts/tenant-context";
 import { useToast } from "@/hooks/use-toast";
 import { calculateKug } from "@/utils/kug-calculation";
-import { useMemo } from "react";
 
 const STATUS: Record<string,string> = { entwurf: "Entwurf", beantragt: "Beantragt", bewilligt: "Bewilligt", abgelehnt: "Abgelehnt" };
 
