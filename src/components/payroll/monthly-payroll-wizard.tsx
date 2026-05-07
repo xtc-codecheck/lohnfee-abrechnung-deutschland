@@ -609,21 +609,16 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
         return;
       }
 
-      let saved = 0;
-      const failed: string[] = [];
-      for (const entry of pendingEntries) {
-        try {
-          // payrollPeriodId aus der frisch angelegten Periode setzen
-          const persisted = await addPayrollEntry({ ...entry, payrollPeriodId: period.id });
-          await addToHistory(persisted);
-          saved++;
-        } catch (err) {
-          const emp = activeEmployees.find(e => e.id === entry.employeeId);
-          const name = emp ? `${emp.personalData.firstName} ${emp.personalData.lastName}` : entry.employeeId;
-          failed.push(name);
-          console.error(`[payroll-persist] Insert fehlgeschlagen für ${name}:`, err);
-        }
-      }
+      // Bulk-Insert in 1 Roundtrip (Performance-Fix für > 100 MA)
+      const entriesWithPeriod = pendingEntries.map(e => ({ ...e, payrollPeriodId: period.id }));
+      const { saved: savedEntries, failed: failedRows } = await addPayrollEntries(entriesWithPeriod);
+      const saved = savedEntries.length;
+      const failed: string[] = failedRows.map(f => {
+        const emp = activeEmployees.find(e => e.id === f.employeeId);
+        return emp ? `${emp.personalData.firstName} ${emp.personalData.lastName}` : f.employeeId;
+      });
+      // Guardian-History asynchron, nicht blockierend für UX.
+      void Promise.allSettled(savedEntries.map(p => addToHistory(p)));
 
       // L1.1: bei Teilausfall ehrlich melden, Status NICHT auf 'calculated' setzen
       if (failed.length > 0) {
