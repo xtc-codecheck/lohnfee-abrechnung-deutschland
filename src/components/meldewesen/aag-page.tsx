@@ -124,7 +124,7 @@ export function AagPage({ onBack }: AagPageProps) {
     const { error } = await supabase.from('aag_antraege').insert({
       tenant_id: tenantId,
       employee_id: employeeId,
-      krankenkasse: employee?.healthInsurance ?? 'Unbekannt',
+      krankenkasse: employee?.healthInsurance?.name ?? 'Unbekannt',
       antrag_typ: antragTyp,
       zeitraum_von: zeitraumVon,
       zeitraum_bis: zeitraumBis,
