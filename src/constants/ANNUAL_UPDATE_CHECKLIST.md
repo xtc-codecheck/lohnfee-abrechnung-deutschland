@@ -142,6 +142,33 @@ Jede Krankenkasse hat einen individuellen Zusatzbeitrag. Diese Liste muss jährl
 
 ---
 
+## 10. Pfändungstabelle (§ 850c ZPO)
+
+**Datei:** `src/constants/pfaendung-tabellen.ts` + DB-Tabelle `pfaendung_tabellen`
+**Quelle:** [BMJ Pfändungsfreigrenzenbekanntmachung](https://www.bmj.de)
+
+| Konstante | 2025 Wert | Zu prüfen |
+|-----------|-----------|-----------|
+| `baseExemption` | 1.491,75 € | ☐ |
+| `perDependentIncrease` | 561,43 € | ☐ |
+| `fullGarnishmentThreshold` | 4.298,81 € | ☐ |
+
+Beträge werden alle zwei Jahre (jeweils zum 01.07.) angepasst.
+Sowohl die TS-Konstanten als auch die DB-Zeile für das neue Jahr ergänzen.
+
+---
+
+## 11. Reisekosten-Pauschalen (BMF Auslandsreisekosten)
+
+**Datei:** `src/utils/travel-expenses.ts`
+**Quelle:** Jährliches BMF-Schreiben "Auslandstage- und -übernachtungsgelder".
+
+- Verpflegungspauschalen Inland (`VERPFLEGUNG_DE_2025`)
+- Auslandstabelle (`VERPFLEGUNG_AUSLAND_2025`)
+- km-Pauschalen `KM_PAUSCHALEN`
+
+---
+
 ## 🔄 Update-Prozess
 
 ### Vor dem Update:
