@@ -17,6 +17,8 @@ const navItems = [
   { path: "/payroll", label: "Abrechnung" },
   { path: "/time-tracking", label: "Zeiterfassung" },
   { path: "/meldewesen", label: "Meldewesen" },
+  { path: "/travel", label: "Reisekosten" },
+  { path: "/steuerberater", label: "Steuerberater" },
   { path: "/autolohn", label: "Autolohn" },
   { path: "/settings", label: "Einstellungen" },
 ];
