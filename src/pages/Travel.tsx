@@ -17,6 +17,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useEmployees } from "@/contexts/employee-context";
 import { useTenant } from "@/contexts/tenant-context";
+import { useAuth } from "@/contexts/auth-context";
 import { useToast } from "@/hooks/use-toast";
 import { calculateTravelLeg, aggregateTrip, type TravelLegInput, VERPFLEGUNG_AUSLAND_2025 } from "@/utils/travel-expenses";
 import { parseCreditCardCsv } from "@/utils/credit-card-import";
@@ -24,21 +25,28 @@ import { parseCreditCardCsv } from "@/utils/credit-card-import";
 const STATUS_LABEL: Record<string, string> = {
   entwurf: "Entwurf",
   eingereicht: "Eingereicht",
+  erste_freigabe: "1. Freigabe (2. fehlt)",
   genehmigt: "Genehmigt",
   abgelehnt: "Abgelehnt",
   abgerechnet: "Abgerechnet",
 };
 
+const SECOND_APPROVAL_THRESHOLD = 1000;
+
 export default function Travel() {
   const navigate = useNavigate();
   const { tenantId } = useTenant();
   const { employees } = useEmployees();
+  const { user, isAdmin, canEdit } = useAuth();
   const { toast } = useToast();
 
   const [trips, setTrips] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [logs, setLogs] = useState<Record<string, any[]>>({});
+  const [rejectFor, setRejectFor] = useState<string | null>(null);
+  const [rejectComment, setRejectComment] = useState("");
 
   // Form
   const [employeeId, setEmployeeId] = useState("");
@@ -60,6 +68,20 @@ export default function Travel() {
       .eq("tenant_id", tenantId)
       .order("start_at", { ascending: false });
     setTrips(data ?? []);
+    if (data?.length) {
+      const { data: logRows } = await supabase
+        .from("travel_approval_log" as any)
+        .select("*")
+        .in("trip_id", data.map((t: any) => t.id))
+        .order("created_at", { ascending: false });
+      const grouped: Record<string, any[]> = {};
+      (logRows as any[] | null)?.forEach((r) => {
+        (grouped[r.trip_id] ||= []).push(r);
+      });
+      setLogs(grouped);
+    } else {
+      setLogs({});
+    }
     setLoading(false);
   }, [tenantId]);
 
@@ -100,6 +122,8 @@ export default function Travel() {
     const legs = buildLegs();
     const calced = legs.map(calculateTravelLeg);
     const totals = aggregateTrip(calced);
+    const total = Number((totals.taxFree + totals.taxable).toFixed(2));
+    const requiresSecond = total >= SECOND_APPROVAL_THRESHOLD;
 
     const { data: trip, error } = await supabase
       .from("travel_trips")
@@ -118,6 +142,8 @@ export default function Travel() {
         total_mileage: totals.mileageAmount,
         total_taxable: totals.taxable,
         total_tax_free: totals.taxFree,
+        total_amount: total,
+        requires_second_approval: requiresSecond,
       })
       .select()
       .single();
@@ -126,6 +152,11 @@ export default function Travel() {
       toast({ title: "Fehler", description: error?.message, variant: "destructive" });
       setSaving(false); return;
     }
+
+    await supabase.from("travel_approval_log" as any).insert({
+      tenant_id: tenantId, trip_id: trip.id, action: "erstellt",
+      actor_user_id: user?.id, actor_role: isAdmin() ? "admin" : "sachbearbeiter",
+    });
 
     if (legs.length) {
       await supabase.from("travel_legs").insert(
@@ -153,8 +184,68 @@ export default function Travel() {
     fetchTrips();
   };
 
-  const setStatus = async (id: string, status: string) => {
-    await supabase.from("travel_trips").update({ status }).eq("id", id);
+  const logAction = async (tripId: string, action: string, comment?: string) => {
+    if (!tenantId) return;
+    await supabase.from("travel_approval_log" as any).insert({
+      tenant_id: tenantId, trip_id: tripId, action,
+      actor_user_id: user?.id,
+      actor_role: isAdmin() ? "admin" : (canEdit() ? "sachbearbeiter" : "leserecht"),
+      comment: comment ?? null,
+    });
+  };
+
+  const submitTrip = async (t: any) => {
+    await supabase.from("travel_trips").update({
+      status: "eingereicht",
+      submitted_at: new Date().toISOString(),
+      submitted_by: user?.id,
+    }).eq("id", t.id);
+    await logAction(t.id, "eingereicht");
+    fetchTrips();
+  };
+
+  const approveTrip = async (t: any) => {
+    if (t.requires_second_approval && !t.approved_by) {
+      // First approval
+      await supabase.from("travel_trips").update({
+        status: "erste_freigabe",
+        approved_by: user?.id,
+        approved_at: new Date().toISOString(),
+      }).eq("id", t.id);
+      await logAction(t.id, "erste_freigabe");
+    } else if (t.requires_second_approval && t.approved_by && t.approved_by !== user?.id) {
+      // Second approval (must be different user)
+      await supabase.from("travel_trips").update({
+        status: "genehmigt",
+        second_approved_by: user?.id,
+        second_approved_at: new Date().toISOString(),
+      }).eq("id", t.id);
+      await logAction(t.id, "zweite_freigabe");
+    } else if (t.requires_second_approval && t.approved_by === user?.id) {
+      toast({ title: "Vier-Augen-Prinzip", description: "Zweite Freigabe muss durch eine andere Person erfolgen.", variant: "destructive" });
+      return;
+    } else {
+      await supabase.from("travel_trips").update({
+        status: "genehmigt",
+        approved_by: user?.id,
+        approved_at: new Date().toISOString(),
+      }).eq("id", t.id);
+      await logAction(t.id, "genehmigt");
+    }
+    fetchTrips();
+  };
+
+  const rejectTrip = async () => {
+    if (!rejectFor) return;
+    await supabase.from("travel_trips").update({ status: "abgelehnt" }).eq("id", rejectFor);
+    await logAction(rejectFor, "abgelehnt", rejectComment);
+    setRejectFor(null); setRejectComment("");
+    fetchTrips();
+  };
+
+  const settleTrip = async (t: any) => {
+    await supabase.from("travel_trips").update({ status: "abgerechnet" }).eq("id", t.id);
+    await logAction(t.id, "abgerechnet");
     fetchTrips();
   };
 
@@ -320,10 +411,34 @@ export default function Travel() {
                         <TableCell className="text-right">{fmt(Number(t.total_tax_free))}</TableCell>
                         <TableCell><Badge variant="outline">{STATUS_LABEL[t.status] || t.status}</Badge></TableCell>
                         <TableCell className="text-right">
-                          {t.status === 'entwurf' && <Button size="sm" variant="outline" onClick={() => setStatus(t.id, 'eingereicht')}>Einreichen</Button>}
-                          {t.status === 'eingereicht' && <Button size="sm" variant="outline" onClick={() => setStatus(t.id, 'genehmigt')}><CheckCircle2 className="h-4 w-4 mr-1" /> Genehmigen</Button>}
-                          {t.status === 'genehmigt' && <Button size="sm" variant="outline" onClick={() => setStatus(t.id, 'abgerechnet')}>Abrechnen</Button>}
-                          <Button size="sm" variant="ghost" onClick={() => remove(t.id)}><Trash2 className="h-4 w-4" /></Button>
+                          <div className="flex gap-1 justify-end flex-wrap">
+                            {t.status === 'entwurf' && <Button size="sm" variant="outline" onClick={() => submitTrip(t)}>Einreichen</Button>}
+                            {(t.status === 'eingereicht' || t.status === 'erste_freigabe') && (
+                              <>
+                                <Button size="sm" variant="outline" onClick={() => approveTrip(t)}>
+                                  <CheckCircle2 className="h-4 w-4 mr-1" />
+                                  {t.requires_second_approval && t.status === 'eingereicht' ? '1. Freigabe' :
+                                   t.requires_second_approval ? '2. Freigabe' : 'Genehmigen'}
+                                </Button>
+                                <Button size="sm" variant="ghost" onClick={() => setRejectFor(t.id)}>Ablehnen</Button>
+                              </>
+                            )}
+                            {t.status === 'genehmigt' && <Button size="sm" variant="outline" onClick={() => settleTrip(t)}>Abrechnen</Button>}
+                            <Button size="sm" variant="ghost" onClick={() => remove(t.id)}><Trash2 className="h-4 w-4" /></Button>
+                          </div>
+                          {logs[t.id]?.length > 0 && (
+                            <details className="mt-1 text-xs text-left text-muted-foreground">
+                              <summary className="cursor-pointer">Audit ({logs[t.id].length})</summary>
+                              <ul className="mt-1 space-y-0.5">
+                                {logs[t.id].map(l => (
+                                  <li key={l.id}>
+                                    {new Date(l.created_at).toLocaleString('de-DE')} – <strong>{l.action}</strong>
+                                    {l.comment ? ` – ${l.comment}` : ''}
+                                  </li>
+                                ))}
+                              </ul>
+                            </details>
+                          )}
                         </TableCell>
                       </TableRow>
                     );
