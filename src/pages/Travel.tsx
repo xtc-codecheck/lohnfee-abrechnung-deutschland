@@ -493,6 +493,18 @@ export default function Travel() {
             </CardContent>
           </Card>
         </div>
+
+        <Dialog open={!!rejectFor} onOpenChange={(o) => !o && setRejectFor(null)}>
+          <DialogContent>
+            <DialogHeader><DialogTitle>Reise ablehnen</DialogTitle></DialogHeader>
+            <Label>Begründung (Pflicht)</Label>
+            <Textarea value={rejectComment} onChange={e => setRejectComment(e.target.value)} />
+            <DialogFooter>
+              <Button variant="ghost" onClick={() => setRejectFor(null)}>Abbrechen</Button>
+              <Button variant="destructive" disabled={!rejectComment.trim()} onClick={rejectTrip}>Ablehnen</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </MainLayout>
   );
