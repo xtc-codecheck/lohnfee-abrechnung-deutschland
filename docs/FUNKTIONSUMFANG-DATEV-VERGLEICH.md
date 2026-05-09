@@ -1,6 +1,8 @@
 # Funktionsumfang vs. DATEV / Lexware Lohn
 
-> Stand: Mai 2026 — Kurze, ehrliche Einschätzung basierend auf dem, was im Projekt **tatsächlich implementiert** ist (Code- und DB-Audit).
+> Stand: Mai 2026 — Ehrliche Einschätzung basierend auf dem, was im Projekt **tatsächlich implementiert** ist (Code- und DB-Audit).
+> 
+> Letzte Aktualisierung: Reisekosten-Genehmigungs-Workflow, Pfändungs-Compliance-Alert, Mitarbeiter-Portal-Erweiterungen.
 
 ---
 
@@ -38,6 +40,31 @@
 | **ZVK / Pensionskassen** | `zvk_kassen`, `zvk_meldungen` | ✅ |
 | ELStAM-Validierung | — | ✅ |
 
+### Reisekosten & Spesen (Workflow)
+| Funktion | Status |
+|---|---|
+| Stammdaten: Reisen, Etappen, Belege | ✅ `travel_trips`, `travel_legs`, `travel_receipts` |
+| **Two-Stage Approval** (>= 1.000 € erfordert zweite Freigabe durch anderen Genehmiger) | ✅ |
+| **Rejection-Dialog** mit Pflichtkommentar | ✅ |
+| **Audit-Log** (`travel_approval_log`) | ✅ |
+| Verpflegungs-Pauschalen, Übernachtungs-Pauschalen | ✅ (hinterlegt, manuelle Eingabe) |
+| **Keine** Beleg-OCR / Belegscan-Automatik | ❌ |
+
+### Mitarbeiter-Self-Service Portal
+| Funktion | Status |
+|---|---|
+| Lohnabrechnung als PDF herunterladen (jsPDF) | ✅ |
+| Urlaubsantrag + Saldo-Anzeige | ✅ |
+| **Manager-Inbox** (Freigabe/Ablehnung von Urlaubsanträgen) | ✅ |
+| **eAU-Self-Service** (elektronische Arbeitsunfähigkeitsbescheinigung hochladen) | ✅ |
+
+### Pfändung & Compliance
+| Funktion | Status |
+|---|---|
+| Pfändungsberechnung (BMJ-Tabellen 2025/2026) | ✅ |
+| **Compliance-Alert** bei Tabellen > 2 Jahre alt | ✅ |
+| Jährliches Update der Tabellen | Manuell per Migration |
+
 ---
 
 ## ⚠️ Eingeschränkt / nur intern
@@ -45,8 +72,8 @@
 - **Übermittlung** aller Meldungen erfolgt aktuell nur über einen **Stub-Provider** (`sv-net-submit` Edge Function). Datensätze werden korrekt erzeugt, der echte Versand an Krankenkassen/Finanzamt fehlt.
 - **ELSTER**: nur Facade über SYSTAX-Layer, keine direkte ERiC-Anbindung
 - **SV-Meldungen**: erzeugt + valide, aber keine sv.net/ITSG-zertifizierte Übermittlung
-- **Reisekosten/Spesen**: Tab + DB-Tabellen (`travel_trips`, `travel_legs`, `travel_receipts`) vorhanden, aber kein vollwertiges Modul (keine Pauschalen-Automatik, kein Genehmigungs-Workflow, kein Belegscan)
-- **Pfändung**: Berechnung + Tabellen vorhanden, jährliches Update aktuell manuell per Migration
+- **Reisekosten**: Workflow + Approval vorhanden, aber **keine** Pauschalen-Automatik (System errechnet nicht automatisch VMK aus Etappen), **kein** Beleg-OCR
+- **Pfändung**: Compliance-Alert bei veralteten Tabellen vorhanden, aber jährliches Update erfordert weiterhin manuelle Migration
 
 ---
 
@@ -56,7 +83,7 @@
 - **ERiC-Modul** für direkte ELSTER-Übermittlung
 - **dakota.le / sv.net-Integration** (produktiver Provider)
 - **Mandantenfähige Steuerberater-Workflows** mit Freigabe und Mandantenkommunikation à la DATEV Unternehmen online (Steuerberater-Paket-Export ist vorhanden, aber kein Two-Way-Workflow)
-- **Reisekostenabrechnung** als vollwertiges Modul (Pauschalen, Verpflegungsmehraufwand-Automatik, Belegerkennung, Genehmigungsprozess)
+- **Reisekostenabrechnung** als vollautomatisches Modul (Pauschalen-Automatik aus Etappen, Beleg-OCR, automatische Verbuchung auf Lohnarten)
 
 ---
 
@@ -65,14 +92,16 @@
 | Bereich | Reifegrad |
 |---|---|
 | Berechnung & Belegerzeugung | **~95 %** auf DATEV/Lexware-Niveau |
-| Meldewesen — Datensatz-Erzeugung | **~75 %** (vorher ~40 %; AAG, Sofortmeldung, UV, EEL/BEA, ZVK, DEÜV-Rückmeldungen sind jetzt implementiert) |
+| Meldewesen — Datensatz-Erzeugung | **~75 %** |
 | Meldewesen — zertifizierte Übermittlung | **~10 %** (Stub-Provider, kein echter Versand) |
-| Reisekosten | **~20 %** (Grundgerüst vorhanden, kein vollwertiges Modul) |
+| Reisekosten | **~60 %** (Workflow + Two-Stage Approval + Audit Log vorhanden; fehlt: Pauschalen-Automatik, OCR) |
+| Mitarbeiter-Portal | **~70 %** (PDF, Urlaub, eAU, Manager-Inbox vorhanden) |
+| Pfändung | **~80 %** (Berechnung + Compliance-Alert vorhanden; manuelles Update) |
 
 **Nächste große Schritte für den Echtbetrieb:**
 1. ITSG-Zertifizierung + produktive sv.net/dakota.le-Anbindung (ersetzt Stub in `sv-net-submit`)
 2. ERiC-Anbindung für direkte ELSTER-Übermittlung (LStA, eLStB)
-3. Reisekostenmodul ausbauen (Pauschalen, Workflow, Belegscan)
+3. Reisekostenmodul ausbauen (Pauschalen-Automatik aus Etappen, Beleg-OCR)
 4. Steuerberater-Workflow mit Mandantenfreigabe
 
 Bis dahin müssen Meldungen extern (z. B. via sv.net Classic) eingereicht werden — die korrekten Datensätze stehen in der DB bereit und können exportiert werden.
