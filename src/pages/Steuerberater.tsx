@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Loader2, Send, MessageSquare, CheckCircle2, XCircle } from "lucide-react";
+import { Loader2, Send, MessageSquare, CheckCircle2, XCircle, Cloud } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/auth-context";
@@ -27,6 +27,8 @@ export default function Steuerberater() {
   const [selectedPeriod, setSelectedPeriod] = useState<any | null>(null);
   const [messages, setMessages] = useState<any[]>([]);
   const [newMessage, setNewMessage] = useState("");
+  const [transfers, setTransfers] = useState<any[]>([]);
+  const [transferring, setTransferring] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     if (!tenantId) return;
@@ -34,6 +36,9 @@ export default function Steuerberater() {
     const { data } = await supabase.from("payroll_periods").select("*")
       .eq("tenant_id", tenantId).order("year", { ascending: false }).order("month", { ascending: false });
     setPeriods(data ?? []);
+    const { data: tr } = await supabase.from("datev_connect_transfers").select("*")
+      .eq("tenant_id", tenantId).order("initiated_at", { ascending: false }).limit(20);
+    setTransfers(tr ?? []);
     setLoading(false);
   }, [tenantId]);
 
@@ -71,6 +76,32 @@ export default function Steuerberater() {
     await supabase.from("payroll_periods").update({ review_status: "rejected" }).eq("id", id);
     toast({ title: "Lauf zurückgewiesen" });
     load();
+  };
+
+  const sendViaDatevConnect = async (period: any) => {
+    if (!tenantId) return;
+    setTransferring(period.id);
+    try {
+      const { data, error } = await supabase.functions.invoke("datev-connect-transfer", {
+        body: {
+          tenantId,
+          transferType: "payroll_release",
+          payrollPeriodId: period.id,
+          documents: [
+            { kind: "payroll_journal", period: `${period.year}-${String(period.month).padStart(2,'0')}` },
+            { kind: "datev_ascii", format: "EXTF_v7" },
+            { kind: "lohnkonto", scope: "all_employees" },
+          ],
+        },
+      });
+      if (error) throw error;
+      toast({ title: "An DATEV Connect übergeben", description: `Ticket: ${data?.ticket}` });
+      load();
+    } catch (e: any) {
+      toast({ title: "Übermittlung fehlgeschlagen", description: e?.message ?? "Unbekannter Fehler", variant: "destructive" });
+    } finally {
+      setTransferring(null);
+    }
   };
 
   const postMessage = async () => {
@@ -124,6 +155,12 @@ export default function Steuerberater() {
                           <Button size="sm" onClick={() => release(p.id)}><CheckCircle2 className="h-4 w-4 mr-1" />Genehmigen</Button>
                           <Button size="sm" variant="destructive" onClick={() => reject(p.id)}><XCircle className="h-4 w-4 mr-1" />Ablehnen</Button>
                         </>)}
+                        {p.review_status === 'released' && (
+                          <Button size="sm" variant="outline" disabled={transferring === p.id} onClick={() => sendViaDatevConnect(p)}>
+                            {transferring === p.id ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Cloud className="h-4 w-4 mr-1" />}
+                            DATEV Connect
+                          </Button>
+                        )}
                       </TableCell>
                     </TableRow>
                   ))}
@@ -156,6 +193,30 @@ export default function Steuerberater() {
             </CardContent>
           </Card>
         )}
+
+        <Card className="shadow-card">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2"><Cloud className="h-5 w-5 text-primary" />DATEV Connect Online – Transfer-Historie</CardTitle>
+            <CardDescription>Digitaler Belegaustausch mit dem Steuerberater (Stub – ITSG-Zertifizierung erforderlich für Echtbetrieb)</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader><TableRow><TableHead>Initiiert</TableHead><TableHead>Typ</TableHead><TableHead>Status</TableHead><TableHead>Ticket</TableHead><TableHead className="text-right">Belege</TableHead></TableRow></TableHeader>
+              <TableBody>
+                {transfers.map(t => (
+                  <TableRow key={t.id}>
+                    <TableCell className="text-xs">{new Date(t.initiated_at).toLocaleString('de-DE')}</TableCell>
+                    <TableCell>{t.transfer_type}</TableCell>
+                    <TableCell><Badge variant={t.status === 'transmitted' ? 'default' : t.status === 'failed' ? 'destructive' : 'outline'}>{t.status}</Badge></TableCell>
+                    <TableCell className="font-mono text-xs">{t.external_ticket ?? '—'}</TableCell>
+                    <TableCell className="text-right">{t.document_count}</TableCell>
+                  </TableRow>
+                ))}
+                {!transfers.length && <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-6">Keine Transfers.</TableCell></TableRow>}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
       </div>
     </MainLayout>
   );
