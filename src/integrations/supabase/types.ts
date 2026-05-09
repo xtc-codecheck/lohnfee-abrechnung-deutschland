@@ -680,6 +680,8 @@ export type Database = {
           id: string
           ist_folge_au: boolean | null
           notes: string | null
+          storage_path: string | null
+          submitted_by_employee: boolean
           tenant_id: string
           updated_at: string
         }
@@ -697,6 +699,8 @@ export type Database = {
           id?: string
           ist_folge_au?: boolean | null
           notes?: string | null
+          storage_path?: string | null
+          submitted_by_employee?: boolean
           tenant_id: string
           updated_at?: string
         }
@@ -714,6 +718,8 @@ export type Database = {
           id?: string
           ist_folge_au?: boolean | null
           notes?: string | null
+          storage_path?: string | null
+          submitted_by_employee?: boolean
           tenant_id?: string
           updated_at?: string
         }
@@ -927,6 +933,7 @@ export type Database = {
           tax_id: string | null
           tenant_id: string | null
           updated_at: string
+          vacation_days_per_year: number
           versorgungswerk_beitragssatz: number | null
           versorgungswerk_mitgliedsnummer: string | null
           versorgungswerk_name: string | null
@@ -974,6 +981,7 @@ export type Database = {
           tax_id?: string | null
           tenant_id?: string | null
           updated_at?: string
+          vacation_days_per_year?: number
           versorgungswerk_beitragssatz?: number | null
           versorgungswerk_mitgliedsnummer?: string | null
           versorgungswerk_name?: string | null
@@ -1021,6 +1029,7 @@ export type Database = {
           tax_id?: string | null
           tenant_id?: string | null
           updated_at?: string
+          vacation_days_per_year?: number
           versorgungswerk_beitragssatz?: number | null
           versorgungswerk_mitgliedsnummer?: string | null
           versorgungswerk_name?: string | null
@@ -2184,6 +2193,47 @@ export type Database = {
           },
         ]
       }
+      travel_approval_log: {
+        Row: {
+          action: string
+          actor_role: string | null
+          actor_user_id: string | null
+          comment: string | null
+          created_at: string
+          id: string
+          tenant_id: string
+          trip_id: string
+        }
+        Insert: {
+          action: string
+          actor_role?: string | null
+          actor_user_id?: string | null
+          comment?: string | null
+          created_at?: string
+          id?: string
+          tenant_id: string
+          trip_id: string
+        }
+        Update: {
+          action?: string
+          actor_role?: string | null
+          actor_user_id?: string | null
+          comment?: string | null
+          created_at?: string
+          id?: string
+          tenant_id?: string
+          trip_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "travel_approval_log_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "travel_trips"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       travel_legs: {
         Row: {
           breakfast_provided: boolean
@@ -2333,9 +2383,15 @@ export type Database = {
           id: string
           notes: string | null
           purpose: string
+          requires_second_approval: boolean
+          second_approved_at: string | null
+          second_approved_by: string | null
           start_at: string
           status: string
+          submitted_at: string | null
+          submitted_by: string | null
           tenant_id: string
+          total_amount: number
           total_lodging: number
           total_meal_allowance: number
           total_mileage: number
@@ -2356,9 +2412,15 @@ export type Database = {
           id?: string
           notes?: string | null
           purpose: string
+          requires_second_approval?: boolean
+          second_approved_at?: string | null
+          second_approved_by?: string | null
           start_at: string
           status?: string
+          submitted_at?: string | null
+          submitted_by?: string | null
           tenant_id: string
+          total_amount?: number
           total_lodging?: number
           total_meal_allowance?: number
           total_mileage?: number
@@ -2379,9 +2441,15 @@ export type Database = {
           id?: string
           notes?: string | null
           purpose?: string
+          requires_second_approval?: boolean
+          second_approved_at?: string | null
+          second_approved_by?: string | null
           start_at?: string
           status?: string
+          submitted_at?: string | null
+          submitted_by?: string | null
           tenant_id?: string
+          total_amount?: number
           total_lodging?: number
           total_meal_allowance?: number
           total_mileage?: number
