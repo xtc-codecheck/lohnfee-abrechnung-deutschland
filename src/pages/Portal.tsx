@@ -113,32 +113,50 @@ export default function Portal() {
   };
 
   const downloadPayslip = async (entry: any) => {
-    const { generatePayrollPDF } = await import('@/utils/payroll-pdf-generator');
     if (!employee) return;
-    const calc = entry.audit_data ?? {
-      grossSalary: Number(entry.gross_salary), netSalary: Number(entry.net_salary),
-      finalNetSalary: Number(entry.final_net_salary), incomeTax: Number(entry.tax_income_tax ?? 0),
-      solidarityTax: Number(entry.tax_solidarity ?? 0), churchTax: Number(entry.tax_church ?? 0),
-      healthInsuranceEmployee: Number(entry.sv_health_employee ?? 0),
-      pensionInsuranceEmployee: Number(entry.sv_pension_employee ?? 0),
-      unemploymentInsuranceEmployee: Number(entry.sv_unemployment_employee ?? 0),
-      careInsuranceEmployee: Number(entry.sv_care_employee ?? 0),
-      totalDeductions: Number(entry.gross_salary) - Number(entry.final_net_salary),
-    };
     try {
-      generatePayrollPDF({
-        employee: {
-          firstName: employee.first_name, lastName: employee.last_name,
-          personalNumber: employee.personal_number ?? '',
-          street: employee.street ?? '', zipCode: employee.zip_code ?? '', city: employee.city ?? '',
-          taxClass: employee.tax_class ?? 1, taxId: employee.tax_id ?? '',
-          svNumber: employee.sv_number ?? '', healthInsurance: employee.health_insurance ?? '',
-          iban: employee.iban ?? '',
-        } as any,
-        calculation: calc,
-        period: { month: entry.payroll_periods.month, year: entry.payroll_periods.year },
-        language: (employee.payslip_language ?? 'de') as 'de' | 'en',
-      });
+      const jsPDF = (await import('jspdf')).default;
+      const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+      const period = entry.payroll_periods;
+      const months = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+      const eur = (v: number) => Number(v ?? 0).toFixed(2).replace('.', ',') + ' €';
+      doc.setFillColor(24, 24, 38); doc.rect(0, 0, 210, 28, 'F');
+      doc.setTextColor(255, 255, 255); doc.setFontSize(16); doc.setFont('helvetica', 'bold');
+      doc.text('Entgeltabrechnung', 20, 18);
+      doc.setFontSize(10); doc.setFont('helvetica', 'normal');
+      doc.text(`${months[period.month - 1]} ${period.year}`, 190, 18, { align: 'right' });
+      doc.setTextColor(40, 40, 40);
+      let y = 40;
+      doc.setFont('helvetica', 'bold'); doc.text('Mitarbeiter', 20, y); y += 6;
+      doc.setFont('helvetica', 'normal');
+      doc.text(`${employee.first_name} ${employee.last_name}`, 20, y); y += 5;
+      doc.text(`Personalnr.: ${employee.personal_number ?? '—'}`, 20, y); y += 5;
+      doc.text(`Steuerklasse: ${employee.tax_class ?? '—'}`, 20, y); y += 10;
+
+      doc.setFont('helvetica', 'bold'); doc.text('Bezüge & Abzüge', 20, y); y += 6;
+      doc.setFont('helvetica', 'normal');
+      const rows: [string, number][] = [
+        ['Bruttolohn', Number(entry.gross_salary)],
+        ['Lohnsteuer', -Number(entry.tax_income_tax ?? 0)],
+        ['Solidaritätszuschlag', -Number(entry.tax_solidarity ?? 0)],
+        ['Kirchensteuer', -Number(entry.tax_church ?? 0)],
+        ['KV (AN)', -Number(entry.sv_health_employee ?? 0)],
+        ['RV (AN)', -Number(entry.sv_pension_employee ?? 0)],
+        ['AV (AN)', -Number(entry.sv_unemployment_employee ?? 0)],
+        ['PV (AN)', -Number(entry.sv_care_employee ?? 0)],
+      ];
+      for (const [label, val] of rows) {
+        doc.text(label, 24, y);
+        doc.text(eur(val), 186, y, { align: 'right' });
+        y += 5;
+      }
+      y += 3; doc.setDrawColor(180); doc.line(20, y, 190, y); y += 6;
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(11);
+      doc.text('Auszahlungsbetrag', 24, y);
+      doc.text(eur(Number(entry.final_net_salary)), 186, y, { align: 'right' });
+      doc.setFontSize(8); doc.setFont('helvetica', 'normal'); doc.setTextColor(120);
+      doc.text('Erstellt über Mitarbeiter-Portal · Selbstauskunft gem. §108 GewO', 20, 285);
+      doc.save(`Lohnzettel_${employee.last_name}_${period.year}-${String(period.month).padStart(2, '0')}.pdf`);
     } catch (e: any) {
       toast({ title: 'PDF-Fehler', description: e.message, variant: 'destructive' });
     }
