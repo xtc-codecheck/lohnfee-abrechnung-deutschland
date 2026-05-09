@@ -12,13 +12,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
-import { Plus, Loader2, Scale, CheckCircle2, Calculator } from "lucide-react";
+import { Plus, Loader2, Scale, CheckCircle2, Calculator, AlertTriangle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useEmployees } from "@/contexts/employee-context";
 import { useTenant } from "@/contexts/tenant-context";
 import { useToast } from "@/hooks/use-toast";
 import { calculateGarnishment } from "@/utils/garnishment-calculation";
+import { getPfaendungstabelle } from "@/constants/pfaendung-tabellen";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const STATUS: Record<string,string> = { aktiv: "Aktiv", erledigt: "Erledigt", ruhend: "Ruhend", aufgehoben: "Aufgehoben" };
 
@@ -59,6 +61,26 @@ export default function Pfaendungen() {
     const { data } = await supabase.from("employee_garnishments" as any).select("*").eq("tenant_id", tenantId).order("created_at", { ascending: false });
     setItems((data as any[]) ?? []);
     setLoading(false);
+    // Pfändungstabellen-Aktualität prüfen → Compliance-Alert erzeugen, wenn Tabelle veraltet
+    try {
+      const currentYear = new Date().getFullYear();
+      const table = getPfaendungstabelle(currentYear);
+      const validFromYear = new Date(table.validFrom).getFullYear();
+      const isStale = currentYear - validFromYear >= 2;
+      if (isStale) {
+        const { data: existing } = await supabase
+          .from("compliance_alerts").select("id")
+          .eq("tenant_id", tenantId).eq("type", "pfaendung_tabelle_veraltet")
+          .eq("is_resolved", false).maybeSingle();
+        if (!existing) {
+          await supabase.from("compliance_alerts").insert({
+            tenant_id: tenantId, type: "pfaendung_tabelle_veraltet", severity: "high",
+            title: `Pfändungstabelle prüfen (Stand ${table.validFrom})`,
+            message: `Die hinterlegte Pfändungstabelle ist mind. 2 Jahre alt. BMJ veröffentlicht alle 2 Jahre eine neue Bekanntmachung. Bitte aktuelle Werte importieren.`,
+          });
+        }
+      }
+    } catch { /* ignore */ }
   }, [tenantId]);
   useEffect(() => { load(); }, [load]);
 
@@ -96,6 +118,20 @@ export default function Pfaendungen() {
       <AppBreadcrumb segments={[{ label: "Mitarbeiter", path: "/employees" }, { label: "Pfändungen" }]} />
       <div className="space-y-6 animate-fade-in">
         <PageHeader title="Pfändungsverwaltung" description="ZPO §§ 850 ff. – Pfändungstabelle 2026, Rangfolge, Unterhaltspfändungen" onBack={() => navigate("/employees")} />
+        {(() => {
+          const t = getPfaendungstabelle(new Date().getFullYear());
+          const stale = new Date().getFullYear() - new Date(t.validFrom).getFullYear() >= 2;
+          return stale ? (
+            <Alert variant="destructive">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertTitle>Pfändungstabelle veraltet</AlertTitle>
+              <AlertDescription>
+                Aktuell hinterlegt: {t.source} (gültig ab {t.validFrom}). Bitte BMJ-Bekanntmachung prüfen
+                und neue Werte importieren — sonst drohen falsche Pfändbarbeträge.
+              </AlertDescription>
+            </Alert>
+          ) : null;
+        })()}
 
         <Card className="shadow-card">
           <CardHeader>
