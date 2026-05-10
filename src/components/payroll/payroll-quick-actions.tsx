@@ -146,10 +146,10 @@ export function PayrollQuickActions({
         </CardContent>
       </Card>
 
-      <Card className="shadow-card hover:shadow-elegant transition-shadow cursor-pointer border-emerald-200 bg-gradient-to-br from-emerald-50 to-emerald-100/50 dark:from-emerald-950/20 dark:to-emerald-900/10 dark:border-emerald-800" onClick={() => onShowFibu?.()}>
+      <Card className="shadow-card hover:shadow-elegant transition-shadow cursor-pointer border-success/30 bg-gradient-to-br from-success to-success/50 dark:from-success/20 dark:to-success/10 dark:border-success" onClick={() => onShowFibu?.()}>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <BookOpenCheck className="h-5 w-5 text-emerald-600" />
+            <BookOpenCheck className="h-5 w-5 text-success" />
             Finanzbuchhaltung
           </CardTitle>
           <CardDescription>Automatische Buchungssätze (Soll/Haben) mit Saldenliste</CardDescription>
@@ -159,10 +159,10 @@ export function PayrollQuickActions({
         </CardContent>
       </Card>
 
-      <Card className="shadow-card hover:shadow-elegant transition-shadow border-purple-200 bg-gradient-to-br from-purple-50 to-purple-100/50 dark:from-purple-950/20 dark:to-purple-900/10 dark:border-purple-800">
+      <Card className="shadow-card hover:shadow-elegant transition-shadow border-primary/30 bg-gradient-to-br from-primary to-primary/50 dark:from-primary/20 dark:to-primary/10 dark:border-primary">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Download className="h-5 w-5 text-purple-600" />
+            <Download className="h-5 w-5 text-primary" />
             DATEV Export
           </CardTitle>
           <CardDescription>Lohndaten für Steuerberater exportieren (SKR03/SKR04)</CardDescription>

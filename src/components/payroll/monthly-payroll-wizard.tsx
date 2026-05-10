@@ -718,7 +718,7 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
             </Alert>
 
             {status.warnings.map((w, i) => (
-              <Alert key={i} variant="destructive" className="bg-orange-50 border-orange-200 text-orange-800 dark:bg-orange-950/30 dark:border-orange-800 dark:text-orange-200">
+              <Alert key={i} variant="destructive" className="bg-warning/10 border-warning/30 text-warning dark:bg-warning/30 dark:border-warning dark:text-warning/70">
                 <AlertTriangle className="h-4 w-4" />
                 <AlertDescription>{w}</AlertDescription>
               </Alert>
@@ -750,9 +750,9 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
             </Alert>
 
             {status.warnings.map((w, i) => (
-              <Alert key={i} className="bg-amber-50 border-amber-200 dark:bg-amber-950/30 dark:border-amber-800">
-                <Gift className="h-4 w-4 text-amber-600" />
-                <AlertDescription className="text-amber-800 dark:text-amber-200">{w}</AlertDescription>
+              <Alert key={i} className="bg-warning/10 border-warning/30 dark:bg-warning/30 dark:border-warning">
+                <Gift className="h-4 w-4 text-warning" />
+                <AlertDescription className="text-warning dark:text-warning/70">{w}</AlertDescription>
               </Alert>
             ))}
 
@@ -770,7 +770,7 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
                           Gehalt: {emp.salaryData?.grossSalary?.toLocaleString('de-DE')}€
                         </div>
                       </div>
-                      <Badge variant="outline" className="text-green-700 border-green-300">
+                      <Badge variant="outline" className="text-success border-success/30">
                         <Check className="h-3 w-3 mr-1" /> Regulär
                       </Badge>
                     </div>
@@ -790,10 +790,10 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
         return (
           <div className="space-y-4">
             {status.completed ? (
-              <Alert className="bg-green-50 border-green-200 dark:bg-green-950/30 dark:border-green-800">
-                <CheckCircle2 className="h-4 w-4 text-green-600" />
-                <AlertTitle className="text-green-800 dark:text-green-200">Abrechnung vorhanden</AlertTitle>
-                <AlertDescription className="text-green-700 dark:text-green-300">
+              <Alert className="bg-success/10 border-success/30 dark:bg-success/30 dark:border-success">
+                <CheckCircle2 className="h-4 w-4 text-success" />
+                <AlertTitle className="text-success dark:text-success/70">Abrechnung vorhanden</AlertTitle>
+                <AlertDescription className="text-success dark:text-success/70">
                   Die Abrechnung für {MONTHS[selectedMonth - 1]} {selectedYear} wurde bereits erstellt.
                 </AlertDescription>
               </Alert>
@@ -880,7 +880,7 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
                         </div>
                         <div className="text-sm text-muted-foreground">{item.desc}</div>
                       </div>
-                      <Badge className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">
+                      <Badge className="bg-success/10 text-success dark:bg-success/30 dark:text-success/70">
                         <Zap className="h-3 w-3 mr-1" /> Automatisch
                       </Badge>
                     </div>
@@ -970,9 +970,9 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                   {[
                     { label: 'Brutto gesamt', value: summaryData.gross, color: 'text-foreground' },
-                    { label: 'Netto gesamt', value: summaryData.netTotal, color: 'text-green-700 dark:text-green-400' },
+                    { label: 'Netto gesamt', value: summaryData.netTotal, color: 'text-success dark:text-success/70' },
                     { label: 'AG-Gesamtkosten', value: summaryData.employerCosts, color: 'text-primary' },
-                    { label: 'Abgabenlast', value: summaryData.taxTotal + summaryData.svEmployee, color: 'text-orange-600 dark:text-orange-400' },
+                    { label: 'Abgabenlast', value: summaryData.taxTotal + summaryData.svEmployee, color: 'text-warning dark:text-warning/70' },
                   ].map((item, i) => (
                     <div key={i} className="bg-muted/40 rounded-lg p-3 text-center">
                       <div className={`text-xl font-bold ${item.color}`}>{fmt(item.value)}€</div>
@@ -1151,10 +1151,10 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
       )}
 
       {autoRunPaused && (
-        <Alert className="border-orange-300 bg-orange-50 dark:bg-orange-950/20 dark:border-orange-800">
-          <AlertTriangle className="h-4 w-4 text-orange-600" />
-          <AlertTitle className="text-orange-800 dark:text-orange-200">Auto-Run pausiert – Ihre Aufmerksamkeit ist nötig</AlertTitle>
-          <AlertDescription className="text-orange-700 dark:text-orange-300">
+        <Alert className="border-warning/30 bg-warning/10 dark:bg-warning/20 dark:border-warning">
+          <AlertTriangle className="h-4 w-4 text-warning" />
+          <AlertTitle className="text-warning dark:text-warning/70">Auto-Run pausiert – Ihre Aufmerksamkeit ist nötig</AlertTitle>
+          <AlertDescription className="text-warning dark:text-warning/70">
             Bei Schritt {currentStep + 1} wurden Auffälligkeiten erkannt. Bitte prüfen und bestätigen Sie, um fortzufahren.
             <div className="mt-2 flex gap-2">
               <Button size="sm" onClick={resumeAutoRun} className="bg-gradient-primary hover:opacity-90">
@@ -1207,7 +1207,7 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
                 isActive
                   ? 'bg-primary text-primary-foreground shadow-md'
                   : status.approved
-                  ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+                  ? 'bg-success/10 text-success dark:bg-success/30 dark:text-success/70'
                   : 'bg-muted text-muted-foreground hover:bg-muted/80'
               }`}
             >

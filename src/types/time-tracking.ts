@@ -68,12 +68,12 @@ export const TIME_ENTRY_LABELS: Record<TimeEntryType, string> = {
 };
 
 export const TIME_ENTRY_COLORS: Record<TimeEntryType, string> = {
-  work: 'bg-green-100 text-green-800 border-green-200',
-  vacation: 'bg-blue-100 text-blue-800 border-blue-200',
-  sick: 'bg-red-100 text-red-800 border-red-200',
-  'parental-leave': 'bg-purple-100 text-purple-800 border-purple-200',
-  'unpaid-leave': 'bg-gray-100 text-gray-800 border-gray-200',
-  training: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-  holiday: 'bg-indigo-100 text-indigo-800 border-indigo-200',
-  absence: 'bg-orange-100 text-orange-800 border-orange-200'
+  work: 'bg-success/10 text-success border-success/30',
+  vacation: 'bg-info/10 text-info border-info/30',
+  sick: 'bg-destructive/10 text-destructive border-destructive/30',
+  'parental-leave': 'bg-primary/10 text-primary border-primary/30',
+  'unpaid-leave': 'bg-muted text-muted-foreground border-border',
+  training: 'bg-warning/10 text-warning border-warning/30',
+  holiday: 'bg-info/10 text-info border-info/30',
+  absence: 'bg-warning/10 text-warning border-warning/30'
 };

@@ -99,11 +99,11 @@ export function TimePayrollSync({ onSyncComplete }: TimePayrollSyncProps) {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'complete':
-        return <CheckCircle className="h-4 w-4 text-green-500" />;
+        return <CheckCircle className="h-4 w-4 text-success" />;
       case 'incomplete':
-        return <XCircle className="h-4 w-4 text-red-500" />;
+        return <XCircle className="h-4 w-4 text-destructive" />;
       case 'discrepancies':
-        return <AlertTriangle className="h-4 w-4 text-yellow-500" />;
+        return <AlertTriangle className="h-4 w-4 text-warning" />;
       default:
         return null;
     }
@@ -112,11 +112,11 @@ export function TimePayrollSync({ onSyncComplete }: TimePayrollSyncProps) {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'complete':
-        return <Badge variant="default" className="bg-green-100 text-green-800">Vollständig</Badge>;
+        return <Badge variant="default" className="bg-success/10 text-success">Vollständig</Badge>;
       case 'incomplete':
         return <Badge variant="destructive">Unvollständig</Badge>;
       case 'discrepancies':
-        return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">Diskrepanzen</Badge>;
+        return <Badge variant="secondary" className="bg-warning/10 text-warning">Diskrepanzen</Badge>;
       default:
         return null;
     }
@@ -178,30 +178,30 @@ export function TimePayrollSync({ onSyncComplete }: TimePayrollSyncProps) {
         {/* Status-Übersicht */}
         {completeness && (
           <div className="grid grid-cols-3 gap-4">
-            <Card className="p-4 bg-green-50 border-green-200">
+            <Card className="p-4 bg-success/10 border-success/30">
               <div className="flex items-center gap-2">
-                <CheckCircle className="h-5 w-5 text-green-600" />
+                <CheckCircle className="h-5 w-5 text-success" />
                 <div>
-                  <p className="text-2xl font-bold text-green-700">{completeness.complete}</p>
-                  <p className="text-sm text-green-600">Vollständig</p>
+                  <p className="text-2xl font-bold text-success">{completeness.complete}</p>
+                  <p className="text-sm text-success">Vollständig</p>
                 </div>
               </div>
             </Card>
-            <Card className="p-4 bg-yellow-50 border-yellow-200">
+            <Card className="p-4 bg-warning/10 border-warning/30">
               <div className="flex items-center gap-2">
-                <AlertTriangle className="h-5 w-5 text-yellow-600" />
+                <AlertTriangle className="h-5 w-5 text-warning" />
                 <div>
-                  <p className="text-2xl font-bold text-yellow-700">{completeness.withDiscrepancies}</p>
-                  <p className="text-sm text-yellow-600">Mit Hinweisen</p>
+                  <p className="text-2xl font-bold text-warning">{completeness.withDiscrepancies}</p>
+                  <p className="text-sm text-warning">Mit Hinweisen</p>
                 </div>
               </div>
             </Card>
-            <Card className="p-4 bg-red-50 border-red-200">
+            <Card className="p-4 bg-destructive/10 border-destructive/30">
               <div className="flex items-center gap-2">
-                <XCircle className="h-5 w-5 text-red-600" />
+                <XCircle className="h-5 w-5 text-destructive" />
                 <div>
-                  <p className="text-2xl font-bold text-red-700">{completeness.incomplete}</p>
-                  <p className="text-sm text-red-600">Unvollständig</p>
+                  <p className="text-2xl font-bold text-destructive">{completeness.incomplete}</p>
+                  <p className="text-sm text-destructive">Unvollständig</p>
                 </div>
               </div>
             </Card>
@@ -246,7 +246,7 @@ export function TimePayrollSync({ onSyncComplete }: TimePayrollSyncProps) {
                           {integration.timeData.overtimeHours > 0 && (
                             <>
                               <span>•</span>
-                              <span className="text-orange-600">
+                              <span className="text-warning">
                                 +{integration.timeData.overtimeHours.toFixed(1)}h Überstunden
                               </span>
                             </>
@@ -256,7 +256,7 @@ export function TimePayrollSync({ onSyncComplete }: TimePayrollSyncProps) {
                     </div>
                     <div className="flex items-center gap-2">
                       {integration.discrepancies.length > 0 && (
-                        <Badge variant="outline" className="text-yellow-600">
+                        <Badge variant="outline" className="text-warning">
                           {integration.discrepancies.length} Hinweise
                         </Badge>
                       )}
@@ -267,22 +267,22 @@ export function TimePayrollSync({ onSyncComplete }: TimePayrollSyncProps) {
                   {/* Zeitdetails */}
                   <div className="mt-3 grid grid-cols-4 gap-2 text-xs">
                     {integration.timeData.vacationDays > 0 && (
-                      <div className="bg-blue-50 text-blue-700 px-2 py-1 rounded">
+                      <div className="bg-info/10 text-info px-2 py-1 rounded">
                         {integration.timeData.vacationDays} Urlaubstage
                       </div>
                     )}
                     {integration.timeData.sickDays > 0 && (
-                      <div className="bg-red-50 text-red-700 px-2 py-1 rounded">
+                      <div className="bg-destructive/10 text-destructive px-2 py-1 rounded">
                         {integration.timeData.sickDays} Krankheitstage
                       </div>
                     )}
                     {integration.timeData.nightHours > 0 && (
-                      <div className="bg-purple-50 text-purple-700 px-2 py-1 rounded">
+                      <div className="bg-primary/10 text-primary px-2 py-1 rounded">
                         {integration.timeData.nightHours.toFixed(1)}h Nachtarbeit
                       </div>
                     )}
                     {integration.timeData.sundayHours > 0 && (
-                      <div className="bg-orange-50 text-orange-700 px-2 py-1 rounded">
+                      <div className="bg-warning/10 text-warning px-2 py-1 rounded">
                         {integration.timeData.sundayHours.toFixed(1)}h Sonntagsarbeit
                       </div>
                     )}
@@ -295,9 +295,9 @@ export function TimePayrollSync({ onSyncComplete }: TimePayrollSyncProps) {
                         <div 
                           key={idx} 
                           className={`text-xs px-2 py-1 rounded flex items-center gap-1 ${
-                            disc.severity === 'high' ? 'bg-red-50 text-red-700' :
-                            disc.severity === 'medium' ? 'bg-yellow-50 text-yellow-700' :
-                            'bg-gray-50 text-gray-700'
+                            disc.severity === 'high' ? 'bg-destructive/10 text-destructive' :
+                            disc.severity === 'medium' ? 'bg-warning/10 text-warning' :
+                            'bg-muted text-foreground'
                           }`}
                         >
                           <AlertTriangle className="h-3 w-3" />

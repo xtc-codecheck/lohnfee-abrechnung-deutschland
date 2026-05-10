@@ -19,7 +19,7 @@ const categories = [
     id: "erste-schritte",
     title: "Erste Schritte",
     icon: Lightbulb,
-    color: "text-amber-500",
+    color: "text-warning",
     description: "So starten Sie mit LohnPro – einfach erklärt",
     articles: [
       {
@@ -94,7 +94,7 @@ Jede Firma hat eigene Mitarbeiter, eigene Abrechnungen und eigene Einstellungen.
     id: "mitarbeiter",
     title: "Mitarbeiter verwalten",
     icon: Users,
-    color: "text-blue-500",
+    color: "text-info",
     description: "Mitarbeiter anlegen, bearbeiten und verwalten",
     articles: [
       {
@@ -197,7 +197,7 @@ Was passiert dann automatisch:
     id: "abrechnung",
     title: "Lohnabrechnung",
     icon: Calculator,
-    color: "text-green-500",
+    color: "text-success",
     description: "Gehälter berechnen, prüfen und exportieren",
     articles: [
       {
@@ -325,7 +325,7 @@ So finden Sie es:
     id: "zeiterfassung",
     title: "Zeiterfassung & Urlaub",
     icon: Clock,
-    color: "text-purple-500",
+    color: "text-primary",
     description: "Arbeitszeiten, Urlaub und Krankheit verwalten",
     articles: [
       {
@@ -387,7 +387,7 @@ LohnPro berechnet Überstunden automatisch:
     id: "meldewesen",
     title: "Meldungen & Bescheinigungen",
     icon: FileText,
-    color: "text-orange-500",
+    color: "text-warning",
     description: "Pflichtmeldungen an Behörden – verständlich erklärt",
     articles: [
       {
@@ -460,7 +460,7 @@ Was steht drauf:
     id: "einstellungen",
     title: "Einstellungen & Sicherheit",
     icon: Settings,
-    color: "text-slate-500",
+    color: "text-muted-foreground",
     description: "Firmendaten, Datenschutz und Benutzer verwalten",
     articles: [
       {
@@ -537,7 +537,7 @@ Was steht drauf:
     id: "branchenmodule",
     title: "Branchenmodule",
     icon: Building2,
-    color: "text-teal-500",
+    color: "text-success",
     description: "Spezielle Funktionen für Bau, Gastronomie und Pflege",
     articles: [
       {
@@ -593,7 +593,7 @@ LohnPro berechnet die Zuschläge automatisch anhand der erfassten Arbeitszeiten 
     id: "berichte",
     title: "Berichte & Auswertungen",
     icon: Download,
-    color: "text-indigo-500",
+    color: "text-info",
     description: "Übersichten, Exporte und Auswertungen erstellen",
     articles: [
       {
@@ -665,7 +665,7 @@ Die PDF enthält:
     id: "troubleshooting",
     title: "Problemlösung",
     icon: AlertTriangle,
-    color: "text-red-500",
+    color: "text-destructive",
     description: "Häufige Probleme lösen – Schritt für Schritt",
     articles: [
       {

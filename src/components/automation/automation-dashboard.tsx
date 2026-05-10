@@ -46,28 +46,28 @@ export function AutomationDashboard({ onBack }: AutomationDashboardProps) {
         <Card>
           <CardHeader className="pb-2"><CardTitle className="text-sm font-medium">Aktive Jobs</CardTitle></CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{mockJobs.filter(j => j.isActive).length}</div>
+            <div className="text-2xl font-bold text-success">{mockJobs.filter(j => j.isActive).length}</div>
             <p className="text-xs text-muted-foreground">von {mockJobs.length} Jobs</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2"><CardTitle className="text-sm font-medium">Letzte Ausführung</CardTitle></CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">Heute</div>
+            <div className="text-2xl font-bold text-info">Heute</div>
             <p className="text-xs text-muted-foreground">Lohnabrechnung</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2"><CardTitle className="text-sm font-medium">E-Mails gesendet</CardTitle></CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-purple-600">142</div>
+            <div className="text-2xl font-bold text-primary">142</div>
             <p className="text-xs text-muted-foreground">Letzter Monat</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2"><CardTitle className="text-sm font-medium">Erfolgsrate</CardTitle></CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">98.5%</div>
+            <div className="text-2xl font-bold text-success">98.5%</div>
             <Progress value={98.5} className="mt-2" />
           </CardContent>
         </Card>

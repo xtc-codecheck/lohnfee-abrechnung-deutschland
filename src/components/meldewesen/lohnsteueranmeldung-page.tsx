@@ -25,9 +25,9 @@ const MONTH_NAMES = [
 
 const STATUS_COLORS: Record<string, string> = {
   entwurf: 'bg-muted text-muted-foreground',
-  geprueft: 'bg-blue-100 text-blue-800',
-  uebermittelt: 'bg-green-100 text-green-800',
-  korrigiert: 'bg-orange-100 text-orange-800',
+  geprueft: 'bg-info/10 text-info',
+  uebermittelt: 'bg-success/10 text-success',
+  korrigiert: 'bg-warning/10 text-warning',
 };
 
 export function LohnsteueranmeldungPage({ onBack }: LohnsteueranmeldungPageProps) {

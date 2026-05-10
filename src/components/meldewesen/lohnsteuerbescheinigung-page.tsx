@@ -191,7 +191,7 @@ export function LohnsteuerbescheinigungPage({ onBack }: LohnsteuerbescheinigungP
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-lg">{getEmployeeName(b.employee_id)}</CardTitle>
                   <div className="flex items-center gap-2">
-                    <Badge className={b.status === 'entwurf' ? 'bg-muted text-muted-foreground' : 'bg-green-100 text-green-800'}>{b.status}</Badge>
+                    <Badge className={b.status === 'entwurf' ? 'bg-muted text-muted-foreground' : 'bg-success/10 text-success'}>{b.status}</Badge>
                     {b.status === 'entwurf' && (
                       <Button size="sm" variant="outline" onClick={() => handleSubmit(b.id)}>
                         <Send className="h-3 w-3 mr-1" />Übermitteln

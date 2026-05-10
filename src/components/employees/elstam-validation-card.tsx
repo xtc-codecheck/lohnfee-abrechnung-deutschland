@@ -30,16 +30,16 @@ export function ELStAMValidationCard({ employeeData }: ELStAMValidationCardProps
   const result = useMemo(() => validateELStAM(employeeData), [employeeData]);
 
   const scoreColor = result.score >= 80
-    ? 'text-green-600'
+    ? 'text-success'
     : result.score >= 50
-    ? 'text-yellow-600'
-    : 'text-red-600';
+    ? 'text-warning'
+    : 'text-destructive';
 
   const progressColor = result.score >= 80
-    ? '[&>div]:bg-green-500'
+    ? '[&>div]:bg-success'
     : result.score >= 50
-    ? '[&>div]:bg-yellow-500'
-    : '[&>div]:bg-red-500';
+    ? '[&>div]:bg-warning'
+    : '[&>div]:bg-destructive';
 
   return (
     <Card>
@@ -62,13 +62,13 @@ export function ELStAMValidationCard({ employeeData }: ELStAMValidationCardProps
         <Progress value={result.score} className={progressColor} />
 
         <div className="flex gap-3 text-xs">
-          <span className="flex items-center gap-1 text-red-600">
+          <span className="flex items-center gap-1 text-destructive">
             <XCircle className="h-3 w-3" /> {result.errors.length} Fehler
           </span>
-          <span className="flex items-center gap-1 text-yellow-600">
+          <span className="flex items-center gap-1 text-warning">
             <AlertTriangle className="h-3 w-3" /> {result.warnings.length} Warnungen
           </span>
-          <span className="flex items-center gap-1 text-blue-600">
+          <span className="flex items-center gap-1 text-info">
             <Info className="h-3 w-3" /> {result.infos.length} Hinweise
           </span>
         </div>
@@ -96,7 +96,7 @@ export function ELStAMValidationCard({ employeeData }: ELStAMValidationCardProps
         )}
 
         {result.isValid && result.errors.length === 0 && result.warnings.length === 0 && (
-          <div className="flex items-center gap-2 text-sm text-green-600">
+          <div className="flex items-center gap-2 text-sm text-success">
             <CheckCircle className="h-4 w-4" />
             Alle ELStAM-Daten sind korrekt.
           </div>
@@ -110,9 +110,9 @@ function IssueRow({ issue }: { issue: ELStAMIssue }) {
   const Icon = issue.severity === 'error' ? XCircle
     : issue.severity === 'warning' ? AlertTriangle
     : Info;
-  const color = issue.severity === 'error' ? 'text-red-600'
-    : issue.severity === 'warning' ? 'text-yellow-600'
-    : 'text-blue-600';
+  const color = issue.severity === 'error' ? 'text-destructive'
+    : issue.severity === 'warning' ? 'text-warning'
+    : 'text-info';
 
   return (
     <div className={`flex items-start gap-2 text-xs ${color}`}>

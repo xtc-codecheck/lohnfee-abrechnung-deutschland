@@ -355,7 +355,7 @@ export function EmployeeDashboard({ onAddEmployee, onCalculateSalary, onShowComp
                                 const comp = employeeCompleteness.get(employee.id);
                                 if (!comp) return null;
                                 if (comp.status === 'complete') return <CheckCircle2 className="h-4 w-4 text-primary" />;
-                                if (comp.status === 'warning') return <AlertCircle className="h-4 w-4 text-yellow-500" />;
+                                if (comp.status === 'warning') return <AlertCircle className="h-4 w-4 text-warning" />;
                                 return <AlertCircle className="h-4 w-4 text-destructive" />;
                               })()}
                             </TooltipTrigger>

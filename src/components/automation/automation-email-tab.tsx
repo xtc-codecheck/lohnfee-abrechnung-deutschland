@@ -81,7 +81,7 @@ Ihr HR-Team`}
                 <CardTitle className="text-sm">Fehlerrate</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-green-600">0%</div>
+                <div className="text-2xl font-bold text-success">0%</div>
                 <p className="text-xs text-muted-foreground">Letzte 30 Tage</p>
               </CardContent>
             </Card>

@@ -179,7 +179,7 @@ export function BeitragsnachweisPage({ onBack }: BeitragsnachweisPageProps) {
               <div className="flex items-center justify-between">
                 <CardTitle className="text-lg">{n.krankenkasse}</CardTitle>
                 <div className="flex items-center gap-2">
-                  <Badge className={n.status === 'entwurf' ? 'bg-muted text-muted-foreground' : 'bg-green-100 text-green-800'}>{n.status}</Badge>
+                  <Badge className={n.status === 'entwurf' ? 'bg-muted text-muted-foreground' : 'bg-success/10 text-success'}>{n.status}</Badge>
                   {n.status === 'entwurf' && (
                     <Button size="sm" variant="outline" onClick={() => handleSubmit(n.id)}>
                       <Send className="h-3 w-3 mr-1" />Übermitteln

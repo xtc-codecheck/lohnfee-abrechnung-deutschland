@@ -130,9 +130,9 @@ export function EmployeeCalendar({ employee, onBack, onBulkEntry }: EmployeeCale
 
   const getStatusBadge = (status: 'green' | 'yellow' | 'red') => {
     const colors = {
-      green: 'bg-green-100 text-green-800 border-green-200',
-      yellow: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-      red: 'bg-red-100 text-red-800 border-red-200'
+      green: 'bg-success/10 text-success border-success/30',
+      yellow: 'bg-warning/10 text-warning border-warning/30',
+      red: 'bg-destructive/10 text-destructive border-destructive/30'
     };
     
     const labels = {
@@ -219,9 +219,9 @@ export function EmployeeCalendar({ employee, onBack, onBulkEntry }: EmployeeCale
                 <div>
                   <p className="text-muted-foreground">Abweichung</p>
                   <p className={cn("font-medium", {
-                    "text-green-600": Math.abs(employeeStatus.deviation) <= 5,
-                    "text-yellow-600": Math.abs(employeeStatus.deviation) > 5 && Math.abs(employeeStatus.deviation) <= 10,
-                    "text-red-600": Math.abs(employeeStatus.deviation) > 10
+                    "text-success": Math.abs(employeeStatus.deviation) <= 5,
+                    "text-warning": Math.abs(employeeStatus.deviation) > 5 && Math.abs(employeeStatus.deviation) <= 10,
+                    "text-destructive": Math.abs(employeeStatus.deviation) > 10
                   })}>
                     {employeeStatus.deviation > 0 ? '+' : ''}{employeeStatus.deviation.toFixed(1)}%
                   </p>

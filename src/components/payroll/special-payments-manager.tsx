@@ -149,7 +149,7 @@ export function SpecialPaymentsManager({ onBack }: SpecialPaymentsManagerProps) 
             <Card className="cursor-pointer hover:shadow-lg transition-shadow">
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-2">
-                  <Heart className="h-5 w-5 text-red-500" />
+                  <Heart className="h-5 w-5 text-destructive" />
                   Krankengeld
                 </CardTitle>
               </CardHeader>
@@ -220,7 +220,7 @@ export function SpecialPaymentsManager({ onBack }: SpecialPaymentsManagerProps) 
             <Card className="cursor-pointer hover:shadow-lg transition-shadow">
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-2">
-                  <Baby className="h-5 w-5 text-pink-500" />
+                  <Baby className="h-5 w-5 text-primary" />
                   Mutterschutz/Elternzeit
                 </CardTitle>
               </CardHeader>
@@ -305,7 +305,7 @@ export function SpecialPaymentsManager({ onBack }: SpecialPaymentsManagerProps) 
             <Card className="cursor-pointer hover:shadow-lg transition-shadow">
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-2">
-                  <Users className="h-5 w-5 text-blue-500" />
+                  <Users className="h-5 w-5 text-info" />
                   Kurzarbeitergeld
                 </CardTitle>
               </CardHeader>

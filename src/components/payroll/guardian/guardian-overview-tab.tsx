@@ -48,7 +48,7 @@ export function GuardianOverviewTab({ anomalies, unresolvedAnomalies, forecasts 
             ) : (
               <div className="h-[250px] flex items-center justify-center text-muted-foreground">
                 <div className="text-center">
-                  <CheckCircle className="h-12 w-12 mx-auto mb-2 text-green-500" />
+                  <CheckCircle className="h-12 w-12 mx-auto mb-2 text-success" />
                   <p>Keine Anomalien erkannt</p>
                 </div>
               </div>
@@ -95,8 +95,8 @@ export function GuardianOverviewTab({ anomalies, unresolvedAnomalies, forecasts 
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
-              <div className="p-3 rounded-full bg-green-100 dark:bg-green-900">
-                <CheckCircle2 className="h-6 w-6 text-green-600 dark:text-green-400" />
+              <div className="p-3 rounded-full bg-success/10 dark:bg-success">
+                <CheckCircle2 className="h-6 w-6 text-success dark:text-success/70" />
               </div>
               <div>
                 <p className="text-2xl font-bold">
@@ -111,8 +111,8 @@ export function GuardianOverviewTab({ anomalies, unresolvedAnomalies, forecasts 
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
-              <div className="p-3 rounded-full bg-blue-100 dark:bg-blue-900">
-                <Target className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+              <div className="p-3 rounded-full bg-info/10 dark:bg-info">
+                <Target className="h-6 w-6 text-info dark:text-info/70" />
               </div>
               <div>
                 <p className="text-2xl font-bold">{forecasts.length}</p>
@@ -125,8 +125,8 @@ export function GuardianOverviewTab({ anomalies, unresolvedAnomalies, forecasts 
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
-              <div className="p-3 rounded-full bg-purple-100 dark:bg-purple-900">
-                <Lightbulb className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+              <div className="p-3 rounded-full bg-primary/10 dark:bg-primary">
+                <Lightbulb className="h-6 w-6 text-primary dark:text-primary/70" />
               </div>
               <div>
                 <p className="text-2xl font-bold">

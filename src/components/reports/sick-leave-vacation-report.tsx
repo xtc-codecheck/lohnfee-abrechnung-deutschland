@@ -79,9 +79,9 @@ export function SickLeaveVacationReport({
   }, [employees, payrollPeriods, payrollEntries, dateRange, selectedDepartment]);
 
   const getSickDaysStatus = (days: number) => {
-    if (days <= 5) return { status: 'Niedrig', color: 'bg-green-500' };
-    if (days <= 10) return { status: 'Normal', color: 'bg-yellow-500' };
-    return { status: 'Hoch', color: 'bg-red-500' };
+    if (days <= 5) return { status: 'Niedrig', color: 'bg-success' };
+    if (days <= 10) return { status: 'Normal', color: 'bg-warning' };
+    return { status: 'Hoch', color: 'bg-destructive' };
   };
 
   return (
@@ -95,7 +95,7 @@ export function SickLeaveVacationReport({
                 <p className="text-sm text-muted-foreground">Gesamte Krankheitstage</p>
                 <p className="text-2xl font-bold">{reportData.totalSickDays}</p>
               </div>
-              <Heart className="h-8 w-8 text-red-600" />
+              <Heart className="h-8 w-8 text-destructive" />
             </div>
           </CardContent>
         </Card>
@@ -107,7 +107,7 @@ export function SickLeaveVacationReport({
                 <p className="text-sm text-muted-foreground">Durchschn. Krankheitstage</p>
                 <p className="text-2xl font-bold">{reportData.avgSickDays.toFixed(1)}</p>
               </div>
-              <TrendingDown className="h-8 w-8 text-orange-600" />
+              <TrendingDown className="h-8 w-8 text-warning" />
             </div>
           </CardContent>
         </Card>
@@ -119,7 +119,7 @@ export function SickLeaveVacationReport({
                 <p className="text-sm text-muted-foreground">Gesamte Urlaubstage</p>
                 <p className="text-2xl font-bold">{reportData.totalVacationDays}</p>
               </div>
-              <Calendar className="h-8 w-8 text-blue-600" />
+              <Calendar className="h-8 w-8 text-info" />
             </div>
           </CardContent>
         </Card>
@@ -131,7 +131,7 @@ export function SickLeaveVacationReport({
                 <p className="text-sm text-muted-foreground">Durchschn. Urlaubstage</p>
                 <p className="text-2xl font-bold">{reportData.avgVacationDays.toFixed(1)}</p>
               </div>
-              <Users className="h-8 w-8 text-green-600" />
+              <Users className="h-8 w-8 text-success" />
             </div>
           </CardContent>
         </Card>

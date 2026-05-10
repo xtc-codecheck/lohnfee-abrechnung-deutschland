@@ -110,7 +110,7 @@ export function GuardianForecastsTab({ employees, forecasts, selectedEmployee, o
                         <p className="text-sm text-muted-foreground">Jahr {milestone.year}</p>
                       </div>
                       <div className="text-right">
-                        <p className="text-green-600 font-medium">
+                        <p className="text-success font-medium">
                           +{milestone.salaryImpact.toLocaleString('de-DE')} €
                         </p>
                         <p className="text-xs text-muted-foreground">

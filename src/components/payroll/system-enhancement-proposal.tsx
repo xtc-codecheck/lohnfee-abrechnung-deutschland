@@ -153,14 +153,14 @@ export function SystemEnhancementProposal() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'implementiert': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
-      case 'erweitert': return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
-      case 'teilweise': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300';
-      case 'geplant': return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300';
-      case 'fehlend': return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
-      case 'statisch': return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300';
-      case 'grundlegend': return 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-300';
-      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
+      case 'implementiert': return 'bg-success/10 text-success dark:bg-success dark:text-success/70';
+      case 'erweitert': return 'bg-info/10 text-info dark:bg-info dark:text-info/70';
+      case 'teilweise': return 'bg-warning/10 text-warning dark:bg-warning dark:text-warning/70';
+      case 'geplant': return 'bg-primary/10 text-primary dark:bg-primary dark:text-primary/70';
+      case 'fehlend': return 'bg-destructive/10 text-destructive dark:bg-destructive dark:text-destructive/70';
+      case 'statisch': return 'bg-warning/10 text-warning dark:bg-warning dark:text-warning/70';
+      case 'grundlegend': return 'bg-info/10 text-info dark:bg-info dark:text-info/70';
+      default: return 'bg-muted text-foreground dark:bg-secondary dark:text-muted-foreground';
     }
   };
 
@@ -179,10 +179,10 @@ export function SystemEnhancementProposal() {
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case 'Hoch': return 'border-l-red-500 bg-red-50 dark:bg-red-950';
-      case 'Mittel': return 'border-l-yellow-500 bg-yellow-50 dark:bg-yellow-950';  
-      case 'Niedrig': return 'border-l-green-500 bg-green-50 dark:bg-green-950';
-      default: return 'border-l-gray-500 bg-gray-50 dark:bg-gray-950';
+      case 'Hoch': return 'border-l-red-500 bg-destructive/10 dark:bg-destructive';
+      case 'Mittel': return 'border-l-yellow-500 bg-warning/10 dark:bg-warning';  
+      case 'Niedrig': return 'border-l-green-500 bg-success/10 dark:bg-success';
+      default: return 'border-l-gray-500 bg-muted dark:bg-muted';
     }
   };
 
@@ -268,19 +268,19 @@ export function SystemEnhancementProposal() {
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
             <div className="p-4 border border-border rounded-lg">
-              <div className="text-2xl font-bold text-red-600">
+              <div className="text-2xl font-bold text-destructive">
                 {enhancements.filter(cat => cat.priority === 'Hoch').length}
               </div>
               <p className="text-sm text-muted-foreground">Hohe Priorität</p>
             </div>
             <div className="p-4 border border-border rounded-lg">
-              <div className="text-2xl font-bold text-yellow-600">
+              <div className="text-2xl font-bold text-warning">
                 {enhancements.filter(cat => cat.priority === 'Mittel').length}
               </div>
               <p className="text-sm text-muted-foreground">Mittlere Priorität</p>
             </div>
             <div className="p-4 border border-border rounded-lg">
-              <div className="text-2xl font-bold text-green-600">
+              <div className="text-2xl font-bold text-success">
                 {enhancements.filter(cat => cat.priority === 'Niedrig').length}
               </div>
               <p className="text-sm text-muted-foreground">Niedrige Priorität</p>

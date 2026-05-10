@@ -178,7 +178,7 @@ export function MainDashboard() {
       {employees.length === 0 && (
         <Card className="shadow-card border-l-4 border-l-orange-500">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-orange-600">
+            <CardTitle className="flex items-center gap-2 text-warning">
               <AlertCircle className="h-5 w-5" />
               Erste Schritte
             </CardTitle>

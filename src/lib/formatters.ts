@@ -417,9 +417,9 @@ export function getPayrollStatusVariant(status: string): 'default' | 'secondary'
  */
 export const PAYROLL_STATUS_COLORS: Record<string, string> = {
   draft: 'bg-muted text-muted-foreground',
-  calculated: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
-  approved: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
-  paid: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
+  calculated: 'bg-info/10 text-info dark:bg-info dark:text-info/70',
+  approved: 'bg-warning/10 text-warning dark:bg-warning dark:text-warning/70',
+  paid: 'bg-success/10 text-success dark:bg-success dark:text-success/70',
   finalized: 'bg-muted text-muted-foreground',
 } as const;
 
@@ -442,8 +442,8 @@ export function getPayrollStatusLabel(status: string): string {
  */
 export const MELDEWESEN_STATUS_COLORS: Record<string, string> = {
   entwurf: 'bg-muted text-muted-foreground',
-  erstellt: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
-  uebermittelt: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
+  erstellt: 'bg-info/10 text-info dark:bg-info dark:text-info/70',
+  uebermittelt: 'bg-success/10 text-success dark:bg-success dark:text-success/70',
   storniert: 'bg-destructive text-destructive-foreground',
 } as const;
 
@@ -456,17 +456,17 @@ export function getMeldwesenStatusColor(status: string): string {
  */
 export function getTrafficLightColor(status: 'green' | 'yellow' | 'red'): string {
   switch (status) {
-    case 'green': return 'bg-green-50 border-green-200 text-green-800 dark:bg-green-900/30 dark:border-green-800 dark:text-green-300';
-    case 'yellow': return 'bg-yellow-50 border-yellow-200 text-yellow-800 dark:bg-yellow-900/30 dark:border-yellow-800 dark:text-yellow-300';
-    case 'red': return 'bg-red-50 border-red-200 text-red-800 dark:bg-red-900/30 dark:border-red-800 dark:text-red-300';
+    case 'green': return 'bg-success/10 border-success/30 text-success dark:bg-success/30 dark:border-success dark:text-success/70';
+    case 'yellow': return 'bg-warning/10 border-warning/30 text-warning dark:bg-warning/30 dark:border-warning dark:text-warning/70';
+    case 'red': return 'bg-destructive/10 border-destructive/30 text-destructive dark:bg-destructive/30 dark:border-destructive dark:text-destructive/70';
   }
 }
 
 export function getTrafficLightDot(status: 'green' | 'yellow' | 'red'): string {
   switch (status) {
-    case 'green': return 'bg-green-500';
-    case 'yellow': return 'bg-yellow-500';
-    case 'red': return 'bg-red-500';
+    case 'green': return 'bg-success';
+    case 'yellow': return 'bg-warning';
+    case 'red': return 'bg-destructive';
   }
 }
 

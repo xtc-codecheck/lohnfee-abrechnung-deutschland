@@ -31,8 +31,8 @@ import {
 
 const STATUS_COLORS: Record<string, string> = {
   entwurf: 'bg-muted text-muted-foreground',
-  gemeldet: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
-  bestaetigt: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
+  gemeldet: 'bg-info/10 text-info dark:bg-info dark:text-info/70',
+  bestaetigt: 'bg-success/10 text-success dark:bg-success dark:text-success/70',
   abgelehnt: 'bg-destructive/20 text-destructive',
 };
 

@@ -131,7 +131,7 @@ export function AuthoritiesIntegration({ onBack }: AuthoritiesIntegrationProps) 
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">Bereit</div>
+            <div className="text-2xl font-bold text-success">Bereit</div>
             <p className="text-xs text-muted-foreground">Letzter Export: Heute</p>
           </CardContent>
         </Card>
@@ -144,7 +144,7 @@ export function AuthoritiesIntegration({ onBack }: AuthoritiesIntegrationProps) 
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">Übermittelt</div>
+            <div className="text-2xl font-bold text-info">Übermittelt</div>
             <p className="text-xs text-muted-foreground">LST-Anmeldung Dez.</p>
           </CardContent>
         </Card>
@@ -157,7 +157,7 @@ export function AuthoritiesIntegration({ onBack }: AuthoritiesIntegrationProps) 
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">Aktuell</div>
+            <div className="text-2xl font-bold text-success">Aktuell</div>
             <p className="text-xs text-muted-foreground">Alle Meldungen OK</p>
           </CardContent>
         </Card>
@@ -170,7 +170,7 @@ export function AuthoritiesIntegration({ onBack }: AuthoritiesIntegrationProps) 
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-orange-600">Ausstehend</div>
+            <div className="text-2xl font-bold text-warning">Ausstehend</div>
             <p className="text-xs text-muted-foreground">Kurzarbeit-Abr.</p>
           </CardContent>
         </Card>

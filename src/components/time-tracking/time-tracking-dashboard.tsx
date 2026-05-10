@@ -128,20 +128,20 @@ export function TimeTrackingDashboard({ onBack }: TimeTrackingDashboardProps) {
         <CardContent>
           <div className="grid grid-cols-3 gap-4 mb-6">
             <div className="text-center">
-              <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-2">
-                <span className="text-2xl font-bold text-green-600">{stats.greenStatus}</span>
+              <div className="w-16 h-16 rounded-full bg-success/10 flex items-center justify-center mx-auto mb-2">
+                <span className="text-2xl font-bold text-success">{stats.greenStatus}</span>
               </div>
               <p className="text-sm font-medium">Grün (≤5% Abweichung)</p>
             </div>
             <div className="text-center">
-              <div className="w-16 h-16 rounded-full bg-yellow-100 flex items-center justify-center mx-auto mb-2">
-                <span className="text-2xl font-bold text-yellow-600">{stats.yellowStatus}</span>
+              <div className="w-16 h-16 rounded-full bg-warning/10 flex items-center justify-center mx-auto mb-2">
+                <span className="text-2xl font-bold text-warning">{stats.yellowStatus}</span>
               </div>
               <p className="text-sm font-medium">Gelb (5-10% Abweichung)</p>
             </div>
             <div className="text-center">
-              <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-2">
-                <span className="text-2xl font-bold text-red-600">{stats.redStatus}</span>
+              <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center mx-auto mb-2">
+                <span className="text-2xl font-bold text-destructive">{stats.redStatus}</span>
               </div>
               <p className="text-sm font-medium">Rot (&gt;10% Abweichung)</p>
             </div>

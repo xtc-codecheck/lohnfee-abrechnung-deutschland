@@ -404,25 +404,25 @@ export function AutolohnDashboard() {
                   <div className="space-y-2 text-sm">
                     {settings.socialSecurityReporting.enabled && (
                       <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                        <div className="w-2 h-2 bg-success rounded-full"></div>
                         <span>Sozialversicherungsmeldung ({settings.socialSecurityReporting.daysBefore} Tage vor Monatsende)</span>
                       </div>
                     )}
                     {settings.payrollTaxReporting.enabled && (
                       <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                        <div className="w-2 h-2 bg-success rounded-full"></div>
                         <span>Lohnsteuermeldung (am {settings.payrollTaxReporting.dayOfNextMonth}. des Folgemonats)</span>
                       </div>
                     )}
                     {settings.employeeNotifications.enabled && (
                       <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                        <div className="w-2 h-2 bg-success rounded-full"></div>
                         <span>Mitarbeiter-Benachrichtigungen</span>
                       </div>
                     )}
                     {settings.managerNotifications.enabled && (
                       <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                        <div className="w-2 h-2 bg-success rounded-full"></div>
                         <span>Manager-Benachrichtigungen ({settings.managerNotifications.daysBefore} Tage vorher)</span>
                       </div>
                     )}

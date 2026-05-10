@@ -108,9 +108,9 @@ export function GdprManagementPage() {
 
   const statusBadge = (s: string) => {
     switch (s) {
-      case 'pending': return <Badge variant="outline" className="text-yellow-600"><Clock className="h-3 w-3 mr-1" />Offen</Badge>;
-      case 'approved': return <Badge className="bg-blue-500">Genehmigt</Badge>;
-      case 'completed': return <Badge className="bg-green-600">Erledigt</Badge>;
+      case 'pending': return <Badge variant="outline" className="text-warning"><Clock className="h-3 w-3 mr-1" />Offen</Badge>;
+      case 'approved': return <Badge className="bg-info">Genehmigt</Badge>;
+      case 'completed': return <Badge className="bg-success">Erledigt</Badge>;
       case 'rejected': return <Badge variant="destructive">Abgelehnt</Badge>;
       default: return <Badge variant="secondary">{s}</Badge>;
     }
@@ -225,7 +225,7 @@ export function GdprManagementPage() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <AlertTriangle className="h-5 w-5 text-yellow-500" />
+            <AlertTriangle className="h-5 w-5 text-warning" />
             Aufbewahrungsfristen
           </CardTitle>
           <CardDescription>Gesetzliche Aufbewahrungspflichten nach AO/HGB</CardDescription>

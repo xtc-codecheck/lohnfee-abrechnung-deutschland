@@ -117,7 +117,7 @@ export function PeriodCloseSummary() {
                   <p className="text-xs text-muted-foreground">{k.label}</p>
                   <p className="text-xl font-semibold mt-1">{formatCurrency(k.value)}</p>
                   {d && (
-                    <p className={`text-xs mt-1 ${d.positive ? "text-emerald-600" : "text-destructive"}`}>
+                    <p className={`text-xs mt-1 ${d.positive ? "text-success" : "text-destructive"}`}>
                       {d.text} vs. Vormonat
                     </p>
                   )}

@@ -240,7 +240,7 @@ export function DatevExportDialog({
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Shield className="h-5 w-5 text-purple-600" />
+            <Shield className="h-5 w-5 text-primary" />
             DATEV-Export für Steuerberater
           </DialogTitle>
           <DialogDescription>
@@ -407,9 +407,9 @@ export function DatevExportDialog({
           </div>
 
           {/* Konten-Vorschau */}
-          <Card className="border-purple-200 bg-purple-50/50">
+          <Card className="border-primary/30 bg-primary/10/50">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm flex items-center gap-2 text-purple-700">
+              <CardTitle className="text-sm flex items-center gap-2 text-primary">
                 <Info className="h-4 w-4" />
                 Verwendete Konten ({config.kontenrahmen})
               </CardTitle>

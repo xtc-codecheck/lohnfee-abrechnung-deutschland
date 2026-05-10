@@ -33,9 +33,9 @@ export function CompanyCarConfigurator() {
 
   const getVehicleIcon = (type: VehicleType) => {
     switch (type) {
-      case 'electric': return <Zap className="h-4 w-4 text-green-500" />;
-      case 'hybrid': return <Fuel className="h-4 w-4 text-blue-500" />;
-      default: return <Car className="h-4 w-4 text-gray-500" />;
+      case 'electric': return <Zap className="h-4 w-4 text-success" />;
+      case 'hybrid': return <Fuel className="h-4 w-4 text-info" />;
+      default: return <Car className="h-4 w-4 text-muted-foreground" />;
     }
   };
 
