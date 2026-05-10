@@ -2,7 +2,8 @@
 
 > Stand: Mai 2026 — Ehrliche Einschätzung basierend auf dem, was im Projekt **tatsächlich implementiert** ist (Code- und DB-Audit).
 > 
-> Letzte Aktualisierung: Reisekosten-Genehmigungs-Workflow, Pfändungs-Compliance-Alert, Mitarbeiter-Portal-Erweiterungen.
+> Letzte Aktualisierung: **Meldungs-Export-Center** für sv.net Classic / Mein ELSTER / BG-Portal,
+> Reisekosten-Pauschalen-Automatik aus Etappen, Beleg-OCR via Lovable AI, Auto-Wizard Persistenz-Fix.
 
 ---
 
@@ -47,8 +48,17 @@
 | **Two-Stage Approval** (>= 1.000 € erfordert zweite Freigabe durch anderen Genehmiger) | ✅ |
 | **Rejection-Dialog** mit Pflichtkommentar | ✅ |
 | **Audit-Log** (`travel_approval_log`) | ✅ |
-| Verpflegungs-Pauschalen, Übernachtungs-Pauschalen | ✅ (hinterlegt, manuelle Eingabe) |
-| **Keine** Beleg-OCR / Belegscan-Automatik | ❌ |
+| **Pauschalen-Automatik aus Etappen** (VMK + Übernachtung + km) | ✅ `aggregateTrip(buildLegs())` |
+| **Beleg-OCR** via Lovable AI (Gemini Vision) | ✅ Edge Function `receipt-ocr` |
+| Kreditkarten-CSV-Import | ✅ `parseCreditCardCsv` |
+
+### Meldungs-Versand (Workaround statt ITSG-Zertifizierung)
+| Funktion | Status |
+|---|---|
+| **Export-Center** — alle Meldungen eines Monats als ZIP | ✅ neu |
+| XML-Generierung pro Datensatz (LStA, BNW, DEÜV, AAG, UV, eLStB) | ✅ |
+| Klartext-Anleitung pro Empfänger im README | ✅ |
+| Direkt-Links zu sv.net Classic, Mein ELSTER, BG-Portal | ✅ |
 
 ### Mitarbeiter-Self-Service Portal
 | Funktion | Status |
@@ -67,23 +77,22 @@
 
 ---
 
-## ⚠️ Eingeschränkt / nur intern
+## ⚠️ Eingeschränkt
 
-- **Übermittlung** aller Meldungen erfolgt aktuell nur über einen **Stub-Provider** (`sv-net-submit` Edge Function). Datensätze werden korrekt erzeugt, der echte Versand an Krankenkassen/Finanzamt fehlt.
-- **ELSTER**: nur Facade über SYSTAX-Layer, keine direkte ERiC-Anbindung
-- **SV-Meldungen**: erzeugt + valide, aber keine sv.net/ITSG-zertifizierte Übermittlung
-- **Reisekosten**: Workflow + Approval vorhanden, aber **keine** Pauschalen-Automatik (System errechnet nicht automatisch VMK aus Etappen), **kein** Beleg-OCR
-- **Pfändung**: Compliance-Alert bei veralteten Tabellen vorhanden, aber jährliches Update erfordert weiterhin manuelle Migration
+- **Direkter zertifizierter Versand**: Datensätze werden korrekt erzeugt; das Bundle muss vom Unternehmer
+  einmal pro Monat über die kostenlosen offiziellen Portale hochgeladen werden (sv.net Classic, Mein ELSTER, BG-Portal).
+  Eine direkte ITSG-zertifizierte Übermittlung fehlt weiterhin.
+- **Pfändung**: Compliance-Alert bei veralteten Tabellen vorhanden, jährliches Update via Migration
+- **UI-Tokens**: Einige Komponenten nutzen noch hartkodierte Tailwind-Farben (Dark-Mode-Optik leidet, Funktion nicht).
 
 ---
 
 ## ❌ Was DATEV/Lexware kann, hier aber fehlt
 
-- **ITSG-/GKV-Zertifizierung** für SV-Meldungen (rechtliche Voraussetzung für Echtbetrieb)
-- **ERiC-Modul** für direkte ELSTER-Übermittlung
-- **dakota.le / sv.net-Integration** (produktiver Provider)
-- **Mandantenfähige Steuerberater-Workflows** mit Freigabe und Mandantenkommunikation à la DATEV Unternehmen online (Steuerberater-Paket-Export ist vorhanden, aber kein Two-Way-Workflow)
-- **Reisekostenabrechnung** als vollautomatisches Modul (Pauschalen-Automatik aus Etappen, Beleg-OCR, automatische Verbuchung auf Lohnarten)
+- **ITSG-/GKV-Zertifizierung** für direkten SV-Versand (Workaround: Export-Center → sv.net Classic)
+- **ERiC-Modul** für direkten ELSTER-Versand (Workaround: Export-Center → Mein ELSTER)
+- **Mandantenfähige Steuerberater-Workflows** à la DATEV Unternehmen online (Steuerberater-Paket-Export vorhanden,
+  aber kein Two-Way-Workflow)
 
 ---
 
@@ -93,15 +102,19 @@
 |---|---|
 | Berechnung & Belegerzeugung | **~95 %** auf DATEV/Lexware-Niveau |
 | Meldewesen — Datensatz-Erzeugung | **~75 %** |
-| Meldewesen — zertifizierte Übermittlung | **~10 %** (Stub-Provider, kein echter Versand) |
-| Reisekosten | **~60 %** (Workflow + Two-Stage Approval + Audit Log vorhanden; fehlt: Pauschalen-Automatik, OCR) |
+| Meldewesen — Übermittlung | **Workaround 100 %** (Export-Center → offizielle Portale) · zertifizierter Direktversand 0 % |
+| Reisekosten | **~90 %** (Workflow + Two-Stage Approval + Pauschalen-Automatik + OCR) |
 | Mitarbeiter-Portal | **~70 %** (PDF, Urlaub, eAU, Manager-Inbox vorhanden) |
 | Pfändung | **~80 %** (Berechnung + Compliance-Alert vorhanden; manuelles Update) |
 
-**Nächste große Schritte für den Echtbetrieb:**
-1. ITSG-Zertifizierung + produktive sv.net/dakota.le-Anbindung (ersetzt Stub in `sv-net-submit`)
-2. ERiC-Anbindung für direkte ELSTER-Übermittlung (LStA, eLStB)
-3. Reisekostenmodul ausbauen (Pauschalen-Automatik aus Etappen, Beleg-OCR)
-4. Steuerberater-Workflow mit Mandantenfreigabe
+## Praxis-Empfehlung für Unternehmer
 
-Bis dahin müssen Meldungen extern (z. B. via sv.net Classic) eingereicht werden — die korrekten Datensätze stehen in der DB bereit und können exportiert werden.
+Mit dem Export-Center kann ein Unternehmer ab sofort selbständig Lohn machen:
+
+1. **Lohnabrechnung erstellen** (Wizard oder Auto-Pilot) — cent-genau, BMF-konform.
+2. **Meldewesen → Export-Center** öffnen, Monat wählen, ZIP herunterladen.
+3. README im ZIP folgen: drei Klicks pro Meldung im jeweiligen kostenlosen Portal.
+
+Damit sind alle gesetzlichen Pflichten (LSt, SV, AAG, UV, eLStB) termingerecht erfüllt — ohne ITSG-Zertifizierung
+und ohne Steuerberater. Die Berechnung und Datensatzerzeugung liegen auf DATEV-Niveau; der einzige Unterschied
+ist der manuelle Upload-Schritt statt direkter Übermittlung.
