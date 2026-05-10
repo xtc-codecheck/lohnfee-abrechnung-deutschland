@@ -390,6 +390,17 @@ Stand: ${new Date().toLocaleDateString("de-DE")}
           </CardContent>
         </Card>
       )}
+
+      {tenantId && (
+        <PreExportValidationDialog
+          open={validationOpen}
+          onClose={() => setValidationOpen(false)}
+          onProceed={buildBundle}
+          tenantId={tenantId}
+          year={year}
+          month={month}
+        />
+      )}
     </div>
   );
 }
