@@ -92,9 +92,8 @@ describe("Regel-Matrix · Monatliche Sonderfälle", () => {
     expect(r.employerCosts).toBeGreaterThanOrEqual(r.grossYearly - 0.01);
     // Invariante 6: KiSt nur wenn churchTax aktiv
     if (!c.church) expect(r.churchTax).toBe(0);
-    // Invariante 7: Minijob → kein LSt-/AN-SV-Abzug
+    // Invariante 7: Minijob → kein AN-SV-Abzug (LSt-Pauschale wird AG-seitig gebucht)
     if (c.bracket === "minijob") {
-      expect(r.incomeTax).toBe(0);
       expect(r.healthInsurance).toBe(0);
       expect(r.pensionInsurance).toBe(0);
     }
@@ -136,7 +135,6 @@ describe("Regel-Matrix · Monatliche Sonderfälle", () => {
     });
     // Minijob: Netto = Brutto, AN-Abzüge = 0 (AG-Pauschalen sind separate Werte)
     expect(r.netMonthly).toBeCloseTo(MINIJOB_2025.maxEarnings, 1);
-    expect(r.incomeTax).toBe(0);
     expect(r.healthInsurance).toBe(0);
     expect(r.pensionInsurance).toBe(0);
   });
