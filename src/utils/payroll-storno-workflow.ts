@@ -15,7 +15,7 @@
  */
 
 import { supabase } from '@/integrations/supabase/client';
-import { calculatePayrollEntry } from './payroll-calculator';
+import { calculatePayrollEntry, createDefaultWorkingData } from './payroll-calculator';
 import type { Employee } from '@/types/employee';
 import { roundCurrency } from '@/lib/formatters';
 
@@ -114,12 +114,12 @@ export async function executeStornoAndCorrection(
   // 3) Korrektur-Berechnung mit neuem Brutto
   const correctedEmployee: Employee = {
     ...employee,
-    employmentData: { ...employee.employmentData, grossSalary: correctedGross },
+    salaryData: { ...employee.salaryData, grossSalary: correctedGross },
   };
   const calc = calculatePayrollEntry({
     employee: correctedEmployee,
     period: { year: period.year, month: period.month },
-    workingData: { workingDays: 21, workingHours: 168, overtimeHours: 0, vacationDays: 0, sickDays: 0 },
+    workingData: createDefaultWorkingData(correctedEmployee),
   });
   const c = calc.entry;
 
