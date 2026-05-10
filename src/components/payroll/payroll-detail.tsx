@@ -19,6 +19,9 @@ import { PayrollCorrectionDialog } from "./payroll-correction-dialog";
 import { PreFlightCheckDialog } from "./preflight-check-dialog";
 import { TaxBreakdownCard } from "./tax-breakdown-card";
 import { AppliedWageTypesCard } from "./applied-wage-types-card";
+import { AuditProtocolDialog } from "./audit-protocol-dialog";
+import { recordAuditProtocol } from "@/utils/gobd-audit-protocol";
+import { useTenant } from "@/contexts/tenant-context";
 
 interface PayrollDetailProps {
   payrollId: string;
@@ -30,6 +33,7 @@ export function PayrollDetail({ payrollId, onBack }: PayrollDetailProps) {
   const [preflightOpen, setPreflightOpen] = useState(false);
   const [pendingEntries, setPendingEntries] = useState<PayrollEntry[]>([]);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const { tenantId } = useTenant();
   const {
     getPayrollReport,
     addPayrollEntry,
@@ -115,14 +119,23 @@ export function PayrollDetail({ payrollId, onBack }: PayrollDetailProps) {
   const handleConfirmSave = async () => {
     try {
       for (const entry of pendingEntries) {
-        addPayrollEntry(entry);
+        const saved = await addPayrollEntry(entry);
         // Nach Speichern in Guardian-Historie aufnehmen
-        await addToHistory(entry);
+        await addToHistory(saved ?? entry);
+        // GoBD-Prüfprotokoll v1 anlegen
+        if (tenantId && saved) {
+          await recordAuditProtocol({
+            tenantId,
+            payrollEntry: saved,
+            employee: saved.employee,
+            eventType: 'created',
+          });
+        }
       }
       updatePayrollPeriodStatus(payrollId, 'calculated');
       toast({
         title: "Abrechnung gespeichert",
-        description: `Lohnabrechnung für ${pendingEntries.length} Mitarbeiter wurde gespeichert.`,
+        description: `${pendingEntries.length} Abrechnung(en) gespeichert. GoBD-Prüfprotokoll wurde angelegt.`,
       });
       setPendingEntries([]);
     } catch (error) {
@@ -314,6 +327,11 @@ export function PayrollDetail({ payrollId, onBack }: PayrollDetailProps) {
                         originalNet={entry.finalNetSalary}
                         originalTax={entry.salaryCalculation.taxes.total}
                         originalSV={entry.salaryCalculation.socialSecurityContributions.total.employee}
+                      />
+                      <AuditProtocolDialog
+                        payrollEntryId={entry.id}
+                        employeeName={`${entry.employee.personalData.firstName} ${entry.employee.personalData.lastName}`}
+                        periodLabel={`${report.period.month}/${report.period.year}`}
                       />
                       <Button variant="outline" size="sm" className="flex items-center gap-1">
                         <FileText className="h-3 w-3" />

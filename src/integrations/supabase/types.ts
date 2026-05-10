@@ -1453,6 +1453,69 @@ export type Database = {
         }
         Relationships: []
       }
+      payroll_audit_protocols: {
+        Row: {
+          applied_constants: Json
+          calculation_steps: Json
+          content_hash: string
+          created_at: string
+          created_by: string | null
+          employee_id: string
+          event_type: string
+          exports: Json
+          id: string
+          notes: string | null
+          payroll_entry_id: string
+          period_month: number
+          period_year: number
+          snapshot_calculation: Json
+          snapshot_employee: Json
+          tenant_id: string
+          version: number
+          warnings: Json
+        }
+        Insert: {
+          applied_constants?: Json
+          calculation_steps?: Json
+          content_hash: string
+          created_at?: string
+          created_by?: string | null
+          employee_id: string
+          event_type?: string
+          exports?: Json
+          id?: string
+          notes?: string | null
+          payroll_entry_id: string
+          period_month: number
+          period_year: number
+          snapshot_calculation?: Json
+          snapshot_employee?: Json
+          tenant_id: string
+          version: number
+          warnings?: Json
+        }
+        Update: {
+          applied_constants?: Json
+          calculation_steps?: Json
+          content_hash?: string
+          created_at?: string
+          created_by?: string | null
+          employee_id?: string
+          event_type?: string
+          exports?: Json
+          id?: string
+          notes?: string | null
+          payroll_entry_id?: string
+          period_month?: number
+          period_year?: number
+          snapshot_calculation?: Json
+          snapshot_employee?: Json
+          tenant_id?: string
+          version?: number
+          warnings?: Json
+        }
+        Relationships: []
+      }
       payroll_entries: {
         Row: {
           audit_data: Json | null
