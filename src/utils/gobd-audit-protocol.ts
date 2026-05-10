@@ -68,25 +68,29 @@ function canonicalJson(v: unknown): string {
 }
 
 function pickEmployeeSnapshot(e: Employee): Record<string, unknown> {
+  const pd = e.personalData;
+  const ed = e.employmentData;
   return {
     id: e.id,
-    personalNumber: (e as any).personalData?.personalNumber,
-    firstName: e.personalData?.firstName,
-    lastName: e.personalData?.lastName,
-    dateOfBirth: e.personalData?.dateOfBirth,
-    address: e.personalData?.address,
-    taxClass: e.taxData?.taxClass,
-    churchTax: e.taxData?.churchTax,
-    childrenAllowance: e.taxData?.childrenAllowance,
-    taxId: e.taxData?.taxId,
-    healthInsurance: e.socialSecurityData?.healthInsurance,
-    svNumber: e.socialSecurityData?.sozialversicherungsnummer,
-    employmentType: e.employmentData?.employmentType,
-    weeklyHours: e.employmentData?.weeklyHours,
-    entryDate: e.employmentData?.entryDate,
-    exitDate: (e.employmentData as any)?.exitDate,
+    personalNumber: (e as any).personalNumber ?? (pd as any)?.personalNumber,
+    firstName: pd?.firstName,
+    lastName: pd?.lastName,
+    dateOfBirth: pd?.dateOfBirth,
+    address: pd?.address,
+    state: pd?.address?.state,
+    taxClass: pd?.taxClass,
+    churchTax: pd?.churchTax,
+    churchTaxRate: pd?.churchTaxRate,
+    childAllowances: pd?.childAllowances,
+    numberOfChildren: pd?.numberOfChildren,
+    taxId: pd?.taxId,
+    healthInsurance: pd?.healthInsurance,
+    svNumber: pd?.socialSecurityNumber,
+    employmentType: ed?.employmentType,
+    weeklyHours: ed?.weeklyHours,
+    startDate: ed?.startDate,
+    endDate: ed?.endDate,
     grossSalary: e.salaryData?.grossSalary,
-    state: (e.personalData?.address as any)?.state ?? (e as any).state,
   };
 }
 
