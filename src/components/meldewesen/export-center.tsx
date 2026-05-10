@@ -27,6 +27,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/contexts/tenant-context";
 import { useToast } from "@/hooks/use-toast";
+import { PreExportValidationDialog } from "./pre-export-validation-dialog";
 
 const MONTHS = ["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"];
 
@@ -54,9 +55,16 @@ export function ExportCenter({ onBack }: Props) {
   const [month, setMonth] = useState(now.getMonth() + 1);
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<BundleResult | null>(null);
+  const [validationOpen, setValidationOpen] = useState(false);
+
+  const requestBundle = () => {
+    if (!tenantId) return;
+    setValidationOpen(true);
+  };
 
   const buildBundle = async () => {
     if (!tenantId) return;
+    setValidationOpen(false);
     setBusy(true);
     setResult(null);
     try {
@@ -324,10 +332,10 @@ Stand: ${new Date().toLocaleDateString("de-DE")}
               </Select>
             </div>
             <div className="flex items-end">
-              <Button onClick={buildBundle} disabled={busy} className="w-full">
+              <Button onClick={requestBundle} disabled={busy} className="w-full">
                 {busy
                   ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Erzeuge…</>
-                  : <><Download className="h-4 w-4 mr-2" /> Bundle erstellen & herunterladen</>}
+                  : <><Download className="h-4 w-4 mr-2" /> Prüfen & Bundle herunterladen</>}
               </Button>
             </div>
           </div>
@@ -381,6 +389,17 @@ Stand: ${new Date().toLocaleDateString("de-DE")}
             ))}
           </CardContent>
         </Card>
+      )}
+
+      {tenantId && (
+        <PreExportValidationDialog
+          open={validationOpen}
+          onClose={() => setValidationOpen(false)}
+          onProceed={buildBundle}
+          tenantId={tenantId}
+          year={year}
+          month={month}
+        />
       )}
     </div>
   );
