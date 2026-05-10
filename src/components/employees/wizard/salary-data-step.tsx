@@ -173,7 +173,7 @@ export function SalaryDataStep({ formData, errors, onInputChange }: WizardStepPr
               <div className="font-medium">Pflegeversicherung</div>
               <div className="text-muted-foreground">
                 Gesamt: {formData.childAllowances === 0 ? SOCIAL_INSURANCE_RATES_2025.careChildless.total : SOCIAL_INSURANCE_RATES_2025.care.total}%<br />
-                {formData.childAllowances === 0 && <span className="text-xs text-orange-600">+ Kinderlosenzuschlag</span>}
+                {formData.childAllowances === 0 && <span className="text-xs text-warning">+ Kinderlosenzuschlag</span>}
               </div>
             </div>
           </div>
@@ -181,20 +181,20 @@ export function SalaryDataStep({ formData, errors, onInputChange }: WizardStepPr
 
         {/* Nettolohnberechnung */}
         {formData.grossSalary > 0 && formData.healthInsurance && (
-          <div className="bg-blue-50 p-4 rounded-lg space-y-4">
-            <div className="font-medium text-sm text-blue-800">Voraussichtliche Nettolohnberechnung</div>
+          <div className="bg-info/10 p-4 rounded-lg space-y-4">
+            <div className="font-medium text-sm text-info">Voraussichtliche Nettolohnberechnung</div>
             {(() => {
               const calculation = calculateNetSalary();
               if (!calculation) return null;
 
               return (
                 <div className="space-y-3 text-sm">
-                  <div className="flex justify-between items-center p-2 bg-blue-100 rounded">
+                  <div className="flex justify-between items-center p-2 bg-info/10 rounded">
                     <span className="font-medium">Arbeitgeberbrutto:</span>
                     <span className="font-bold">{calculation.employerGross.toFixed(2)}€</span>
                   </div>
 
-                  <div className="flex justify-between items-center p-2 bg-white rounded border">
+                  <div className="flex justify-between items-center p-2 bg-card rounded border">
                     <span className="font-medium">Arbeitnehmerbrutto:</span>
                     <span className="font-bold">{calculation.employeeGross.toFixed(2)}€</span>
                   </div>
@@ -225,9 +225,9 @@ export function SalaryDataStep({ formData, errors, onInputChange }: WizardStepPr
                     </div>
                   </div>
 
-                  <div className="flex justify-between items-center p-2 bg-green-100 rounded">
+                  <div className="flex justify-between items-center p-2 bg-success/10 rounded">
                     <span className="font-medium">Netto (vor Lohnsteuer):</span>
-                    <span className="font-bold text-green-700">{calculation.netSalary.toFixed(2)}€</span>
+                    <span className="font-bold text-success">{calculation.netSalary.toFixed(2)}€</span>
                   </div>
 
                   <div className="text-xs text-muted-foreground mt-2">

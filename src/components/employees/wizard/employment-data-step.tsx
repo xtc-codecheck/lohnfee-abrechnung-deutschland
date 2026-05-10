@@ -142,8 +142,8 @@ export function EmploymentDataStep({ formData, errors, onInputChange }: WizardSt
 
           {/* Baulohn-spezifische Felder */}
           {formData.industry === 'construction' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 p-4 bg-orange-50 rounded-lg border border-orange-200">
-              <div className="col-span-2 flex items-center gap-2 text-orange-800 font-medium">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 p-4 bg-warning/10 rounded-lg border border-warning/30">
+              <div className="col-span-2 flex items-center gap-2 text-warning font-medium">
                 🏗️ Baulohn-Einstellungen
               </div>
               <div className="space-y-2">
@@ -178,7 +178,7 @@ export function EmploymentDataStep({ formData, errors, onInputChange }: WizardSt
                   </SelectContent>
                 </Select>
               </div>
-              <div className="col-span-2 text-xs text-orange-700">
+              <div className="col-span-2 text-xs text-warning">
                 SOKA-BAU Arbeitgeber-Beitrag: 15,20% • Urlaubskasse • Wintergeld (Dez-März)
               </div>
             </div>
@@ -186,8 +186,8 @@ export function EmploymentDataStep({ formData, errors, onInputChange }: WizardSt
 
           {/* Gastronomie-spezifische Felder */}
           {formData.industry === 'gastronomy' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 p-4 bg-amber-50 rounded-lg border border-amber-200">
-              <div className="col-span-2 flex items-center gap-2 text-amber-800 font-medium">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 p-4 bg-warning/10 rounded-lg border border-warning/30">
+              <div className="col-span-2 flex items-center gap-2 text-warning font-medium">
                 🍽️ Gastronomie-Einstellungen
               </div>
               <div className="flex items-center space-x-2">
@@ -208,7 +208,7 @@ export function EmploymentDataStep({ formData, errors, onInputChange }: WizardSt
                 />
                 <Label htmlFor="tipsFromEmployer">Trinkgeld vom Arbeitgeber</Label>
               </div>
-              <div className="col-span-2 text-xs text-amber-700">
+              <div className="col-span-2 text-xs text-warning">
                 Sachbezug Mahlzeiten 2025: Frühstück 2,17€ • Mittag/Abend je 4,13€ • Trinkgeld von Gästen ist steuerfrei
               </div>
             </div>
@@ -216,8 +216,8 @@ export function EmploymentDataStep({ formData, errors, onInputChange }: WizardSt
 
           {/* Pflege-spezifische Felder */}
           {formData.industry === 'nursing' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
-              <div className="col-span-2 flex items-center gap-2 text-blue-800 font-medium">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 p-4 bg-info/10 rounded-lg border border-info/30">
+              <div className="col-span-2 flex items-center gap-2 text-info font-medium">
                 🏥 Pflege/Schichtdienst-Einstellungen
               </div>
               <div className="space-y-2">
@@ -237,7 +237,7 @@ export function EmploymentDataStep({ formData, errors, onInputChange }: WizardSt
                   </SelectContent>
                 </Select>
               </div>
-              <div className="col-span-2 text-xs text-blue-700">
+              <div className="col-span-2 text-xs text-info">
                 SFN-Zuschläge (steuerfrei): Nacht 25% • Sonntag 50% • Feiertag 125% • Schichtzulagen nach TVöD-P
               </div>
             </div>
@@ -288,8 +288,8 @@ export function EmploymentDataStep({ formData, errors, onInputChange }: WizardSt
         </div>
 
         {/* Compliance Bereich */}
-        <div className="space-y-4 bg-blue-50 p-4 rounded-lg">
-          <h4 className="font-medium text-blue-800">Compliance & Rechtliche Anforderungen</h4>
+        <div className="space-y-4 bg-info/10 p-4 rounded-lg">
+          <h4 className="font-medium text-info">Compliance & Rechtliche Anforderungen</h4>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -319,12 +319,12 @@ export function EmploymentDataStep({ formData, errors, onInputChange }: WizardSt
             )}
           </div>
 
-          <div className="bg-yellow-50 p-3 rounded border border-yellow-200">
+          <div className="bg-warning/10 p-3 rounded border border-warning/30">
             <div className="flex items-start gap-2">
-              <div className="text-yellow-600 text-sm">⚠️</div>
+              <div className="text-warning text-sm">⚠️</div>
               <div className="text-sm">
-                <div className="font-medium text-yellow-800">Aufbewahrungsfristen</div>
-                <div className="text-yellow-700 text-xs mt-1">
+                <div className="font-medium text-warning">Aufbewahrungsfristen</div>
+                <div className="text-warning text-xs mt-1">
                   Personaldaten müssen 5 Jahre nach Beendigung des Arbeitsverhältnisses für die Rentenversicherung aufbewahrt werden.
                 </div>
               </div>
@@ -381,7 +381,7 @@ export function EmploymentDataStep({ formData, errors, onInputChange }: WizardSt
             </div>
             {getHoursDifference() !== 0 && (
               <div className={`mt-2 p-2 rounded text-sm ${
-                getHoursDifference() > 0 ? 'bg-orange-100 text-orange-800' : 'bg-blue-100 text-blue-800'
+                getHoursDifference() > 0 ? 'bg-warning/10 text-warning' : 'bg-info/10 text-info'
               }`}>
                 {getHoursDifference() > 0 ? '⚠️' : 'ℹ️'} Differenz: {getHoursDifference() > 0 ? '+' : ''}{getHoursDifference().toFixed(1)}h
                 {getHoursDifference() > 0 
@@ -391,7 +391,7 @@ export function EmploymentDataStep({ formData, errors, onInputChange }: WizardSt
               </div>
             )}
             {getHoursDifference() === 0 && (
-              <div className="mt-2 p-2 rounded text-sm bg-green-100 text-green-800">
+              <div className="mt-2 p-2 rounded text-sm bg-success/10 text-success">
                 ✅ Stundenverteilung stimmt mit Wochenstunden überein
               </div>
             )}

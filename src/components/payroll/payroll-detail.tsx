@@ -171,7 +171,7 @@ export function PayrollDetail({ payrollId, onBack }: PayrollDetailProps) {
           {hasEntries && report.period.status === 'calculated' && (
             <Button 
               onClick={handleApprovePayroll}
-              className="flex items-center gap-2 bg-green-600 hover:bg-green-700"
+              className="flex items-center gap-2 bg-success hover:bg-success"
             >
               <Check className="h-4 w-4" />
               Genehmigen

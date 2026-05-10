@@ -158,20 +158,20 @@ export function AuditReport({
 
   const getActionColor = (action: string) => {
     switch (action) {
-      case 'create': return 'text-green-600 bg-green-100';
-      case 'update': return 'text-blue-600 bg-blue-100';
-      case 'delete': return 'text-red-600 bg-red-100';
-      case 'view': return 'text-gray-600 bg-gray-100';
-      default: return 'text-gray-600 bg-gray-100';
+      case 'create': return 'text-success bg-success/10';
+      case 'update': return 'text-info bg-info/10';
+      case 'delete': return 'text-destructive bg-destructive/10';
+      case 'view': return 'text-muted-foreground bg-muted';
+      default: return 'text-muted-foreground bg-muted';
     }
   };
 
   const getRiskLevelColor = (riskLevel: string) => {
     switch (riskLevel) {
-      case 'high': return 'bg-red-500';
-      case 'medium': return 'bg-yellow-500';
-      case 'low': return 'bg-green-500';
-      default: return 'bg-gray-500';
+      case 'high': return 'bg-destructive';
+      case 'medium': return 'bg-warning';
+      case 'low': return 'bg-success';
+      default: return 'bg-muted-foreground';
     }
   };
 
@@ -186,7 +186,7 @@ export function AuditReport({
                 <p className="text-sm text-muted-foreground">Gesamte Logs</p>
                 <p className="text-2xl font-bold">{auditData.stats.totalLogs}</p>
               </div>
-              <Shield className="h-8 w-8 text-blue-600" />
+              <Shield className="h-8 w-8 text-info" />
             </div>
           </CardContent>
         </Card>
@@ -196,9 +196,9 @@ export function AuditReport({
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Hohe Risiken</p>
-                <p className="text-2xl font-bold text-red-600">{auditData.stats.highRiskLogs}</p>
+                <p className="text-2xl font-bold text-destructive">{auditData.stats.highRiskLogs}</p>
               </div>
-              <Trash2 className="h-8 w-8 text-red-600" />
+              <Trash2 className="h-8 w-8 text-destructive" />
             </div>
           </CardContent>
         </Card>
@@ -210,7 +210,7 @@ export function AuditReport({
                 <p className="text-sm text-muted-foreground">Aktive Benutzer</p>
                 <p className="text-2xl font-bold">{auditData.stats.uniqueUsers}</p>
               </div>
-              <User className="h-8 w-8 text-green-600" />
+              <User className="h-8 w-8 text-success" />
             </div>
           </CardContent>
         </Card>
@@ -222,7 +222,7 @@ export function AuditReport({
                 <p className="text-sm text-muted-foreground">Änderungen</p>
                 <p className="text-2xl font-bold">{auditData.stats.actionBreakdown.update}</p>
               </div>
-              <Edit className="h-8 w-8 text-orange-600" />
+              <Edit className="h-8 w-8 text-warning" />
             </div>
           </CardContent>
         </Card>

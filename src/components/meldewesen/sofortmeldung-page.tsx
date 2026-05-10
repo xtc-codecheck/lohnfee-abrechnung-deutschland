@@ -164,7 +164,7 @@ export function SofortmeldungPage({ onBack }: SofortmeldungPageProps) {
                       </TableCell>
                       <TableCell>
                         {done ? (
-                          <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">
+                          <Badge className="bg-success/10 text-success dark:bg-success dark:text-success/70">
                             <CheckCircle2 className="h-3 w-3 mr-1" />gemeldet
                           </Badge>
                         ) : (

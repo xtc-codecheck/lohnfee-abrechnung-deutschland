@@ -42,7 +42,7 @@ export function PensionBenefitsTab() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="mb-4 p-4 bg-blue-50 rounded-lg">
+            <div className="mb-4 p-4 bg-info/10 rounded-lg">
               <h4 className="font-medium mb-2">bAV-Förderung 2025</h4>
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div><strong>Steuerfreiheit:</strong> 3.504 € pro Jahr<br /><strong>SV-Freiheit:</strong> 2.928 € pro Jahr</div>
@@ -91,7 +91,7 @@ export function PensionBenefitsTab() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="mb-4 p-4 bg-green-50 rounded-lg">
+            <div className="mb-4 p-4 bg-success/10 rounded-lg">
               <h4 className="font-medium mb-2">VL-Förderung 2025</h4>
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div><strong>Arbeitgeberbeitrag:</strong> max. 40 € pro Monat<br /><strong>Bausparvertrag:</strong> 43 € Sparzulage</div>

@@ -60,9 +60,9 @@ export function AutomationJobsTab({ jobs, getStatusBadge }: AutomationJobsTabPro
                   <TableCell>
                     <div className="flex items-center gap-2">
                       {job.isActive ? (
-                        <CheckCircle className="h-4 w-4 text-green-500" />
+                        <CheckCircle className="h-4 w-4 text-success" />
                       ) : (
-                        <Pause className="h-4 w-4 text-gray-500" />
+                        <Pause className="h-4 w-4 text-muted-foreground" />
                       )}
                       {getStatusBadge(job.status)}
                     </div>

@@ -35,13 +35,13 @@ export function ComplianceDashboard({ onBack }: ComplianceDashboardProps) {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'passed':
-        return <CheckCircle className="h-4 w-4 text-green-600" />;
+        return <CheckCircle className="h-4 w-4 text-success" />;
       case 'warning':
-        return <AlertTriangle className="h-4 w-4 text-yellow-600" />;
+        return <AlertTriangle className="h-4 w-4 text-warning" />;
       case 'failed':
-        return <AlertCircle className="h-4 w-4 text-red-600" />;
+        return <AlertCircle className="h-4 w-4 text-destructive" />;
       default:
-        return <Clock className="h-4 w-4 text-gray-400" />;
+        return <Clock className="h-4 w-4 text-muted-foreground" />;
     }
   };
 
@@ -128,7 +128,7 @@ export function ComplianceDashboard({ onBack }: ComplianceDashboardProps) {
             <AlertCircle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">{criticalIssues.length}</div>
+            <div className="text-2xl font-bold text-destructive">{criticalIssues.length}</div>
             <p className="text-xs text-muted-foreground">
               Sofortige Aufmerksamkeit erforderlich
             </p>
@@ -168,31 +168,31 @@ export function ComplianceDashboard({ onBack }: ComplianceDashboardProps) {
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
                   <span className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-green-600" />
+                    <CheckCircle className="h-4 w-4 text-success" />
                     Bestanden
                   </span>
                   <span className="font-semibold">{currentReport.summary.passed}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="flex items-center gap-2">
-                    <AlertTriangle className="h-4 w-4 text-yellow-600" />
+                    <AlertTriangle className="h-4 w-4 text-warning" />
                     Warnungen
                   </span>
                   <span className="font-semibold">{currentReport.summary.warnings}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="flex items-center gap-2">
-                    <AlertCircle className="h-4 w-4 text-red-600" />
+                    <AlertCircle className="h-4 w-4 text-destructive" />
                     Fehlgeschlagen
                   </span>
                   <span className="font-semibold">{currentReport.summary.failed}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="flex items-center gap-2">
-                    <FileX className="h-4 w-4 text-red-800" />
+                    <FileX className="h-4 w-4 text-destructive" />
                     Kritisch
                   </span>
-                  <span className="font-semibold text-red-600">{currentReport.summary.critical}</span>
+                  <span className="font-semibold text-destructive">{currentReport.summary.critical}</span>
                 </div>
               </CardContent>
             </Card>
@@ -298,9 +298,9 @@ export function ComplianceDashboard({ onBack }: ComplianceDashboardProps) {
                     const hourlyWage = emp.salaryData.hourlyWage || (emp.salaryData.grossSalary / (emp.employmentData.weeklyHours * 4.33));
                     return hourlyWage < MINIMUM_WAGES[2025];
                   }).map(emp => (
-                    <div key={emp.id} className="flex items-center justify-between p-3 bg-red-50 rounded-lg">
+                    <div key={emp.id} className="flex items-center justify-between p-3 bg-destructive/10 rounded-lg">
                       <span>{emp.personalData.firstName} {emp.personalData.lastName}</span>
-                      <span className="text-red-600 font-semibold">
+                      <span className="text-destructive font-semibold">
                         {(emp.salaryData.hourlyWage || (emp.salaryData.grossSalary / (emp.employmentData.weeklyHours * 4.33))).toFixed(2)}€/h
                       </span>
                     </div>
@@ -309,7 +309,7 @@ export function ComplianceDashboard({ onBack }: ComplianceDashboardProps) {
                     const hourlyWage = emp.salaryData.hourlyWage || (emp.salaryData.grossSalary / (emp.employmentData.weeklyHours * 4.33));
                     return hourlyWage < MINIMUM_WAGES[2025];
                   }).length === 0 && (
-                    <p className="text-green-600 p-3 bg-green-50 rounded-lg">
+                    <p className="text-success p-3 bg-success/10 rounded-lg">
                       ✓ Alle Mitarbeiter erhalten mindestens den gesetzlichen Mindestlohn
                     </p>
                   )}

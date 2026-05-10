@@ -163,7 +163,7 @@ export function AnnualReconciliationDialog({ employeeId, employeeName, taxParams
 }
 
 function Row({ label, value, bold, diff }: { label: string; value: string; bold?: boolean; diff?: number }) {
-  const color = diff !== undefined ? (diff < -0.01 ? 'text-green-600' : diff > 0.01 ? 'text-red-600' : '') : '';
+  const color = diff !== undefined ? (diff < -0.01 ? 'text-success' : diff > 0.01 ? 'text-destructive' : '') : '';
   return (
     <div className={`flex justify-between text-sm ${bold ? 'font-semibold' : ''}`}>
       <span>{label}</span>

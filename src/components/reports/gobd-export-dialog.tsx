@@ -273,11 +273,11 @@ export function GoBDExportDialog() {
               <CardTitle className="text-sm">Exportumfang</CardTitle>
             </CardHeader>
             <CardContent className="text-sm space-y-1">
-              <div className="flex items-center gap-2"><CheckCircle className="h-3 w-3 text-green-600" /> Stammdaten aller Mitarbeiter</div>
-              <div className="flex items-center gap-2"><CheckCircle className="h-3 w-3 text-green-600" /> Lohnabrechnungen mit Steuer/SV-Details</div>
-              <div className="flex items-center gap-2"><CheckCircle className="h-3 w-3 text-green-600" /> Vollständiges Änderungsprotokoll</div>
-              <div className="flex items-center gap-2"><CheckCircle className="h-3 w-3 text-green-600" /> GDPdU index.xml Beschreibungsdatei</div>
-              <div className="flex items-center gap-2"><CheckCircle className="h-3 w-3 text-green-600" /> SHA-256 Prüfsummen je Datei</div>
+              <div className="flex items-center gap-2"><CheckCircle className="h-3 w-3 text-success" /> Stammdaten aller Mitarbeiter</div>
+              <div className="flex items-center gap-2"><CheckCircle className="h-3 w-3 text-success" /> Lohnabrechnungen mit Steuer/SV-Details</div>
+              <div className="flex items-center gap-2"><CheckCircle className="h-3 w-3 text-success" /> Vollständiges Änderungsprotokoll</div>
+              <div className="flex items-center gap-2"><CheckCircle className="h-3 w-3 text-success" /> GDPdU index.xml Beschreibungsdatei</div>
+              <div className="flex items-center gap-2"><CheckCircle className="h-3 w-3 text-success" /> SHA-256 Prüfsummen je Datei</div>
             </CardContent>
           </Card>
 

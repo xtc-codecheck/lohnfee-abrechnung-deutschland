@@ -101,7 +101,7 @@ export function PayrollCostOverviewReport({
                 <p className="text-sm text-muted-foreground">Gesamte Lohnkosten</p>
                 <p className="text-2xl font-bold">{formatCurrency(reportData.totals.totalEmployerCosts)}</p>
               </div>
-              <Euro className="h-8 w-8 text-green-600" />
+              <Euro className="h-8 w-8 text-success" />
             </div>
           </CardContent>
         </Card>
@@ -113,7 +113,7 @@ export function PayrollCostOverviewReport({
                 <p className="text-sm text-muted-foreground">Bruttolöhne</p>
                 <p className="text-2xl font-bold">{formatCurrency(reportData.totals.totalGrossSalary)}</p>
               </div>
-              <TrendingUp className="h-8 w-8 text-blue-600" />
+              <TrendingUp className="h-8 w-8 text-info" />
             </div>
           </CardContent>
         </Card>
@@ -125,7 +125,7 @@ export function PayrollCostOverviewReport({
                 <p className="text-sm text-muted-foreground">SV-Beiträge AG</p>
                 <p className="text-2xl font-bold">{formatCurrency(reportData.totals.totalEmployerSocialSecurity)}</p>
               </div>
-              <Building2 className="h-8 w-8 text-purple-600" />
+              <Building2 className="h-8 w-8 text-primary" />
             </div>
           </CardContent>
         </Card>
@@ -137,7 +137,7 @@ export function PayrollCostOverviewReport({
                 <p className="text-sm text-muted-foreground">Mitarbeiter</p>
                 <p className="text-2xl font-bold">{reportData.totals.employeeCount}</p>
               </div>
-              <Users className="h-8 w-8 text-orange-600" />
+              <Users className="h-8 w-8 text-warning" />
             </div>
           </CardContent>
         </Card>

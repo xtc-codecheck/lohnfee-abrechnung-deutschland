@@ -145,9 +145,9 @@ export function EmployeeStatisticsReport({
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Fluktuation</p>
-                <p className="text-2xl font-bold text-red-600">{reportData.turnoverData.turnoverRate}%</p>
+                <p className="text-2xl font-bold text-destructive">{reportData.turnoverData.turnoverRate}%</p>
               </div>
-              <TrendingUp className="h-8 w-8 text-red-600" />
+              <TrendingUp className="h-8 w-8 text-destructive" />
             </div>
           </CardContent>
         </Card>
@@ -159,7 +159,7 @@ export function EmployeeStatisticsReport({
                 <p className="text-sm text-muted-foreground">Durchschn. Gehalt</p>
                 <p className="text-2xl font-bold">{formatCurrency(reportData.performanceMetrics.avgSalary)}</p>
               </div>
-              <Euro className="h-8 w-8 text-green-600" />
+              <Euro className="h-8 w-8 text-success" />
             </div>
           </CardContent>
         </Card>
@@ -171,7 +171,7 @@ export function EmployeeStatisticsReport({
                 <p className="text-sm text-muted-foreground">Durchschn. Betriebszugehörigkeit</p>
                 <p className="text-2xl font-bold">{reportData.turnoverData.averageTenure} Jahre</p>
               </div>
-              <Calendar className="h-8 w-8 text-blue-600" />
+              <Calendar className="h-8 w-8 text-info" />
             </div>
           </CardContent>
         </Card>
@@ -181,9 +181,9 @@ export function EmployeeStatisticsReport({
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Neue Mitarbeiter</p>
-                <p className="text-2xl font-bold text-green-600">+{reportData.turnoverData.joinedThisYear}</p>
+                <p className="text-2xl font-bold text-success">+{reportData.turnoverData.joinedThisYear}</p>
               </div>
-              <Users className="h-8 w-8 text-orange-600" />
+              <Users className="h-8 w-8 text-warning" />
             </div>
           </CardContent>
         </Card>
@@ -280,16 +280,16 @@ export function EmployeeStatisticsReport({
                     </TableCell>
                     <TableCell>{formatCurrency(item.lastYearSalary)}</TableCell>
                     <TableCell>{formatCurrency(item.currentSalary)}</TableCell>
-                    <TableCell className={isPositive ? 'text-green-600' : 'text-red-600'}>
+                    <TableCell className={isPositive ? 'text-success' : 'text-destructive'}>
                       {isPositive ? '+' : ''}{formatCurrency(item.increaseAmount)}
                     </TableCell>
-                    <TableCell className={isPositive ? 'text-green-600' : 'text-red-600'}>
+                    <TableCell className={isPositive ? 'text-success' : 'text-destructive'}>
                       {isPositive ? '+' : ''}{item.increase.toFixed(1)}%
                     </TableCell>
                     <TableCell>
                       <Badge 
                         variant="secondary"
-                        className={isPositive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}
+                        className={isPositive ? 'bg-success/10 text-success' : 'bg-destructive/10 text-destructive'}
                       >
                         {isPositive ? 'Erhöht' : 'Reduziert'}
                       </Badge>
@@ -364,7 +364,7 @@ export function EmployeeStatisticsReport({
             </div>
             <div className="text-center p-4 bg-muted rounded-lg">
               <p className="text-sm text-muted-foreground">Abgänge dieses Jahr</p>
-              <p className="text-xl font-bold text-red-600">-{reportData.turnoverData.leftThisYear}</p>
+              <p className="text-xl font-bold text-destructive">-{reportData.turnoverData.leftThisYear}</p>
             </div>
           </div>
         </CardContent>

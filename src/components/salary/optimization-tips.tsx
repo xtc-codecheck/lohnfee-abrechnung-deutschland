@@ -28,10 +28,10 @@ const iconMap: Record<string, React.ComponentType<any>> = {
 };
 
 const categoryColors: Record<OptimizationTip['category'], string> = {
-  'tax-free': 'bg-green-500/10 text-green-600 border-green-500/20',
-  'social-security': 'bg-blue-500/10 text-blue-600 border-blue-500/20',
-  'deductible': 'bg-orange-500/10 text-orange-600 border-orange-500/20',
-  'benefit': 'bg-purple-500/10 text-purple-600 border-purple-500/20',
+  'tax-free': 'bg-success/10 text-success border-success/20',
+  'social-security': 'bg-info/10 text-info border-info/20',
+  'deductible': 'bg-warning/10 text-warning border-warning/20',
+  'benefit': 'bg-primary/10 text-primary border-primary/20',
 };
 
 const categoryLabels: Record<OptimizationTip['category'], string> = {
@@ -42,9 +42,9 @@ const categoryLabels: Record<OptimizationTip['category'], string> = {
 };
 
 const difficultyColors: Record<OptimizationTip['difficulty'], string> = {
-  easy: 'bg-green-500/10 text-green-600',
-  medium: 'bg-yellow-500/10 text-yellow-600',
-  hard: 'bg-red-500/10 text-red-600',
+  easy: 'bg-success/10 text-success',
+  medium: 'bg-warning/10 text-warning',
+  hard: 'bg-destructive/10 text-destructive',
 };
 
 const difficultyLabels: Record<OptimizationTip['difficulty'], string> = {
@@ -62,7 +62,7 @@ export function OptimizationTips({ tips, onTipClick }: OptimizationTipsProps) {
         <div className="flex items-center justify-between">
           <div>
             <CardTitle className="flex items-center gap-2">
-              <Lightbulb className="h-5 w-5 text-yellow-500" />
+              <Lightbulb className="h-5 w-5 text-warning" />
               Optimierungspotenzial
             </CardTitle>
             <CardDescription>
@@ -142,7 +142,7 @@ export function OptimizationTipsCompact({ tips }: { tips: OptimizationTip[] }) {
   return (
     <div className="space-y-2">
       <h4 className="font-medium text-sm flex items-center gap-2">
-        <Lightbulb className="h-4 w-4 text-yellow-500" />
+        <Lightbulb className="h-4 w-4 text-warning" />
         Top Spartipps
       </h4>
       {tips.slice(0, 3).map((tip) => {

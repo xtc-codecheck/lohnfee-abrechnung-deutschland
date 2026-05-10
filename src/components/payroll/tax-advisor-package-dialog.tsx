@@ -572,7 +572,7 @@ export function TaxAdvisorPackageDialog({
                           ].includes(status);
                           return (
                             <span
-                              className={`text-xs ${closed ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'}`}
+                              className={`text-xs ${closed ? 'text-success dark:text-success/70' : 'text-warning dark:text-warning/70'}`}
                             >
                               {closed ? '· abgeschlossen' : `· ${status}`}
                             </span>
@@ -625,7 +625,7 @@ export function TaxAdvisorPackageDialog({
                                 />
                                 <span className="flex-1 truncate">{monthHuman}</span>
                                 <span
-                                  className={`text-xs ml-2 ${closed ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'}`}
+                                  className={`text-xs ml-2 ${closed ? 'text-success dark:text-success/70' : 'text-warning dark:text-warning/70'}`}
                                 >
                                   {closed ? 'abgeschlossen' : status}
                                 </span>
@@ -668,7 +668,7 @@ export function TaxAdvisorPackageDialog({
               {(hiddenNoEntriesCount > 0 || hiddenDraftCount > 0) && (
                 <p className="text-xs text-muted-foreground flex items-start gap-1.5">
                   <AlertTriangle
-                    className="h-3 w-3 mt-0.5 shrink-0 text-amber-600 dark:text-amber-400"
+                    className="h-3 w-3 mt-0.5 shrink-0 text-warning dark:text-warning/70"
                     aria-hidden="true"
                   />
                   <span>
@@ -871,18 +871,18 @@ function ValidationChecklist({
 
   const headerClass =
     headerStatus === 'ok'
-      ? 'border-emerald-500/40 bg-emerald-500/5 dark:bg-emerald-500/10'
+      ? 'border-success/40 bg-success/5 dark:bg-success/10'
       : headerStatus === 'warn'
-        ? 'border-amber-500/40 bg-amber-500/5 dark:bg-amber-500/10'
+        ? 'border-warning/40 bg-warning/5 dark:bg-warning/10'
         : 'border-destructive/40 bg-destructive/5';
 
   const HeaderIcon =
     headerStatus === 'ok' ? ShieldCheck : headerStatus === 'warn' ? AlertTriangle : XCircle;
   const headerIconClass =
     headerStatus === 'ok'
-      ? 'text-emerald-600 dark:text-emerald-400'
+      ? 'text-success dark:text-success/70'
       : headerStatus === 'warn'
-        ? 'text-amber-600 dark:text-amber-400'
+        ? 'text-warning dark:text-warning/70'
         : 'text-destructive';
 
   return (
@@ -907,13 +907,13 @@ function ValidationChecklist({
             <li key={c.id} className="flex items-start gap-2 text-sm">
               {c.status === 'ok' && (
                 <CheckCircle2
-                  className="h-4 w-4 mt-0.5 shrink-0 text-emerald-600 dark:text-emerald-400"
+                  className="h-4 w-4 mt-0.5 shrink-0 text-success dark:text-success/70"
                   aria-label="OK"
                 />
               )}
               {c.status === 'warn' && (
                 <AlertTriangle
-                  className="h-4 w-4 mt-0.5 shrink-0 text-amber-600 dark:text-amber-400"
+                  className="h-4 w-4 mt-0.5 shrink-0 text-warning dark:text-warning/70"
                   aria-label="Hinweis"
                 />
               )}

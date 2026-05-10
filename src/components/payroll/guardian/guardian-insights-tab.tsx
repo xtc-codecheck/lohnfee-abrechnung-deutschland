@@ -87,7 +87,7 @@ export function GuardianInsightsTab({ forecasts }: GuardianInsightsTabProps) {
                     <Badge variant={opt.effort === 'low' ? 'default' : opt.effort === 'medium' ? 'secondary' : 'outline'}>
                       {opt.effort === 'low' ? 'Einfach' : opt.effort === 'medium' ? 'Mittel' : 'Komplex'}
                     </Badge>
-                    <span className="text-green-600 font-semibold text-sm">
+                    <span className="text-success font-semibold text-sm">
                       +{opt.potentialSaving.toLocaleString('de-DE')} €
                     </span>
                   </div>

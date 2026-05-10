@@ -151,12 +151,12 @@ export function BavOptimizer() {
 
           <div className="pt-3 border-t space-y-1 text-sm">
             {!bavResult.isWithinSocialSecurityLimit && (
-              <Badge variant="outline" className="text-orange-600 border-orange-300">
+              <Badge variant="outline" className="text-warning border-warning/30">
                 ⚠️ Beitrag über SV-freier Grenze ({formatCurrency(bavResult.socialSecurityFreeLimit)})
               </Badge>
             )}
             {!bavResult.isWithinTaxLimit && (
-              <Badge variant="outline" className="text-orange-600 border-orange-300">
+              <Badge variant="outline" className="text-warning border-warning/30">
                 ⚠️ Beitrag über steuerfreier Grenze ({formatCurrency(bavResult.taxFreeLimit)})
               </Badge>
             )}

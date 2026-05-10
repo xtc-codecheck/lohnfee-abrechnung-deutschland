@@ -56,19 +56,19 @@ const KATEGORIE_LABELS: Record<BuchungsKategorie, string> = {
 };
 
 const KATEGORIE_COLORS: Record<BuchungsKategorie, string> = {
-  gehalt: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
-  lohnsteuer: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
-  solidaritaet: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
-  kirchensteuer: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
-  krankenversicherung: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
-  rentenversicherung: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
-  arbeitslosenversicherung: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
-  pflegeversicherung: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
-  'ag-sv': 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300',
+  gehalt: 'bg-info/10 text-info dark:bg-info/30 dark:text-info/70',
+  lohnsteuer: 'bg-destructive/10 text-destructive dark:bg-destructive/30 dark:text-destructive/70',
+  solidaritaet: 'bg-destructive/10 text-destructive dark:bg-destructive/30 dark:text-destructive/70',
+  kirchensteuer: 'bg-destructive/10 text-destructive dark:bg-destructive/30 dark:text-destructive/70',
+  krankenversicherung: 'bg-success/10 text-success dark:bg-success/30 dark:text-success/70',
+  rentenversicherung: 'bg-success/10 text-success dark:bg-success/30 dark:text-success/70',
+  arbeitslosenversicherung: 'bg-success/10 text-success dark:bg-success/30 dark:text-success/70',
+  pflegeversicherung: 'bg-success/10 text-success dark:bg-success/30 dark:text-success/70',
+  'ag-sv': 'bg-warning/10 text-warning dark:bg-warning/30 dark:text-warning/70',
   nettolohn: 'bg-primary/10 text-primary',
-  sonderzahlung: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300',
-  lohnart: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900/30 dark:text-cyan-300',
-  pauschalsteuer: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300',
+  sonderzahlung: 'bg-primary/10 text-primary dark:bg-primary/30 dark:text-primary/70',
+  lohnart: 'bg-info/10 text-info dark:bg-info/30 dark:text-info/70',
+  pauschalsteuer: 'bg-warning/10 text-warning dark:bg-warning/30 dark:text-warning/70',
 };
 
 const fmt = (v: number) =>
@@ -218,11 +218,11 @@ export function FibuJournalPage({ onBack }: FibuJournalPageProps) {
               <CardContent className="pt-4 pb-4 text-center">
                 <div className="flex items-center justify-center gap-1">
                   {journal.summen.differenz === 0 ? (
-                    <CheckCircle2 className="h-5 w-5 text-green-600" />
+                    <CheckCircle2 className="h-5 w-5 text-success" />
                   ) : (
-                    <AlertTriangle className="h-5 w-5 text-red-600" />
+                    <AlertTriangle className="h-5 w-5 text-destructive" />
                   )}
-                  <span className={`text-2xl font-bold ${journal.summen.differenz === 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  <span className={`text-2xl font-bold ${journal.summen.differenz === 0 ? 'text-success' : 'text-destructive'}`}>
                     {fmt(journal.summen.differenz)}€
                   </span>
                 </div>
@@ -327,7 +327,7 @@ export function FibuJournalPage({ onBack }: FibuJournalPageProps) {
                     </div>
                     <div>
                       <span className="text-muted-foreground">Differenz:</span>{' '}
-                      <span className={`font-bold ${journal.summen.differenz === 0 ? 'text-green-600' : 'text-red-600'}`}>
+                      <span className={`font-bold ${journal.summen.differenz === 0 ? 'text-success' : 'text-destructive'}`}>
                         {fmt(journal.summen.differenz)}€
                       </span>
                     </div>

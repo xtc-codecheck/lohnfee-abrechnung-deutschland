@@ -58,42 +58,42 @@ export function AdvancedReports({ onBack }: AdvancedReportsProps) {
       title: 'Lohnkostenübersicht',
       description: 'Monatliche/jährliche Lohnkosten',
       icon: Euro,
-      color: 'text-green-600'
+      color: 'text-success'
     },
     {
       id: 'sick-vacation' as ReportType,
       title: 'Krankmeldungen & Urlaub',
       description: 'Fehlzeiten-Statistiken',
       icon: Heart,
-      color: 'text-red-600'
+      color: 'text-destructive'
     },
     {
       id: 'tax-sv' as ReportType,
       title: 'Steuern & SV-Beiträge',
       description: 'Detaillierte Beitragsübersicht',
       icon: Shield,
-      color: 'text-blue-600'
+      color: 'text-info'
     },
     {
       id: 'audit' as ReportType,
       title: 'Audit-Report',
       description: 'Änderungsprotokoll',
       icon: FileText,
-      color: 'text-purple-600'
+      color: 'text-primary'
     },
     {
       id: 'employee-stats' as ReportType,
       title: 'Mitarbeiterstatistiken',
       description: 'Fluktuation, Lohnentwicklung',
       icon: Users,
-      color: 'text-orange-600'
+      color: 'text-warning'
     },
     {
       id: 'min-wage' as ReportType,
       title: 'Mindestlohn-Prüfung',
       description: 'Konformitätscheck gegen MiLoG',
       icon: ShieldCheck,
-      color: 'text-emerald-600'
+      color: 'text-success'
     }
   ];
 

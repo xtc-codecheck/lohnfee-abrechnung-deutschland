@@ -244,8 +244,8 @@ export function OnboardingWizard({ onDismiss }: OnboardingWizardProps) {
         {/* Step 2: Done / Next Steps */}
         {currentStep === 2 && (
           <div className="text-center py-4 space-y-5">
-            <div className="inline-flex items-center justify-center h-16 w-16 rounded-2xl bg-green-100 dark:bg-green-900/30 mx-auto">
-              <PartyPopper className="h-8 w-8 text-green-600 dark:text-green-400" />
+            <div className="inline-flex items-center justify-center h-16 w-16 rounded-2xl bg-success/10 dark:bg-success/30 mx-auto">
+              <PartyPopper className="h-8 w-8 text-success dark:text-success/70" />
             </div>
             <h2 className="text-2xl font-bold text-foreground">
               Super, Ihre Firma ist eingerichtet! 🎉
@@ -259,8 +259,8 @@ export function OnboardingWizard({ onDismiss }: OnboardingWizardProps) {
                 onClick={() => { onDismiss(); navigate("/employees"); }}
                 className="w-full flex items-center gap-3 p-4 rounded-lg border border-border hover:border-primary/50 hover:bg-primary/5 transition-colors text-left"
               >
-                <div className="h-10 w-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center shrink-0">
-                  <Users className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                <div className="h-10 w-10 rounded-lg bg-info/10 dark:bg-info/30 flex items-center justify-center shrink-0">
+                  <Users className="h-5 w-5 text-info dark:text-info/70" />
                 </div>
                 <div>
                   <p className="font-medium text-foreground">Ersten Mitarbeiter anlegen</p>
@@ -273,8 +273,8 @@ export function OnboardingWizard({ onDismiss }: OnboardingWizardProps) {
                 onClick={() => { onDismiss(); navigate("/settings"); }}
                 className="w-full flex items-center gap-3 p-4 rounded-lg border border-border hover:border-primary/50 hover:bg-primary/5 transition-colors text-left"
               >
-                <div className="h-10 w-10 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0">
-                  <Building2 className="h-5 w-5 text-slate-600 dark:text-slate-400" />
+                <div className="h-10 w-10 rounded-lg bg-muted dark:bg-secondary flex items-center justify-center shrink-0">
+                  <Building2 className="h-5 w-5 text-muted-foreground dark:text-muted-foreground" />
                 </div>
                 <div>
                   <p className="font-medium text-foreground">Firmendaten ergänzen</p>
@@ -287,8 +287,8 @@ export function OnboardingWizard({ onDismiss }: OnboardingWizardProps) {
                 onClick={() => { onDismiss(); navigate("/hilfe"); }}
                 className="w-full flex items-center gap-3 p-4 rounded-lg border border-border hover:border-primary/50 hover:bg-primary/5 transition-colors text-left"
               >
-                <div className="h-10 w-10 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center shrink-0">
-                  <Sparkles className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+                <div className="h-10 w-10 rounded-lg bg-warning/10 dark:bg-warning/30 flex items-center justify-center shrink-0">
+                  <Sparkles className="h-5 w-5 text-warning dark:text-warning/70" />
                 </div>
                 <div>
                   <p className="font-medium text-foreground">Hilfe-Center öffnen</p>

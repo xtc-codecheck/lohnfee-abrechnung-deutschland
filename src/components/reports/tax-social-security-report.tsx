@@ -177,7 +177,7 @@ export function TaxSocialSecurityReport({
                 <p className="text-sm text-muted-foreground">Gesamte Steuern</p>
                 <p className="text-2xl font-bold">{formatCurrency(reportData.totalTaxes)}</p>
               </div>
-              <FileText className="h-8 w-8 text-red-600" />
+              <FileText className="h-8 w-8 text-destructive" />
             </div>
           </CardContent>
         </Card>
@@ -189,7 +189,7 @@ export function TaxSocialSecurityReport({
                 <p className="text-sm text-muted-foreground">Gesamte SV-Beiträge</p>
                 <p className="text-2xl font-bold">{formatCurrency(reportData.totalSocialSecurity)}</p>
               </div>
-              <Shield className="h-8 w-8 text-blue-600" />
+              <Shield className="h-8 w-8 text-info" />
             </div>
           </CardContent>
         </Card>
@@ -268,7 +268,7 @@ export function TaxSocialSecurityReport({
       {/* DATEV Export Information */}
       <Card className="border-dashed">
         <CardHeader>
-          <CardTitle className="flex items-center text-green-700">
+          <CardTitle className="flex items-center text-success">
             <Euro className="h-5 w-5 mr-2" />
             DATEV-Export Information
           </CardTitle>

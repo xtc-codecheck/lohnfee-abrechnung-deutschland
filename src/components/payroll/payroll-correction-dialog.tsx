@@ -169,7 +169,7 @@ function Row({ label, value, bold }: { label: string; value: string; bold?: bool
 }
 
 function DiffRow({ label, value }: { label: string; value: number }) {
-  const color = value > 0.01 ? 'text-green-600' : value < -0.01 ? 'text-red-600' : '';
+  const color = value > 0.01 ? 'text-success' : value < -0.01 ? 'text-destructive' : '';
   return (
     <div className="flex justify-between">
       <span>{label}</span>

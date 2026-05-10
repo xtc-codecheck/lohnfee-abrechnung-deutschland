@@ -50,8 +50,8 @@ interface PreFlightCheckDialogProps {
 
 const SEVERITY_COLORS: Record<PayrollAnomaly["severity"], string> = {
   critical: "bg-destructive text-destructive-foreground",
-  high: "bg-orange-500 text-white",
-  medium: "bg-yellow-500 text-black",
+  high: "bg-warning text-white",
+  medium: "bg-warning text-foreground",
   low: "bg-muted text-muted-foreground",
 };
 
@@ -92,7 +92,7 @@ export function PreFlightCheckDialog({
           <AlertDialogTitle className="flex items-center gap-2">
             {anomalies.length === 0 ? (
               <>
-                <ShieldCheck className="h-5 w-5 text-green-600" />
+                <ShieldCheck className="h-5 w-5 text-success" />
                 Pre-Flight-Check bestanden
               </>
             ) : hasBlockingFindings ? (
@@ -102,7 +102,7 @@ export function PreFlightCheckDialog({
               </>
             ) : (
               <>
-                <AlertTriangle className="h-5 w-5 text-orange-500" />
+                <AlertTriangle className="h-5 w-5 text-warning" />
                 Hinweise vor dem Speichern
               </>
             )}
@@ -125,7 +125,7 @@ export function PreFlightCheckDialog({
                   )}
                   {highCount > 0 && (
                     <>
-                      {" "}und <strong className="text-orange-600">{highCount} mit hoher Priorität</strong>
+                      {" "}und <strong className="text-warning">{highCount} mit hoher Priorität</strong>
                     </>
                   )}
                   . Bitte prüfen Sie diese vor dem Speichern.

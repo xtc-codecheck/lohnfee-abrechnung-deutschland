@@ -75,28 +75,28 @@ export function ExportManager({
       label: 'PDF', 
       icon: FileText, 
       description: 'Formatierter Bericht mit Grafiken',
-      color: 'text-red-600'
+      color: 'text-destructive'
     },
     { 
       id: 'csv' as ExportFormat, 
       label: 'CSV', 
       icon: FileSpreadsheet, 
       description: 'Kompatibel mit Excel/Calc',
-      color: 'text-green-600'
+      color: 'text-success'
     },
     { 
       id: 'xlsx' as ExportFormat, 
       label: 'Excel', 
       icon: FileBarChart, 
       description: 'Native Excel-Datei mit Formeln',
-      color: 'text-blue-600'
+      color: 'text-info'
     },
     { 
       id: 'datev' as ExportFormat, 
       label: 'DATEV', 
       icon: Shield, 
       description: 'Steuerberater-Format',
-      color: 'text-purple-600'
+      color: 'text-primary'
     }
   ];
 
@@ -457,9 +457,9 @@ export function ExportManager({
 
           {/* Special Options for DATEV */}
           {selectedFormat === 'datev' && (
-            <Card className="border-purple-200 bg-purple-50">
+            <Card className="border-primary/30 bg-primary/10">
               <CardHeader className="pb-3">
-                <CardTitle className="flex items-center text-purple-700">
+                <CardTitle className="flex items-center text-primary">
                   <Shield className="h-5 w-5 mr-2" />
                   DATEV-Export Informationen
                 </CardTitle>

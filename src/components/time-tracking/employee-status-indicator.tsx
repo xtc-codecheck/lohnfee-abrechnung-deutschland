@@ -58,9 +58,9 @@ export function EmployeeStatusIndicator({
                 <span>{status.actualHours.toFixed(1)}h / {status.contractHours.toFixed(1)}h</span>
               </div>
               <div className={cn("font-medium", {
-                "text-green-600": Math.abs(status.deviation) <= 5,
-                "text-yellow-600": Math.abs(status.deviation) > 5 && Math.abs(status.deviation) <= 10,
-                "text-red-600": Math.abs(status.deviation) > 10
+                "text-success": Math.abs(status.deviation) <= 5,
+                "text-warning": Math.abs(status.deviation) > 5 && Math.abs(status.deviation) <= 10,
+                "text-destructive": Math.abs(status.deviation) > 10
               })}>
                 {status.deviation > 0 ? '+' : ''}{status.deviation.toFixed(1)}%
               </div>
@@ -70,13 +70,13 @@ export function EmployeeStatusIndicator({
             {(status.sickDays > 0 || status.vacationDays > 0) && (
               <div className="text-right text-sm">
                 {status.sickDays > 0 && (
-                  <div className="flex items-center gap-1 text-red-600">
+                  <div className="flex items-center gap-1 text-destructive">
                     <AlertTriangle className="h-3 w-3" />
                     <span>{status.sickDays} Krank</span>
                   </div>
                 )}
                 {status.vacationDays > 0 && (
-                  <div className="flex items-center gap-1 text-blue-600">
+                  <div className="flex items-center gap-1 text-info">
                     <Calendar className="h-3 w-3" />
                     <span>{status.vacationDays} Urlaub</span>
                   </div>

@@ -99,13 +99,13 @@ export function PayrollGuardianDashboard({ onBack }: PayrollGuardianDashboardPro
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Trend</CardTitle>
-            {stats.trendsPositive > 0 ? <TrendingUp className="h-4 w-4 text-green-500" /> :
+            {stats.trendsPositive > 0 ? <TrendingUp className="h-4 w-4 text-success" /> :
              stats.trendsNegative > 0 ? <TrendingDown className="h-4 w-4 text-destructive" /> :
              <Activity className="h-4 w-4 text-muted-foreground" />}
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">
-              {stats.trendsPositive > 0 && <span className="text-green-500">+{stats.trendsPositive}</span>}
+              {stats.trendsPositive > 0 && <span className="text-success">+{stats.trendsPositive}</span>}
               {stats.trendsNegative > 0 && <span className="text-destructive">-{stats.trendsNegative}</span>}
               {stats.trendsPositive === 0 && stats.trendsNegative === 0 && '—'}
             </div>

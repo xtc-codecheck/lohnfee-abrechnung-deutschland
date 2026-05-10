@@ -10,10 +10,10 @@ import {
 
 export const getSeverityColor = (severity: string) => {
   switch (severity) {
-    case 'critical': return 'bg-red-500';
-    case 'high': return 'bg-orange-500';
-    case 'medium': return 'bg-yellow-500';
-    case 'low': return 'bg-blue-500';
+    case 'critical': return 'bg-destructive';
+    case 'high': return 'bg-warning';
+    case 'medium': return 'bg-warning';
+    case 'low': return 'bg-info';
     default: return 'bg-muted';
   }
 };
@@ -21,8 +21,8 @@ export const getSeverityColor = (severity: string) => {
 export const getSeverityBadge = (severity: string) => {
   switch (severity) {
     case 'critical': return <Badge variant="destructive">Kritisch</Badge>;
-    case 'high': return <Badge className="bg-orange-500 hover:bg-orange-600">Hoch</Badge>;
-    case 'medium': return <Badge className="bg-yellow-500 text-black hover:bg-yellow-600">Mittel</Badge>;
+    case 'high': return <Badge className="bg-warning hover:bg-warning">Hoch</Badge>;
+    case 'medium': return <Badge className="bg-warning text-foreground hover:bg-warning">Mittel</Badge>;
     case 'low': return <Badge variant="secondary">Niedrig</Badge>;
     default: return <Badge variant="outline">Unbekannt</Badge>;
   }
