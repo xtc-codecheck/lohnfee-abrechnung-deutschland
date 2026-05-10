@@ -105,7 +105,7 @@ describe('formatters - Status-Labels', () => {
 describe('formatters - Zentrale Status-Farben', () => {
   it('gibt Payroll-Status-Farben zurück', () => {
     expect(getPayrollStatusColor('draft')).toContain('bg-muted');
-    expect(getPayrollStatusColor('paid')).toContain('bg-green');
+    expect(getPayrollStatusColor('paid')).toContain('bg-success');
     expect(getPayrollStatusColor('unknown')).toContain('bg-muted');
   });
 
@@ -116,18 +116,18 @@ describe('formatters - Zentrale Status-Farben', () => {
 
   it('gibt Meldewesen-Status-Farben zurück', () => {
     expect(getMeldwesenStatusColor('entwurf')).toContain('bg-muted');
-    expect(getMeldwesenStatusColor('uebermittelt')).toContain('bg-green');
+    expect(getMeldwesenStatusColor('uebermittelt')).toContain('bg-success');
   });
 
   it('gibt Traffic-Light-Farben zurück', () => {
-    expect(getTrafficLightColor('green')).toContain('bg-green');
-    expect(getTrafficLightColor('yellow')).toContain('bg-yellow');
-    expect(getTrafficLightColor('red')).toContain('bg-red');
+    expect(getTrafficLightColor('green')).toContain('bg-success');
+    expect(getTrafficLightColor('yellow')).toContain('bg-warning');
+    expect(getTrafficLightColor('red')).toContain('bg-destructive');
   });
 
   it('gibt Traffic-Light-Dot-Farben zurück', () => {
-    expect(getTrafficLightDot('green')).toBe('bg-green-500');
-    expect(getTrafficLightDot('red')).toBe('bg-red-500');
+    expect(getTrafficLightDot('green')).toBe('bg-success');
+    expect(getTrafficLightDot('red')).toBe('bg-destructive');
   });
 
   it('gibt Traffic-Light-Labels zurück', () => {
