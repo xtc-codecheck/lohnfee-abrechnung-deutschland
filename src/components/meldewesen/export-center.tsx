@@ -126,17 +126,17 @@ export function ExportCenter({ onBack }: Props) {
       const monthEnd = new Date(year, month, 0).toISOString().slice(0, 10);
       const { data: svm } = await supabase.from("sv_meldungen").select("*")
         .eq("tenant_id", tenantId).gte("created_at", monthStart).lte("created_at", monthEnd + "T23:59:59");
-      svm?.forEach((row, i) => {
+      svm?.forEach((row: any, i) => {
         const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <DEUEV_Meldung>
   <Grund>${xmlEscape(row.meldegrund)}</Grund>
   <PersonengruppeSchluessel>${xmlEscape(row.personengruppe ?? "101")}</PersonengruppeSchluessel>
-  <BBNR_AG>${xmlEscape(row.betriebsnummer_ag)}</BBNR_AG>
+  <BBNR_AG>${xmlEscape(row.betriebsnummer_ag ?? "")}</BBNR_AG>
   <BBNR_KK>${xmlEscape(row.betriebsnummer_kk)}</BBNR_KK>
   <Krankenkasse>${xmlEscape(row.krankenkasse)}</Krankenkasse>
   <Zeitraum_Von>${xmlEscape(row.zeitraum_von)}</Zeitraum_Von>
   <Zeitraum_Bis>${xmlEscape(row.zeitraum_bis)}</Zeitraum_Bis>
-  <Brutto>${row.brutto ?? 0}</Brutto>
+  <Brutto>${row.brutto ?? row.entgelt ?? 0}</Brutto>
 </DEUEV_Meldung>`;
         zip.folder("03_DEUEV_SV-Meldungen_svnet")?.file(`DEUEV_${row.meldegrund || "X"}_${i + 1}.xml`, xml);
         addRecipient("svnet", {
@@ -176,18 +176,20 @@ export function ExportCenter({ onBack }: Props) {
 
       // 5) UV-Jahresmeldung (DSLN) — nur Februar relevant, aber immer auflisten
       const { data: uv } = await supabase.from("uv_jahresmeldungen").select("*")
-        .eq("tenant_id", tenantId).eq("meldejahr", year);
-      uv?.forEach((row, i) => {
+        .eq("tenant_id", tenantId).eq("year", year);
+      uv?.forEach((row: any, i) => {
         const xml = `<?xml version="1.0" encoding="UTF-8"?>
-<UV_Jahresmeldung Meldejahr="${row.meldejahr}">
-  <BG>${xmlEscape(row.berufsgenossenschaft)}</BG>
-  <Mitgliedsnummer>${xmlEscape(row.mitgliedsnummer)}</Mitgliedsnummer>
-  <Gesamt_Brutto>${row.gesamt_brutto ?? 0}</Gesamt_Brutto>
-  <Gesamt_Stunden>${row.gesamt_stunden ?? 0}</Gesamt_Stunden>
+<UV_Jahresmeldung Meldejahr="${row.year}">
+  <BG>${xmlEscape(row.berufsgenossenschaft ?? "")}</BG>
+  <Mitgliedsnummer>${xmlEscape(row.bg_mitgliedsnummer)}</Mitgliedsnummer>
+  <Gefahrtarifstelle>${xmlEscape(row.gefahrtarifstelle)}</Gefahrtarifstelle>
+  <Gesamt_Brutto>${row.brutto_summe ?? 0}</Gesamt_Brutto>
+  <Gesamt_Stunden>${row.geleistete_arbeitsstunden ?? 0}</Gesamt_Stunden>
+  <Anzahl_Versicherte>${row.anzahl_versicherte ?? 0}</Anzahl_Versicherte>
 </UV_Jahresmeldung>`;
-        zip.folder("05_UV_Jahresmeldung_BG-Portal")?.file(`DSLN_${row.meldejahr}_${i + 1}.xml`, xml);
+        zip.folder("05_UV_Jahresmeldung_BG-Portal")?.file(`DSLN_${row.year}_${i + 1}.xml`, xml);
         addRecipient("bg", {
-          name: `Berufsgenossenschaft – DSLN ${row.meldejahr}`,
+          name: `Berufsgenossenschaft – DSLN ${row.year}`,
           portal: "BG-Portal Lohnnachweis Digital",
           url: "https://www.dguv.de/lohnnachweis-digital",
         });
