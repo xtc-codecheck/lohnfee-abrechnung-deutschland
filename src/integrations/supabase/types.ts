@@ -239,6 +239,7 @@ export type Database = {
           gesamtbetrag: number | null
           id: string
           insolvenzgeldumlage: number | null
+          is_correction: boolean
           krankenkasse: string
           kv_ag: number | null
           kv_an: number | null
@@ -248,6 +249,7 @@ export type Database = {
           pv_ag: number | null
           pv_an: number | null
           pv_kinderlose_zuschlag: number | null
+          replaces_id: string | null
           rv_ag: number | null
           rv_an: number | null
           status: string
@@ -269,6 +271,7 @@ export type Database = {
           gesamtbetrag?: number | null
           id?: string
           insolvenzgeldumlage?: number | null
+          is_correction?: boolean
           krankenkasse: string
           kv_ag?: number | null
           kv_an?: number | null
@@ -278,6 +281,7 @@ export type Database = {
           pv_ag?: number | null
           pv_an?: number | null
           pv_kinderlose_zuschlag?: number | null
+          replaces_id?: string | null
           rv_ag?: number | null
           rv_an?: number | null
           status?: string
@@ -299,6 +303,7 @@ export type Database = {
           gesamtbetrag?: number | null
           id?: string
           insolvenzgeldumlage?: number | null
+          is_correction?: boolean
           krankenkasse?: string
           kv_ag?: number | null
           kv_an?: number | null
@@ -308,6 +313,7 @@ export type Database = {
           pv_ag?: number | null
           pv_an?: number | null
           pv_kinderlose_zuschlag?: number | null
+          replaces_id?: string | null
           rv_ag?: number | null
           rv_an?: number | null
           status?: string
@@ -1228,8 +1234,10 @@ export type Database = {
           finanzamt: string | null
           gesamtbetrag: number
           id: string
+          is_correction: boolean
           korrektur_von: string | null
           month: number
+          replaces_id: string | null
           status: string
           steuernummer: string | null
           summe_kirchensteuer_ev: number
@@ -1251,8 +1259,10 @@ export type Database = {
           finanzamt?: string | null
           gesamtbetrag?: number
           id?: string
+          is_correction?: boolean
           korrektur_von?: string | null
           month: number
+          replaces_id?: string | null
           status?: string
           steuernummer?: string | null
           summe_kirchensteuer_ev?: number
@@ -1274,8 +1284,10 @@ export type Database = {
           finanzamt?: string | null
           gesamtbetrag?: number
           id?: string
+          is_correction?: boolean
           korrektur_von?: string | null
           month?: number
+          replaces_id?: string | null
           status?: string
           steuernummer?: string | null
           summe_kirchensteuer_ev?: number
@@ -1445,11 +1457,16 @@ export type Database = {
         Row: {
           audit_data: Json | null
           bonus: number | null
+          corrected_at: string | null
+          corrected_by: string | null
+          correction_reason: string | null
+          corrects_entry_id: string | null
           created_at: string
           deduction_description: string | null
           deductions: number | null
           employee_id: string
           employer_costs: number | null
+          entry_type: string
           final_net_salary: number
           gross_salary: number
           id: string
@@ -1478,11 +1495,16 @@ export type Database = {
         Insert: {
           audit_data?: Json | null
           bonus?: number | null
+          corrected_at?: string | null
+          corrected_by?: string | null
+          correction_reason?: string | null
+          corrects_entry_id?: string | null
           created_at?: string
           deduction_description?: string | null
           deductions?: number | null
           employee_id: string
           employer_costs?: number | null
+          entry_type?: string
           final_net_salary: number
           gross_salary: number
           id?: string
@@ -1511,11 +1533,16 @@ export type Database = {
         Update: {
           audit_data?: Json | null
           bonus?: number | null
+          corrected_at?: string | null
+          corrected_by?: string | null
+          correction_reason?: string | null
+          corrects_entry_id?: string | null
           created_at?: string
           deduction_description?: string | null
           deductions?: number | null
           employee_id?: string
           employer_costs?: number | null
+          entry_type?: string
           final_net_salary?: number
           gross_salary?: number
           id?: string
@@ -1980,12 +2007,14 @@ export type Database = {
           created_by: string | null
           employee_id: string
           id: string
+          is_correction: boolean
           krankenkasse: string
           meldedatum: string | null
           meldegrund: string
           meldegrund_schluessel: string | null
           notes: string | null
           personengruppe: string | null
+          replaces_id: string | null
           status: string
           storniert_am: string | null
           storno_grund: string | null
@@ -2002,12 +2031,14 @@ export type Database = {
           created_by?: string | null
           employee_id: string
           id?: string
+          is_correction?: boolean
           krankenkasse: string
           meldedatum?: string | null
           meldegrund: string
           meldegrund_schluessel?: string | null
           notes?: string | null
           personengruppe?: string | null
+          replaces_id?: string | null
           status?: string
           storniert_am?: string | null
           storno_grund?: string | null
@@ -2024,12 +2055,14 @@ export type Database = {
           created_by?: string | null
           employee_id?: string
           id?: string
+          is_correction?: boolean
           krankenkasse?: string
           meldedatum?: string | null
           meldegrund?: string
           meldegrund_schluessel?: string | null
           notes?: string | null
           personengruppe?: string | null
+          replaces_id?: string | null
           status?: string
           storniert_am?: string | null
           storno_grund?: string | null
