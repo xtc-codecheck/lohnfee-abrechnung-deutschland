@@ -18,6 +18,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { calculatePayrollEntry, createDefaultWorkingData } from './payroll-calculator';
 import type { Employee } from '@/types/employee';
 import { roundCurrency } from '@/lib/formatters';
+import { recordAuditProtocol } from './gobd-audit-protocol';
 
 export interface StornoCorrectionInput {
   originalEntryId: string;
@@ -162,6 +163,37 @@ export async function executeStornoAndCorrection(
     .select('id')
     .single();
   if (errCorr || !corrData) throw new Error(`Korrektur fehlgeschlagen: ${errCorr?.message}`);
+
+  // GoBD-Prüfprotokoll: Storno-Eintrag (am Original)
+  try {
+    await recordAuditProtocol({
+      tenantId,
+      payrollEntry: {
+        ...(c as any),
+        id: original.id,
+        employeeId: original.employee_id,
+      } as any,
+      employee,
+      eventType: 'storno',
+      userId,
+      notes: `Storno wegen: ${reason}`,
+    });
+    // GoBD-Prüfprotokoll: Korrektur-Eintrag (auf neuer Buchung)
+    await recordAuditProtocol({
+      tenantId,
+      payrollEntry: {
+        ...(c as any),
+        id: corrData.id,
+        employeeId: original.employee_id,
+      } as any,
+      employee: correctedEmployee,
+      eventType: 'corrected',
+      userId,
+      notes: `Korrektur zu ${original.id}: ${reason}`,
+    });
+  } catch (e) {
+    console.warn('Audit-Protokoll nach Storno/Korrektur fehlgeschlagen:', e);
+  }
 
   // 4) Meldungen für die Periode regenerieren (LStA + BNW)
   const newLstaId = await regenerateLsta(tenantId, period.year, period.month, userId);
