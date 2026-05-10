@@ -44,6 +44,9 @@ Professionelle Farben für Finanz- und HR-Anwendungen. Alle Farben in HSL.
     --warning: 45 85% 55%;
     --warning-foreground: 0 0% 100%;
 
+    --info: 210 90% 50%;
+    --info-foreground: 0 0% 100%;
+
     --border: 220 15% 88%;
     --input: 220 15% 88%;
     --ring: 220 90% 48%;
@@ -102,6 +105,15 @@ Professionelle Farben für Finanz- und HR-Anwendungen. Alle Farben in HSL.
 
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
+
+    --success: 140 65% 45%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 38 92% 50%;
+    --warning-foreground: 222 47% 11%;
+
+    --info: 210 90% 60%;
+    --info-foreground: 222 47% 11%;
 
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
