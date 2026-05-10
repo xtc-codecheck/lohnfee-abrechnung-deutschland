@@ -27,6 +27,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/contexts/tenant-context";
 import { useToast } from "@/hooks/use-toast";
+import { PreExportValidationDialog } from "./pre-export-validation-dialog";
 
 const MONTHS = ["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"];
 
@@ -54,9 +55,16 @@ export function ExportCenter({ onBack }: Props) {
   const [month, setMonth] = useState(now.getMonth() + 1);
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<BundleResult | null>(null);
+  const [validationOpen, setValidationOpen] = useState(false);
+
+  const requestBundle = () => {
+    if (!tenantId) return;
+    setValidationOpen(true);
+  };
 
   const buildBundle = async () => {
     if (!tenantId) return;
+    setValidationOpen(false);
     setBusy(true);
     setResult(null);
     try {
