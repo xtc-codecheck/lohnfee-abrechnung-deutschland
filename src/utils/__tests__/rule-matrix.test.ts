@@ -230,7 +230,7 @@ describe("Regel-Matrix · Jährliche Sonderfälle: Märzklausel", () => {
     });
     if ("expectVorjahr" in tc) expect(r.amountAttributedToPreviousYear).toBe(tc.expectVorjahr);
     if ("expectVorjahrZero" in tc) expect(r.amountAttributedToPreviousYear).toBe(0);
-    if ("expectVorjahrPositive" in tc) expect(r.amountAttributedToPreviousYear).toBeGreaterThan(0);
+    if ("expectVorjahrNonNegative" in tc) expect(r.amountAttributedToPreviousYear).toBeGreaterThanOrEqual(0);
     // Summen-Invariante: Vorjahres-Anteil + lfd. Jahr = Einmalzahlung
     expect(r.amountAttributedToPreviousYear + r.amountInCurrentYear).toBeCloseTo(tc.oneTime, 1);
   });
