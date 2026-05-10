@@ -308,6 +308,8 @@ export function PayrollDetail({ payrollId, onBack }: PayrollDetailProps) {
                       />
                       <PayrollCorrectionDialog
                         periodLabel={`${report.period.month}/${report.period.year}`}
+                        entryId={entry.id}
+                        employee={entry.employee}
                         originalGross={entry.salaryCalculation.grossSalary}
                         originalNet={entry.finalNetSalary}
                         originalTax={entry.salaryCalculation.taxes.total}
