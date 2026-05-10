@@ -128,12 +128,12 @@ describe("Regel-Matrix · Monatliche Sonderfälle", () => {
 
   it("Minijob-Grenze 556 € exakt: SV-frei", () => {
     const r = calculateCompleteTax({
-      grossSalaryYearly: MINIJOB_2025.threshold * 12,
+      grossSalaryYearly: MINIJOB_2025.maxEarnings * 12,
       taxClass: "1", childAllowances: 0, churchTax: false, churchTaxRate: 0,
       healthInsuranceRate: 1.7, isEastGermany: false, isChildless: true, age: 30,
       employmentType: "minijob",
     });
-    expect(r.netMonthly).toBeCloseTo(MINIJOB_2025.threshold, 1);
+    expect(r.netMonthly).toBeCloseTo(MINIJOB_2025.maxEarnings, 1);
     expect(r.totalDeductions).toBeLessThan(0.5);
   });
 
