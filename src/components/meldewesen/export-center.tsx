@@ -332,10 +332,10 @@ Stand: ${new Date().toLocaleDateString("de-DE")}
               </Select>
             </div>
             <div className="flex items-end">
-              <Button onClick={buildBundle} disabled={busy} className="w-full">
+              <Button onClick={requestBundle} disabled={busy} className="w-full">
                 {busy
                   ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Erzeuge…</>
-                  : <><Download className="h-4 w-4 mr-2" /> Bundle erstellen & herunterladen</>}
+                  : <><Download className="h-4 w-4 mr-2" /> Prüfen & Bundle herunterladen</>}
               </Button>
             </div>
           </div>
