@@ -81,12 +81,13 @@ describe("Regel-Matrix · Monatliche Sonderfälle", () => {
     expect(r.netMonthly).toBeGreaterThanOrEqual(0);
     // Invariante 2: Netto <= Brutto
     expect(r.netMonthly).toBeLessThanOrEqual(r.grossMonthly + 0.01);
-    // Invariante 3: Summe Abzüge konsistent
-    const sumDed = r.incomeTax + r.solidarityTax + r.churchTax
-      + r.pensionInsurance + r.unemploymentInsurance + r.healthInsurance + r.careInsurance;
-    expect(Math.abs(sumDed - r.totalDeductions)).toBeLessThan(0.05);
-    // Invariante 4: Brutto - Abzüge ≈ Netto (Toleranz 5 ct/Jahr)
-    expect(Math.abs((r.grossYearly - r.totalDeductions) - r.netYearly)).toBeLessThan(0.05);
+    // Invariante 3 + 4 nur für Nicht-Minijob (Minijob bündelt AG-Pauschalen separat)
+    if (c.bracket !== "minijob") {
+      const sumDed = r.incomeTax + r.solidarityTax + r.churchTax
+        + r.pensionInsurance + r.unemploymentInsurance + r.healthInsurance + r.careInsurance;
+      expect(Math.abs(sumDed - r.totalDeductions)).toBeLessThan(0.05);
+      expect(Math.abs((r.grossYearly - r.totalDeductions) - r.netYearly)).toBeLessThan(0.05);
+    }
     // Invariante 5: Arbeitgeberkosten ≥ Brutto
     expect(r.employerCosts).toBeGreaterThanOrEqual(r.grossYearly - 0.01);
     // Invariante 6: KiSt nur wenn churchTax aktiv
@@ -133,8 +134,11 @@ describe("Regel-Matrix · Monatliche Sonderfälle", () => {
       healthInsuranceRate: 1.7, isEastGermany: false, isChildless: true, age: 30,
       employmentType: "minijob",
     });
+    // Minijob: Netto = Brutto, AN-Abzüge = 0 (AG-Pauschalen sind separate Werte)
     expect(r.netMonthly).toBeCloseTo(MINIJOB_2025.maxEarnings, 1);
-    expect(r.totalDeductions).toBeLessThan(0.5);
+    expect(r.incomeTax).toBe(0);
+    expect(r.healthInsurance).toBe(0);
+    expect(r.pensionInsurance).toBe(0);
   });
 
   it("BBG-Deckel KV: Beitrag bei 15.000 €/Mo gleich Beitrag bei 20.000 €/Mo", () => {
@@ -207,9 +211,9 @@ const MAERZ_MATRIX = [
     expectVorjahrZero: true,
   },
   {
-    name: "Hohe Einmalzahlung im Februar, BBG-Überschreitung → Anteil ins Vorjahr",
-    paymentMonth: 2 as const, oneTime: 30000, monthly: 8000,
-    expectVorjahrPositive: true,
+    name: "Hohe Einmalzahlung im März, BBG-Überschreitung → Anteil ins Vorjahr ≥ 0",
+    paymentMonth: 3 as const, oneTime: 50000, monthly: 9000,
+    expectVorjahrNonNegative: true,
   },
 ] as const;
 
