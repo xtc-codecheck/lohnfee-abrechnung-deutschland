@@ -11,14 +11,15 @@ import { UvJahresmeldungPage } from "@/components/meldewesen/uv-jahresmeldung-pa
 import { BescheinigungenPage } from "@/components/meldewesen/bescheinigungen-page";
 import { DeuevRueckmeldungenPage } from "@/components/meldewesen/deuev-rueckmeldungen-page";
 import { ZvkPage } from "@/components/meldewesen/zvk-page";
+import { ExportCenter } from "@/components/meldewesen/export-center";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/page-header";
 import { AppBreadcrumb } from "@/components/ui/app-breadcrumb";
-import { FileText, Send, ClipboardList, Calculator, HeartPulse, Zap, Shield, FileSignature, Inbox, Building2, Plane, Scale } from "lucide-react";
+import { FileText, Send, ClipboardList, Calculator, HeartPulse, Zap, Shield, FileSignature, Inbox, Building2, Plane, Scale, Package } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-type MeldewesenView = 'overview' | 'sv-meldungen' | 'beitragsnachweise' | 'lstb' | 'lsta' | 'aag' | 'sofortmeldung' | 'uv-jahr' | 'bescheinigungen' | 'deuev-rueck' | 'zvk';
+type MeldewesenView = 'overview' | 'sv-meldungen' | 'beitragsnachweise' | 'lstb' | 'lsta' | 'aag' | 'sofortmeldung' | 'uv-jahr' | 'bescheinigungen' | 'deuev-rueck' | 'zvk' | 'export-center';
 
 const viewLabels: Record<Exclude<MeldewesenView, 'overview'>, string> = {
   'sv-meldungen': 'SV-Meldungen',
@@ -31,6 +32,7 @@ const viewLabels: Record<Exclude<MeldewesenView, 'overview'>, string> = {
   'bescheinigungen': 'Bescheinigungen (EEL/BEA)',
   'deuev-rueck': 'DEÜV-Rückmeldungen',
   'zvk': 'ZVK / Pensionskassen',
+  'export-center': 'Export-Center',
 };
 
 export default function Meldewesen() {
@@ -58,6 +60,7 @@ export default function Meldewesen() {
         {currentView === 'bescheinigungen' && <BescheinigungenPage onBack={handleBack} />}
         {currentView === 'deuev-rueck' && <DeuevRueckmeldungenPage onBack={handleBack} />}
         {currentView === 'zvk' && <ZvkPage onBack={handleBack} />}
+        {currentView === 'export-center' && <ExportCenter onBack={handleBack} />}
       </MainLayout>
     );
   }
@@ -67,6 +70,23 @@ export default function Meldewesen() {
       <PageSeo title="Meldewesen" description="SV-Meldungen, Beitragsnachweise, Lohnsteueranmeldungen und -bescheinigungen erstellen und übermitteln." path="/meldewesen" />
       <div className="space-y-6 animate-fade-in">
         <PageHeader title="Meldewesen" description="Gesetzliche Meldungen und Bescheinigungen" onBack={() => navigate("/dashboard")} />
+
+        <Card className="shadow-elegant border-primary/40 bg-primary/5 cursor-pointer hover:shadow-elegant transition-shadow"
+              onClick={() => setCurrentView('export-center')}>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-primary">
+              <Package className="h-5 w-5" />
+              Export-Center · Alle Meldungen eines Monats als ZIP
+            </CardTitle>
+            <CardDescription>
+              Ein Klick = ZIP-Bundle mit Lohnsteueranmeldung, Beitragsnachweisen, DEÜV-Meldungen, AAG, UV
+              und Anleitung für sv.net Classic / Mein ELSTER / BG-Portal. Empfohlen für Unternehmer ohne Steuerberater.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button className="w-full">Export-Center öffnen</Button>
+          </CardContent>
+        </Card>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <Card className="shadow-card hover:shadow-elegant transition-shadow cursor-pointer" onClick={() => setCurrentView('sv-meldungen')}>
