@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 /**
  * GoBD-konformer Datenexport für Betriebsprüfungen
  */
@@ -15,7 +16,6 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useTenant } from '@/contexts/tenant-context';
 import {
-import { logger } from '@/lib/logger';
   generateGDPdUIndexXml,
   generateEmployeeCSV,
   generatePayrollCSV,

@@ -17,12 +17,12 @@ import { WorkingTimeData, PayrollEntry } from '@/types/payroll';
 import { PreFlightCheckDialog } from './preflight-check-dialog';
 import { usePayrollGuardian } from '@/hooks/use-payroll-guardian';
 import {
-import { logger } from '@/lib/logger';
   ArrowLeft, ArrowRight, Check, CheckCircle2, Clock, Gift,
   Calculator, FileText, Download, Play, AlertTriangle, Info,
   Zap, Loader2, ChevronRight, RefreshCw, FastForward, Pause,
   CircleCheck, OctagonX,
 } from 'lucide-react';
+import { logger } from '@/lib/logger';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';

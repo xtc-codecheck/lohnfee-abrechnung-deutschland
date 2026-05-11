@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 /**
  * Monatlicher Exportplan für Steuerberater-Pakete
  *
@@ -10,7 +11,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import type { PayrollEntry, PayrollPeriod } from '@/types/payroll';
 import {
-import { logger } from '@/lib/logger';
   generateTaxAdvisorPackage,
   downloadTaxAdvisorPackage,
 } from '@/utils/tax-advisor-package';
