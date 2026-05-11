@@ -8,6 +8,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertTriangle, Clock, Send, Zap } from "lucide-react";
 import { format } from "date-fns";
 import { de } from "date-fns/locale";
+import { logger } from '@/lib/logger';
 
 export function AutomationIntegrationsTab() {
   const [zapierWebhook, setZapierWebhook] = useState("");
@@ -38,7 +39,7 @@ export function AutomationIntegrationsTab() {
       });
       alert("Zapier-Webhook wurde ausgelöst. Prüfen Sie Ihre Zap-Historie für Bestätigung.");
     } catch (error) {
-      console.error("Error triggering webhook:", error);
+      logger.error('automation-integrations-tab', "Error triggering webhook:", error);
       alert("Fehler beim Auslösen des Zapier-Webhooks. Bitte prüfen Sie die URL.");
     } finally {
       setIsLoading(false);

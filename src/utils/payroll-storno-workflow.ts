@@ -19,6 +19,7 @@ import { calculatePayrollEntry, createDefaultWorkingData } from './payroll-calcu
 import type { Employee } from '@/types/employee';
 import { roundCurrency } from '@/lib/formatters';
 import { recordAuditProtocol } from './gobd-audit-protocol';
+import { logger } from '@/lib/logger';
 
 export interface StornoCorrectionInput {
   originalEntryId: string;
@@ -193,7 +194,7 @@ export async function executeStornoAndCorrection(
       notes: `Korrektur zu ${original.id}: ${reason}`,
     });
   } catch (e) {
-    console.warn('Audit-Protokoll nach Storno/Korrektur fehlgeschlagen:', e);
+    logger.warn('payroll-storno-workflow', 'Audit-Protokoll nach Storno/Korrektur fehlgeschlagen:', e);
   }
 
   // 4) Meldungen für die Periode regenerieren (LStA + BNW)
@@ -288,7 +289,7 @@ async function regenerateLsta(
     .select('id')
     .single();
   if (error) {
-    console.warn('LStA-Regeneration fehlgeschlagen:', error.message);
+    logger.warn('payroll-storno-workflow', 'LStA-Regeneration fehlgeschlagen:', error.message);
     return undefined;
   }
   return ins?.id;

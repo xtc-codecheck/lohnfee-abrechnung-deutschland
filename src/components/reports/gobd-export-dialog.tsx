@@ -15,6 +15,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useTenant } from '@/contexts/tenant-context';
 import {
+import { logger } from '@/lib/logger';
   generateGDPdUIndexXml,
   generateEmployeeCSV,
   generatePayrollCSV,
@@ -204,7 +205,7 @@ export function GoBDExportDialog() {
 
       toast({ title: 'GoBD-Export abgeschlossen', description: `${files.length} Dateien mit Prüfsummen erstellt.` });
     } catch (error) {
-      console.error('GoBD export error:', error);
+      logger.error('gobd-export-dialog', 'GoBD export error:', error);
       toast({ title: 'Exportfehler', description: 'Der GoBD-Export konnte nicht erstellt werden.', variant: 'destructive' });
     } finally {
       setLoading(false);

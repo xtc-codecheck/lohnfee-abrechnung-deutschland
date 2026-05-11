@@ -22,6 +22,7 @@ import { AppliedWageTypesCard } from "./applied-wage-types-card";
 import { AuditProtocolDialog } from "./audit-protocol-dialog";
 import { recordAuditProtocol } from "@/utils/gobd-audit-protocol";
 import { useTenant } from "@/contexts/tenant-context";
+import { logger } from '@/lib/logger';
 
 interface PayrollDetailProps {
   payrollId: string;
@@ -80,7 +81,7 @@ export function PayrollDetail({ payrollId, onBack }: PayrollDetailProps) {
         updatedAt: new Date(),
       } as PayrollEntry;
     } catch (error) {
-      console.error(`Fehler bei Berechnung für ${employeeId}:`, error);
+      logger.error('payroll-detail', `Fehler bei Berechnung für ${employeeId}:`, error);
       return null;
     }
   };

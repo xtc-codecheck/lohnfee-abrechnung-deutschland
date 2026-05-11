@@ -8,6 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { 
+import { logger } from '@/lib/logger';
   Download, 
   FileText, 
   FileSpreadsheet, 
@@ -370,7 +371,7 @@ export function ExportManager({
       toast.success('Export erfolgreich erstellt!');
     } catch (error) {
       toast.error('Fehler beim Export!');
-      console.error('Export error:', error);
+      logger.error('export-manager', 'Export error:', error);
     } finally {
       setIsExporting(false);
     }

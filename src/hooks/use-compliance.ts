@@ -9,6 +9,7 @@ import { BBG_2025_MONTHLY } from '@/constants/social-security';
 import { useTenant } from '@/contexts/tenant-context';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 
 export function useCompliance() {
   const [alerts, setAlerts] = useState<ComplianceAlert[]>([]);
@@ -29,7 +30,7 @@ export function useCompliance() {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Error loading compliance alerts:', error);
+        logger.error('use-compliance', 'Error loading compliance alerts:', error);
         toast.error('Compliance-Alerts konnten nicht geladen werden');
       } else if (data) {
         setAlerts(data.map(row => ({

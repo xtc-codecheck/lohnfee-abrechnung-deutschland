@@ -14,6 +14,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import type { PayrollEntry } from '@/types/payroll';
 import type { Employee } from '@/types/employee';
+import { logger } from '@/lib/logger';
 
 export type AuditEventType = 'created' | 'recalculated' | 'corrected' | 'storno' | 'export';
 
@@ -182,7 +183,7 @@ export async function recordAuditProtocol(params: {
     .single();
 
   if (error) {
-    console.warn('Audit-Protokoll konnte nicht gespeichert werden:', error.message);
+    logger.warn('gobd-audit-protocol', 'Audit-Protokoll konnte nicht gespeichert werden:', error.message);
     return null;
   }
   return mapRow(data);
@@ -247,7 +248,7 @@ export async function recordExportProof(params: {
     .single();
 
   if (error) {
-    console.warn('Export-Nachweis konnte nicht gespeichert werden:', error.message);
+    logger.warn('gobd-audit-protocol', 'Export-Nachweis konnte nicht gespeichert werden:', error.message);
     return null;
   }
   return mapRow(data);

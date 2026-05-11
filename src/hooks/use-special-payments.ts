@@ -6,6 +6,7 @@ import { SickPayCalculation, MaternityBenefits, ShortTimeWork, SpecialPaymentSum
 import { useTenant } from '@/contexts/tenant-context';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 
 type PaymentRow = {
   id: string;
@@ -89,7 +90,7 @@ export function useSpecialPayments() {
         .eq('tenant_id', currentTenant.id);
 
       if (error) {
-        console.error('Error loading special payments:', error);
+        logger.error('use-special-payments', 'Error loading special payments:', error);
         toast.error('Sonderzahlungen konnten nicht geladen werden');
         setIsLoading(false);
         return;

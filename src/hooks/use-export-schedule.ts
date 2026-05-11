@@ -10,6 +10,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import type { PayrollEntry, PayrollPeriod } from '@/types/payroll';
 import {
+import { logger } from '@/lib/logger';
   generateTaxAdvisorPackage,
   downloadTaxAdvisorPackage,
 } from '@/utils/tax-advisor-package';
@@ -79,7 +80,7 @@ function safeWriteJson(key: string, value: unknown): void {
   try {
     window.localStorage.setItem(key, JSON.stringify(value));
   } catch (err) {
-    console.warn('[export-schedule] Persistenz fehlgeschlagen:', err);
+    logger.warn('use-export-schedule', '[export-schedule] Persistenz fehlgeschlagen:', err);
   }
 }
 
@@ -306,7 +307,7 @@ export function useExportScheduleRunner({ periods, entries }: RunnerOptions) {
           description: `${periodLabel(targetPeriodLabel)} wurde automatisch erstellt und liegt zum Download bereit.`,
         });
       } catch (err) {
-        console.error('[export-schedule] Auto-Lauf fehlgeschlagen:', err);
+        logger.error('use-export-schedule', '[export-schedule] Auto-Lauf fehlgeschlagen:', err);
         toast.error('Automatischer Export fehlgeschlagen', {
           description: err instanceof Error ? err.message : 'Unbekannter Fehler.',
         });
