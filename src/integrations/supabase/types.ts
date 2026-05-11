@@ -731,6 +731,57 @@ export type Database = {
         }
         Relationships: []
       }
+      elstam_changes: {
+        Row: {
+          affected_entry_ids: string[] | null
+          created_at: string
+          effective_date: string
+          employee_id: string
+          field_name: string
+          id: string
+          new_value: string | null
+          notes: string | null
+          old_value: string | null
+          processed_at: string | null
+          processed_by: string | null
+          status: Database["public"]["Enums"]["elstam_change_status"]
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          affected_entry_ids?: string[] | null
+          created_at?: string
+          effective_date?: string
+          employee_id: string
+          field_name: string
+          id?: string
+          new_value?: string | null
+          notes?: string | null
+          old_value?: string | null
+          processed_at?: string | null
+          processed_by?: string | null
+          status?: Database["public"]["Enums"]["elstam_change_status"]
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          affected_entry_ids?: string[] | null
+          created_at?: string
+          effective_date?: string
+          employee_id?: string
+          field_name?: string
+          id?: string
+          new_value?: string | null
+          notes?: string | null
+          old_value?: string | null
+          processed_at?: string | null
+          processed_by?: string | null
+          status?: Database["public"]["Enums"]["elstam_change_status"]
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       employee_garnishments: {
         Row: {
           aktenzeichen: string | null
@@ -2910,6 +2961,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "sachbearbeiter" | "leserecht" | "steuerberater"
+      elstam_change_status: "open" | "processed" | "ignored"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -3038,6 +3090,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "sachbearbeiter", "leserecht", "steuerberater"],
+      elstam_change_status: ["open", "processed", "ignored"],
     },
   },
 } as const
