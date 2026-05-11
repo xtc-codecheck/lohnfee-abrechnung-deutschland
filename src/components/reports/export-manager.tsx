@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -8,7 +9,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { 
-import { logger } from '@/lib/logger';
   Download, 
   FileText, 
   FileSpreadsheet, 

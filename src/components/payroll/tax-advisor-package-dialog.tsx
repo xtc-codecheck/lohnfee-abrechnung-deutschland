@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 /**
  * Steuerberater-Paket Dialog
  *
@@ -14,7 +15,6 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import {
-import { logger } from '@/lib/logger';
   Command,
   CommandEmpty,
   CommandGroup,
