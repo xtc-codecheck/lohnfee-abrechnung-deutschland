@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 import { Employee } from '@/types/employee';
-import { TimeEntry, WorkingTimeData } from '@/types/payroll';
+import { WorkingTimeData } from '@/types/payroll';
+import { TimeEntry } from '@/types/time-tracking';
 
 /**
  * Baut WorkingTimeData aus echten Zeiteinträgen für einen Mitarbeiter und Monat.
