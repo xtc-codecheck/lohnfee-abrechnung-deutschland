@@ -34,6 +34,7 @@ export interface StornoCorrectionResult {
   correctionEntryId: string;
   newLstaId?: string;
   newBnwIds: string[];
+  newSvMeldungIds: string[];
   netDifference: number;
   taxDifference: number;
   svDifference: number;
