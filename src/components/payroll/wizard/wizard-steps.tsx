@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { HelpTooltip } from '@/components/ui/help-tooltip';
 import { Employee } from '@/types/employee';
-import { PayrollEntry, PayrollPeriod, TimeEntry } from '@/types/payroll';
+import { PayrollEntry, PayrollPeriod } from '@/types/payroll';
 import { TimeEntry as RealTimeEntry } from '@/types/time-tracking';
 import { MONTHS, StepStatus } from './types';
 
