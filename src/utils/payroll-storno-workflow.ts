@@ -198,12 +198,22 @@ export async function executeStornoAndCorrection(
   // 4) Meldungen für die Periode regenerieren (LStA + BNW)
   const newLstaId = await regenerateLsta(tenantId, period.year, period.month, userId);
   const newBnwIds = await regenerateBeitragsnachweise(tenantId, period.year, period.month);
+  const newSvMeldungIds = await regenerateSvMeldungen({
+    tenantId,
+    employeeId: original.employee_id,
+    year: period.year,
+    month: period.month,
+    newSvBrutto: c.salaryCalculation.grossSalary,
+    reason,
+    userId,
+  });
 
   return {
     stornoEntryId: stornoData.id,
     correctionEntryId: corrData.id,
     newLstaId,
     newBnwIds,
+    newSvMeldungIds,
     netDifference: roundCurrency(c.finalNetSalary - Number(original.final_net_salary)),
     taxDifference: roundCurrency(c.salaryCalculation.taxes.total - Number(original.tax_total ?? 0)),
     svDifference: roundCurrency(
