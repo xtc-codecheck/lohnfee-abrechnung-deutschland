@@ -383,3 +383,73 @@ async function regenerateBeitragsnachweise(
   }
   return newIds;
 }
+
+/**
+ * DEÜV-Storno-Pfad (§ 28a SGB IV):
+ *   - Findet alle nicht stornierten SV-Meldungen für Mitarbeiter & Periode.
+ *   - Markiert sie als storniert (storniert_am, storno_grund).
+ *   - Erzeugt je Meldung eine Korrektur-Meldung (is_correction, replaces_id)
+ *     mit dem aktualisierten sv_brutto.
+ */
+async function regenerateSvMeldungen(params: {
+  tenantId: string;
+  employeeId: string;
+  year: number;
+  month: number;
+  newSvBrutto: number;
+  reason: string;
+  userId?: string;
+}): Promise<string[]> {
+  const { tenantId, employeeId, year, month, newSvBrutto, reason, userId } = params;
+  const periodStart = `${year}-${String(month).padStart(2, '0')}-01`;
+  // letzter Tag des Monats
+  const last = new Date(year, month, 0).getDate();
+  const periodEnd = `${year}-${String(month).padStart(2, '0')}-${String(last).padStart(2, '0')}`;
+
+  const { data: active, error } = await supabase
+    .from('sv_meldungen')
+    .select('*')
+    .eq('tenant_id', tenantId)
+    .eq('employee_id', employeeId)
+    .lte('zeitraum_von', periodEnd)
+    .gte('zeitraum_bis', periodStart)
+    .is('storniert_am', null);
+  if (error || !active || active.length === 0) return [];
+
+  const today = new Date().toISOString().slice(0, 10);
+  const newIds: string[] = [];
+
+  for (const m of active) {
+    // 1) Original stornieren
+    await supabase
+      .from('sv_meldungen')
+      .update({ storniert_am: today, storno_grund: `Lohnkorrektur: ${reason}` })
+      .eq('id', m.id);
+
+    // 2) Korrektur-Meldung mit neuem sv_brutto
+    const { data: ins, error: insErr } = await supabase
+      .from('sv_meldungen')
+      .insert({
+        tenant_id: tenantId,
+        employee_id: employeeId,
+        meldegrund: m.meldegrund,
+        meldegrund_schluessel: m.meldegrund_schluessel,
+        zeitraum_von: m.zeitraum_von,
+        zeitraum_bis: m.zeitraum_bis,
+        krankenkasse: m.krankenkasse,
+        betriebsnummer_kk: m.betriebsnummer_kk,
+        beitragsgruppe: m.beitragsgruppe,
+        personengruppe: m.personengruppe,
+        sv_brutto: roundCurrency(newSvBrutto),
+        status: 'entwurf',
+        is_correction: true,
+        replaces_id: m.id,
+        notes: `Korrektur zu DEÜV-Meldung ${m.id} – ${reason}`,
+        created_by: userId ?? null,
+      } as any)
+      .select('id')
+      .single();
+    if (!insErr && ins) newIds.push(ins.id);
+  }
+  return newIds;
+}
