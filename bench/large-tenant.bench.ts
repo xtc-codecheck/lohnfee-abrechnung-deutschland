@@ -13,9 +13,9 @@
  */
 import { bench, describe } from 'vitest';
 import { calculatePayrollEntry } from '@/utils/payroll-calculator';
-import { generateDatevExport } from '@/utils/datev-export';
+import { generateDatevExport, getDefaultDatevConfig } from '@/utils/datev-export';
 import { makeEmployee, makeWorkingData } from './_fixtures';
-import type { PayrollEntry } from '@/types/payroll';
+import type { PayrollEntry, PayrollPeriod } from '@/types/payroll';
 
 const wd = makeWorkingData();
 const period = { year: 2026, month: 5 };
@@ -26,6 +26,13 @@ const entries500: PayrollEntry[] = employees500.map((emp, i) => {
   const r = calculatePayrollEntry({ employee: emp, period, workingData: wd });
   return { ...r.entry, id: `e-${i}`, payrollPeriodId: 'p1', createdAt: new Date(), updatedAt: new Date() } as PayrollEntry;
 });
+
+const periode500: PayrollPeriod = {
+  id: 'p1', year: 2026, month: 5,
+  startDate: new Date('2026-05-01'), endDate: new Date('2026-05-31'),
+  status: 'calculated', createdAt: new Date(),
+};
+const datevConfig = getDefaultDatevConfig();
 
 describe('Large-Tenant — Calculation Pipeline', () => {
   bench('500 MA · vollständige Brutto→Netto-Berechnung', () => {
@@ -43,12 +50,6 @@ describe('Large-Tenant — Calculation Pipeline', () => {
 
 describe('Large-Tenant — DATEV-Export', () => {
   bench('DATEV-Export · 500 Lohnabrechnungen', () => {
-    generateDatevExport(entries500, employees500, {
-      consultantNumber: '12345',
-      clientNumber: '67890',
-      accountChart: 'SKR03',
-      year: 2026,
-      month: 5,
-    } as never);
+    generateDatevExport(entries500, periode500, datevConfig);
   }, { iterations: 20, time: 0 });
 });
