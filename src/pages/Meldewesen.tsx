@@ -10,16 +10,17 @@ import { SofortmeldungPage } from "@/components/meldewesen/sofortmeldung-page";
 import { UvJahresmeldungPage } from "@/components/meldewesen/uv-jahresmeldung-page";
 import { BescheinigungenPage } from "@/components/meldewesen/bescheinigungen-page";
 import { DeuevRueckmeldungenPage } from "@/components/meldewesen/deuev-rueckmeldungen-page";
+import { ElstamChangesPage } from "@/components/meldewesen/elstam-changes-page";
 import { ZvkPage } from "@/components/meldewesen/zvk-page";
 import { ExportCenter } from "@/components/meldewesen/export-center";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/page-header";
 import { AppBreadcrumb } from "@/components/ui/app-breadcrumb";
-import { FileText, Send, ClipboardList, Calculator, HeartPulse, Zap, Shield, FileSignature, Inbox, Building2, Plane, Scale, Package } from "lucide-react";
+import { FileText, Send, ClipboardList, Calculator, HeartPulse, Zap, Shield, FileSignature, Inbox, Building2, Plane, Scale, Package, ShieldCheck } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-type MeldewesenView = 'overview' | 'sv-meldungen' | 'beitragsnachweise' | 'lstb' | 'lsta' | 'aag' | 'sofortmeldung' | 'uv-jahr' | 'bescheinigungen' | 'deuev-rueck' | 'zvk' | 'export-center';
+type MeldewesenView = 'overview' | 'sv-meldungen' | 'beitragsnachweise' | 'lstb' | 'lsta' | 'aag' | 'sofortmeldung' | 'uv-jahr' | 'bescheinigungen' | 'deuev-rueck' | 'elstam-changes' | 'zvk' | 'export-center';
 
 const viewLabels: Record<Exclude<MeldewesenView, 'overview'>, string> = {
   'sv-meldungen': 'SV-Meldungen',
@@ -31,6 +32,7 @@ const viewLabels: Record<Exclude<MeldewesenView, 'overview'>, string> = {
   'uv-jahr': 'UV-Jahresmeldung',
   'bescheinigungen': 'Bescheinigungen (EEL/BEA)',
   'deuev-rueck': 'DEÜV-Rückmeldungen',
+  'elstam-changes': 'ELStAM-Änderungen',
   'zvk': 'ZVK / Pensionskassen',
   'export-center': 'Export-Center',
 };
@@ -59,6 +61,7 @@ export default function Meldewesen() {
         {currentView === 'uv-jahr' && <UvJahresmeldungPage onBack={handleBack} />}
         {currentView === 'bescheinigungen' && <BescheinigungenPage onBack={handleBack} />}
         {currentView === 'deuev-rueck' && <DeuevRueckmeldungenPage onBack={handleBack} />}
+        {currentView === 'elstam-changes' && <ElstamChangesPage onBack={handleBack} />}
         {currentView === 'zvk' && <ZvkPage onBack={handleBack} />}
         {currentView === 'export-center' && <ExportCenter onBack={handleBack} />}
       </MainLayout>
@@ -217,6 +220,21 @@ export default function Meldewesen() {
               </CardTitle>
               <CardDescription>
                 Antworten der Krankenkassen einlesen und Status zuordnen
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button variant="outline" className="w-full">Inbox öffnen</Button>
+            </CardContent>
+          </Card>
+
+          <Card className="shadow-card hover:shadow-elegant transition-shadow cursor-pointer" onClick={() => setCurrentView('elstam-changes')}>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <ShieldCheck className="h-5 w-5 text-primary" />
+                ELStAM-Änderungen
+              </CardTitle>
+              <CardDescription>
+                Änderungen an Steuerklasse, KiSt &amp; Kinderfreibetrag mit Korrekturhinweis (§ 41c EStG)
               </CardDescription>
             </CardHeader>
             <CardContent>
