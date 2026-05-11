@@ -42,7 +42,7 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
   const { employees } = useEmployees();
   const {
     payrollPeriods, payrollEntries, createPayrollPeriod,
-    addPayrollEntry, addPayrollEntries, updatePayrollPeriodStatus,
+    addPayrollEntries, updatePayrollPeriodStatus,
   } = useSupabasePayroll();
   const { byEmployee: wageTypesByEmployee } = useTenantEmployeeWageTypes();
   const { timeEntries } = useTimeTracking();
