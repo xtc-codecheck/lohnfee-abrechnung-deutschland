@@ -46,14 +46,13 @@ describe('Mehrfachbeschäftigung – BBG-Split E2E', () => {
   it('Steuerklasse VI Szenario: Nebenbeschäftigung mit kleinem Brutto', () => {
     const r = calculateMultipleEmploymentSV({
       employments: [
-        { employerId: 'main', employerName: 'Haupt', monthlyGross: 5000, isPrimary: true },
+        { employerId: 'main', employerName: 'Haupt', monthlyGross: 3000, isPrimary: true },
         { employerId: 'side', employerName: 'Neben', monthlyGross: 800, isPrimary: false },
       ],
     });
-    // Beide unter BBG → keine Kappung
-    expect(r.employmentResults[0].svGross_KV).toBe(5000);
+    // Gesamt 3800 < BBG_KV (5512,50) → keine Kappung
+    expect(r.employmentResults[0].svGross_KV).toBe(3000);
     expect(r.employmentResults[1].svGross_KV).toBe(800);
-    // AN-Beiträge müssen positiv sein
     r.employmentResults.forEach(e => {
       expect(e.totalEmployee).toBeGreaterThan(0);
     });
