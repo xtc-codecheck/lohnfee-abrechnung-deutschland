@@ -132,7 +132,7 @@ export function PayrollDetail({ payrollId, onBack }: PayrollDetailProps) {
           });
         }
       }
-      updatePayrollPeriodStatus(payrollId, 'calculated');
+      await updatePayrollPeriodStatus(payrollId, 'calculated');
       toast({
         title: "Abrechnung gespeichert",
         description: `${pendingEntries.length} Abrechnung(en) gespeichert. GoBD-Prüfprotokoll wurde angelegt.`,
@@ -147,12 +147,20 @@ export function PayrollDetail({ payrollId, onBack }: PayrollDetailProps) {
     }
   };
 
-  const handleApprovePayroll = () => {
-    updatePayrollPeriodStatus(payrollId, 'approved');
-    toast({
-      title: "Abrechnung genehmigt",
-      description: "Die Lohnabrechnung wurde zur Auszahlung freigegeben.",
-    });
+  const handleApprovePayroll = async () => {
+    try {
+      await updatePayrollPeriodStatus(payrollId, 'approved');
+      toast({
+        title: "Abrechnung genehmigt",
+        description: "Die Lohnabrechnung wurde zur Auszahlung freigegeben.",
+      });
+    } catch {
+      toast({
+        title: "Genehmigung fehlgeschlagen",
+        description: "Der Status konnte nicht aktualisiert werden.",
+        variant: "destructive",
+      });
+    }
   };
 
   const entries = getPayrollEntriesForPeriod(payrollId);
