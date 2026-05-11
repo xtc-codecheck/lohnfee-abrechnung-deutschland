@@ -1,36 +1,52 @@
 import { ReactNode, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Menu, X, LogOut, User } from "lucide-react";
+import { Menu, X, LogOut, User, ChevronDown, Settings, Building2, LayoutGrid, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/auth-context";
-import { TenantSwitcher } from "@/components/settings/tenant-switcher";
+import { useTenant } from "@/contexts/tenant-context";
 import { DarkModeToggle } from "@/components/ui/dark-mode-toggle";
 import { CookieConsent, openCookieConsent } from "@/components/system/cookie-consent";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent,
+  DropdownMenuPortal,
+  DropdownMenuGroup,
+} from "@/components/ui/dropdown-menu";
 
 interface MainLayoutProps {
   children: ReactNode;
 }
 
-const navItems = [
+const primaryNavItems = [
   { path: "/dashboard", label: "Dashboard" },
   { path: "/employees", label: "Mitarbeiter" },
   { path: "/payroll", label: "Abrechnung" },
   { path: "/time-tracking", label: "Zeiterfassung" },
-  { path: "/meldewesen", label: "Meldewesen" },
-  { path: "/travel", label: "Reisekosten" },
-  { path: "/steuerberater", label: "Steuerberater" },
-  { path: "/autolohn", label: "Autolohn" },
-  { path: "/portal", label: "Mein Portal" },
-  { path: "/settings", label: "Einstellungen" },
 ];
+
+const secondaryNavItems = [
+  { path: "/meldewesen", label: "Meldewesen", group: "Compliance" },
+  { path: "/steuerberater", label: "Steuerberater", group: "Compliance" },
+  { path: "/travel", label: "Reisekosten", group: "Operativ" },
+  { path: "/autolohn", label: "Autolohn", group: "Operativ" },
+] as const;
 
 export function MainLayout({ children }: MainLayoutProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { user, roles, signOut } = useAuth();
+  const { tenants, currentTenant, switchTenant } = useTenant();
 
   const isActive = (path: string) => location.pathname === path;
+  const isSecondaryActive = secondaryNavItems.some((i) => isActive(i.path));
 
   const handleNavigation = (path: string) => {
     navigate(path);
@@ -62,37 +78,116 @@ export function MainLayout({ children }: MainLayoutProps) {
             </div>
 
             {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center space-x-6" aria-label="Hauptnavigation">
-              {navItems.map((item) => (
+            <nav className="hidden md:flex items-center gap-1" aria-label="Hauptnavigation">
+              {primaryNavItems.map((item) => (
                 <button
                   key={item.path}
                   onClick={() => handleNavigation(item.path)}
-                  aria-label={`Navigiere zu ${item.label}`}
                   aria-current={isActive(item.path) ? "page" : undefined}
-                  className={`transition-colors ${
+                  className={`px-3 py-2 rounded-md text-sm transition-colors ${
                     isActive(item.path)
-                      ? "text-primary font-medium"
-                      : "text-muted-foreground hover:text-primary"
+                      ? "text-primary font-medium bg-primary/5"
+                      : "text-muted-foreground hover:text-primary hover:bg-muted"
                   }`}
                 >
                   {item.label}
                 </button>
               ))}
-              <div className="flex items-center gap-2 ml-4 pl-4 border-l border-border">
-                <TenantSwitcher />
+
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    className={`px-3 py-2 rounded-md text-sm inline-flex items-center gap-1 transition-colors ${
+                      isSecondaryActive
+                        ? "text-primary font-medium bg-primary/5"
+                        : "text-muted-foreground hover:text-primary hover:bg-muted"
+                    }`}
+                    aria-label="Weitere Bereiche"
+                  >
+                    Mehr <ChevronDown className="h-3.5 w-3.5" aria-hidden="true" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-56 bg-popover">
+                  <DropdownMenuLabel className="text-xs text-muted-foreground">Compliance</DropdownMenuLabel>
+                  {secondaryNavItems.filter(i => i.group === "Compliance").map(item => (
+                    <DropdownMenuItem key={item.path} onClick={() => handleNavigation(item.path)}>
+                      {item.label}
+                      {isActive(item.path) && <Check className="ml-auto h-4 w-4" />}
+                    </DropdownMenuItem>
+                  ))}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuLabel className="text-xs text-muted-foreground">Operativ</DropdownMenuLabel>
+                  {secondaryNavItems.filter(i => i.group === "Operativ").map(item => (
+                    <DropdownMenuItem key={item.path} onClick={() => handleNavigation(item.path)}>
+                      {item.label}
+                      {isActive(item.path) && <Check className="ml-auto h-4 w-4" />}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              <div className="flex items-center gap-1 ml-3 pl-3 border-l border-border">
                 <DarkModeToggle />
-                <User className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-                <span className="text-sm text-muted-foreground truncate max-w-[150px]">
-                  {user?.email}
-                </span>
-                {roles.length > 0 && (
-                  <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full" role="status">
-                    {roles[0]}
-                  </span>
-                )}
-                <Button variant="ghost" size="icon" onClick={signOut} aria-label="Abmelden">
-                  <LogOut className="h-4 w-4" aria-hidden="true" />
-                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      className="inline-flex items-center gap-2 px-2 py-1.5 rounded-md text-sm hover:bg-muted transition-colors"
+                      aria-label="Profilmenü öffnen"
+                    >
+                      <div className="h-7 w-7 rounded-full bg-gradient-primary flex items-center justify-center text-primary-foreground text-xs font-medium" aria-hidden="true">
+                        {user?.email?.[0]?.toUpperCase() ?? <User className="h-3.5 w-3.5" />}
+                      </div>
+                      <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" aria-hidden="true" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-64 bg-popover">
+                    <DropdownMenuLabel className="font-normal">
+                      <div className="flex flex-col gap-1">
+                        <span className="text-sm font-medium truncate">{user?.email}</span>
+                        <div className="flex items-center gap-2">
+                          {roles.length > 0 && (
+                            <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">
+                              {roles[0]}
+                            </span>
+                          )}
+                          {currentTenant && (
+                            <span className="text-xs text-muted-foreground truncate">{currentTenant.name}</span>
+                          )}
+                        </div>
+                      </div>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuGroup>
+                      <DropdownMenuItem onClick={() => navigate("/portal")}>
+                        <LayoutGrid className="mr-2 h-4 w-4" /> Mein Portal
+                      </DropdownMenuItem>
+                      {tenants.length > 1 && (
+                        <DropdownMenuSub>
+                          <DropdownMenuSubTrigger>
+                            <Building2 className="mr-2 h-4 w-4" /> Mandant wechseln
+                          </DropdownMenuSubTrigger>
+                          <DropdownMenuPortal>
+                            <DropdownMenuSubContent className="bg-popover">
+                              {tenants.map(t => (
+                                <DropdownMenuItem key={t.id} onClick={() => switchTenant(t.id)}>
+                                  {t.name}
+                                  {currentTenant?.id === t.id && <Check className="ml-auto h-4 w-4" />}
+                                </DropdownMenuItem>
+                              ))}
+                            </DropdownMenuSubContent>
+                          </DropdownMenuPortal>
+                        </DropdownMenuSub>
+                      )}
+                      <DropdownMenuItem onClick={() => navigate("/settings")}>
+                        <Settings className="mr-2 h-4 w-4" /> Einstellungen
+                      </DropdownMenuItem>
+                    </DropdownMenuGroup>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={signOut} className="text-destructive focus:text-destructive">
+                      <LogOut className="mr-2 h-4 w-4" /> Abmelden
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </nav>
 
@@ -113,8 +208,8 @@ export function MainLayout({ children }: MainLayoutProps) {
           {/* Mobile Navigation */}
           {mobileMenuOpen && (
             <nav id="mobile-nav" className="md:hidden mt-4 pb-2 border-t border-border pt-4" aria-label="Mobile Navigation">
-              <div className="flex flex-col space-y-2">
-                {navItems.map((item) => (
+              <div className="flex flex-col space-y-1">
+                {primaryNavItems.map((item) => (
                   <button
                     key={item.path}
                     onClick={() => handleNavigation(item.path)}
@@ -128,24 +223,80 @@ export function MainLayout({ children }: MainLayoutProps) {
                     {item.label}
                   </button>
                 ))}
-                <div className="flex items-center justify-between px-4 pt-3 border-t border-border mt-2">
-                  <TenantSwitcher />
-                  <DarkModeToggle />
+                <div className="px-4 pt-3 pb-1 text-xs uppercase tracking-wide text-muted-foreground">Weitere</div>
+                {secondaryNavItems.map((item) => (
+                  <button
+                    key={item.path}
+                    onClick={() => handleNavigation(item.path)}
+                    aria-current={isActive(item.path) ? "page" : undefined}
+                    className={`text-left px-4 py-3 rounded-lg transition-colors ${
+                      isActive(item.path)
+                        ? "bg-primary/10 text-primary font-medium"
+                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    }`}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+
+                <div className="border-t border-border mt-3 pt-3 space-y-1">
+                  <div className="flex items-center gap-2 px-4 pb-2">
+                    <div className="h-8 w-8 rounded-full bg-gradient-primary flex items-center justify-center text-primary-foreground text-xs font-medium">
+                      {user?.email?.[0]?.toUpperCase() ?? <User className="h-4 w-4" />}
+                    </div>
+                    <div className="flex flex-col min-w-0">
+                      <span className="text-sm font-medium truncate">{user?.email}</span>
+                      {currentTenant && <span className="text-xs text-muted-foreground truncate">{currentTenant.name}</span>}
+                    </div>
+                  </div>
+
+                  {tenants.length > 1 && (
+                    <div className="px-4 py-2">
+                      <div className="text-xs text-muted-foreground mb-1">Mandant</div>
+                      <div className="flex flex-col gap-1">
+                        {tenants.map(t => (
+                          <button
+                            key={t.id}
+                            onClick={() => { switchTenant(t.id); setMobileMenuOpen(false); }}
+                            className={`text-left text-sm px-2 py-1.5 rounded inline-flex items-center justify-between ${
+                              currentTenant?.id === t.id ? "bg-primary/10 text-primary" : "hover:bg-muted"
+                            }`}
+                          >
+                            <span className="truncate">{t.name}</span>
+                            {currentTenant?.id === t.id && <Check className="h-4 w-4" />}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <button
+                    onClick={() => handleNavigation("/portal")}
+                    className="w-full text-left flex items-center gap-2 px-4 py-3 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                  >
+                    <LayoutGrid className="h-4 w-4" /> Mein Portal
+                  </button>
+                  <button
+                    onClick={() => handleNavigation("/settings")}
+                    className="w-full text-left flex items-center gap-2 px-4 py-3 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                  >
+                    <Settings className="h-4 w-4" /> Einstellungen
+                  </button>
+
+                  <div className="flex items-center justify-between px-4 py-2">
+                    <span className="text-sm text-muted-foreground">Erscheinungsbild</span>
+                    <DarkModeToggle />
+                  </div>
+
+                  <button
+                    onClick={() => { signOut(); setMobileMenuOpen(false); }}
+                    className="w-full flex items-center gap-2 px-4 py-3 text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
+                    aria-label="Abmelden"
+                  >
+                    <LogOut className="h-4 w-4" aria-hidden="true" />
+                    Abmelden
+                  </button>
                 </div>
-                <div className="flex items-center gap-2 px-4 pt-2">
-                  <User className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-                  <span className="text-sm text-muted-foreground truncate flex-1">
-                    {user?.email}
-                  </span>
-                </div>
-                <button
-                  onClick={() => { signOut(); setMobileMenuOpen(false); }}
-                  className="flex items-center gap-2 px-4 py-3 text-destructive hover:bg-destructive/10 rounded-lg transition-colors mt-1"
-                  aria-label="Abmelden"
-                >
-                  <LogOut className="h-4 w-4" aria-hidden="true" />
-                  Abmelden
-                </button>
               </div>
             </nav>
           )}
