@@ -429,7 +429,8 @@ describe('validateDatevConfig', () => {
 describe('getDefaultDatevConfig', () => {
   it('gibt gültige Standardkonfiguration zurück', () => {
     const config = getDefaultDatevConfig();
-    expect(config.kontenrahmen).toBe('SKR03');
+    // Default ist SKR04 (moderner Standardkontenrahmen für neue Mandanten)
+    expect(config.kontenrahmen).toBe('SKR04');
     expect(config.sachkontenlaenge).toBe(4);
     expect(validateDatevConfig(config)).toEqual([]);
   });
