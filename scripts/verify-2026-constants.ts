@@ -54,9 +54,11 @@ const CHECKS: Check[] = [
   { label: 'Kinderfreibetrag pro Elternteil (€)', expected: 6828, actual: TAX_ALLOWANCES_2026.childAllowance, source: 'JStG 2024' },
 
   // Tarif 2026 (Eckwerte)
-  { label: 'Zone-2 obere Grenze (€)', expected: 17799, actual: TAX_RATES_2026.zone2.to, source: '§ 32a EStG ab VZ 2026' },
-  { label: 'Zone-2 Koeffizient a', expected: 914.51, actual: TAX_RATES_2026.zone2.coefficients[0], source: '§ 32a EStG ab VZ 2026' },
-  { label: 'Zone-2 Koeffizient b', expected: 1400, actual: TAX_RATES_2026.zone2.coefficients[1], source: '§ 32a EStG ab VZ 2026' },
+  { label: 'Progression-Zone1 obere Grenze (€)', expected: 17799, actual: TAX_RATES_2026.progressionZone1.to, source: '§ 32a EStG ab VZ 2026' },
+  { label: 'Progression-Zone1 Koeffizient a', expected: 914.51, actual: TAX_RATES_2026.progressionZone1.coefficients[0], source: '§ 32a EStG ab VZ 2026' },
+  { label: 'Progression-Zone1 Koeffizient b', expected: 1400, actual: TAX_RATES_2026.progressionZone1.coefficients[1], source: '§ 32a EStG ab VZ 2026' },
+  { label: 'Proportional-Zone1 Satz (%)', expected: 0.42, actual: TAX_RATES_2026.proportionalZone1.rate, source: '§ 32a EStG ab VZ 2026' },
+  { label: 'Proportional-Zone2 Satz (%)', expected: 0.45, actual: TAX_RATES_2026.proportionalZone2.rate, source: '§ 32a EStG ab VZ 2026' },
 
   // Minijob 2026
   { label: 'Minijob-Grenze (€/Monat)', expected: 603, actual: MINIJOB_2026.maxEarnings, source: 'Mindestlohn 2026 (13,90 €)' },
