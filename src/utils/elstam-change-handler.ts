@@ -54,19 +54,23 @@ export async function processElstamChange(changeId: string): Promise<ElstamChang
   const requiresPayrollCorrection = TAX_RELEVANT_FIELDS.has(change.field_name);
   const effectiveDate = change.effective_date as string;
 
-  // Betroffene payroll_entries: Periode endet am/ nach effective_date,
-  // status in ('approved','exported','closed') – Drafts werden vor Lauf neu berechnet.
+  // Betroffene payroll_entries via Join über payroll_periods.end_date.
+  // Drafts werden ohnehin vor dem Lauf neu berechnet, daher ausgeschlossen.
   const { data: entries } = await supabase
     .from('payroll_entries')
-    .select('id, period_end, status, entry_type')
+    .select('id, entry_type, payroll_periods!inner(end_date, status)')
     .eq('tenant_id', change.tenant_id)
     .eq('employee_id', change.employee_id)
-    .gte('period_end', effectiveDate)
+    .gte('payroll_periods.end_date', effectiveDate)
     .neq('entry_type', 'storno');
 
-  const affectedEntryIds = (entries ?? [])
-    .filter(e => e.status !== 'draft')
-    .map(e => e.id as string);
+  const affectedEntryIds = ((entries ?? []) as Array<{
+    id: string;
+    entry_type: string;
+    payroll_periods: { end_date: string; status: string } | null;
+  }>)
+    .filter(e => e.payroll_periods && e.payroll_periods.status !== 'draft')
+    .map(e => e.id);
 
   // Status-Update nur wenn relevant ODER bereits Effekt erkannt
   const newStatus = requiresPayrollCorrection ? 'processed' : 'ignored';
