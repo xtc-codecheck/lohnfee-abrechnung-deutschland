@@ -13,6 +13,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
+import { logger } from '@/lib/logger';
   Dialog,
   DialogContent,
   DialogDescription,
@@ -186,7 +187,7 @@ export function DatevExportDialog({
       onExportComplete?.();
       setOpen(false);
     } catch (error) {
-      console.error('DATEV Export Error:', error);
+      logger.error('datev-export-dialog', 'DATEV Export Error:', error);
       toast.error('Export fehlgeschlagen', {
         description: 'Bitte prüfen Sie die Konfiguration.',
       });

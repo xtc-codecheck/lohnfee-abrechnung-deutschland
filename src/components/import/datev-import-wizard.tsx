@@ -15,6 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input as FormInput } from '@/components/ui/input';
 import { PdfReviewStep, PdfEmployeeData } from './pdf-review-step';
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/lib/logger';
 
 type WizardStep = 'upload' | 'preview' | 'conflicts' | 'import' | 'complete' | 'pdf-review';
 
@@ -81,7 +82,7 @@ export function DatevImportWizard() {
         }
       } catch (e) {
         toast.error('PDF-Verarbeitung fehlgeschlagen');
-        console.error(e);
+        logger.error('datev-import-wizard', e);
       } finally {
         setIsPdfParsing(false);
       }

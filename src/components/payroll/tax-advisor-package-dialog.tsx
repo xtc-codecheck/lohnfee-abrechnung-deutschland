@@ -14,6 +14,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import {
+import { logger } from '@/lib/logger';
   Command,
   CommandEmpty,
   CommandGroup,
@@ -444,7 +445,7 @@ export function TaxAdvisorPackageDialog({
       onExportComplete?.();
       setOpen(false);
     } catch (err) {
-      console.error('Tax advisor package error:', err);
+      logger.error('tax-advisor-package-dialog', 'Tax advisor package error:', err);
       toast.error('Export fehlgeschlagen', {
         description: err instanceof Error ? err.message : 'Unbekannter Fehler.',
       });

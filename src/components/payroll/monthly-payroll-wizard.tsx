@@ -17,6 +17,7 @@ import { WorkingTimeData, PayrollEntry } from '@/types/payroll';
 import { PreFlightCheckDialog } from './preflight-check-dialog';
 import { usePayrollGuardian } from '@/hooks/use-payroll-guardian';
 import {
+import { logger } from '@/lib/logger';
   ArrowLeft, ArrowRight, Check, CheckCircle2, Clock, Gift,
   Calculator, FileText, Download, Play, AlertTriangle, Info,
   Zap, Loader2, ChevronRight, RefreshCw, FastForward, Pause,
@@ -272,14 +273,14 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
         try {
           await addToHistory(persisted);
         } catch (histErr) {
-          console.warn('[payroll-persist] Guardian-Historie fehlgeschlagen:', histErr);
+          logger.warn('monthly-payroll-wizard', '[payroll-persist] Guardian-Historie fehlgeschlagen:', histErr);
         }
         saved++;
       } catch (err) {
         // L1.1: Fehler werden jetzt sichtbar — gezählt + zurückgegeben
         const name = `${emp.personalData.firstName} ${emp.personalData.lastName}`;
         failed.push(name);
-        console.error(`[payroll-persist] Insert fehlgeschlagen für ${name}:`, err);
+        logger.error('monthly-payroll-wizard', `[payroll-persist] Insert fehlgeschlagen für ${name}:`, err);
       }
     }
     return { saved, skipped, failed };
@@ -370,7 +371,7 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
               await updatePayrollPeriodStatus(period.id, 'calculated');
               log('✅ Periode als "calculated" markiert');
             } catch (statusErr) {
-              console.error('[payroll-persist] Status-Update fehlgeschlagen:', statusErr);
+              logger.error('monthly-payroll-wizard', '[payroll-persist] Status-Update fehlgeschlagen:', statusErr);
               log('⚠️ Periodenstatus konnte nicht aktualisiert werden (Daten sind aber gespeichert)');
             }
           }
@@ -487,7 +488,7 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
               await updatePayrollPeriodStatus(period.id, 'calculated');
               log('✅ Periode als "calculated" markiert');
             } catch (statusErr) {
-              console.error('[payroll-persist] Status-Update fehlgeschlagen:', statusErr);
+              logger.error('monthly-payroll-wizard', '[payroll-persist] Status-Update fehlgeschlagen:', statusErr);
               log('⚠️ Periodenstatus konnte nicht aktualisiert werden (Daten sind aber gespeichert)');
             }
           }
@@ -575,7 +576,7 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
             updatedAt: new Date(),
           } as PayrollEntry);
         } catch (err) {
-          console.error(`Fehler bei ${emp.personalData.firstName} ${emp.personalData.lastName}:`, err);
+          logger.error('monthly-payroll-wizard', `Fehler bei ${emp.personalData.firstName} ${emp.personalData.lastName}:`, err);
         }
       }
 

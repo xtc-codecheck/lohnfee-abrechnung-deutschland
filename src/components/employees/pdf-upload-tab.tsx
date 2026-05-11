@@ -7,6 +7,7 @@ import { Upload, FileText, Loader2, CheckCircle2, Info } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import type { Employee } from '@/types/employee';
+import { logger } from '@/lib/logger';
 
 interface ExtractedFields {
   taxId?: string;
@@ -74,7 +75,7 @@ export function PdfUploadTab({ employee, onFieldsExtracted }: PdfUploadTabProps)
       setExtractedFields(fields);
       toast.success(`${Object.keys(fields).length} Felder aus PDF erkannt.`);
     } catch (e) {
-      console.error(e);
+      logger.error('pdf-upload-tab', e);
       toast.error('PDF-Verarbeitung fehlgeschlagen');
     } finally {
       setIsUploading(false);
