@@ -351,8 +351,8 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
           const period = await ensurePayrollPeriod();
           if (period) {
             log('📊 Abrechnungen werden berechnet und gespeichert...');
-            const { saved, failed } = await calculateAndPersistEntries(period.id);
-            log(`✅ ${saved}/${activeEmployees.length} Abrechnungen gespeichert`);
+            const { saved, skipped, failed } = await calculateAndPersistEntries(period.id);
+            log(`✅ ${saved}/${activeEmployees.length} Abrechnungen gespeichert${skipped ? ` (${skipped} bereits vorhanden – übersprungen)` : ''}`);
             if (failed.length > 0) {
               log(`❌ ${failed.length} Abrechnungen fehlgeschlagen: ${failed.join(', ')}`);
               checked.criticalWarnings.push(
@@ -469,8 +469,8 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
           }
           const period = await ensurePayrollPeriod();
           if (period) {
-            const { saved, failed } = await calculateAndPersistEntries(period.id);
-            log(`✅ ${saved}/${activeEmployees.length} Abrechnungen gespeichert`);
+            const { saved, skipped, failed } = await calculateAndPersistEntries(period.id);
+            log(`✅ ${saved}/${activeEmployees.length} Abrechnungen gespeichert${skipped ? ` (${skipped} bereits vorhanden – übersprungen)` : ''}`);
             if (failed.length > 0) {
               log(`❌ ${failed.length} Abrechnungen fehlgeschlagen: ${failed.join(', ')}`);
               checked.criticalWarnings.push(
