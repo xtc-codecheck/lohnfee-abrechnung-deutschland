@@ -243,8 +243,19 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
 
   const calculateAndPersistEntries = useCallback(async (periodId: string) => {
     let saved = 0;
+    let skipped = 0;
     const failed: string[] = [];
+    // Idempotenz: bereits vorhandene Mitarbeiter-Einträge dieses Periods nicht erneut anlegen
+    const existingEmployeeIds = new Set(
+      payrollEntries
+        .filter(pe => pe.payrollPeriodId === periodId)
+        .map(pe => pe.employeeId)
+    );
     for (const emp of activeEmployees) {
+      if (existingEmployeeIds.has(emp.id)) {
+        skipped++;
+        continue;
+      }
       try {
         const workingData = buildWorkingDataFromTimeEntries(emp.id);
         const input: PayrollCalculationInput = {
@@ -271,8 +282,8 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
         console.error(`[payroll-persist] Insert fehlgeschlagen für ${name}:`, err);
       }
     }
-    return { saved, failed };
-  }, [activeEmployees, selectedYear, selectedMonth, addPayrollEntry, addToHistory, buildWorkingDataFromTimeEntries, wageTypesByEmployee]);
+    return { saved, skipped, failed };
+  }, [activeEmployees, selectedYear, selectedMonth, addPayrollEntry, addToHistory, buildWorkingDataFromTimeEntries, wageTypesByEmployee, payrollEntries]);
 
   /**
    * Wiederverwendung statt Doppel-Insert:
