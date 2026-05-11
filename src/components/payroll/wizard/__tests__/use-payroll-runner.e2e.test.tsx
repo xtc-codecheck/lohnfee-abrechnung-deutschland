@@ -47,7 +47,7 @@ import { usePayrollRunner } from '../use-payroll-runner';
 const mkEmp = (id: string, first: string, last: string): Employee => ({
   id,
   personalData: { firstName: first, lastName: last } as never,
-} as Employee);
+} as unknown as Employee);
 
 const PERIOD: PayrollPeriod = {
   id: 'period-1', year: 2025, month: 6,
