@@ -29,3 +29,16 @@ jobs:
         run: bunx vitest bench --run --config vitest.bench.config.ts
       - name: Run unit tests for payroll-core
         run: bunx vitest run src/utils/__tests__/golden-master-2026.test.ts src/utils/__tests__/bmf-pap-verification.test.ts
+
+  verify-constants:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+      - name: Verify 2026 constants against CONSTANTS-VERIFIED-2026.md
+        run: bun scripts/verify-2026-constants.ts

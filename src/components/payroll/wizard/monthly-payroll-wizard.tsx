@@ -42,7 +42,7 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
   const { employees } = useEmployees();
   const {
     payrollPeriods, payrollEntries, createPayrollPeriod,
-    addPayrollEntry, addPayrollEntries, updatePayrollPeriodStatus,
+    addPayrollEntries, updatePayrollPeriodStatus,
   } = useSupabasePayroll();
   const { byEmployee: wageTypesByEmployee } = useTenantEmployeeWageTypes();
   const { timeEntries } = useTimeTracking();
@@ -72,9 +72,9 @@ export function MonthlyPayrollWizard({ onBack, onComplete }: MonthlyPayrollWizar
   const buildWorkingDataFromTimeEntries = useWorkingDataBuilder(timeEntries, selectedMonth, selectedYear, activeEmployees);
   const { ensurePayrollPeriod, calculateAndPersistEntries } = usePayrollRunner({
     activeEmployees, selectedYear, selectedMonth,
-    payrollPeriods, payrollEntries, wageTypesByEmployee,
+    payrollPeriods, wageTypesByEmployee,
     buildWorkingDataFromTimeEntries,
-    createPayrollPeriod, addPayrollEntry, addToHistory,
+    createPayrollPeriod, addPayrollEntries, addToHistory,
   });
 
   const autoCheckCurrentStep = useCallback(() => {
